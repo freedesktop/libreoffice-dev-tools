@@ -1,0 +1,14 @@
+
+modules_dep is a program to analyzed the dependencies of libreoffice's modules
+
+options:
+-u print a moduel only once
+-c <foo> list the child modules of foo. the 'child' dependent are the module that need <foo> to build before them
+-p <foo> list the parent modules of foo. the parent modules are the modules that need to be built before <foo>
+
+the arguments must be the list of all the build.lst to analyze.
+
+example:
+find $(SRC_ROOT) -maxdepth 5 -name "build.lst" | grep -v "splitbuild/" | xargs ./a.out -u -c svx 
+
+Note: optional dependecies are considered always required except SUN:xxx which are ignored.
