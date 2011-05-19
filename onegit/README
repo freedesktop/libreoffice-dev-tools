@@ -205,8 +205,7 @@ before the migration.
 
 The onegit.sh, found in contrib/dev-tools, implement the steps described above.
 You are all encouraged to try it for yourselves and check that the result is sane
-(bear in mind that that script took almost 6 hours to run on a machine where a tinderbox
-typically run in 17 minutes)
+
 
 I'm planning to add to this script a few step at the end to patche core
 so that autogen and the other scripts are adjusted to the changes..
