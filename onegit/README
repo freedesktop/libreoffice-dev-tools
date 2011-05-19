@@ -1,0 +1,238 @@
+
+Single-git-repo Plan as of 2011-05-17 by Norbert Thiebaud
+
+
+currently we have 20 git repository:
+bootstrap + artwork base calc components extensions extras filters help impress
+libs-core libs-extern libs-extern-sys libs-gui postprocess sdk testing
+translations ure writer
+
+For reference, the size of the .git of each of these repository is:
+
+47M     bootstrap
+57M     artwork
+27M     base
+83M     calc
+44M     components
+50M     extensions
+42M     extras
+99M     filters
+29M     help
+32M     impress
+184M    libs-core
+317M    libs-extern-sys
+70M     libs-extern
+101M    libs-gui
+1.3M    postprocess
+11M     sdk
+81M     testing
+240M    translations
+59M     ure
+92M     writer
+
+I concentrate on the size of the .git because that is the size that really
+matter for the performance of mot git operations, and especially for git clone
+out of a remote location.
+
+The general idea is to consolidate some of these repositories together using a
+simple git fetch
+This technic as the merit of relative simplicity. but the drawback is that
+the resulting history, although theorically complete, is fairly unsuable.
+That is it would be very cumbersome to be able to check-out at a point in
+time prior to when the actual fusion is done and have a complete
+buildable tree.
+The core issue is that the 'true' history is in fact represented by 20 parallels
+history.
+In order to mitigate that, the tag for each imported repository will be renamed,
+prefixing the name of the repository in from of the tag name, that way we will
+avoid name conflict, and the differents tag for the same 'history' level
+in each of the repository is still accessible.
+Nevertheless, you can only check out one of these tag, i.e essentially only
+one old-repository at the time.
+It is possible to still checkout everything properly, but that would require
+a somewhat elaborate setup...  It is simpler to keep a version
+of our current split git around for these purposes.
+
+== Per repository analysis ==
+
+we will review each repostory and discuss what the migration will
+entail for it.
+
+=== bootstrap ===
+
+bootstrap will be used as the anchor for the whole process. it is left as is
+and become, after all processing our new 'core' repository
+
+==  base calc components extensions extras impress libs-core libs-gui postprocess sdk writer ==
+
+these are bread-and-butter code repository. I did not see any discussions
+suggesting they should not be fusionned.
+The only processiong step is to rename the tag to avoid name-conflict
+
+The current version of the onegit.sh script combine all these repositories in
+the core repo.
+
+=== artwork ===
+
+Artwork contains mostly binary objects. Its content is mostly the domain of
+the graphic design team, and from the dev side change consiste mostly into
+naming thing and moving things around.
+
+The rate of change is fairly low (46 commits since the beginning of the year)
+The size of the repo is moderate (with respect to the other repositories)
+
+For simplicity sake, it would be not to costly to consolidate artwork into core.
+But on long term it may be usefull, from a size perspective and from a
+division of labor aspect to keep artwork as a stand-alone repo.
+In the later case we will kepp it initialy as a sub-git in clone/artwork
+just as today.
+
+
+The current version of the onegit.sh script combine artwork into core,
+but a decision whether to do that or to keep it separate must be taken
+before the migration.
+
+=== help ===
+
+This repos contains script and metadata to generate the help files.
+Technically this is an optional repository, but it is a  fairly small one
+and it directly depend on tools that are in libs-gui and other modules
+in the core repository.
+
+I'm unsure about how that repo content is actually managed.
+
+The current version of the onegit.sh script combine help in
+the core repo.
+It could porbably be kept as a stand-alone repo without too much negative
+impact. Input on that are welcome...
+
+=== filters ===
+
+filters particularity is being the host of binfilter.
+Since binfilter is deprecated and will eventually be dropped, it sound
+like a good idea to take advantage of this intrusive reorganisation
+of the git repositories to extract binfilter out of filters
+This save about 60% of the size of filters.
+
+So binfilter will be extracted out of filters, the resulting 'lean' filters
+will have it's tag renamed and combined with core.
+the new binfilter git repository will be placed in clone/binfilter and
+managed the same way auxiliary git repository are managed today
+with the added benefit of being completely optional
+
+=== libs-extern ===
+
+libs-extern is essentailly a wrapper to patchand build external libraries.
+It is a fairly big repository, but in fact a substential part of the size
+is due to that once upon a time the tar.gz of these external libraries
+were dumped into the git repo. we do not do that anymore, but the history
+still reflect that.
+Once again, since we are going to an instrusive reorg we may as well take
+advantage of this to do some clean-up and put that repo on a diet.
+
+So libs-extern will undergo a git-filter to remove historical */download/*
+instances and to rename the tags. it will then be combined with core.
+
+=== libs-extern-sys ===
+
+the case of libs-extern-sys is very similar to that of libs-extern
+with the added twist that a big part of this repo is used by the 'dictionaries'
+module. 'dictionnaries' is more related to 'translations' than to the core code
+it is usually maintained by the localisation/translation group.
+
+libs-extern-sys as it stand is a pretty big repo, in fact our biggest
+but without dictionnaries and with a clean-up of the old historical
+tar.gz it sie dwindle to 2MB
+
+So, dictionnaries will be extracted from libs-extern-sys and then added to
+translations.
+
+the remaining libs-extern-sys will undergo a git-filter to remove historical
+*/download/* files, the tag will be renamed and then combined with core.
+
+=== testing ===
+
+The testing repository is a fairly sizeable repo. it has been suggested that it be kept
+apart.
+Is is saddly a fairly low activity git at this point, but we should certainly
+hope that it won't remain so.
+I find it hard to justify keeping it appart as test should live and evolve
+fairly simbiotically with the code it tests.
+keeping these two in sync would means mostly maintaining the ./g mechanism
+we have currently, with no real hope that I can see to avoid it. That kind
+of defeat the purpose of this exercise.
+
+The current version of the onegit.sh script combine testing into core,
+but a decision whether to do that or to keep it separate must be taken
+before the migration.
+
+=== translations ===
+
+The translatio repository is a big repository, managed quasi-exclusively by
+the translation/localisation team. It is an optional repository in the
+sens that it is not required to build the product.
+
+There seems to be a consensus that 'translations' should not be combined
+into core, and should be left alone. In fact most of the discussion resolve
+around improving the independance of 'translation' to possibly make the
+localisation process a completely independant process.
+
+So translations is left untouched and will still be optionally present in
+clone/translations
+
+=== ure ===
+
+The ure repository is a relatively small, but has a pretty high rate of change
+(574 change year to date). There are quite a few items on the ToDo list that
+seems to indicate that ure will sustain a sizeable rate of change in the
+foreseable future.
+
+So altough ure can conceptually be seen as an 'external' library. It seems
+that trying maintain it as such will, for practical reason means that it
+would remain as an auxilliary git in clone/, again defeating the purpose
+of simpifying the git repo layout.
+Furthermore, there are numerous changes that impact both ur and the rest
+of the code. keeping ure separate would make bisection very hard/slow at best
+
+But since there was no consensus yet on this, the issue must be addressed
+before we can proceed.
+
+The current version of the onegit.sh script combine ure into core,
+but a decision whether to do that or to keep it separate must be taken
+before the migration.
+
+== onegit.sh ==
+
+The onegit.sh, found in contrib/dev-tools, implement the steps described above.
+You are all encouraged to try it for yourselves and check that the result is sane
+(bear in mind that that script took almost 6 hours to run on a machine where a tinderbox
+typically run in 17 minutes)
+
+I'm planning to add to this script a few step at the end to patche core
+so that autogen and the other scripts are adjusted to the changes..
+
+== deployement ==
+
+The migration is intrusive. Technically cherry picking from the existing layout
+should still be possible, but should be done in a dedicated set-up because
+pulling the existing git repos into the migrated one to cherry pick will
+make them grow a lot... it is probably easier to git-format-patch the commit
+to cherry pick and then apply them as patches...
+
+Still in order to limit the amount of such patches, it is preferable to do the
+migration when 3.4 has stabilized... so after 3.4.2...
+
+Furthermore, during the actual migration master on the original repos need to be
+somehow shutdown.
+We need to plan for this, make sure that everybody having commit access is aware
+of the planning and take appropriate step to flush what need to be flushed out
+of their local tree.
+
+The result of the conversion should be a libreoffice/core.git repo and an
+additional libreoffice/binfiter.git.
+
+The build instructions will remain unchanged (except to use core.git instead
+of bootstrap)
+
+
+
