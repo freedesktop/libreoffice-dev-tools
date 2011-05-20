@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties/>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>BASEURL=`readlink -f ${WORKSPACE}/../../repo-mirror/workspace/`
+[ -d ${WORKSPACE}/.git ] || git clone ${BASEURL}/bootstrap.git ${WORKSPACE}
+git pull
+./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${HOME}/.jenkins/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
+cat ${HOME}/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
+./download
+./g checkout libreoffice-3-4
+git checkout solenv/bin/gccinstlib.pl
+git cherry-pick -n 33b25c9c7ac5c960991c71d641740dbc8fa432b5
+./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${HOME}/.jenkins/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
+cat ${HOME}/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
+cat ${HOME}/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
+echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
+echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
+./g stash save
+./g pull -r
+./g -f stash pop
+./g branch -v
+. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $SOLARSRC/instsetoo_native &amp;&amp; $SOLARENV/bin/build.pl --all -P4 -- -P4
+. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $SOLARSRC/smoketestoo_native &amp;&amp; dmake localinstall
+. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $WORKSPACE &amp;&amp; $SOLARENV/bin/subsequenttests -j10 -l9 -k
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
