@@ -17,14 +17,13 @@
 [ -d ${WORKSPACE}/.git ] || git clone ${BASEURL}/bootstrap.git ${WORKSPACE}
 git pull
 ./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${HOME}/.jenkins/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
-cat ${HOME}/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
+cat ${HOME}/.jenkins/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
 ./download
 ./g checkout libreoffice-3-4
 git checkout solenv/bin/gccinstlib.pl
 git cherry-pick -n 33b25c9c7ac5c960991c71d641740dbc8fa432b5
 ./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${HOME}/.jenkins/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
-cat ${HOME}/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
-cat ${HOME}/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
+cat ${HOME}/.jenkins/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
 echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
 echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
 ./g stash save
