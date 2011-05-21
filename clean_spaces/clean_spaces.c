@@ -9,6 +9,10 @@
 #include <stdio.h>
 #include <assert.h>
 
+#ifdef __APPLE__
+#define MAP_POPULATE 0
+#endif
+
 static char* filter[] =
 {
     "c","cpp","cxx","h","hrc","hxx","idl","inl","java","map","pl","pm","sdi","sh","src","tab","xcu","xml"
