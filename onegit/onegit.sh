@@ -236,17 +236,17 @@ process_generic()
     r=$1
 
     echo "== generic processing for $r =="
-    pushd $r
+    pushd $r || die "*** Error cd-ing to $r"
     for oldtag in $(git tag) ; do git tag "${r}_${oldtag}" "$oldtag" ; git tag -d "${oldtag}" > /dev/null ; done
-    git filter-branch --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
+    git filter-branch --prune-empty --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
     popd > /dev/null
 }
 
 process_bootstrap()
 {
     echo "== generic processing for bootstrap =="
-    pushd bootstrap
-    git filter-branch --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
+    pushd bootstrap || die "*** Error cd-ing to bootstrap"
+    git filter-branch --prune-empty --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
     popd > /dev/null
 }
 
@@ -284,38 +284,44 @@ process_filters()
 {
     echo "== filter out binfilter from filters =="
     (
-	    cd filters-no-binfilter  || die "cd-ing to filters-no-binfilter"
-	    echo "=== filter-out binfilter"
-	    git filter-branch --tag-name-filter 'xargs -I{} echo "filters_{}"' --index-filter 'git rm -q -r --cached --ignore-unmatch  binfilter' -- --all && ( git tag | grep -v "filters_" | xargs -n 1 git tag -d > /dev/null ) || die "*** Error filtering out binfilter"
-        git filter-branch --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
+        cd filters-no-binfilter  || die "cd-ing to filters-no-binfilter"
+        echo "=== filter-out binfilter"
+        git filter-branch --prune-empty --tag-name-filter 'xargs -I{} echo "filters_{}"' --index-filter 'git rm -q -r --cached --ignore-unmatch  binfilter' -- --all && ( git tag | grep -v "filters_" | xargs -n 1 git tag -d > /dev/null ) || die "*** Error filtering out binfilter"
+        git filter-branch -f --prune-empty --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
     ) &
     p1=$!
 
     echo "== extract binfilter from filters =="
     (
-	    cd filters-binfilter-only  || die "cd-ing to filters-binfilter-only"
-	    echo "=== filter-out evertything but binfilter"
-	    git filter-branch --tag-name-filter cat --index-filter 'git rm -q -r --cached --ignore-unmatch filter hwpfilter lotuswordpro oox unoxml writerfilter writerperfect xmerge' -- --all || die "*** Error extracting binfilter out of filters"
-        git filter-branch --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
+        cd filters-binfilter-only  || die "cd-ing to filters-binfilter-only"
+        echo "=== filter-out evertything but binfilter"
+        git filter-branch --prune-empty --tag-name-filter cat --index-filter 'git rm -q -r --cached --ignore-unmatch filter hwpfilter lotuswordpro oox unoxml writerfilter writerperfect xmerge' -- --all || die "*** Error extracting binfilter out of filters"
+        git filter-branch -f --prune-empty --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
     )&
     p2=$!
 
-   result=0
-   wait $p1 || result=1
-   wait $p2 || result=1
-   if [ $result -eq 1 ] ; then
-       exit $result
-   fi
+    result=0
+    wait $p1 || result=1
+    wait $p2 || result=1
+    if [ $result -eq 1 ] ; then
+	exit $result
+    fi
 
     git clone filters-binfilter-only binfilter || die "*** Error cloning filters-binfilter-only"
     git clone filters-no-binfilter filters || die "*** Error cloning filters-binfilter-only"
     rm -fr filters-no-binfilter
     rm -fr filters-binfilter-only
     rm -fr filters-base
+
     echo "== gc binfilter =="
-    ( cd binfilter && git gc --aggressive --prune=now ) || die "*** Error compacting the binfilter repo"
+    pushd binfilter || die "*** Error cd-ing to binfilter"
+    git gc --aggressive --prune=now || die "*** Error compacting the binfilter repo"
+    popd > /dev/null
+
     echo "== gc filters =="
-    ( cd filters && git gc --aggressive --prune=now ) || die "*** Error compacting the clean filters repo"
+    pushd filters || die "*** Error cd-ing to filters"
+    git gc --aggressive --prune=now || die "*** Error compacting the clean filters repo"
+    popd > /dev/null
 }
 
 process_help()
@@ -336,17 +342,18 @@ process_libs-core()
 process_libs-extern()
 {
     echo "== create a lean libs-extern =="
-    (
-	    cd libs-extern-no-bloat || die "*** Error cd-ing to libs-extern-no-bloat"
-	    echo "== filter-out bloat =="
-	    git filter-branch -f --tag-name-filter 'xargs -I{} echo "libs-extern_{}"' --index-filter 'git rm -q -r --cached --ignore-unmatch "*/download/*.tar.gz"' -- --all &&  ( git tag | grep -v "libs-extern_" | xargs -n 1 git tag -d > /dev/null ) || die "*** Error filteroing out bloat from libs-extern"
-        git filter-branch --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
-    ) || die
+    pushd libs-extern-no-bloat || die "*** Error cd-ing to libs-extern-no-bloat"
+    echo "== filter-out bloat =="
+    git filter-branch --prune-empty --tag-name-filter 'xargs -I{} echo "libs-extern_{}"' --index-filter 'git rm -q -r --cached --ignore-unmatch "*/download/*.tar.gz"' -- --all &&  ( git tag | grep -v "libs-extern_" | xargs -n 1 git tag -d > /dev/null ) || die "*** Error filteroing out bloat from libs-extern"
+    git filter-branch -f --prune-empty --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
+    popd > /dev/null
     git clone libs-extern-no-bloat libs-extern || die "*** Error cloning libs-extern-no-bloat"
     rm -fr libs-extern-no-bloat
     rm -fr libs-extern-base
     echo "== gc libs-extern =="
-    ( cd libs-extern && git gc --aggressive --prune=now ) || die "*** Error compacting the clean libs-extern repo"
+    pushd libs-extern || die "*** Error cd-ing to libs-extern"
+    git gc --aggressive --prune=now || die "*** Error compacting the clean libs-extern repo"
+    popd > /dev/null
 }
 
 process_libs-extern-sys()
@@ -354,35 +361,37 @@ process_libs-extern-sys()
 
 (
     echo "== create a lean libs-extern-sys =="
-    (
-	    cd libs-extern-sys-no-dict-work || die "*** Error cd-ing to libs-extern-sys-no-dict-work"
-	    echo "== filter-out dictionaries and bloat=="
-	    for oldtag in $(git tag) ; do git tag "${r}_${oldtag}" "$oldtag" ; git tag -d "${oldtag}" > /dev/null ; done
-	    git filter-branch --tag-name-filter cat --index-filter 'git rm -q -r --cached --ignore-unmatch dictionaries */download' -- --all || die "*** Error filtering out dictionaries from libs-extern-sys"
-        git filter-branch --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
-    ) || die
+    pushd libs-extern-sys-no-dict-work || die "*** Error cd-ing to libs-extern-sys-no-dict-work"
+    echo "== filter-out dictionaries and bloat=="
+    for oldtag in $(git tag) ; do git tag "libs-extern-sys_${oldtag}" "$oldtag" ; git tag -d "${oldtag}" > /dev/null ; done
+    git filter-branch --prune-empty --tag-name-filter cat --index-filter 'git rm -q -r --cached --ignore-unmatch dictionaries */download' -- --all || die "*** Error filtering out dictionaries from libs-extern-sys"
+    git filter-branch -f --prune-empty --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
+    popd > /dev/null
     git clone libs-extern-sys-no-dict-work libs-extern-sys || die "*** Error cloning libs-extern-sys-no-dict-work"
     rm -fr libs-extern-sys-no-dict-work
     echo "== gc libs-extern-sys =="
-    ( cd libs-extern-sys && git gc --aggressive --prune=now ) || die "*** Error compacting the clean libs-extern-sys repo"
+    pushd libs-extern-sys|| die "*** Error cd-ing to libs-extern-sys"
+    git gc --aggressive --prune=now || die "*** Error compacting the clean libs-extern-sys repo"
+    popd > /dev/null
 )&
 p1=$!
 
 (
     echo "extract dictionaries as stand-alone to be fusionned with translations"
-    (
-	    cd libs-extern-sys-dict-work  || die "*** Error cd-ing to libs-extern-sys-dict-work"
-	    echo "== filter-out everything but dictionaries =="
-	    git filter-branch --prune-empty --tag-name-filter 'xargs -I{} echo "dictionaries_{}"' --index-filter 'git rm -q -r --cached --ignore-unmatch berkeleydb  boost  cairo  curl expat  graphite  hunspell  icu  jpeg  libxml2  libxslt  more_fonts  moz  neon  nss  python  saxon  stax  zlib bitstream_vera_fonts' -- --all && ( git tag | grep -v "dictionaries_" | xargs -n 1 git tag -d > /dev/null ) || die "*** Error extracting dictionaries out of libs-extern-sys"
-        git filter-branch --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
-    ) || die
+    pushd libs-extern-sys-dict-work || die "*** Error cd-ing to libs-extern-sys-dict-work"
+    echo "== filter-out everything but dictionaries =="
+    git filter-branch --prune-empty --tag-name-filter 'xargs -I{} echo "dictionaries_{}"' --index-filter 'git rm -q -r --cached --ignore-unmatch berkeleydb  boost  cairo  curl expat  graphite  hunspell  icu  jpeg  libxml2  libxslt  more_fonts  moz  neon  nss  python  saxon  stax  zlib bitstream_vera_fonts' -- --all && ( git tag | grep -v "dictionaries_" | xargs -n 1 git tag -d > /dev/null ) || die "*** Error extracting dictionaries out of libs-extern-sys"
+    git filter-branch -f --prune-empty --tag-name-filter cat --tree-filter 'find . -type f | xargs -n 100 clean_spaces ' -- --all
+    popd > /dev/null
 
     git clone libs-extern-sys-dict-work dictionaries || die "*** Error cloning libs-extern-sys-dict-work"
     rm -fr libs-extern-sys-dict-work
     rm -fr libs-extern-sys-base
 
     echo "== gc dictionaries =="
-    ( cd dictionaries && git gc --aggressive --prune=now ) || die "*** Error compacting the dictionaries repo"
+    pushd dictionaries || die "*** Error cd-ing to dictionaries"
+    git gc --aggressive --prune=now || die "*** Error compacting the dictionaries repo"
+    popd > /dev/null
 )&
 p2=$!
 
@@ -427,10 +436,10 @@ process_writer()
 
 while getopts C:g:hn:t: opt ; do
     case "$opt" in
-	C) GIT_BASE="$OPTARG" ;;
-	h) usage; exit ;;
-	g) REMOTE_GIT_BASE="$OPTARG" ;;
-	n) GIT_NAME="$OPTARG" ;;
+        C) GIT_BASE="$OPTARG" ;;
+        h) usage; exit ;;
+        g) REMOTE_GIT_BASE="$OPTARG" ;;
+        n) GIT_NAME="$OPTARG" ;;
     t) GIT_TEMP="$OPTARG" ;;
     esac
 done
@@ -470,7 +479,7 @@ fi
 
 # we could verify that the workdir is clean too... to avoid disagreement later ?
 
-pushd $GIT_BASE
+pushd $GIT_BASE || die "*** Error cd-ing to ${GIT_BASE}"
 
 
 echo "== create a temporary workarea ${GIT_TEMP?} =="
@@ -485,13 +494,13 @@ echo "== create a temporary workarea ${GIT_TEMP?} =="
     result=0
 
     for repo in $REPOS ; do
-	    clone_${repo} || die
-	    process_${repo} &
-	    pids[$nb_task]=$!
-	    let nb_task=$nb_task+1
+            clone_${repo} || die
+            process_${repo} &
+            pids[$nb_task]=$!
+            let nb_task=$nb_task+1
     done
     for job in ${pids[@]} ; do
-	    wait $job || result=1
+            wait $job || result=1
     done
     exit $result;
 ) || die
@@ -521,16 +530,16 @@ fi
     echo "== add repos =="
     for repo in $REPOS ; do
         if [ "$repo" != "bootstrap" ] ; then
-	        echo "== Add remote ${GIT_TEMP?}/$repo =="
-	        git remote add $repo "${GIT_TEMP?}/$repo" || die "*** Error adding remote ${GIT_TEMP?}/$repo"
+                echo "== Add remote ${GIT_TEMP?}/$repo =="
+                git remote add $repo "${GIT_TEMP?}/$repo" || die "*** Error adding remote ${GIT_TEMP?}/$repo"
         fi
     done
 
     echo "== fetch repos =="
     for repo in $REPOS ; do
         if [ "$repo" != "bootstrap" ] ; then
-	        git fetch $repo || die "*** Error fetching $repo"
-	        git fetch -t $repo || die "*** Error fetching tags for $repo"
+                git fetch $repo || die "*** Error fetching $repo"
+                git fetch -t $repo || die "*** Error fetching tags for $repo"
         fi
     done
 
@@ -538,37 +547,37 @@ fi
 
     for repo in $REPOS ; do
         if [ "$repo" != "bootstrap" ] ; then
-	        git merge -Xours $repo/master || die "*** Error merging $repo/master"
+                git merge -Xours $repo/master || die "*** Error merging $repo/master"
         fi
     done
 
     echo "== rm repos =="
     for repo in $REPOS ; do
         if [ "$repo" != "bootstrap" ] ; then
-	        git remote rm $repo || die "*** Error removing remote $repo/master"
+                git remote rm $repo || die "*** Error removing remote $repo/master"
         fi
     done
 
 
     echo "== import dictionaries into translation =="
     (
-	cd clone || die "*** Error cd-ing to $(pwd)/clone"
-	cd translations || die "*** Error cd-ing to $(pwd)/translations"
+        cd clone || die "*** Error cd-ing to $(pwd)/clone"
+        cd translations || die "*** Error cd-ing to $(pwd)/translations"
 
-	# merge the extracted 'dictionaries' into the translations repo
-	git remote add dictionaries "${GIT_TEMP?}/dictionaries" || die "*** Error adding remote ${GIT_TEMP?}/dictionaries"
-	git fetch  dictionaries || die "*** Error fetching dictionaries"
-	git fetch -t dictionaries || die "*** Error fetching dictionaries"
-	git merge -Xours dictionaries/master || die "*** Error merging dictionaries"
-	git remote rm dictionaries || die "*** Error removing remote dictionaries"
+        # merge the extracted 'dictionaries' into the translations repo
+        git remote add dictionaries "${GIT_TEMP?}/dictionaries" || die "*** Error adding remote ${GIT_TEMP?}/dictionaries"
+        git fetch  dictionaries || die "*** Error fetching dictionaries"
+        git fetch -t dictionaries || die "*** Error fetching dictionaries"
+        git merge -Xours dictionaries/master || die "*** Error merging dictionaries"
+        git remote rm dictionaries || die "*** Error removing remote dictionaries"
 
     ) || die
 
 
     echo "== copy binfilters in clone/binfilters =="
     (
-	cd clone
-	git clone "${GIT_TEMP?}/binfilter" binfilter || die "*** Error cloning ${GIT_TEMP?}/binfilter"
+        cd clone
+        git clone "${GIT_TEMP?}/binfilter" binfilter || die "*** Error cloning ${GIT_TEMP?}/binfilter"
     )
     echo "== clean-up bootstrap .gitignore =="
 
