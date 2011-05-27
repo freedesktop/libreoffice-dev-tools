@@ -183,7 +183,7 @@ struct stat s;
                                     default:
                                         *cursor_out++ = ' ';
                                     }
-                                    col += pre_len;
+                                    col += pre_len + 1;
                                     cursor_in += 1;
                                 }
                                 else if(*cursor_in == '\n')
@@ -248,7 +248,7 @@ struct stat s;
                                         default:
                                             *cursor_out++ = ' ';
                                         }
-                                        col += pre_len;
+                                        col += pre_len + 1;
                                         cursor_in += 1;
                                     }
                                     else
