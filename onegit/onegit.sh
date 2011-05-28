@@ -521,6 +521,7 @@ fi
     cd clone || die "*** Error cd-ing to $(pwd)/clone"
     for repo in ${UNTOUCHED_REPOS?} ; do
         git clone "${REMOTE_GIT_AUX_BASE?}/$repo" $repo || die "*** Error cloning ${REMOTE_GIT_AUX_BASE?}/$repo"
+    done
 ) || die
 
 
