@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <pthread.h>
+#include <errno.h>
 
 #ifdef __APPLE__
 #define MAP_POPULATE 0
@@ -17,8 +18,7 @@
 struct item
 {
     struct item* next;
-    int fd;
-    size_t size;
+    char* filename;
 };
 
 struct context
@@ -106,44 +106,99 @@ int _post_item(struct context* context, struct item* item)
 
 static void* _worker_proc(struct context* context)
 {
+int rc = 0;
 int fd;
 int col;
 int rewrite;
+char* filename;
 char* input;
 char* end;
 char* cursor_in;
 char* after_last_non_space;
 char* cursor_out = NULL;
 char* output = NULL;
+int allocated_output = 1024*1024;
 off_t size;
 struct item* item;
+struct stat s;
 
+    output = malloc(allocated_output);
     while((item = _wait_for_item(context)) != NULL)
     {
-        fd = item->fd;
-        size = item->size;
-        input = mmap( NULL, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
-        if(input != MAP_FAILED)
+        filename = item->filename;
+//        fprintf(stderr,"process %s\n", filename);
+        /* look for the extension, ignore pure dot filename */
+        cursor_in = filename + strlen(filename);
+        while(cursor_in > filename && *cursor_in != '.')
         {
-            cursor_in = input;
-            end = input;
-            end += size;
-            after_last_non_space = cursor_in;
-            col = 0;
-            rewrite = 0;
-            /* first find the first occurence if any of things needing a rewrite */
-            while(cursor_in < end)
+            cursor_in -= 1;
+        }
+        if(cursor_in == filename)
+        {
+            continue;
+        }
+        /* check that the extention is candidat for filtering */
+        if(!_is_filter_candidat(cursor_in + 1))
+        {
+            continue;
+        }
+        if(stat(filename, &s))
+        {
+            fprintf(stderr, "*** Error on stat for %s\n", filename);
+            continue;
+        }
+        /* we filter only non-zero sized regular file */
+        if(S_ISREG(s.st_mode))
+        {
+            size = s.st_size;
+        }
+        if(!size)
+        {
+            continue;
+        }
+        fd = open(filename, O_RDWR);
+        if(fd != -1)
+        {
+            input = mmap( NULL, size, PROT_READ, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+            close(fd);
+            if(input != MAP_FAILED)
             {
-                /* short-cut the most common case */
-                if(*cursor_in > 32)
+                cursor_in = input;
+                end = input;
+                end += size;
+                after_last_non_space = cursor_in;
+                col = 0;
+                rewrite = 0;
+                /* first find the first occurence if any of things needing a rewrite */
+                while(cursor_in < end)
                 {
-                    cursor_in += 1;
-                    col += 1;
-                    after_last_non_space = cursor_in;
-                }
-                else if(*cursor_in == '\n')
-                {
-                    if(cursor_in != after_last_non_space)
+                    /* short-cut the most common case */
+                    if(*cursor_in > 32)
+                    {
+                        cursor_in += 1;
+                        col += 1;
+                        after_last_non_space = cursor_in;
+                    }
+                    else if(*cursor_in == '\n')
+                    {
+                        if(cursor_in != after_last_non_space)
+                        {
+                            rewrite = 1;
+                            break;
+                        }
+                        else
+                        {
+                            cursor_in += 1;
+                            after_last_non_space = cursor_in;
+                            col = 0;
+                        }
+                    }
+                    else if(*cursor_in == ' ')
+                    {
+                        cursor_in += 1;
+                        col += 1;
+                    }
+                    else if(*cursor_in == '\t')
                     {
                         rewrite = 1;
                         break;
@@ -151,121 +206,46 @@ struct item* item;
                     else
                     {
                         cursor_in += 1;
+                        col += 1;
                         after_last_non_space = cursor_in;
-                        col = 0;
                     }
                 }
-                else if(*cursor_in == ' ')
+                if(rewrite)
                 {
-                    cursor_in += 1;
-                    col += 1;
-                }
-                else if(*cursor_in == '\t')
-                {
-                    rewrite = 1;
-                    break;
-                }
-                else
-                {
-                    cursor_in += 1;
-                    col += 1;
-                    after_last_non_space = cursor_in;
-                }
-            }
-            if(rewrite)
-            {
-                /* since we need a rewrite, we need to copy the beginning of the file
-                 * al the way to the first anomaly and fix the current anomally */
-                /* in theory teh file could be all tabs... so the output could grow 4 times */
-                output = malloc(4 * size);
-                if(output)
-                {
-                    int pre_len;
+                    /* since we need a rewrite, we need to copy the beginning of the file
+                     * al the way to the first anomaly and fix the current anomally */
+                    /* in theory teh file could be all tabs... so the output could grow 4 times */
+                    if((4 * size) >= allocated_output)
+                    {
+                    int new_size = (((size+1) * 4) + 32768) & ~32767; /* round up to the next 32K */
 
-                    cursor_out = output;
+                        output = realloc(output, new_size);
+//                        fprintf(stderr, "realloc from %d to %d\n", allocated_output, new_size);
+                        allocated_output = new_size;
+                    }
+                    if(output)
+                    {
+                        int pre_len = 0;
 
-                    if(*cursor_in == '\t')
-                    {
-                        pre_len = (int)(cursor_in - input);
-                        if(pre_len > 1)
-                        {
-                            memcpy(output, input, pre_len - 1);
-                            cursor_out += (pre_len - 1);
-                        }
-                        /* from now on after_last_non_space point into the output buffer *
-                         * technicaly it always have, but up to now the output buffer was
-                         * also the input buffer */
-                        pre_len = (int)(after_last_non_space - input);
-                        after_last_non_space = output;
-                        after_last_non_space += pre_len;
+                        cursor_out = output;
 
-                        /* expend the tab to the correct number of spaces */
-                        pre_len = (~col & 3);
-                        switch( (unsigned char)pre_len)
+                        if(*cursor_in == '\t')
                         {
-                        case 3:
-                            *cursor_out++ = ' ';
-                        case 2:
-                            *cursor_out++ = ' ';
-                        case 1:
-                            *cursor_out++ = ' ';
-                        default:
-                            *cursor_out++ = ' ';
-                        }
-                        col += pre_len + 1;
-                        cursor_in += 1;
-                    }
-                    else if(*cursor_in == '\n')
-                    {
-                        pre_len = (int)(after_last_non_space - input);
-                        if(pre_len > 0)
-                        {
-                            memcpy(output, input, pre_len);
-                            cursor_out += (pre_len);
-                        }
-                        *cursor_out++ = '\n';
-                        cursor_in += 1;
-                        after_last_non_space = cursor_out;
-                        col = 0;
-                    }
-                    else
-                    {
-                        /* that should not happen */
-                        assert(0);
-                    }
-                    /* clean-up the rest of the file as-needed*/
-                    while(cursor_in < end)
-                    {
-                        /* short-cut the most common case */
-                        if(*cursor_in > 32)
-                        {
-                            *cursor_out++ = *cursor_in++;
-                            col += 1;
-                            after_last_non_space = cursor_out;
-                        }
-                        else if(*cursor_in == '\n')
-                        {
-                            if(cursor_out != after_last_non_space)
+                            pre_len = (int)(cursor_in - input);
+                            if(pre_len > 1)
                             {
-                                *after_last_non_space++ = *cursor_in++;
-                                cursor_out = after_last_non_space;
+                                memcpy(output, input, pre_len - 1);
+                                cursor_out += (pre_len - 1);
                             }
-                            else
-                            {
-                                *cursor_out++ = *cursor_in++;
-                                after_last_non_space = cursor_out;
-                            }
-                            col = 0;
-                        }
-                        else if(*cursor_in == ' ')
-                        {
-                            *cursor_out++ = *cursor_in++;
-                            col += 1;
-                        }
-                        else if(*cursor_in == '\t')
-                        {
+                            /* from now on after_last_non_space point into the output buffer *
+                             * technicaly it always have, but up to now the output buffer was
+                             * also the input buffer */
+                            pre_len = (int)(after_last_non_space - input);
+                            after_last_non_space = output;
+                            after_last_non_space += pre_len;
+
+                            /* expend the tab to the correct number of spaces */
                             pre_len = (~col & 3);
-                            /* we cast to unsigned char to help to compiler optimize the case jump table */
                             switch( (unsigned char)pre_len)
                             {
                             case 3:
@@ -280,54 +260,118 @@ struct item* item;
                             col += pre_len + 1;
                             cursor_in += 1;
                         }
+                        else if(*cursor_in == '\n')
+                        {
+                            pre_len = (int)(after_last_non_space - input);
+                            if(pre_len > 0)
+                            {
+                                memcpy(output, input, pre_len);
+                                cursor_out += (pre_len);
+                            }
+                            *cursor_out++ = '\n';
+                            cursor_in += 1;
+                            after_last_non_space = cursor_out;
+                            col = 0;
+                        }
                         else
                         {
-                            *cursor_out++ = *cursor_in++;
-                            col += 1;
-                            after_last_non_space = cursor_out;
+                            /* that should not happen */
+                            abort();
                         }
-                    }
-                    if(after_last_non_space != cursor_out)
-                    {
-                        /* we have space on the last line without \n at the end */
-                        *after_last_non_space++ = '\n';
-                        cursor_out = after_last_non_space;
-                    }
-                    if(cursor_out == output)
-                    {
-                        /* empty_file */
-                        ftruncate(fd, 0);
+                        /* clean-up the rest of the file as-needed*/
+                        while(cursor_in < end)
+                        {
+                            /* short-cut the most common case */
+                            if(*cursor_in > 32)
+                            {
+                                *cursor_out++ = *cursor_in++;
+                                col += 1;
+                                after_last_non_space = cursor_out;
+                            }
+                            else if(*cursor_in == '\n')
+                            {
+                                if(cursor_out != after_last_non_space)
+                                {
+                                    *after_last_non_space++ = *cursor_in++;
+                                    cursor_out = after_last_non_space;
+                                }
+                                else
+                                {
+                                    *cursor_out++ = *cursor_in++;
+                                    after_last_non_space = cursor_out;
+                                }
+                                col = 0;
+                            }
+                            else if(*cursor_in == ' ')
+                            {
+                                *cursor_out++ = *cursor_in++;
+                                col += 1;
+                            }
+                            else if(*cursor_in == '\t')
+                            {
+                                pre_len = (~col & 3);
+                                /* we cast to unsigned char to help to compiler optimize the case jump table */
+                                switch( (unsigned char)pre_len)
+                                {
+                                case 3:
+                                    *cursor_out++ = ' ';
+                                case 2:
+                                    *cursor_out++ = ' ';
+                                case 1:
+                                    *cursor_out++ = ' ';
+                                default:
+                                    *cursor_out++ = ' ';
+                                }
+                                col += pre_len + 1;
+                                cursor_in += 1;
+                            }
+                            else
+                            {
+                                *cursor_out++ = *cursor_in++;
+                                col += 1;
+                                after_last_non_space = cursor_out;
+                            }
+                        }
+                        if(after_last_non_space != cursor_out)
+                        {
+                            /* we have space on the last line without \n at the end */
+                            *after_last_non_space++ = '\n';
+                            cursor_out = after_last_non_space;
+                        }
+                        fd = open(filename, O_WRONLY | O_TRUNC);
+                        if(fd != -1)
+                        {
+                            if(cursor_out == output)
+                            {
+                                /* empty_file */
+                            }
+                            else
+                            {
+                            ssize_t written;
+
+                                written = write(fd, output, (size_t)(cursor_out - output));
+                                if(written != (ssize_t)(cursor_out - output))
+                                {
+                                    rc = 1;
+                                }
+                            }
+                            close(fd);
+                        }
+                        else
+                        {
+                            fprintf(stderr, "*** Error re-opening %s for write\n", filename);
+                        }
                     }
                     else
                     {
-                    ssize_t written;
-
-                        written = write(fd, output, (size_t)(cursor_out - output));
-                        if(written != (ssize_t)(cursor_out - output))
-                        {
-                            assert(0);
-                        }
-                        ftruncate(fd, written);
+                        abort();
                     }
-                    close(fd);
-                    free(output);
                 }
-                else
-                {
-                    assert(0);
-                }
+                munmap(input, size);
             }
-            else
-            {
-                close(fd);
-            }
-            munmap(input, size);
-        }
-        else
-        {
-            close(fd);
         }
     }
+
     return NULL;
 }
 
@@ -349,60 +393,34 @@ struct item* item;
     return item;
 }
 
-static int _clean_one_file(struct context* context, char* filename)
+static char* _consume_input(struct context* context, char* fn_cursor, char* fn_tail)
 {
-int rc = 0;
-int fd;
-int col;
-int rewrite = 0;
+char* filename;
 struct item* item;
-char* input;
-char* end;
-char* cursor_in;
-char* after_last_non_space;
-char* cursor_out = NULL;
-char* output = NULL;
-off_t size = 0;
-struct stat s;
 
-    /* look for the extension, ignore pure dot filename */
-    cursor_in = filename + strlen(filename);
-    while(cursor_in > filename && *cursor_in != '.')
+    while(fn_cursor <= fn_tail)
     {
-        cursor_in -= 1;
-    }
-    if(cursor_in > filename)
-    {
-        /* check that the extention is candidat for filtering */
-        if(_is_filter_candidat(cursor_in + 1))
+        filename = fn_cursor;
+        while(*fn_cursor && *fn_cursor != '\n')
         {
-            if(stat(filename, &s))
-            {
-                return 1;
-            }
-            /* we filter only non-zero sized regular file */
-            if(S_ISREG(s.st_mode))
-            {
-                size = s.st_size;
-            }
-            if(size)
-            {
-                fd = open(filename, O_RDWR);
-                if(fd != -1)
-                {
-                    item = _get_item(context);
-                    item->fd = fd;
-                    item->size = size;
-                    _post_item(context, item);
-                }
-                else
-                {
-                    rc = 1;
-                }
-            }
+            fn_cursor += 1;
+        }
+        if(*fn_cursor =='\n')
+        {
+            *fn_cursor = 0;
+            fn_cursor += 1;
+            item = _get_item(context);
+            item->filename = filename;
+//            fprintf(stderr, "post %s\n", filename);
+            _post_item(context, item);
+        }
+        else
+        {
+            fn_cursor = filename;
+            break;
         }
     }
-    return rc;
+    return fn_cursor;
 }
 
 static void _usage(void)
@@ -421,6 +439,13 @@ pthread_t* workers_tid;
 char filename[2048];
 pthread_mutexattr_t mutex_attribute;
 pthread_condattr_t cond_attribute;
+char* fn_buffer;
+#define FN_BUFFER_SIZE (2*1024*1024)
+char* fn_cursor;
+char* fn_head;
+char* fn_tail;
+int fn_used = 0;
+int fn_read = 0;
 
     memset(&context, 0, sizeof(struct context));
     nb_workers = sysconf(_SC_NPROCESSORS_ONLN);
@@ -472,21 +497,38 @@ pthread_condattr_t cond_attribute;
         pthread_create(&(workers_tid[i]), NULL, (void* (*)(void*))_worker_proc, &context);
     }
 
-    /* yes this is unsafe since we 'hope' that no line will be more than 2048,
-     * but then we don't have to deal with cleaning \n... so that will do
-     * for reasonable use (and this is a lmited-use tool, not a 'product')
-    */
-    while(fgets(filename, 2048, stdin))
-    {
-    int len = strlen(filename);
+    fn_buffer = malloc(FN_BUFFER_SIZE);
+    fn_tail = fn_cursor = fn_buffer;
 
-        if(len)
+    for(;;)
+    {
+        fn_read = read(STDIN_FILENO, fn_buffer + fn_used, FN_BUFFER_SIZE - fn_used);
+        if(fn_read > 0)
         {
-            if(filename[len-1] == '\n')
+            fn_used += fn_read;
+            fn_tail += fn_read;
+            *fn_tail = 0;
+            fn_cursor = _consume_input(&context, fn_cursor, fn_tail);
+            if(fn_used == FN_BUFFER_SIZE)
             {
-                filename[len-1] = 0;
+                rc = 1;
+                break;
             }
-            _clean_one_file(&context, filename);
+        }
+        else
+        {
+            if(fn_read == 0)
+            {
+                break;
+            }
+            else
+            {
+                if(errno != EINTR)
+                {
+                    rc = -1;
+                    break;
+                }
+            }
         }
     }
     context.done = 1;
