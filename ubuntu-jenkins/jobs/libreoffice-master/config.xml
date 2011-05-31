@@ -20,14 +20,15 @@ git pull
 cat ${HOME}/.jenkins/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
 echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
 echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
+echo &quot;export CCACHE_BASEDIR=\&quot;${WORKSPACE}\&quot;&quot; &gt;&gt; LinuxX86-64Env.Set.sh
 ./download
 ./g stash save
 ./g pull -r
 ./g -f stash pop
 ./g branch -v
-. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $SOLARSRC/instsetoo_native &amp;&amp; $SOLARENV/bin/build.pl --all -P4 -- -P4
-. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $SOLARSRC/smoketestoo_native &amp;&amp; dmake localinstall
-. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $WORKSPACE &amp;&amp; $SOLARENV/bin/subsequenttests -j5 -k
+#./g --set-push-user YOURUSERNAMEHERE
+. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; make dev-install
+. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; make subsequentcheck -j5 -k -f $WORKSPACE/GNUmakefile.mk
 </command>
     </hudson.tasks.Shell>
   </builders>
