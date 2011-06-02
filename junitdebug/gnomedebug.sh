@@ -29,6 +29,15 @@
 #
 
 GDBCOMMANDFILE=`mktemp`
+# in theory this should work too and be better, because it identifies 'our'
+# soffice instance, and would thus allow us to use this with multiple soffice
+# instances in parallel.  However ooosplash.bin is too unstable here still and
+# crashes too often, confusing the hierachy of processes (by reparenting
+# soffice.bin to init) so we will for now take any soffice.bin instance we can
+# find.
+#OOSPLASHPID=`ps -o pid= --ppid $PPID -C oosplash.bin`
+#SOFFICEPID=`ps -o pid= --ppid $OOSPLASHPID -C soffice.bin`
+
 echo "at `ps -o pid= -C soffice.bin`" > $GDBCOMMANDFILE
 echo "c" >> $GDBCOMMANDFILE
 gnome-terminal --command "gdb -command=\"$GDBCOMMANDFILE\""
