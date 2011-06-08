@@ -377,7 +377,6 @@ struct stat s;
 
 static void* _worker_proc(struct context* context)
 {
-int rc = 0;
 char* output = NULL;
 int allocated_output = 1024*1024;
 struct item* item;
@@ -457,7 +456,6 @@ int rc = 0;
 int i;
 struct context context;
 pthread_t* workers_tid;
-char filename[2048];
 pthread_mutexattr_t mutex_attribute;
 pthread_condattr_t cond_attribute;
 char* fn_buffer;
@@ -472,7 +470,6 @@ char* fn_head;
 char* fn_tail;
 int fn_used = 0;
 int fn_read = 0;
-char* output = NULL;
 
     memset(&context, 0, sizeof(struct context));
     context.nb_workers = sysconf(_SC_NPROCESSORS_ONLN);
