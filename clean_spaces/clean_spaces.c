@@ -228,8 +228,8 @@ struct stat s;
                         pre_len = (int)(cursor_in - input);
                         if(pre_len > 1)
                         {
-                            memcpy(*output, input, pre_len - 1);
-                            cursor_out += (pre_len - 1);
+                            memcpy(*output, input, pre_len);
+                            cursor_out += pre_len;
                         }
                         /* from now on after_last_non_space point into the output buffer *
                          * technicaly it always have, but up to now the output buffer was
