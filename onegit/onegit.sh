@@ -245,7 +245,10 @@ process_libs-extern-sys()
     pushd libs-extern-sys-dict-work > /dev/null || die "Error cd-ing to libs-extern-sys-dict-work"
     log "filter-out everything but dictionaries"
 
-    everything_but="$(ls -1 | grep -v "dictionaries") bitstream-vera-fonts"
+    everything_but="bitstream-vera-fonts"
+    for f in $(ls -1 | grep -v "dictionaries") ; do
+	everything_but="$everything_but $f"
+    done
     cmd="git rm -q -r --cached --ignore-unmatch ${everything_but?}"
     git filter-branch --prune-empty --tag-name-filter 'xargs -I{} echo "dictionaries_{}"' --index-filter "$cmd" -- --all && ( git tag | grep -v "dictionaries_" | xargs -n 1 git tag -d > /dev/null ) || die "Error extracting dictionaries out of libs-extern-sys"
     git filter-branch -f --prune-empty --tag-name-filter cat --tree-filter 'git ls-files | clean_spaces -p 1' -- --all || die "Error cleaning dictionaries"
@@ -401,6 +404,7 @@ process_batch4()
     batch="[batch4]"
 
     process_generic_mp libs-core
+# alternate for debugging to avoid re-processing libs-core
 #    sleep 5000
 #    cp -r /fast/saved/libs-core /fast/gittemp/libs-core
     merge_generic libs-core
