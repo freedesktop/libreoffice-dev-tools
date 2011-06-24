@@ -427,12 +427,10 @@ apply_patches()
 while getopts aC:e:g:hn:s:t: opt ; do
     case "$opt" in
 	a) aply_patches; exit ;;
-	e) END_PHASE="$OPTARG" ;;
         C) GIT_BASE="$OPTARG" ;;
         h) usage; exit ;;
         g) REMOTE_GIT_BASE="$OPTARG" ;;
         n) GIT_NAME="$OPTARG" ;;
-	s) START_PHASE="$OPTARG" ;;
 	t) GIT_TEMP="$OPTARG" ;;
     esac
 done
@@ -444,64 +442,27 @@ if [ ! -d ${GIT_BASE?} ] ; then
 fi
 cat /dev/null > ${GIT_BASE?}/onegit.msgs
 
-if [ -z ${START_PHASE} ] ; then
-    START_PHASE=0
+
+# make sure we have a location for the source repos
+if [ -z "$REMOTE_GIT_BASE" ] ; then
+    die "Missing -g arguement. use -h for help"
+fi
+if [ -d "${REMOTE_GIT_BASE?}" ] ; then
+    REMOTE_GIT_AUX_BASE="${REMOTE_GIT_BASE?}/clone"
 else
-    case "$START_PHASE" in
-	init) START_PHASE=0 ;;
-	process) START_PHASE=1 ;;
-	patch) START_PHASE=2 ;;
-	tag)  START_PHASE=3 ;;
-	*) die "Invalid -s arguemtn, expecting init, process, patch or tag" ;;
-    esac
+    REMOTE_GIT_AUX_BASE="${REMOTE_GIT_BASE?}"
 fi
 
-if [ -z ${END_PHASE} ] ; then
-    END_PHASE=3
-else
-    case "$END_PHASE" in
-	init) END_PHASE=0 ;;
-	process) END_PHASE=1 ;;
-	patch) END_PHASE=2 ;;
-	tag)  END_PHASE=3 ;;
-	*) die "Invalid -e arguement, expecting init, process, patch or tag" ;;
-    esac
+# preferably our target core repo does not exist already
+if [ -e "${GIT_BASE?}/${GIT_NAME?}" ] ; then
+    die "$GIT_BASE/$GIT_NAME already exist, cannot create a git repo there"
 fi
-
-if [ $START_PHASE -gt $END_PHASE ] ; then
-    die "-s and -e do not have compatible value"
-fi
-
-if [ $START_PHASE -lt 2 ] ; then
-    # make sure we have a location for the source repos
-    if [ -z "$REMOTE_GIT_BASE" ] ; then
-	die "Missing -g arguement. use -h for help"
-    fi
-    if [ -d "${REMOTE_GIT_BASE?}" ] ; then
-	REMOTE_GIT_AUX_BASE="${REMOTE_GIT_BASE?}/clone"
-    else
-	REMOTE_GIT_AUX_BASE="${REMOTE_GIT_BASE?}"
-    fi
-fi
-
-if [ $START_PHASE -lt 2 ] ; then
-
-    # preferably our target core repo does not exist already
-    if [ -e "${GIT_BASE?}/${GIT_NAME?}" ] ; then
-	die "$GIT_BASE/$GIT_NAME already exist, cannot create a git repo there"
-    fi
 
     #check that clean_spaces is built
-    if [ ! -x "${bin_dir?}/../clean_spaces/clean_spaces" ] ; then
-	die "${bin_dir?}/../clean_spaces/clean_spaces need to be build"
-    else
-	export PATH="$PATH:${bin_dir?}/../clean_spaces/"
-    fi
+if [ ! -x "${bin_dir?}/../clean_spaces/clean_spaces" ] ; then
+    die "${bin_dir?}/../clean_spaces/clean_spaces need to be build"
 else
-    # if we start after process the target repos is supposed to be here
-    if [ ! -e "${GIT_BASE?}/${GIT_NAME?}" ] ; then
-	die "$GIT_BASE/$GIT_NAME does not exist, cannot skip the process phase"
-    fi
+    export PATH="$PATH:${bin_dir?}/../clean_spaces/"
 fi
 
 if [ ! -d "${GIT_TEMP?}" ] ; then
@@ -509,59 +470,55 @@ if [ ! -d "${GIT_TEMP?}" ] ; then
     mkdir "${GIT_TEMP?}" || die "Error creating directory ${GIT_TEMP?}"
 fi
 
-if [ $START_PHASE -le 1 -a $END_PHASE -ge 1  ] ; then
+log "Start OneGit conversion"
 
-    log "Start OneGit conversion"
+(process_batch4)&
+p_batch4=$!
 
-    (process_batch4)&
-    p_batch4=$!
+(process_batch1)&
+p_batch1=$!
 
-    (process_batch1)&
-    p_batch1=$!
+(process_batch2)&
+p_batch2=$!
 
-    (process_batch2)&
-    p_batch2=$!
+(process_batch3)&
+p_batch3=$!
 
-    (process_batch3)&
-    p_batch3=$!
+result=0
+wait $p_batch1 || result=1
+wait $p_batch2 || result=1
+wait $p_batch3 || result=1
+wait $p_batch4 || result=1
 
-    result=0
-    wait $p_batch1 || result=1
-    wait $p_batch2 || result=1
-    wait $p_batch3 || result=1
-    wait $p_batch4 || result=1
-
-    if [ $result -ne 0 ] ; then
-	exit $result
-    fi
+if [ $result -ne 0 ] ; then
+    exit $result
 fi
 
-if [ $START_PHASE -le 2 -a $END_PHASE -ge 2  ] ; then
-    log "Apply patches"
-    apply_patches
-fi
+log "Tag new repos"
 
-if [ $START_PHASE -le 3 -a $END_PHASE -ge 3  ] ; then
+pushd ${GIT_BASE?}/${GIT_NAME?} > /dev/null || die "Error cd-int to ${GIT_BASE}/${GIT_NAME} to tag"
+git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on core"
 
-    log "Tag new repos"
+pushd clone/translations > /dev/null
+git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on translations"
+popd > /dev/null # clone/translation
 
-    pushd ${GIT_BASE?}/${GIT_NAME?} > /dev/null || die "Error cd-int to ${GIT_BASE}/${GIT_NAME} to tag"
-    git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on core"
+pushd clone/binfilter > /dev/null
+git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on binfilter"
+popd > /dev/null # clone/binfilter
 
-    pushd clone/translations > /dev/null
-    git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on translations"
-    popd > /dev/null # clone/translation
+pushd clone/help > /dev/null
+git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on help"
+popd > /dev/null # clone/help
 
-    pushd clone/binfilter > /dev/null
-    git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on binfilter"
-    popd > /dev/null # clone/binfilter
+pushd clone/dictionaries > /dev/null
+git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on help"
+popd > /dev/null # clone/dictionaries
 
-    pushd clone/help > /dev/null
-    git tag -m "OneGit script applied" MELD_LIBREOFFICE_REPOS || die "Error applying tag on help"
-    popd > /dev/null # clone/help
+log "Apply patches"
+apply_patches
 
-    popd > /dev/null # GIT_BASE/GIT_NAME
+popd > /dev/null # GIT_BASE/GIT_NAME
 
-fi
 log "OneGit conversion All Done."
 
