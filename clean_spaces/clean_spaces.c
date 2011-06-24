@@ -240,17 +240,8 @@ struct stat s;
 
                         /* expend the tab to the correct number of spaces */
                         pre_len = (~col & 3);
-                        switch( (unsigned char)pre_len)
-                        {
-                        case 3:
-                            *cursor_out++ = ' ';
-                        case 2:
-                            *cursor_out++ = ' ';
-                        case 1:
-                            *cursor_out++ = ' ';
-                        default:
-                            *cursor_out++ = ' ';
-                        }
+                        memset(cursor_out, ' ', 4);
+                        cursor_out += pre_len + 1;
                         col += pre_len + 1;
                         cursor_in += 1;
                     }
@@ -304,18 +295,8 @@ struct stat s;
                         else if(*cursor_in == '\t')
                         {
                             pre_len = (~col & 3);
-                            /* we cast to unsigned char to help to compiler optimize the case jump table */
-                            switch( (unsigned char)pre_len)
-                            {
-                            case 3:
-                                *cursor_out++ = ' ';
-                            case 2:
-                                *cursor_out++ = ' ';
-                            case 1:
-                                *cursor_out++ = ' ';
-                            default:
-                                *cursor_out++ = ' ';
-                            }
+                            memset(cursor_out, ' ', 4);
+                            cursor_out += pre_len + 1;
                             col += pre_len + 1;
                             cursor_in += 1;
                         }
