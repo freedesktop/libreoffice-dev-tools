@@ -270,25 +270,6 @@ process_libs-extern-sys()
 merge_libs-extern-sys()
 {
     merge_generic libs-extern-sys
-
-    # work on still external repos
-    pushd ${GIT_BASE?}/${GIT_NAME?}/clone > /dev/null || die "Error cd-ing to ${GIT_BASE}/${GIT_NAME}/clone from $(pwd)"
-
-    log "clone transation"
-    git clone "${REMOTE_GIT_AUX_BASE?}/translations" translations || die "Error cloning ${REMOTE_GIT_AUX_BASE?}/translations"
-    pushd translations > /dev/null || die "Error cd-ing to translations"
-
-    log "merge dictionaries into translation"
-    # merge the extracted 'dictionaries' into the translations repo
-    git remote add dictionaries "${GIT_TEMP?}/dictionaries" || die "Error adding remote ${GIT_TEMP?}/dictionaries"
-    git fetch  dictionaries || die "Error fetching dictionaries"
-#    git fetch -t dictionaries
-    git merge -Xours dictionaries/master || die "Error merging dictionaries"
-    git remote rm dictionaries || die "Error removing remote dictionaries"
-    popd > /dev/null # translation
-
-    popd > /dev/null # GIT_BASE/GIT_NAME/clone
-    log "Done merging for libs-extern-sys and related"
 }
 
 merge_bootstrap()
@@ -377,14 +358,25 @@ process_batch3()
     process_generic extras
     merge_generic extras
 
-    # lib-extern-sys deal also with translation by virtue of
-    # adding dictionaries to it
     process_libs-extern-sys
     merge_libs-extern-sys
 
+    # deal with still separate repos, either purely untouched like help or translations
+    # or newly splitted like dictionnaries (note binfilter is dealt with in merge_filters
     pushd ${GIT_BASE?}/${GIT_NAME?}/clone > /dev/null || die "Error cd.ing to ${GIT_BASE}/${GIT_NAME}/clone from $(pwd)"
+
     log "clone help"
     git clone "${REMOTE_GIT_AUX_BASE?}/help" help || die "Error cloning ${REMOTE_GIT_AUX_BASE?}/help"
+    log "Done cloning help"
+
+    log "clone transations"
+    git clone "${REMOTE_GIT_AUX_BASE?}/translations" translations || die "Error cloning ${REMOTE_GIT_AUX_BASE?}/translations"
+    log "Done cloning translations"
+
+    log "clone dictionaries"
+    git clone "${GIT_TEMP?}/dictionaries" dictionaries || die "Error cloning ${GIT_TEMP?}/dictionaries"
+    log "Done cloning dictionnaries"
+
     popd > /dev/null # GIT_BASE/GIT_NAME/clone
 
     process_libs-extern
