@@ -26,6 +26,7 @@ usage()
 cat <<EOF
 Usage $0 [options] -g <git_base_url>
 Options:
+   -a       Just apply the patches (this need to be after -C and -n if they are specified)
    -C       base directory where to create the onegit repo. the default
             is the current working directory, i.e '.'
    -g       base part of the url to access the libreoffice repos
