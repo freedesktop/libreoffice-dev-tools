@@ -135,6 +135,7 @@ process_bootstrap()
     fi
     log "processing for bootstrap"
     pushd bootstrap > /dev/null || die "Error cd-ing to bootstrap"
+    for oldtag in $(git tag) ; do git tag "bootstrap_${oldtag}" "$oldtag" ; git tag -d "${oldtag}" > /dev/null ; done
     git filter-branch --prune-empty --tag-name-filter cat --tree-filter 'git ls-files | clean_spaces -p 1' -- --all || die "Error filtering bootstrap"
     log "git gc of bootstrap"
     git gc --prune=now --aggressive || die "Error during git-gc of bootstrap"
