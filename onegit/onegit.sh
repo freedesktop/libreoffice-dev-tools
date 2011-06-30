@@ -437,6 +437,9 @@ process_batch1()
     process_light artwork
     merge_generic artwork
 
+    process_generic extensions --buffer-size 80
+    merge_generic extensions
+
     # deal with still separate repos, purely untouched like help or translations
     pushd ${GIT_BASE?}/${GIT_NAME?}/clone > /dev/null || die "Error cd.ing to ${GIT_BASE}/${GIT_NAME}/clone from $(pwd)"
     log "clone help"
@@ -514,10 +517,6 @@ process_batch4()
     log "Done cloning dictionnaries"
 
     popd > /dev/null # GIT_BASE/GIT_NAME/clone
-
-
-    process_generic extensions --buffer-size 80
-    merge_generic extensions
 
     log "Done processing batch4"
 }
