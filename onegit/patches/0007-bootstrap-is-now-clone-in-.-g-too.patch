@@ -1,0 +1,43 @@
+From f7d7345a4a8915c70f899198b35eeb464cfa1ea3 Mon Sep 17 00:00:00 2001
+From: Norbert Thiebaud <nthiebaud@gmail.com>
+Date: Thu, 23 Jun 2011 23:03:15 -0500
+Subject: [PATCH 7/9] bootstrap is now clone in ./g too
+
+---
+ g |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/g b/g
+index bf6d887..0e4165e 100755
+--- a/g
++++ b/g
+@@ -145,7 +145,7 @@ while shift ; do
+ done
+ 
+ # do it!
+-DIRS="bootstrap $(cd $CLONEDIR ; ls)"
++DIRS="core $(cd $CLONEDIR ; ls)"
+ if [ "$COMMAND" = "clone" ] ; then
+     DIRS=$(cat "$RAWBUILDDIR/bin/repo-list")
+     # update hooks in the main repo too
+@@ -155,7 +155,7 @@ for REPO in $DIRS ; do
+     DIR="$CLONEDIR/$REPO"
+     NAME="$REPO"
+     HOOKDIR="../../../../git-hooks"
+-    if [ "$REPO" = "bootstrap" ] ; then
++    if [ "$REPO" = "core" ] ; then
+         DIR="$RAWBUILDDIR"
+         NAME="main repo"
+         HOOKDIR="../../git-hooks"
+@@ -228,7 +228,7 @@ for REPO in $DIRS ; do
+                     ;;
+                 clone)
+                     EXTRA="$(git config remote.origin.url)"
+-		    EXTRA=${EXTRA/bootstrap/${REPO}}
++		    EXTRA=${EXTRA/core/${REPO}}
+                     ;;
+             esac
+ 
+-- 
+1.7.3.4
+

@@ -1,0 +1,46 @@
+From 4e9625899bc21814ec3542034e8ee74749b1d4fe Mon Sep 17 00:00:00 2001
+From: Norbert Thiebaud <nthiebaud@gmail.com>
+Date: Thu, 30 Jun 2011 14:17:50 -0500
+Subject: [PATCH 9/9] do not use /clone in path fro test in sw
+
+---
+ sw/qa/core/filters-test.cxx |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/sw/qa/core/filters-test.cxx b/sw/qa/core/filters-test.cxx
+index 5153aad..b2e93e0 100644
+--- a/sw/qa/core/filters-test.cxx
++++ b/sw/qa/core/filters-test.cxx
+@@ -181,21 +181,21 @@ bool FiltersTest::testLoad(const rtl::OUString &rFilter,
+ 
+ void FiltersTest::testCVEs()
+ {
+-    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Staroffice XML (Writer)")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/xml/pass")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CXML")), true);
++    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Staroffice XML (Writer)")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/xml/pass")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CXML")), true);
+ 
+-    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Staroffice XML (Writer)")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/xml/fail")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CXML")), false);
++    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Staroffice XML (Writer)")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/xml/fail")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CXML")), false);
+ 
+-    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Rich Text Format")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/rtf/pass")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("RTF")), true);
++    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Rich Text Format")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/rtf/pass")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("RTF")), true);
+ 
+-    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Rich Text Format")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/rtf/fail")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("RTF")), false);
++    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Rich Text Format")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/rtf/fail")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("RTF")), false);
+ 
+-    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Rich Text Format")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/rtf/indeterminate")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("RTF")), indeterminate);
++    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Rich Text Format")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/rtf/indeterminate")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("RTF")), indeterminate);
+ 
+-    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("MS Word 97")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/ww8/pass")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CWW8")), true);
++    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("MS Word 97")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/ww8/pass")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CWW8")), true);
+ 
+-    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("MS Word 97")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/ww8/fail")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CWW8")), false);
++    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("MS Word 97")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/ww8/fail")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CWW8")), false);
+ 
+-    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("MS Word 97")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/ww8/indeterminate")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CWW8")), indeterminate);
++    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("MS Word 97")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/ww8/indeterminate")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CWW8")), indeterminate);
+ }
+ 
+ FiltersTest::FiltersTest()
+-- 
+1.7.3.4
+

@@ -1,0 +1,27 @@
+From 17e92efafe95fd933d3eb3d4f9c9fbde9985acc1 Mon Sep 17 00:00:00 2001
+From: Norbert Thiebaud <nthiebaud@gmail.com>
+Date: Thu, 30 Jun 2011 14:17:30 -0500
+Subject: [PATCH 8/9] do not use /clone in path for test in hwpfilter
+
+---
+ hwpfilter/qa/cppunit/test_hwpfilter.cxx |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hwpfilter/qa/cppunit/test_hwpfilter.cxx b/hwpfilter/qa/cppunit/test_hwpfilter.cxx
+index 56c887f..460db0f 100644
+--- a/hwpfilter/qa/cppunit/test_hwpfilter.cxx
++++ b/hwpfilter/qa/cppunit/test_hwpfilter.cxx
+@@ -157,8 +157,8 @@ namespace
+ 
+     void HwpFilterTest::test()
+     {
+-        recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/filters/hwpfilter/qa/cppunit/data/pass")), true);
+-        recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/filters/hwpfilter/qa/cppunit/data/fail/")), false);
++        recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/hwpfilter/qa/cppunit/data/pass")), true);
++        recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/hwpfilter/qa/cppunit/data/fail/")), false);
+ 
+         printf("HwpFilter: tested %d files\n", m_nLoadedDocs);
+     }
+-- 
+1.7.3.4
+
