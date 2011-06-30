@@ -23,9 +23,19 @@ static struct buffer
     int nb_cleaned;
     int nb_not_cleaned;
     int nb_tag;
+    char* exclude_suffix;
+    int suffix_len;
+    char* exclude_module;
+    int module_len;
+    char* filter_module;
+    char* module;
+    int alternate_commit;
+
 } g_buffer;
 
-#define kBUFFER_SIZE (10*1024*1024)
+static char* g_prefix = "";
+
+#define kBUFFER_SIZE (30*1024*1024)
 
 static void _realign_buffer(struct buffer* buffer)
 {
@@ -34,7 +44,7 @@ int used;
 char* d;
 char* s;
 
-    fprintf(stderr, "commit:%d tag:%d blob:%d cleaned:%d not_cleaned:%d\n",
+    fprintf(stderr, "%s commit:%d tag:%d blob:%d cleaned:%d not_cleaned:%d\n", g_prefix,
             buffer->nb_commit, buffer->nb_tag, buffer->nb_blob, buffer->nb_cleaned, buffer->nb_not_cleaned);
 //    fprintf(stderr, "-> realligned buffer: datqa:%p head:%p, cursor:%p tail:%p free:%d nb_commit=%d\n",
 //            buffer->data, buffer->head, buffer->cursor, buffer->tail, buffer->free, buffer->nb_commit);
@@ -43,22 +53,25 @@ char* s;
         offset = buffer->cursor - buffer->head;
         used = (buffer->tail - buffer->head);
 //        fprintf(stderr, "realligned buffer: free=%d offset=%d used=%d\n", buffer->free, offset, used);
+//        fprintf(stderr, "partial:|%.*s|\n", offset , buffer->head);
         d = buffer->data;
         s = buffer->head;
-        while(s < buffer->tail)
+        while(s <= buffer->tail)
         {
             *d++ = *s++;
         }
+        *d = 0;
         buffer->head = buffer->data;
         buffer->cursor = buffer->head + offset;
         buffer->tail = buffer->head + used;
-        buffer->free = kBUFFER_SIZE - used;
+        buffer->free = buffer->allocated - used;
+        assert(buffer->free > 4096);
     }
 //    fprintf(stderr, "<- realligned buffer: datqa:%p head:%p, cursor:%p tail:%p free=%d\n",
 //            buffer->data, buffer->head, buffer->cursor, buffer->tail, buffer->free);
 }
 
-static void _read_more(struct buffer* buffer)
+static int _read_more(struct buffer* buffer)
 {
 int received;
 
@@ -67,6 +80,12 @@ int received;
         _realign_buffer(buffer);
     }
   Retry:
+    if(buffer->free == 0)
+    {
+        fprintf(stderr, "%s read_more error free=0: data:%p head:%p, cursor:%p tail:%p free:%d nb_commit=%d\n", g_prefix,
+                buffer->data, buffer->head, buffer->cursor, buffer->tail, buffer->free, buffer->nb_commit);
+        abort();
+    }
     assert(buffer->free > 0);
     received = read(STDIN_FILENO, buffer->tail, buffer->free);
     if(received > 0)
@@ -78,6 +97,7 @@ int received;
     {
         if(received == 0)
         {
+            fprintf(stderr, "_read_more premature EOF\n");
             exit(100);
         }
         else
@@ -128,7 +148,7 @@ static void _write_in_full(char* data, int len)
             {
                 goto Retry;
             }
-            fprintf(stderr, "_writ_in_full error:%d\n", errno);
+            fprintf(stderr, "_write_in_full error:%d\n", errno);
             exit(1);
         }
     }
@@ -137,6 +157,7 @@ static void _write_in_full(char* data, int len)
 
 static void _copy_line(struct buffer* buffer)
 {
+int rc = 0;
 int pos = 0;
 int space_count = 0;
 int id_pos = 0;
@@ -165,6 +186,7 @@ int id_end_pos = -1;
             _read_more(buffer);
         }
     }
+//    fprintf(stderr, "copy_line(id_pos:%d):|%.*s|\n", id_pos, pos+1, buffer->cursor);
     if(id_pos)
     {
         if(id_end_pos == -1)
@@ -184,11 +206,6 @@ int id_end_pos = -1;
         _write_in_full(buffer->cursor, pos + 1);
     }
     buffer->cursor += pos + 1;
-    if(buffer->cursor >= buffer->tail)
-    {
-        _read_more(buffer);
-    }
-
 }
 
 static void _copy_data(struct buffer* buffer)
@@ -213,6 +230,7 @@ char* cursor;
         data_len += *cursor - '0';
         cursor += 1;
     }
+//    fprintf(stderr, "data %d\n", data_len);
     _write_in_full(buffer->cursor, pos + 1);
     buffer->cursor += pos + 1;
     if(buffer->cursor + (data_len) >= buffer->tail)
@@ -425,6 +443,121 @@ char temp[10];
     return 0;
 }
 
+static int _is_kept(struct buffer* buffer, char* name, int len)
+{
+int i;
+int keep = 1;
+int match;
+
+    if(buffer->module)
+    {
+        match = 1;
+        for(i = 0; i < len && i < buffer->module_len; i++)
+        {
+            if(name[i] != buffer->module[i])
+            {
+                match = 0;
+                break;
+            }
+        }
+        if(match && (i >= len || name[i] != '/'))
+        {
+            match = 0;
+        }
+        if(buffer->exclude_module)
+        {
+            keep = !match;
+        }
+        else
+        {
+            keep = match;
+        }
+    }
+    if(keep && buffer->exclude_suffix)
+    {
+        if(len > buffer->suffix_len)
+        {
+            if(!memcmp(name + (len - buffer->suffix_len), buffer->exclude_suffix, buffer->suffix_len))
+            {
+                keep = 0;
+                fprintf(stderr, "exluded %.*s\n", len, name);
+            }
+        }
+    }
+
+    return keep;
+}
+
+static void _filter_commit_action(struct buffer* buffer)
+{
+    int i = 0;
+    int id_pos = -1;
+    int mode_pos = -1;
+    int path_pos = -1;
+
+    while(buffer->cursor[i] != '\n')
+    {
+        if(buffer->cursor[i] == ' ')
+        {
+            if(mode_pos < 0 )
+            {
+                mode_pos = i + 1;
+            }
+            else if(id_pos < 0)
+            {
+                id_pos = i + 1;
+            }
+            else if(path_pos < 0)
+            {
+                path_pos = i + 1;
+            }
+        }
+        i += 1;
+        if(buffer->cursor + i >= buffer->tail)
+        {
+            _read_more(buffer);
+        }
+    }
+//    fprintf(stderr, "commit_action (id_pos=%d path_pos=%d):|%.*s|\n",id_pos, path_pos, i + 1, buffer->cursor);
+    if(_is_kept(buffer, buffer->cursor + path_pos, i - path_pos))
+    {
+        _write_in_full(buffer->cursor, path_pos - 1);
+        if(_is_filter_candidat(buffer->cursor + path_pos, i - path_pos))
+        {
+            _write_in_full("1", 1);
+            buffer->nb_cleaned += 1;
+        }
+        else
+        {
+            _write_in_full("0", 1);
+            buffer->nb_not_cleaned += 1;
+        }
+        _write_in_full(buffer->cursor + path_pos - 1, i - path_pos + 2);
+    }
+    buffer->cursor += i + 1;
+}
+
+static void _filter_line(struct buffer* buffer)
+{
+    int i = 0;
+    int path_pos = -1;
+
+    while(buffer->cursor[i] != '\n')
+    {
+        i += 1;
+        if(buffer->cursor + i >= buffer->tail)
+        {
+            _read_more(buffer);
+        }
+    }
+
+    if(_is_kept(buffer, buffer->cursor + 2, i - 2))
+    {
+        _write_in_full(buffer->cursor, i + 1);
+    }
+    buffer->cursor += i + 1;
+}
+
 static void _process_commit_action(struct buffer* buffer)
 {
     int i = 0;
@@ -448,10 +581,6 @@ static void _process_commit_action(struct buffer* buffer)
             {
                 path_pos = i + 1;
             }
-            else
-            {
-                abort();
-            }
         }
         i += 1;
         if(buffer->cursor + i >= buffer->tail)
@@ -459,6 +588,7 @@ static void _process_commit_action(struct buffer* buffer)
             _read_more(buffer);
         }
     }
+//    fprintf(stderr, "commit_action (id_pos=%d path_pos=%d):|%.*s|\n",id_pos, path_pos, i + 1, buffer->cursor); 
     _write_in_full(buffer->cursor, path_pos - 1);
     if(_is_filter_candidat(buffer->cursor + path_pos, i - path_pos))
     {
@@ -474,38 +604,104 @@ static void _process_commit_action(struct buffer* buffer)
     buffer->cursor += i + 1;
 }
 
-static void _process_commit(struct buffer* buffer)
+static int _process_commit(struct buffer* buffer)
 {
+int rc = 0;
+
+//    fprintf(stderr, "-->process_commit\n");
     buffer->cursor = buffer->head;
     while(*buffer->cursor != 'd')
     {
         _copy_line(buffer);
-    }
-    _copy_data(buffer);
-    while(*buffer->cursor != '\n')
-    {
-        switch(*buffer->cursor)
-        {
-        case 'f':
-        case 'm':
-        case 'D':
-            _copy_line(buffer);
-            break;
-        case 'M':
-            _process_commit_action(buffer);
-            break;
-        default:
-            fprintf(stderr, "unrecognized commit action '%.120s'\n", buffer->cursor - 20);
-            exit(1);
-        }
-        if(buffer->cursor  >= buffer->tail)
+        if(buffer->cursor >= buffer->tail)
         {
             _read_more(buffer);
         }
-
+    }
+    _copy_data(buffer);
+    if(buffer->cursor  >= buffer->tail)
+    {
+        _read_more(buffer);
+    }
+    if(!rc)
+    {
+        while(*buffer->cursor != '\n')
+        {
+            switch(*buffer->cursor)
+            {
+            case 'f':
+            case 'm':
+            case 'D':
+                _copy_line(buffer);
+                break;
+            case 'M':
+                _process_commit_action(buffer);
+                break;
+            default:
+                fprintf(stderr, "unrecognized commit action '%.120s'\n", buffer->cursor - 20);
+                exit(1);
+            }
+            if(buffer->cursor >= buffer->tail)
+            {
+                _read_more(buffer);
+            }
+        }
     }
     buffer->nb_commit += 1;
     buffer->head = buffer->cursor;
+//    fprintf(stderr, "<--process_commit\n");
+    return rc;
+}
+
+static int _process_filtering_commit(struct buffer* buffer)
+{
+int rc = 0;
+
+//    fprintf(stderr, "-->process_commit\n");
+    buffer->cursor = buffer->head;
+    while(*buffer->cursor != 'd')
+    {
+        _copy_line(buffer);
+        if(buffer->cursor >= buffer->tail)
+        {
+            _read_more(buffer);
+        }
+    }
+    _copy_data(buffer);
+    if(buffer->cursor  >= buffer->tail)
+    {
+        _read_more(buffer);
+    }
+    if(!rc)
+    {
+        while(*buffer->cursor != '\n')
+        {
+            switch(*buffer->cursor)
+            {
+            case 'f':
+            case 'm':
+                _copy_line(buffer);
+                break;
+            case 'D':
+                _filter_line(buffer);
+                break;
+            case 'M':
+                _filter_commit_action(buffer);
+                break;
+            default:
+                fprintf(stderr, "unrecognized commit action '%.120s'\n", buffer->cursor - 20);
+                exit(1);
+            }
+            if(buffer->cursor >= buffer->tail)
+            {
+                _read_more(buffer);
+            }
+        }
+    }
+    buffer->nb_commit += 1;
+    buffer->head = buffer->cursor;
+//    fprintf(stderr, "<--process_commit\n");
+    return rc;
 }
 
 static void _process_tag(struct buffer* buffer)
@@ -514,14 +710,21 @@ static void _process_tag(struct buffer* buffer)
     while(*buffer->cursor != 'd')
     {
         _copy_line(buffer);
+        if(buffer->cursor >= buffer->tail)
+        {
+            _read_more(buffer);
+        }
     }
     _copy_data(buffer);
     buffer->nb_tag += 1;
     buffer->head = buffer->cursor;
 }
 
-static void _consume_input(struct buffer* buffer)
+static int _consume_input(struct buffer* buffer)
 {
+int rc = 0;
+
+//    fprintf(stderr, "-->consume_input\n");
     do
     {
         switch(*(buffer->head))
@@ -530,7 +733,14 @@ static void _consume_input(struct buffer* buffer)
             _process_blob(buffer);;
             break;
         case 'c':
-            _process_commit(buffer);
+            if(buffer->alternate_commit)
+            {
+                rc = _process_filtering_commit(buffer);
+            }
+            else
+            {
+                rc = _process_commit(buffer);
+            }
             break;
         case 't':
             _process_tag(buffer);
@@ -543,20 +753,82 @@ static void _consume_input(struct buffer* buffer)
 
     }
     while(buffer->head < buffer->tail);
+//    fprintf(stderr, "<--consume_input\n");
+    return rc;
 }
+
 
 int main(int argc, char** argv)
 {
 int rc = 0;
+int i;
 int received = 0;
 struct buffer* buffer = &g_buffer;
 
-    buffer->data = malloc(kBUFFER_SIZE + 1);
+    buffer->allocated = kBUFFER_SIZE;
+    for(i = 1; i < argc; i++)
+    {
+        if(!strcmp(argv[i], "--prefix"))
+        {
+            i += 1;
+            if(i < argc)
+            {
+                g_prefix = argv[i];
+            }
+        }
+        else if(!strcmp(argv[i], "--exclude-module"))
+        {
+            i += 1;
+            if(i < argc)
+            {
+                buffer->module = buffer->exclude_module = argv[i];
+                buffer->module_len = strlen(buffer->module);
+            }
+        }
+        else if(!strcmp(argv[i], "--filter-module"))
+        {
+            i += 1;
+            if(i < argc)
+            {
+                buffer->module = buffer->filter_module = argv[i];
+                buffer->module_len = strlen(buffer->module);
+            }
+        }
+        else if(!strcmp(argv[i], "--exclude-suffix"))
+        {
+            i += 1;
+            if(i < argc)
+            {
+                buffer->exclude_suffix = argv[i];
+                buffer->suffix_len = strlen(buffer->exclude_suffix);
+            }
+        }
+        else if(!strcmp(argv[i], "--buffer-size"))
+        {
+            i += 1;
+            if(i < argc)
+            {
+                buffer->allocated = atoi(argv[i]);
+                if(buffer->allocated < 10 || buffer->allocated > 1024)
+                {
+                    fprintf(stderr, "--buffer-size must be in MB between 10 and 1024\n");
+                    exit(1);
+                }
+                buffer->allocated *= 1024*1024;
+            }
+        }
+    }
+    if(buffer->exclude_module || buffer->filter_module || buffer->exclude_suffix)
+    {
+        buffer->alternate_commit = 1;
+    }
+
+    buffer->data = malloc(buffer->allocated + 1);
     if(!buffer->data)
     {
         return ENOMEM;
     }
-    buffer->workspace = malloc(2 * kBUFFER_SIZE);
+    buffer->workspace = malloc((buffer->allocated * 3) / 2 + 1);
     if(!buffer->workspace)
     {
         return ENOMEM;
@@ -564,8 +836,7 @@ struct buffer* buffer = &g_buffer;
     buffer->head = buffer->data;
     buffer->tail = buffer->data;
     buffer->cursor = buffer->data;
-    buffer->free = kBUFFER_SIZE;
-    buffer->allocated = kBUFFER_SIZE;
+    buffer->free = buffer->allocated;
 
 
     while(!rc)
@@ -587,7 +858,7 @@ struct buffer* buffer = &g_buffer;
             {
                 if(received == 0)
                 {
-                    return 0;
+                    break;
                 }
                 else
                 {
@@ -597,14 +868,15 @@ struct buffer* buffer = &g_buffer;
                     }
                     else
                     {
+                        fprintf(stderr, "read errno:%d\n", errno);
                         return errno;
                     }
                 }
             }
         }
-        _consume_input(buffer);
+        rc = _consume_input(buffer);
     }
-    fprintf(stderr, "commit:%d tag:%d blob:%d cleaned:%d not_cleaned:%d\n",
+    fprintf(stderr, "%s final commit:%d tag:%d blob:%d cleaned:%d not_cleaned:%d\n", g_prefix,
             buffer->nb_commit, buffer->nb_tag, buffer->nb_blob, buffer->nb_cleaned, buffer->nb_not_cleaned);
 
     return rc;
