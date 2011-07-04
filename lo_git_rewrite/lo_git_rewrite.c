@@ -30,6 +30,7 @@ static struct buffer
     char* filter_module;
     char* module;
     int alternate_commit;
+    int exclude_download;
 
 } g_buffer;
 
@@ -473,14 +474,32 @@ int match;
             keep = match;
         }
     }
+    if(keep && buffer->exclude_download)
+    {
+        for(i = 0; i < len; i++)
+        {
+            if(name[i] == '/')
+            {
+                break;
+            }
+        }
+        if(len - i > 10)
+        {
+            if(!memcmp(name + i, "/download/" , 10))
+            {
+//                fprintf(stderr, "%s exclude-download: %.*s\n", g_prefix, len, name);
+                keep = 0;
+            }
+        }
+    }
     if(keep && buffer->exclude_suffix)
     {
         if(len > buffer->suffix_len)
         {
             if(!memcmp(name + (len - buffer->suffix_len), buffer->exclude_suffix, buffer->suffix_len))
             {
+//                fprintf(stderr, "%s exclude-suffix: %.*s\n", g_prefix, len, name);
                 keep = 0;
-                fprintf(stderr, "exluded %.*s\n", len, name);
             }
         }
     }
@@ -785,6 +804,10 @@ struct buffer* buffer = &g_buffer;
                 buffer->module_len = strlen(buffer->module);
             }
         }
+        else if(!strcmp(argv[i], "--exclude-download"))
+        {
+            buffer->exclude_download = 1;
+        }
         else if(!strcmp(argv[i], "--filter-module"))
         {
             i += 1;
@@ -817,8 +840,12 @@ struct buffer* buffer = &g_buffer;
                 buffer->allocated *= 1024*1024;
             }
         }
+        else
+        {
+            fprintf(stderr, "ignored unknown arg: |%s|\n", argv[i]);
+        }
     }
-    if(buffer->exclude_module || buffer->filter_module || buffer->exclude_suffix)
+    if(buffer->exclude_module || buffer->filter_module || buffer->exclude_suffix || buffer->exclude_download)
     {
         buffer->alternate_commit = 1;
     }
