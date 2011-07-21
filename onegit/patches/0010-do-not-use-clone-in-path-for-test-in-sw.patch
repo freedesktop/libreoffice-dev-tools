@@ -1,17 +1,17 @@
-From 4e9625899bc21814ec3542034e8ee74749b1d4fe Mon Sep 17 00:00:00 2001
+From 5c53ee885457ead03521aef90393ed7f06c6a83b Mon Sep 17 00:00:00 2001
 From: Norbert Thiebaud <nthiebaud@gmail.com>
-Date: Thu, 30 Jun 2011 14:17:50 -0500
-Subject: [PATCH 9/9] do not use /clone in path fro test in sw
+Date: Thu, 21 Jul 2011 10:18:54 -0500
+Subject: do not use /clone in path for test in sw
 
 ---
  sw/qa/core/filters-test.cxx |   16 ++++++++--------
  1 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/sw/qa/core/filters-test.cxx b/sw/qa/core/filters-test.cxx
-index 5153aad..b2e93e0 100644
+index 9ace6d6..0c10fd8 100644
 --- a/sw/qa/core/filters-test.cxx
 +++ b/sw/qa/core/filters-test.cxx
-@@ -181,21 +181,21 @@ bool FiltersTest::testLoad(const rtl::OUString &rFilter,
+@@ -162,21 +162,21 @@ void FiltersTest::recursiveScan(const rtl::OUString &rFilter, const rtl::OUStrin
  
  void FiltersTest::testCVEs()
  {

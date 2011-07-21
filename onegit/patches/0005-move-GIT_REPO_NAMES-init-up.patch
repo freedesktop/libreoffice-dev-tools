@@ -1,14 +1,14 @@
-From 61b8d86697bc16b0c2d513d1e6e0bfc998231b4c Mon Sep 17 00:00:00 2001
+From d7a2f4e2210d665cd283dc836785187ecce5563a Mon Sep 17 00:00:00 2001
 From: Norbert Thiebaud <nthiebaud@gmail.com>
-Date: Thu, 23 Jun 2011 20:08:16 -0500
-Subject: [PATCH 4/9] move GIT_REPO_NAMES init earlier in the script
+Date: Thu, 21 Jul 2011 08:54:13 -0500
+Subject: move GIT_REPO_NAMES init up
 
 ---
  configure.in |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/configure.in b/configure.in
-index 77d2cb0..dd0c51b 100755
+index d400124..a6f2262 100755
 --- a/configure.in
 +++ b/configure.in
 @@ -1276,6 +1276,7 @@ AC_ARG_WITH(max-jobs,
@@ -19,7 +19,7 @@ index 77d2cb0..dd0c51b 100755
  
  echo "********************************************************************"
  echo "*"
-@@ -8517,7 +8518,6 @@ AC_SUBST(OOO_JUNIT_JAR)
+@@ -8544,7 +8545,6 @@ AC_SUBST(OOO_JUNIT_JAR)
  dnl ===================================================================
  dnl Dealing with l10n options
  dnl ===================================================================

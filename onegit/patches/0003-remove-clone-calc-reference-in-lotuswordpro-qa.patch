@@ -1,0 +1,27 @@
+From be518200dbbab30b530a958abdcc1f04cc951611 Mon Sep 17 00:00:00 2001
+From: Norbert Thiebaud <nthiebaud@gmail.com>
+Date: Thu, 21 Jul 2011 08:51:07 -0500
+Subject: remove /clone/calc reference in lotuswordpro qa
+
+---
+ lotuswordpro/qa/cppunit/test_lotuswordpro.cxx |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lotuswordpro/qa/cppunit/test_lotuswordpro.cxx b/lotuswordpro/qa/cppunit/test_lotuswordpro.cxx
+index 2766253..12bc0f5 100644
+--- a/lotuswordpro/qa/cppunit/test_lotuswordpro.cxx
++++ b/lotuswordpro/qa/cppunit/test_lotuswordpro.cxx
+@@ -147,8 +147,8 @@ namespace
+ 
+     void LotusWordProTest::test()
+     {
+-        recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/filters/lotuswordpro/qa/cppunit/data/pass")), true);
+-        recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/filters/lotuswordpro/qa/cppunit/data/fail/")), false);
++        recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/lotuswordpro/qa/cppunit/data/pass")), true);
++        recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/lotuswordpro/qa/cppunit/data/fail/")), false);
+ 
+         printf("LotusWordPro: tested %d files\n", m_nLoadedDocs);
+     }
+-- 
+1.7.3.4
+

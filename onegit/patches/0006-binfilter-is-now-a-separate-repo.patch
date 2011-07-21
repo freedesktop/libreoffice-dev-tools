@@ -1,0 +1,24 @@
+From 29406ecd7c950d407c52ed009df66b4bbb964aec Mon Sep 17 00:00:00 2001
+From: Norbert Thiebaud <nthiebaud@gmail.com>
+Date: Thu, 21 Jul 2011 08:54:33 -0500
+Subject: binfilter is now a separate repo
+
+---
+ configure.in |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/configure.in b/configure.in
+index a6f2262..8a1d319 100755
+--- a/configure.in
++++ b/configure.in
+@@ -1993,6 +1993,7 @@ if test "$enable_binfilter" = "no"; then
+ else
+     WITH_BINFILTER="YES"
+     BUILD_TYPE="$BUILD_TYPE BINFILTER"
++    GIT_REPO_NAMES="$GIT_REPO_NAMES binfilter"
+     AC_MSG_RESULT([yes])
+ fi
+ AC_SUBST(WITH_BINFILTER)
+-- 
+1.7.3.4
+

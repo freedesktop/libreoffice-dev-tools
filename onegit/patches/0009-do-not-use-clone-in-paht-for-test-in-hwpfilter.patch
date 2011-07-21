@@ -1,7 +1,7 @@
-From 17e92efafe95fd933d3eb3d4f9c9fbde9985acc1 Mon Sep 17 00:00:00 2001
+From 1fcc3efbcabdbc8663c4295d1d9a9393bb5fc444 Mon Sep 17 00:00:00 2001
 From: Norbert Thiebaud <nthiebaud@gmail.com>
-Date: Thu, 30 Jun 2011 14:17:30 -0500
-Subject: [PATCH 8/9] do not use /clone in path for test in hwpfilter
+Date: Thu, 21 Jul 2011 10:18:38 -0500
+Subject: do not use /clone in paht for test in hwpfilter
 
 ---
  hwpfilter/qa/cppunit/test_hwpfilter.cxx |    4 ++--

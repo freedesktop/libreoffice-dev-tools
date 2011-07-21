@@ -1,17 +1,17 @@
-From 888aa9ae48a6247b8bb9fc9ee65d9f4ab39895be Mon Sep 17 00:00:00 2001
+From 36cc551b4b5ff871fa24ddd9756ab4b373cac49f Mon Sep 17 00:00:00 2001
 From: Norbert Thiebaud <nthiebaud@gmail.com>
 Date: Mon, 13 Jun 2011 13:56:41 -0500
-Subject: [PATCH 2/9] [PATCH 2/7] adjust the list of external git repos for onegit
+Subject: adjust the list of external git repos for onegit
 
 ---
  configure.in |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/configure.in b/configure.in
-index bda4ece..77d2cb0 100755
+index 9ad2f52..d400124 100755
 --- a/configure.in
 +++ b/configure.in
-@@ -8517,7 +8517,7 @@ AC_SUBST(OOO_JUNIT_JAR)
+@@ -8544,7 +8544,7 @@ AC_SUBST(OOO_JUNIT_JAR)
  dnl ===================================================================
  dnl Dealing with l10n options
  dnl ===================================================================

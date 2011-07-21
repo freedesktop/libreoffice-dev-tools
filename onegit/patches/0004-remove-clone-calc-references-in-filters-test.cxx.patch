@@ -1,0 +1,48 @@
+From 498bd2e88e35197b6dae50efcea993073d8119f9 Mon Sep 17 00:00:00 2001
+From: Norbert Thiebaud <nthiebaud@gmail.com>
+Date: Thu, 21 Jul 2011 08:51:36 -0500
+Subject: remove clone/calc references in filters-test.cxx
+
+---
+ sc/qa/unit/filters-test.cxx |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/sc/qa/unit/filters-test.cxx b/sc/qa/unit/filters-test.cxx
+index 288249c..09cb107 100644
+--- a/sc/qa/unit/filters-test.cxx
++++ b/sc/qa/unit/filters-test.cxx
+@@ -157,25 +157,25 @@ void FiltersTest::recursiveScan(const rtl::OUString &rFilter, const rtl::OUStrin
+ void FiltersTest::testCVEs()
+ {
+     recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Quattro Pro 6.0")),
+-        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/calc/sc/qa/unit/data/qpro/pass")), rtl::OUString(), true);
++        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sc/qa/unit/data/qpro/pass")), rtl::OUString(), true);
+ 
+     recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Quattro Pro 6.0")),
+-        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/calc/sc/qa/unit/data/qpro/fail")), rtl::OUString(), false);
++        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sc/qa/unit/data/qpro/fail")), rtl::OUString(), false);
+ 
+     recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("Quattro Pro 6.0")),
+-        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/calc/sc/qa/unit/data/qpro/indeterminate")), rtl::OUString(), indeterminate);
++        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sc/qa/unit/data/qpro/indeterminate")), rtl::OUString(), indeterminate);
+ 
+     //warning, the current "sylk filter" in sc (docsh.cxx) automatically
+     //chains on failure on trying as csv, rtf, etc. so "success" may
+     //not indicate that it imported as .slk.
+     recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("SYLK")),
+-        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/calc/sc/qa/unit/data/slk/pass")), rtl::OUString(), true);
++        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sc/qa/unit/data/slk/pass")), rtl::OUString(), true);
+ 
+     recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("SYLK")),
+-        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/calc/sc/qa/unit/data/slk/fail")), rtl::OUString(), false);
++        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sc/qa/unit/data/slk/fail")), rtl::OUString(), false);
+ 
+     recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("SYLK")),
+-        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/calc/sc/qa/unit/data/slk/indeterminate")), rtl::OUString(), indeterminate);
++        m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sc/qa/unit/data/slk/indeterminate")), rtl::OUString(), indeterminate);
+ 
+ }
+ 
+-- 
+1.7.3.4
+

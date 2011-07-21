@@ -1,7 +1,7 @@
-From f7d7345a4a8915c70f899198b35eeb464cfa1ea3 Mon Sep 17 00:00:00 2001
+From a8013507a33f8e6e098539e19486b084fd33beed Mon Sep 17 00:00:00 2001
 From: Norbert Thiebaud <nthiebaud@gmail.com>
-Date: Thu, 23 Jun 2011 23:03:15 -0500
-Subject: [PATCH 7/9] bootstrap is now clone in ./g too
+Date: Thu, 21 Jul 2011 10:18:13 -0500
+Subject: bootstrap is now core in ./g
 
 ---
  g |    6 +++---
