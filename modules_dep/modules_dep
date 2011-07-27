@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ls -l | grep "^[dl]" | awk '{print $9;}' | xargs $0.bin $@

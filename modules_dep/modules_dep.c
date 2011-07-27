@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 struct module_ref
 {
@@ -18,6 +19,7 @@ struct module
     char* name;
     char* list_parents;
     int traversed;
+    int gmake;
 };
 
 #define SHOW_F_PARENTS  (int)(1<<0)
@@ -34,9 +36,32 @@ static struct module* _load_module_deps(char* filename, int verbose)
 FILE* fp;
 struct module* module = NULL;
 char* children_start;
+struct stat st;
 char buffer[4096]; /* ok ugly, we should really be dynamic here... but that will do for now */
+int gmake_module = 0;
 
-    fp = fopen(filename, "r");
+    memset(&st, 0, sizeof(struct stat));
+    if(stat(filename, &st))
+    {
+        fprintf(stderr, "error getting stat() on %s\n", filename);
+        exit(1);
+    }
+    if(!S_ISDIR(st.st_mode))
+    {
+        fprintf(stderr, "%s is not a directory, skip\n", filename);
+        return NULL;
+    }
+    sprintf(buffer, "%s/Makefile", filename);
+    if(stat(buffer, &st))
+    {
+        gmake_module = 0;
+    }
+    else
+    {
+        gmake_module = 1;
+    }
+    sprintf(buffer, "%s/prj/build.lst", filename);
+    fp = fopen(buffer, "r");
     if(fp)
     {
         if(verbose)
@@ -118,6 +143,7 @@ char buffer[4096]; /* ok ugly, we should really be dynamic here... but that will
             *cursor_out = 0;
             module = calloc(1, sizeof(struct module));
             module->name = strdup(buffer);
+            module->gmake = gmake_module;
             len = (size_t)(cursor_out - children_start);
             if(len < 6)
             {
@@ -138,14 +164,16 @@ char buffer[4096]; /* ok ugly, we should really be dynamic here... but that will
         }
         else
         {
-            fprintf(stderr, "error reading %s\n", filename);
+            fprintf(stderr, "error reading %s\n", buffer);
             exit(1);
         }
     }
     else
     {
-        fprintf(stderr, "error opening %s\n", filename);
-        exit(1);
+        if(verbose)
+        {
+            fprintf(stderr, "skipping %s, probably not a module\n", filename);
+        }
     }
     fclose(fp);
     return module;
@@ -213,7 +241,7 @@ struct module_ref* mr;
             {
                 if(strcmp(cursor, "NULL\n"))
                 {
-                    fprintf(stderr, "Error: depenecy %s of module %s does not have a known build.lst associated to it\n", cursor, module->name);
+                    fprintf(stderr, "Error: dependency %s of module %s does not have a known build.lst associated to it\n", cursor, module->name);
                 }
             }
             cursor += strlen(cursor) + 1;
@@ -247,11 +275,27 @@ struct module_ref* cursor = NULL;
     }
     if(i < level)
     {
-        printf("  + %s\n", module->name);
+        if(module->gmake)
+        {
+            printf("  + %s (*)\n", module->name);
+        }
+        else
+        {
+            printf("  + %s\n", module->name);
+            rc += 1;
+        }
     }
     else
     {
-        printf("%s\n", module->name);
+        if(module->gmake)
+        {
+            printf("%s (*)\n", module->name);
+        }
+        else
+        {
+            printf("%s\n", module->name);
+            rc += 1;
+        }
     }
     if(show & SHOW_F_CHILDREN)
     {
@@ -263,7 +307,7 @@ struct module_ref* cursor = NULL;
     }
     while(cursor)
     {
-        _print_module(cursor->module, show, level + 1);
+        rc += _print_module(cursor->module, show, level + 1);
         cursor = cursor->next;
     }
     return rc;
@@ -272,12 +316,17 @@ struct module_ref* cursor = NULL;
 static int _print_dep(char* name, struct module** modules, int nb_modules, int show)
 {
 int rc = 0;
+int nb_non_gmake = 0;
 struct module* base;
 
     base = _lookup_module(name, modules, nb_modules);
     if(base)
     {
-        _print_module(base, show, 0);
+        nb_non_gmake = _print_module(base, show, 0);
+        if(show & SHOW_F_CHILDREN)
+        {
+            printf("\n%d non gbuild children\n", nb_non_gmake);
+        }
     }
     else
     {
@@ -363,10 +412,6 @@ int verbose = 0;
             if(module)
             {
                 modules[nb_modules++] = module;
-            }
-            else
-            {
-                exit(1);
             }
         }
     }

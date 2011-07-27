@@ -8,7 +8,41 @@ options:
 
 the arguments must be the list of all the build.lst to analyze.
 
+in the ouput, (*) idicate a gnumake module.
+
 example:
-find $(SRC_ROOT) -maxdepth 5 -name "build.lst" | grep -v "splitbuild/" | xargs ./a.out -u -c svx 
+from the root directory of the lo project:
+
+$> module_dep -u -c svx
+svx (*)
+  + xmlsecurity
+     + postprocess
+        + splitbuild
+        + packimages
+           + instsetoo_native
+              + testgraphical
+              + smoketestoo_native
+  + writerfilter (*)
+     + sw (*)
+  + vbahelper (*)
+     + tail_build (*)
+     + scripting
+     + sc (*)
+  + starmath (*)
+  + sd (*)
+  + oox (*)
+  + lotuswordpro (*)
+  + formula (*)
+     + reportdesign (*)
+  + forms (*)
+  + filter
+     + desktop
+  + extensions
+  + dbaccess (*)
+  + cui (*)
+  + chart2 (*)
+  + basctl
+
+12 non gbuild children
 
 Note: optional dependecies are considered always required except SUN:xxx which are ignored.
