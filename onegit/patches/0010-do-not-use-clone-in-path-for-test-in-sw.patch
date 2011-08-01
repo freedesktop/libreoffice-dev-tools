@@ -1,17 +1,17 @@
-From 5c53ee885457ead03521aef90393ed7f06c6a83b Mon Sep 17 00:00:00 2001
+From a99c9b619cb96b9331c2b072f02231779f134935 Mon Sep 17 00:00:00 2001
 From: Norbert Thiebaud <nthiebaud@gmail.com>
-Date: Thu, 21 Jul 2011 10:18:54 -0500
-Subject: do not use /clone in path for test in sw
+Date: Mon, 1 Aug 2011 15:56:09 -0500
+Subject: [PATCH] do not use clone in path for test in sw
 
 ---
  sw/qa/core/filters-test.cxx |   16 ++++++++--------
  1 files changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/sw/qa/core/filters-test.cxx b/sw/qa/core/filters-test.cxx
-index 9ace6d6..0c10fd8 100644
+index 71e5d74..e9d2e4a 100644
 --- a/sw/qa/core/filters-test.cxx
 +++ b/sw/qa/core/filters-test.cxx
-@@ -162,21 +162,21 @@ void FiltersTest::recursiveScan(const rtl::OUString &rFilter, const rtl::OUStrin
+@@ -167,21 +167,21 @@ void FiltersTest::recursiveScan(const rtl::OUString &rFilter, const rtl::OUStrin
  
  void FiltersTest::testCVEs()
  {
@@ -38,9 +38,9 @@ index 9ace6d6..0c10fd8 100644
  
 -    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("MS Word 97")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/writer/sw/qa/core/data/ww8/indeterminate")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CWW8")), indeterminate);
 +    recursiveScan(rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("MS Word 97")), m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/sw/qa/core/data/ww8/indeterminate")), rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("CWW8")), indeterminate);
- }
  
- FiltersTest::FiltersTest()
+     printf("Writer: tested %d files\n", m_nLoadedDocs);
+ }
 -- 
 1.7.3.4
 

@@ -1,0 +1,36 @@
+From 36c59f42fcb363d810449ed0c96beac0af992e6e Mon Sep 17 00:00:00 2001
+From: Norbert Thiebaud <nthiebaud@gmail.com>
+Date: Mon, 1 Aug 2011 18:27:06 -0500
+Subject: [PATCH] another round of hard-coded /clone whack-a-mole in svtools this time.
+
+---
+ svtools/qa/cppunit/filters-test.cxx |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/svtools/qa/cppunit/filters-test.cxx b/svtools/qa/cppunit/filters-test.cxx
+index c5d43af..490f8d5 100644
+--- a/svtools/qa/cppunit/filters-test.cxx
++++ b/svtools/qa/cppunit/filters-test.cxx
+@@ -134,13 +134,13 @@ void FiltersTest::recursiveScan(const rtl::OUString &rURL, int nExpected)
+ 
+ void FiltersTest::testCVEs()
+ {
+-    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/libs-gui/svtools/qa/cppunit/data/wmf/pass")), true);
+-    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/libs-gui/svtools/qa/cppunit/data/wmf/fail")), false);
+-    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/libs-gui/svtools/qa/cppunit/data/wmf/indeterminate")), 2);
++    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/svtools/qa/cppunit/data/wmf/pass")), true);
++    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/svtools/qa/cppunit/data/wmf/fail")), false);
++    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/svtools/qa/cppunit/data/wmf/indeterminate")), 2);
+ 
+-    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/libs-gui/svtools/qa/cppunit/data/emf/pass")), true);
+-    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/libs-gui/svtools/qa/cppunit/data/emf/fail")), false);
+-    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/libs-gui/svtools/qa/cppunit/data/emf/indeterminate")), 2);
++    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/svtools/qa/cppunit/data/emf/pass")), true);
++    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/svtools/qa/cppunit/data/emf/fail")), false);
++    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/svtools/qa/cppunit/data/emf/indeterminate")), 2);
+ }
+ 
+ FiltersTest::FiltersTest()
+-- 
+1.7.3.4
+
