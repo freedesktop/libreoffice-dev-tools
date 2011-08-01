@@ -22,6 +22,8 @@ struct module
     int gmake;
 };
 
+static int verbose;
+
 #define SHOW_F_PARENTS  (int)(1<<0)
 #define SHOW_F_CHILDREN (int)(1<<1)
 #define SHOW_F_UNIQUE   (int)(1<<2)
@@ -31,7 +33,7 @@ static int _compare_module(struct module** a, struct module** b)
     return strcmp((*a)->name, (*b)->name);
 }
 
-static struct module* _load_module_deps(char* filename, int verbose)
+static struct module* _load_module_deps(char* filename)
 {
 FILE* fp;
 struct module* module = NULL;
@@ -158,8 +160,8 @@ int gmake_module = 0;
                     fprintf(stderr, "error Parsing %s (%s)\n", filename, tail_indicator);
                     exit(1);
                 }
-                module->list_parents = malloc(len);
-                memcpy(module->list_parents, children_start, len);
+                module->list_parents = malloc(len + 1);
+                memcpy(module->list_parents, children_start, len + 1);
             }
         }
         else
@@ -225,6 +227,11 @@ struct module_ref* mr;
         cursor = module->list_parents;
         while(cursor && *cursor)
         {
+            if(verbose)
+            {
+                fprintf(stderr, "parent for %s :|%s|\n", module->name, cursor);
+            }
+
             parent = _lookup_module(cursor, modules, nb_modules);
             if(parent)
             {
@@ -349,7 +356,6 @@ char* base_module_name = NULL;
 int show = 0;
 struct module** modules;
 int nb_modules = 0;
-int verbose = 0;
 
     /* we will have no more modules that there are arguments (in fact we should have 3 less than) */
     modules = calloc(argc, sizeof(struct module*));
@@ -408,7 +414,7 @@ int verbose = 0;
         {
         struct module* module;
 
-            module = _load_module_deps(argv[i], verbose);
+            module = _load_module_deps(argv[i]);
             if(module)
             {
                 modules[nb_modules++] = module;
