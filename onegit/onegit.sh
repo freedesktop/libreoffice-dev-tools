@@ -29,7 +29,6 @@ Options:
    -a       Just apply the patches (this need to be after -C and -n if they are specified)
    -C       base directory where to create the onegit repo. the default
             is the current working directory, i.e '.'
-   -f       use git fast-export/import.
    -g       base part of the url to access the libreoffice repos
             for example -g "git://anongit.freedesktop.org/libreoffice"
             or -f "/lo/"
@@ -225,12 +224,12 @@ apply_patches()
 
 ##### main
 
-while getopts aC:e:fg:hn:s:t: opt ; do
+while getopts aC:g:hn:t: opt ; do
     case "$opt" in
 	a) aply_patches; exit ;;
         C) GIT_BASE="$OPTARG" ;;
-        h) usage; exit ;;
         g) SOURCE_GIT_BASE="$OPTARG" ;;
+        h) usage; exit ;;
         n) GIT_NAME="$OPTARG" ;;
 	t) GIT_TEMP="$OPTARG" ;;
     esac
