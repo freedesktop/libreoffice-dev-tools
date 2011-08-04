@@ -6,6 +6,11 @@ ONE_GIT=/local/libreoffice/dev-tools/onegit/libo
 # list all revisions of the file
 function all_revs {
     FILE="$1"
+
+    # first the log (without commit numbers)
+    git log --reverse --pretty=format:"Author: %an <%ae>%nDate: %ai%nCommitter: %cn <%ce>%nCommit date: %ci%n%n%B" "$FILE"
+
+    # then all the revisions of the file
     git rev-list --reverse --objects HEAD -- "$FILE" | while read SHA REST ; do
         TYPE=`git cat-file -t $SHA`
 	if [ "$TYPE" = "blob" ] ; then
