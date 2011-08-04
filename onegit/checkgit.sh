@@ -13,29 +13,42 @@ function all_revs {
     # then all the revisions of the file
     git rev-list --reverse --objects HEAD -- "$FILE" | while read SHA REST ; do
         TYPE=`git cat-file -t $SHA`
-	if [ "$TYPE" = "blob" ] ; then
-	    git cat-file -p $SHA
-	fi
+        if [ "$TYPE" = "blob" ] ; then
+            git cat-file -p $SHA
+        fi
     done
 }
 
 cd "$ONE_GIT"
-find . -type f | while read FILE ; do
-    all_revs "$FILE" > /tmp/testrev.onegit
+for MODULE in .[^.]* * ; do
+(
+    [ "$MODULE" != ".git" ] && find $MODULE -type f | while read FILE ; do
+        all_revs "$FILE" > /tmp/testrev.$MODULE.onegit
+    
+        TRY_FILE=`eval "echo $SPLIT_GIT/clone/*/$FILE"`
+        DIR="$SPLIT_GIT"
+        if [ -f "$TRY_FILE" ] ; then
+            DIR="${TRY_FILE%$FILE}"
+        fi
+        pushd "$DIR" > /dev/null
+        all_revs "$FILE" > /tmp/testrev.$MODULE.splitgit
+        popd > /dev/null
+    
+        (
+            echo -n "Trying $FILE ... "
+            if diff -uw /tmp/testrev.$MODULE.splitgit /tmp/testrev.$MODULE.onegit ; then
+                echo "OK"
+            else
+                echo "ERROR: $FILE differs"
+            fi
+        ) > /tmp/testrev.$MODULE.log
 
-    TRY_FILE=`eval "echo $SPLIT_GIT/clone/*/$FILE"`
-    DIR="$SPLIT_GIT"
-    if [ -f "$TRY_FILE" ] ; then
-	DIR="${TRY_FILE%$FILE}"
-    fi
-    pushd "$DIR" > /dev/null
-    all_revs "$FILE" > /tmp/testrev.splitgit
-    popd > /dev/null
-
-    echo -n "Trying $FILE ... "
-    if diff -uw /tmp/testrev.splitgit /tmp/testrev.onegit ; then
-	echo "OK"
-    else
-	echo "ERROR: $FILE differs"
-    fi
+        (
+            flock -x 200
+            cat /tmp/testrev.$MODULE.log
+        ) 200>/tmp/testrev.lock
+    done
+) &
 done
+
+wait
