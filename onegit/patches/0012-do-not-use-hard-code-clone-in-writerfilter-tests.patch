@@ -1,0 +1,27 @@
+From a1909e7a1ec58fca5d151c1630877afe96896232 Mon Sep 17 00:00:00 2001
+From: Norbert Thiebaud <nthiebaud@gmail.com>
+Date: Thu, 4 Aug 2011 20:57:49 -0500
+Subject: [PATCH] do not use hard-code/clone/in writerfilter tests
+
+---
+ writerfilter/qa/cppunittests/rtftok/testrtftok.cxx |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/writerfilter/qa/cppunittests/rtftok/testrtftok.cxx b/writerfilter/qa/cppunittests/rtftok/testrtftok.cxx
+index 7ed42dc..fbff05f 100644
+--- a/writerfilter/qa/cppunittests/rtftok/testrtftok.cxx
++++ b/writerfilter/qa/cppunittests/rtftok/testrtftok.cxx
+@@ -160,8 +160,8 @@ void RtfTest::recursiveScan(const rtl::OUString &rURL, bool bExpected)
+ 
+ void RtfTest::test()
+ {
+-    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/filters/writerfilter/qa/cppunittests/rtftok/data/pass")), true);
+-    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/clone/filters/writerfilter/qa/cppunittests/rtftok/data/fail")), false);
++    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/writerfilter/qa/cppunittests/rtftok/data/pass")), true);
++    recursiveScan(m_aSrcRoot + rtl::OUString(RTL_CONSTASCII_USTRINGPARAM("/writerfilter/qa/cppunittests/rtftok/data/fail")), false);
+ 
+     printf("Rtf: tested %d files\n", m_nLoadedDocs);
+ }
+-- 
+1.7.3.4
+
