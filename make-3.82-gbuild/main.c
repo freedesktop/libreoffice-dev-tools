@@ -643,6 +643,12 @@ decode_debug_flags (void)
             case 'b':
               db_level |= DB_BASIC;
               break;
+            case 'c':
+              db_level |= DB_CALL;
+              break;
+            case 'e':
+              db_level |= DB_EVAL;
+              break;
             case 'i':
               db_level |= DB_BASIC | DB_IMPLICIT;
               break;

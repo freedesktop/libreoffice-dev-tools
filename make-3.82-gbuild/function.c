@@ -28,6 +28,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "amiga.h"
 #endif
 
+static int depth = 0;
+
 
 struct function_table_entry
   {
@@ -1371,7 +1373,12 @@ func_eval (char *o, char **argv, const char *funcname UNUSED)
 
   install_variable_buffer (&buf, &len);
 
+  depth += 1;
+  DBS( DB_EVAL, ("### eval -->\n"));
+  DB( DB_EVAL, ("%s\n", argv[0]));
   eval_buffer (argv[0]);
+  DBS( DB_EVAL, ("### eval <--\n"));
+  depth -= 1;
 
   restore_variable_buffer (buf, len);
 
@@ -2340,6 +2347,7 @@ func_call (char *o, char **argv, const char *funcname UNUSED)
   if (v == 0 || *v->value == '\0')
     return o;
 
+  depth += 1;
   body = alloca (flen + 4);
   body[0] = '$';
   body[1] = '(';
@@ -2347,6 +2355,7 @@ func_call (char *o, char **argv, const char *funcname UNUSED)
   body[flen+2] = ')';
   body[flen+3] = '\0';
 
+  DBS(DB_CALL, ("### call %s -->\n", body));
   /* Set up arguments $(1) .. $(N).  $(0) is the function name.  */
 
   push_new_variable_scope ();
@@ -2356,6 +2365,7 @@ func_call (char *o, char **argv, const char *funcname UNUSED)
       char num[11];
 
       sprintf (num, "%d", i);
+      DBS(DB_CALL, ("### arg %i for call %s is '%s'\n", i, body, *argv));
       define_variable (num, strlen (num), *argv, o_automatic, 0);
     }
 
@@ -2369,6 +2379,7 @@ func_call (char *o, char **argv, const char *funcname UNUSED)
       char num[11];
 
       sprintf (num, "%d", i);
+      DBS(DB_CALL, ("### arg %i for call %s is implicit\n", i, body));
       define_variable (num, strlen (num), "", o_automatic, 0);
     }
 
@@ -2379,7 +2390,14 @@ func_call (char *o, char **argv, const char *funcname UNUSED)
 
   saved_args = max_args;
   max_args = i;
+
   o = variable_expand_string (o, body, flen+3);
+  DBS(DB_CALL, ("### call to %s expended into\n", body));
+  DB(DB_CALL, ("%s\n", o));
+  DBS(DB_CALL, ("### call %s <--\n", body));
+
+  depth -= 1;
+
   max_args = saved_args;
 
   v->exp_count = 0;

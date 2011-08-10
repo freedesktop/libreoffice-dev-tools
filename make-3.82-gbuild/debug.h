@@ -21,6 +21,8 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 #define DB_JOBS         (0x004)
 #define DB_IMPLICIT     (0x008)
 #define DB_MAKEFILES    (0x100)
+#define DB_CALL       (0x01000)
+#define DB_EVAL       (0x02000)
 
 #define DB_ALL          (0xfff)
 
