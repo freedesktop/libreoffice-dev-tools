@@ -13,7 +13,7 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>echo &quot;export TARFILE_LOCATION=\&quot;${WORKSPACE}\&quot;&quot; &gt; ${HOME}/.jenkins/set_tarfile_location.sh</command>
+      <command>echo &quot;export TARFILE_LOCATION=\&quot;${WORKSPACE}\&quot;&quot; &gt; ${JENKINS_HOME}/set_tarfile_location.sh</command>
     </hudson.tasks.Shell>
   </builders>
   <publishers/>

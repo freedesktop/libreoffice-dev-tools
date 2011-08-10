@@ -14,21 +14,22 @@
   <builders>
     <hudson.tasks.Shell>
       <command>BASEURL=`readlink -f ${WORKSPACE}/../../repo-mirror/workspace/`
-[ -d ${WORKSPACE}/.git ] || git clone ${BASEURL}/bootstrap.git ${WORKSPACE}
+[ -d ${WORKSPACE}/.git ] || git clone ${BASEURL}/core.git ${WORKSPACE}
 git pull
-./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${HOME}/.jenkins/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
-cat ${HOME}/.jenkins/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
-echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
-echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
-echo &quot;export CCACHE_BASEDIR=\&quot;${WORKSPACE}\&quot;&quot; &gt;&gt; LinuxX86-64Env.Set.sh
+./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${JENKINS_HOME}/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
+cat ${JENKINS_HOME}/set_tarfile_location.sh &gt;&gt; Env.Host.sh
+echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; Env.Host.sh
+echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; Env.Host.sh
+echo &quot;export CCACHE_BASEDIR=\&quot;${WORKSPACE}\&quot;&quot; &gt;&gt; Env.Host.sh
 ./download
 ./g stash save
 ./g pull -r
 ./g -f stash pop
 ./g branch -v
 #./g --set-push-user YOURUSERNAMEHERE
-. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; make dev-install
-. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; make subsequentcheck -j5 -k -f $WORKSPACE/GNUmakefile.mk
+. $WORKSPACE/Env.Host.sh &amp;&amp; make
+. $WORKSPACE/Env.Host.sh &amp;&amp; make dev-install
+. $WORKSPACE/Env.Host.sh &amp;&amp; make subsequentcheck -j5 -k -f $WORKSPACE/GNUmakefile.mk
 </command>
     </hudson.tasks.Shell>
   </builders>

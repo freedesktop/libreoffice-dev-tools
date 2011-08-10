@@ -13,26 +13,32 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>BASEURL=`readlink -f ${WORKSPACE}/../../repo-mirror/workspace/`
+      <command>BASEURL=`readlink -f ${WORKSPACE}/../../repo-mirror-pre-one-git/workspace/`
 [ -d ${WORKSPACE}/.git ] || git clone ${BASEURL}/bootstrap.git ${WORKSPACE}
 git pull
-./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${HOME}/.jenkins/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
-cat ${HOME}/.jenkins/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
+./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${JENKINS_HOME}/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
+cat ${JENKINS_HOME}/set_tarfile_location.sh &gt;&gt; Env.Host.sh
 ./download
 ./g checkout libreoffice-3-4
-./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${HOME}/.jenkins/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
-cat ${HOME}/.jenkins/set_tarfile_location.sh &gt;&gt; LinuxX86-64Env.Set.sh
-echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
-echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; LinuxX86-64Env.Set.sh
-echo &quot;export CCACHE_BASEDIR=\&quot;${WORKSPACE}\&quot;&quot; &gt;&gt; LinuxX86-64Env.Set.sh
+./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${JENKINS_HOME}/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
+if [ -e LinuxX86Env.Set.sh ]
+then
+  ENV_SET_SH=LinuxX86Env.Set.sh
+else
+  ENV_SET_SH=LinuxX86-64Env.Set.sh
+fi
+cat ${JENKINS_HOME}/set_tarfile_location.sh &gt;&gt; $ENV_SET_SH
+echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; $ENV_SET_SH
+echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; $ENV_SET_SH
+echo &quot;export CCACHE_BASEDIR=\&quot;${WORKSPACE}\&quot;&quot; &gt;&gt; $ENV_SET_SH
 ./g stash save
 ./g pull -r
 ./g -f stash pop
 ./g branch -v
 #./g --set-push-user YOURUSERNAMEHERE
-. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $SOLARSRC/instsetoo_native &amp;&amp; $SOLARENV/bin/build.pl --all -P4 -- -P4
-. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $SOLARSRC/smoketestoo_native &amp;&amp; dmake localinstall
-. $WORKSPACE/LinuxX86-64Env.Set.sh &amp;&amp; cd $WORKSPACE &amp;&amp; $SOLARENV/bin/subsequenttests -j10 -l9 -k
+. $WORKSPACE/$ENV_SET_SH &amp;&amp; cd $SOLARSRC/instsetoo_native &amp;&amp; $SOLARENV/bin/build.pl --all -P4 -- -P4
+. $WORKSPACE/$ENV_SET_SH &amp;&amp; cd $SOLARSRC/smoketestoo_native &amp;&amp; dmake localinstall
+. $WORKSPACE/$ENV_SET_SH &amp;&amp; cd $WORKSPACE &amp;&amp; $SOLARENV/bin/subsequenttests -j10 -l9 -k
 </command>
     </hudson.tasks.Shell>
   </builders>

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
   <actions/>
-  <description>sync local LibreOffice repositories</description>
+  <description>sync local LibreOffice repositories for 3.4.x versions</description>
   <keepDependencies>false</keepDependencies>
   <properties/>
   <scm class="hudson.scm.NullSCM"/>
@@ -9,11 +9,7 @@
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers class="vector">
-    <hudson.triggers.TimerTrigger>
-      <spec>0 8 * * *</spec>
-    </hudson.triggers.TimerTrigger>
-  </triggers>
+  <triggers class="vector"/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
@@ -25,7 +21,7 @@ import subprocess
 
 workspace = os.environ[&apos;WORKSPACE&apos;]
 baseurl = &apos;git://anongit.freedesktop.org/libreoffice/&apos;
-repos = [ &apos;core&apos;, &apos;binfilter&apos;, &apos;dictionaries&apos;, &apos;help&apos;, &apos;translations&apos;]
+repos = [&apos;artwork&apos;, &apos;base&apos;, &apos;bootstrap&apos;, &apos;calc&apos;, &apos;components&apos;, &apos;extensions&apos;, &apos;extras&apos;, &apos;filters&apos;, &apos;help&apos;, &apos;impress&apos;, &apos;libs-core&apos;, &apos;libs-extern&apos;, &apos;libs-extern-sys&apos;, &apos;libs-gui&apos;, &apos;postprocess&apos;, &apos;sdk&apos;, &apos;testing&apos;, &apos;ure&apos;, &apos;writer&apos;]
 
 state = []
 for (repo, repodir) in ((repo, os.path.join(workspace, repo+&apos;.git&apos;)) for repo in repos):
