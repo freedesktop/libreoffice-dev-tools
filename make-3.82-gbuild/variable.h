@@ -220,6 +220,13 @@ void undefine_variable_in_set (const char *name, unsigned int length,
                                 (int)(l), (n)); \
                               }while(0)
 
+#define warn_undefined_function(n,l) do{\
+                              if (warn_undefined_functions_flag) \
+                                error (reading_file, \
+                                       _("warning: undefined function `%.*s'"), \
+                                (int)(l), (n)); \
+                              }while(0)
+
 char **target_environment (struct file *file);
 
 struct pattern_var *create_pattern_var (const char *target,
