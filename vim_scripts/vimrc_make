@@ -1,0 +1,137 @@
+" vim:set filetype=vim shiftwidth=4 softtabstop=4 expandtab:
+
+" Version: MPL 1.1 / GPLv3+ / LGPLv3+
+"
+" The contents of this file are subject to the Mozilla Public License Version
+" 1.1 (the "License"); you may not use this file except in compliance with
+" the License or as specified alternatively below. You may obtain a copy of
+" the License at http://www.mozilla.org/MPL/
+"
+" Software distributed under the License is distributed on an "AS IS" basis,
+" WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+" for the specific language governing rights and limitations under the
+" License.
+"
+" The Initial Developer of the Original Code is
+"       Eike Rathke <erack@erack.de>
+" Portions created by the Initial Developer are Copyright (C) 2011 the
+" Initial Developer. All Rights Reserved.
+"
+" Major Contributor(s): 
+"
+" For minor contributions see the git repository.
+"
+" Alternatively, the contents of this file may be used under the terms of
+" either the GNU General Public License Version 3 or later (the "GPLv3+"), or
+" the GNU Lesser General Public License Version 3 or later (the "LGPLv3+"),
+" in which case the provisions of the GPLv3+ or the LGPLv3+ are applicable
+" instead of those above.
+
+" =============================================================================
+"
+" A ~/.vimrc snippet to be able to compile " LibreOffice/OpenOffice.org source
+" files from within Vim.
+"
+" The current source file is compiled with wall=true debug=true.
+"
+" In the case of a gbuild module, compilation may continue if other sources
+" are to be compiled as well due to dependencies on modified files, press
+" Ctrl+C to interrupt once the next compile started. Hopefully this can be
+" changed in gbuild.
+"
+" In the case of a dmake module, only the current source file is compiled.
+"
+" If the current file is Makefile, the entire module is built with gbuild
+" make.
+"
+" If the current file is build.lst, the entire module is built with build.pl
+
+
+" Call appropriate makeprg with Ctrl+K
+map <C-K> :call Make()<CR>
+
+if $SOLARENV == ""
+    " Normal makeprg, not in LibreOffice/OpenOffice.org environment
+    function Make()
+        make
+    endfun
+else
+    let s:make_jobs = 1     " define how many jobs you want with make
+    let s:build_dirs = 2    " define how many directories are built in parallel with build.pl
+    let s:build_dmake = 3   " define how many processes each dmake spawns with build.pl
+    " The root of the directory where we stop going further up, excluding.
+    " For example, if /libo/core is the tree's root, the root of that is /libo
+    let s:dir_root = fnamemodify( $SRC_ROOT, ":h" )
+    function DirLimit( dir )
+        return a:dir == s:dir_root
+    endfunction
+
+    function GetDotPath()
+        let l:dir = "."
+        while !DirLimit( l:dir ) && !filereadable( l:dir . "/Makefile" ) && !filereadable( l:dir . "/prj/build.lst" )
+            let l:dir .= "/.."
+        endwhile
+        if DirLimit( l:dir )
+            let l:dir = "."
+        else
+            " get rid of first ./
+            " The loop above could be changed to make this unnecessary, but
+            " as is it is identical to the one in GetModuleRoot()
+            let l:dir = substitute( dir, "\./", "", "" )
+        endif
+        return l:dir
+    endfunction
+
+    function GetModuleRoot()
+        let l:mods = ":p:h"
+        let l:dir = expand( "%" . l:mods )
+        while !DirLimit( l:dir ) && !filereadable( l:dir . "/Makefile" ) && !filereadable( l:dir . "/prj/build.lst" )
+            let l:mods .= ":h"
+            let l:dir = expand( "%" . l:mods )
+        endwhile
+        if DirLimit( l:dir )
+            let l:dir = expand( "%:p:h" )
+        endif
+        return l:dir
+    endfunction
+
+    function Make()
+        " cd into current file's directory before obtaining module's root
+        let l:my_local_path = expand("%:h")
+        if (l:my_local_path == "")
+            let l:my_local_path = "."
+        endif
+        exec 'lcd ' . l:my_local_path
+        if has("gui_running")
+            " Source environment for detached gvim. Use ENV.$INPATH instead of
+            " Env.Host.sh when building for more than one platform and
+            " cp Env.Host.sh ENV.$INPATH
+            " or something similar.
+            let l:mymake = "source $SRC_ROOT/Env.Host.sh && "
+        else
+            let l:mymake = ""
+        endif
+        let l:module = GetModuleRoot()
+        " Define the make tool, order is significant as a Makefile exists in
+        " the project's root returned as module if none exists in the module.
+        if expand( "%:t" ) == "Makefile"
+            " If the current file is a Makefile, gbuild the entire module.
+            exec 'lcd ' . l:module
+            let l:mymake .= "make -sr -j" . s:make_jobs . " wall=true debug=true"
+        elseif expand( "%:t" ) == "build.lst"
+            " If the current file is a build.lst, dmake the entire module.
+            let l:mymake .= "build.pl wall=true debug=true -P" . s:build_dirs . " -- -P" . s:build_dmake
+        elseif filereadable( "makefile.mk" )
+            " Relative target for dmake.
+            let l:mymake .= "dmake wall=true debug=true " . GetDotPath() . "/$INPATH/slo/%:t:r.obj"
+        elseif filereadable( l:module . "/Makefile" )
+            exec 'lcd ' . l:module
+            " Pass target as full path constructed of now relative part.
+            let l:mymake .= "make -sr -j1 wall=true debug=true $WORKDIR/CxxObject/" . fnamemodify( l:module, ":t" ) . "/%:.:h/%:t:r.o"
+        else
+            let l:mymake .= "build.pl wall=true debug=true -P" . s:build_dirs . " -- -P" . s:build_dmake
+        endif
+        let &makeprg = l:mymake
+        make
+    endfunction
+endif
