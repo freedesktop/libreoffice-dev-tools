@@ -20,7 +20,8 @@ git clone git://anongit.freedesktop.org/libreoffice/contrib/dev-tools dev-tools
 mv dev-tools/ubuntu-jenkins/jobs jobs
 rm -rf dev-tools
 echo "#!/bin/sh" > start-lo-jenkins.sh
-echo "java -DJENKINS_HOME=$(pwd) -jar $(pwd)/jenkins.war">> start-lo-jenkins.sh
+echo 'SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"' >> start-lo-jenkins.sh
+echo 'java -DJENKINS_HOME=$SCRIPT_DIR -jar $SCRIPT_DIR/jenkins.war' >> start-lo-jenkins.sh
 chmod u+x start-lo-jenkins.sh
 echo "done."
 echo "You can start your LibreOffice Ubuntu Jenkins server with: $(pwd)/start-lo-jenkins.sh"
