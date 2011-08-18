@@ -1,0 +1,65 @@
+From 129beb48680166f53f5ce5a384add0c9e506ed00 Mon Sep 17 00:00:00 2001
+From: Jan Holesovsky <kendy@suse.cz>
+Date: Mon, 15 Aug 2011 15:15:58 +0200
+Subject: [PATCH 4/4] MSVC: Handle the error output correctly when the compilation fails.
+
+---
+ ccache.c |   23 +++++++++++++++++++++--
+ 1 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/ccache.c b/ccache.c
+index 7df5d01..263dc66 100644
+--- a/ccache.c
++++ b/ccache.c
+@@ -234,9 +234,18 @@ static void to_cache(ARGS *args)
+ 
+ 	if (status != 0) {
+ 		int fd;
++		int error_fd = 2;
+ 		cc_log("compile of %s gave status = %d\n", output_file, status);
+ 		stats_update(STATS_STATUS);
+ 
++		if (compiler == COMPILER_MSVC) {
++		    /* MSVC is confused, and writes the showIncludes to
++		       stderr when preprocessing, but to stdout when compiling.
++		       Let's try to make it consistent, and output everything to
++		       stdout regardless what is happening. */
++		    error_fd = 1;
++		}
++
+ 		fd = open(tmp_stderr, O_RDONLY | O_BINARY);
+ 		if (fd != -1) {
+ 			if (strcmp(output_file, "/dev/null") == 0 ||
+@@ -245,7 +254,7 @@ static void to_cache(ARGS *args)
+ 					/* we might have some stderr from cpp */
+ 					int fd2 = open(cpp_stderr, O_RDONLY | O_BINARY);
+ 					if (fd2 != -1) {
+-						copy_fd(fd2, 2);
++						copy_fd(fd2, error_fd);
+ 						close(fd2);
+ 						unlink(cpp_stderr);
+ 						cpp_stderr = NULL;
+@@ -254,9 +263,19 @@ static void to_cache(ARGS *args)
+ 
+ 				/* we can use a quick method of
+                                    getting the failed output */
+-				copy_fd(fd, 2);
++				copy_fd(fd, error_fd);
+ 				close(fd);
+ 				unlink(tmp_stderr);
++
++				if (compiler == COMPILER_MSVC) {
++				    /* MSVC sends even errors to stdout, copy
++				       them too */
++				    fd = open(tmp_stdout, O_RDONLY | O_BINARY);
++				    copy_fd(fd, error_fd);
++				    close(fd);
++				    unlink(tmp_stdout);
++				}
++
+ 				if (i_tmpfile && !direct_i_file) {
+ 					unlink(i_tmpfile);
+ 				}
+-- 
+1.7.2.3
+
