@@ -115,7 +115,7 @@ local repo="$1"
     do_action "unpack the $repo tar.bz2 file" "unpacking the $repo tar.bz2 file" tar -xf ${temp_dir}/libreoffice-$repo.tar.bz2 -C clone
     $active && pushd ./clone/$repo > /dev/null || ( $active && die "cannot cd to clone/$repo" )
     do_action "restore the working view of the $repo repo" "restoring the working view of $repo" git reset --hard
-    $active popd > /dev/null
+    $active && popd > /dev/null
     do_action "re-create the links in core for $repo if needed" "" relink $repo
 
 }
