@@ -27,7 +27,7 @@ die()
 
 usage()
 {
-    echo "usage: $0 [-h] [-d <paht>] [-t <path>] [all | dev | [core] [help] [tr[anslations]] [binfilter] [dict[ionaries]]"
+    echo "usage: $0 [-h] [-d <path>] [-t <path>] [all | dev | [core] [help] [tr[anslations]] [binfilter] [dict[ionaries]]"
     echo ""
     echo "    -h        Display this help."
     echo "    -d <path> The location of the core repository for libreoffice. Default: ./libo"
@@ -53,9 +53,9 @@ usage()
 #
 sanity_check()
 {
-    which wget > /dev/null || die "This script need wget in the PATH to function"
-    which tar > /dev/null || die "This script need tar in the PATH to function"
-    which bzip2 > /dev/null || die "This script need bzips in the PATH to function"
+    which wget > /dev/null 2>&1 || die "This script need wget in the PATH to function"
+    which tar > /dev/null 2>&1 || die "This script need tar in the PATH to function"
+    which bzip2 > /dev/null 2>&1 || die "This script need bzips in the PATH to function"
 }
 
 ###
@@ -112,8 +112,8 @@ local repo="$1"
     if [ -e ./clone/$repo ] ; then
         do_action "Remove the current $repo repo" "removing ./clone/$repo" rm -fr ./clone/$repo
     fi
-    do_action "unpack the $repo tar.bz2 file" "unpacking the $repo tar.bz2 file" tar -xf ${temp_dir}/libreoffice-$repo-git.tar.bz2 -C clone
-    $active && pushd ./clone/repo > /dev/null || $active && die "cannot cd to clone/$repo"
+    do_action "unpack the $repo tar.bz2 file" "unpacking the $repo tar.bz2 file" tar -xf ${temp_dir}/libreoffice-$repo.tar.bz2 -C clone
+    $active && pushd ./clone/$repo > /dev/null || $active && die "cannot cd to clone/$repo"
     do_action "restore the working view of the $repo repo" "restoring the working view of $repo" git reset --hard
     $active popd > /dev/null
     do_action "re-create the links in core for $repo if needed" "" relink $repo
@@ -176,7 +176,7 @@ if $do_core ; then
     do_action "Download the core repo tar.bz2 file" "downloading package for the core repo" wget  http://dev-www.libreoffice.org/bundles/libreoffice-core.tar.bz2 -P ${temp_dir}
     $active && mkdir ${core_path?} || $active && die "cannot create the directory ${core_path}"
     $active && pushd ${core_path?} > /dev/null || $active && die "cannot cd to ${core_path?}"
-    do_action "Unpack the core repo tar.bz2 file to ${core_path}" "unpacking the core tar.bz2 file" tar -xf --strip-components=1 ${temp_dir}/libreoffice-$repo-git.tar.bz2
+    do_action "Unpack the core repo tar.bz2 file to ${core_path}" "unpacking the core tar.bz2 file" tar -xf --strip-components=1 ${temp_dir}/libreoffice-$repo.tar.bz2
     $active && mkdir clone
     do_action "Restore the working view of the core repo" "restoring the working view of core" git reset --hard
 else
