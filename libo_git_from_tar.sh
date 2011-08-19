@@ -41,11 +41,11 @@ usage()
     echo "Do not abuse this script. Once you have downloaded a set of git repos, it is much more efficient, for you and for us, to use ./g pull -r to refresh your git repositories"
     echo ""
     echo "Example:"
-    echo "$0 \# will clone the core repo in ./core (right now: $(pwd)/core) and clone binfilter, help and dictionaries in ./core/clone"
+    echo "$0 # will clone the core repo in ./core (right now: $(pwd)/core) and clone binfilter, help and dictionaries in ./core/clone"
     echo ""
-    echo "$0 -d ~/core \# clone the core repo in ~/core and clone binfilter, help and dictionaries in ~/core/clone"
+    echo "$0 -d ~/core # clone the core repo in ~/core and clone binfilter, help and dictionaries in ~/core/clone"
     echo ""
-    echo "$0 -d ~/libo translations \# remove ~/libo/clone/translations if it exist, and clone a new translations repo there"
+    echo "$0 -d ~/libo translations # remove ~/libo/clone/translations if it exist, and clone a new translations repo there"
 }
 
 ###
@@ -68,7 +68,7 @@ shift
 local die_message="$1"
 shift
 
-   echo "--> $description_message"
+   if [ -n "$description_message" ] ; then echo "--> $description_message" ; fi
    if $active ; then
        $@ || die "$die_message"
    fi
@@ -113,9 +113,9 @@ local repo="$1"
         do_action "Remove the current $repo repo" "removing ./clone/$repo" rm -fr ./clone/$repo
     fi
     do_action "unpack the $repo tar.bz2 file" "unpacking the $repo tar.bz2 file" tar -xf ${temp_dir}/libreoffice-$repo.tar.bz2 -C clone
-    $active && pushd ./clone/$repo > /dev/null || ( $active && die "cannot cd to clone/$repo" )
+    do_action "" "cannot cd to clone/$repo" pushd ./clone/$repo > /dev/null
     do_action "restore the working view of the $repo repo" "restoring the working view of $repo" git reset --hard
-    $active && popd > /dev/null
+    do_action "" "pop-ing up to the previous directory" popd > /dev/null
     do_action "re-create the links in core for $repo if needed" "" relink $repo
 
 }
@@ -174,13 +174,13 @@ fi
 if $do_core ; then
     do_action "Remove any old copy of core tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-core.tar.bz2"  rm -f ${temp_dir}/libreoffice-core.tar.bz2
     do_action "Download the core repo tar.bz2 file" "downloading package for the core repo" wget  http://dev-www.libreoffice.org/bundles/libreoffice-core.tar.bz2 -P ${temp_dir}
-    $active && mkdir ${core_path?} || ( $active && die "cannot create the directory ${core_path}" )
-    $active && pushd ${core_path?} > /dev/null || ( $active && die "cannot cd to ${core_path?}" )
+    do_action "" "cannot create the directory ${core_path}" mkdir ${core_path?}
+    do_action "" "cannot cd to ${core_path?}" pushd ${core_path?} > /dev/null
     do_action "Unpack the core repo tar.bz2 file to ${core_path}" "unpacking the core tar.bz2 file" tar --strip-components=1 -xf ${temp_dir}/libreoffice-core.tar.bz2
-    $active && mkdir clone
+    do_action "" "cannot create the directory clone" mkdir clone
     do_action "Restore the working view of the core repo" "restoring the working view of core" git reset --hard
 else
-    $active && pushd ${core_path?} > /dev/null || ( $active && die "cannot cd to ${core_path?}" )
+    do_action "" "cannot cd to ${core_path?}" pushd ${core_path?} > /dev/null
 fi
 
 $do_translations && process_child_repo translations
