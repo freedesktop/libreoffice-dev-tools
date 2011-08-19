@@ -12,6 +12,7 @@
 temp_dir=/tmp
 core_path=libo
 active=true
+resume=false
 
 do_core=false
 do_binfilter=false
@@ -32,6 +33,7 @@ usage()
     echo "    -h        Display this help."
     echo "    -d <path> The location of the core repository for libreoffice. Default: ./libo"
     echo "    -p        Pretend. display what would be done, but do not actually do it."
+    echo "    -resume   try to re-use already downloaded/partially downloaded tar.bz2
     echo "    -t <path> The location of the temporary directory used to download and extract repositories. Default: /tmp"
     echo ""
     echo "The arguments name the repositories to be downloaded, 'all' means... all of them. 'dev' means all but translations, which is the default."
@@ -106,8 +108,8 @@ process_child_repo()
 {
 local repo="$1"
 
-    do_action "Remove old copy of $repo tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-$repo.tar.bz2"  rm -f ${temp_dir}/libreoffice-$repo.tar.bz2
-    do_action "Download the $repo repo tar.bz2 file" "downloading package for the $repo repo" wget  http://dev-www.libreoffice.org/bundles/libreoffice-$repo.tar.bz2 -P ${temp_dir}
+    if ! $resume ; then do_action "Remove old copy of $repo tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-$repo.tar.bz2"  rm -f ${temp_dir}/libreoffice-$repo.tar.bz2 ; fi
+    do_action "Download the $repo repo tar.bz2 file" "downloading package for the $repo repo" wget -c http://dev-www.libreoffice.org/bundles/libreoffice-$repo.tar.bz2 -P ${temp_dir}
 
     if [ -e ./clone/$repo ] ; then
         do_action "Remove the current $repo repo" "removing ./clone/$repo" rm -fr ./clone/$repo
@@ -126,6 +128,7 @@ while [ "${1:-}" != "" ] ; do
         -d) shift; core_path="$1" ;;
         -t) shift; temp_dir="$1" ;;
         -p) active=false ;;
+        --resume) resume=true ;;
         all)  do_core=true ; do_binfilter=true; do_help=true; do_dictionaries=true ; do_translations=true;;
         dev)  do_core=true ; do_binfilter=true; do_help=true; do_dictionaries=true ;;
         core) do_core=true ;;
@@ -172,8 +175,8 @@ fi
 
 
 if $do_core ; then
-    do_action "Remove any old copy of core tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-core.tar.bz2"  rm -f ${temp_dir}/libreoffice-core.tar.bz2
-    do_action "Download the core repo tar.bz2 file" "downloading package for the core repo" wget  http://dev-www.libreoffice.org/bundles/libreoffice-core.tar.bz2 -P ${temp_dir}
+    if ! $resume ; then do_action "Remove any old copy of core tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-core.tar.bz2"  rm -f ${temp_dir}/libreoffice-core.tar.bz2 ; fi
+    do_action "Download the core repo tar.bz2 file" "downloading package for the core repo" wget -c http://dev-www.libreoffice.org/bundles/libreoffice-core.tar.bz2 -P ${temp_dir}
     do_action "" "cannot create the directory ${core_path}" mkdir ${core_path?}
     do_action "" "cannot cd to ${core_path?}" pushd ${core_path?} > /dev/null
     do_action "Unpack the core repo tar.bz2 file to ${core_path}" "unpacking the core tar.bz2 file" tar --strip-components=1 -xf ${temp_dir}/libreoffice-core.tar.bz2
