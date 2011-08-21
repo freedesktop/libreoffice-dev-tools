@@ -46,10 +46,11 @@ function recreate_repotag {
         `cd $REPODIR/$REPO && git checkout $TAGTOFIND`
         git bisect reset
         git bisect start ${REPO}_${UPPERBOUND} ${REPO}_${LOWERBOUND}^
+        git bisect skip 575c02a34623b3bb3e596708cbc917cbe2a4eba6
         git bisect run $BISECTFUNCTOR $REPODIR/$REPO
         if [ "$?" -eq "0" ]
         then
-            git tag ${REPO}_${TAGTOFIND} HEAD^
+            git tag ${REPO}_${TAGTOFIND} `git rev-list --bisect-all ^${REPO}_${LOWERBOUND} ${HEAD}|grep dist=1|tail -n1|cut -f1 -d\ `
         else
             exit 1
         fi
@@ -67,16 +68,16 @@ function premerge_fixes {
     git tag -d filters_feature/gnumake4_writerfilter_head
     for repo in $OLDREPONAMES
     do
-        recreate_repotag ${repo} OOO_BUILD_3_2_98_1 OOO_BUILD_3_2_98_0 LIBREOFFICE_3_3_0_1
-        recreate_repotag ${repo} LIBREOFFICE_3_2_99_1 OOO_BUILD_3_2_98_1 LIBREOFFICE_3_3_0_1
+        #recreate_repotag ${repo} OOO_BUILD_3_2_98_1 OOO_BUILD_3_2_98_0 LIBREOFFICE_3_3_0_1
+        #recreate_repotag ${repo} LIBREOFFICE_3_2_99_1 OOO_BUILD_3_2_98_1 LIBREOFFICE_3_3_0_1
 
-        recreate_repotag ${repo} libreoffice-3.3.1.2 libreoffice-3.3.0.3 libreoffice-3.3.2.1
-        recreate_repotag ${repo} libreoffice-3.3.0.4 libreoffice-3.3.0.3 libreoffice-3.3.1.2
-        recreate_repotag ${repo} libreoffice-3.3.1.1 libreoffice-3.3.0.4 libreoffice-3.3.1.2
+        #recreate_repotag ${repo} libreoffice-3.3.1.2 libreoffice-3.3.0.3 libreoffice-3.3.2.1
+        #recreate_repotag ${repo} libreoffice-3.3.0.4 libreoffice-3.3.0.3 libreoffice-3.3.2.1
+        #recreate_repotag ${repo} libreoffice-3.3.1.1 libreoffice-3.3.0.4 libreoffice-3.3.1.2
 
-        recreate_repotag ${repo} libreoffice-3.3.3.1 libreoffice-3.3.1.2 libreoffice-3.4.0.1
-        recreate_repotag ${repo} libreoffice-3.3.4.1 libreoffice-3.3.3.1 libreoffice-3.4.0.1
-        recreate_repotag ${repo} libreoffice-3.3.2.2 libreoffice-3.3.2.1 libreoffice-3.3.3.1
+        #recreate_repotag ${repo} libreoffice-3.3.3.1 libreoffice-3.3.1.2 libreoffice-3.4.0.1
+        #recreate_repotag ${repo} libreoffice-3.3.4.1 libreoffice-3.3.3.1 libreoffice-3.4.0.1
+        #recreate_repotag ${repo} libreoffice-3.3.2.2 libreoffice-3.3.2.1 libreoffice-3.3.3.1
 
         git tag -d ${repo}_ooo/DEV300_last_svn_milestone
     done
