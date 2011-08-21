@@ -13,7 +13,7 @@ function premerge_fixes {
     git tag -d filters_feature/gnumake4_writerfilter_head
     for repo in $OLDREPONAMES
     do
-        git tag -d ooo/DEV300_last_svn_milestone
+        git tag -d ${repo}_ooo/DEV300_last_svn_milestone
     done
     popd > /dev/null
 }
