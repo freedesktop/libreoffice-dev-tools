@@ -4,12 +4,55 @@ REPO=`readlink -f $1`
 
 OLDREPONAMES="artwork base bootstrap calc components extensions extras filters impress libs-core libs-extern-sys libs-extern libs-gui postprocess sdk testing ure writer" 
 
-function apply_fixes {
+function premerge_fixes {
     pushd $REPO > /dev/null
     rm .git/hooks/*
-    for oldrepo in $OLDREPONAMES
+    git tag writer_LIBREOFFICE_3_3_0_1 520eb9a251e557ffbebfc79deb5ee0cb55600d9e
+    git tag postprocess_LIBREOFFICE_3_3_0_1 98bb7da5f26a1644397dbe73d35e0a083e45da85
+    git tag -d filters_feature/gnumake4_writerfilter_base
+    git tag -d filters_feature/gnumake4_writerfilter_head
+    for repo in $OLDREPONAMES
     do
-        git tag ${oldrepo}_libreoffice-3.3.0.1 ${oldrepo}_LIBREOFFICE_3_3_0_1
+        git tag -d ooo/DEV300_last_svn_milestone
+    done
+    popd > /dev/null
+}
+
+function postmerge_fixes {
+    pushd $REPO > /dev/null
+    rm .git/hooks/*
+    git tag libreoffice-3.2.99.2 LIBREOFFICE_3_2_99_2
+    git tag -d LIBREOFFICE_3_2_99_2
+    git tag libreoffice-3.2.99.3 LIBREOFFICE_3_2_99_3
+    git tag -d LIBREOFFICE_3_2_99_3
+    git tag -d linux-build-fridrich-20100930
+    git tag libreoffice-3.3.0.1 LIBREOFFICE_3_3_0_1
+    git tag -d LIBREOFFICE_3_3_0_1
+    git branch -D LIBREOFFICE
+    git branch -D LO-BASE-INTEGRATION-DEV300
+    git branch -D OOO_BUILD
+    git branch -D linux-build-fridrich-20100930
+    git branch -D ooo/OOO310
+    git branch -D ooo/OOO320
+    git branch -D ooo/OOO330
+    git tag ooo/DEV300_last_svn_milestone ooo/DEV300_m63
+    popd > /dev/null
+}
+
+function tag_to_notes {
+    local TAG=$1
+    pushd $REPO > /dev/null
+    local OLDREPOTAGS=`for repo in $OLDREPONAMES;do echo ${repo}_${TAG}; done`
+    # -remove split repo tags
+    # -write split repo notes replacing the tag
+    for repotag in $OLDREPOTAGS
+    do
+        echo "tag to note: $repotag"
+        if [ -n "`git tag|grep ${repotag}`" ]
+        then
+            git notes append -m "split repo tag: ${repotag}" `git rev-list --no-walk ${repotag}`
+            git tag -d ${repotag}
+        fi
     done
     popd > /dev/null
 }
@@ -22,16 +65,16 @@ function merge_tag {
     local MISSINGTAGS=
     for repotag in $OLDREPOTAGS
     do
-        git rev-list --no-walk $repotag > /dev/null
-        if [ "$?" -ne "0" ]
+        if [ -z "`git tag|grep ${repotag}`" ]
         then
-            echo "Missing $repotag!!"
             MISSINGTAGS+=" $repotag"
         fi
     done 
     if [ -n "$MISSINGTAGS" ]
     then
         echo "Not mergeing tag $TAG because $MISSINGTAGS are missing!"
+        SKIPPEDTAGS="$SKIPPEDTAGS $TAG"
+        ALLMISSINGTAGS="$ALLMISSINGTAGS $MISSINGTAGS"
         popd > /dev/null
         return
     fi
@@ -51,18 +94,12 @@ function merge_tag {
     GIT_AUTOR_DATE="$COMMITTIME" GIT_COMMITER_DATE="$COMMITTIME" git commit -m "merged tag $TAG" --date=$COMMITTIME
     # -tag merged commit
     git tag $TAG
-    # -remove split repo tags
-    # -write split repo notes replacing the tags 
-    for repo in $OLDREPONAMES
-    do
-        git notes append -m "split repo tag: ${repo}_${TAG}" `git rev-list --no-walk ${repo}_${TAG}`
-        git tag -d ${repo}_${TAG}
-    done
     popd > /dev/null
 }
 
 #creates a merged branch
 function create_branch {
+    echo "creating branch $1 with tags $2"
     local BRANCHNAME=$1
     local TAGS=$2
     [ -n "$BRANCHNAME" ] || return
@@ -79,19 +116,20 @@ function create_branch {
     for hash in $ORDEREDBOOTSTRAPHASHES
     do
         local TAG=`git name-rev --tags --name-only $hash|sed -e s/^bootstrap_// -e s/..$//`
+        echo "working on bootstrap commit $hash which is $TAG"
         if [ -z "$BRANCHCREATED" ]
         then
             #-if the first tag has already been created just start from there
             #-otherwise start from bootstrap
-            git rev-list --no-walk $TAG > /dev/null
-            if [ "$?" -ne "0" ]
+            if [ -n "`git tag|grep ${TAG}`" ]
             then
                 echo "basetag $TAG for branch $BRANCHNAME does not exist yet."
-                git rev-list --no-walk bootstrap_$TAG > /dev/null
-                if [ "$?" -eq "0" ]
+                if [ -n "`git tag|grep bootstrap_$TAG`" ]
                 then
                     echo "creating branch from bootstrap."
                     git checkout -b $BRANCHNAME bootstrap_$TAG
+                    echo "merge tag $TAG"
+                    merge_tag $TAG
                     BRANCHCREATED=T
                 else
                     echo "missing bootstrap tag bootstrap_$TAG for creating branch $BRANCHNAME"
@@ -103,7 +141,6 @@ function create_branch {
             fi
         else
             #-we already have a branch so we just pump out the merged tags as commits on it
-            echo "merge tag $TAG"
             merge_tag $TAG
         fi
     done
@@ -122,11 +159,22 @@ cat > $FINDREPOBRANCHES <<EOF
         TAGSFORBRANCH["ooo/OOO320"] = "ooo/DEV300_m60";
         TAGSFORBRANCH["ooo/OOO330"] = "ooo/DEV300_m84";
         TAGSFORBRANCH["ooo/DEV300_last_svn_milestone"] = "ooo/DEV300_m63";
+        TAGSFORBRANCH["libreoffice-3-4-2"] = "libreoffice-3.4.1.1";
+        TAGSFORBRANCH["libreoffice-3-4-1"] = "libreoffice-3.4.0.1";
+        # libreoffice-3.3 is way undertagged for now so we leave it out
+        #TAGSFORBRANCH["libreoffice-3-3-3"] = "libreoffice-3.3.2.1";
+        #TAGSFORBRANCH["libreoffice-3-3-2"] = "libreoffice-3.3.1.1";
+        #TAGSFORBRANCH["libreoffice-3-3-1"] = "LIBREOFFICE_3.3.1.1";
     }
     /^libreoffice-.*/ {
         MAJOR=\$1 "-" \$2
         MINOR=\$1 "-" \$2 "-" \$3
         RC=\$1 "." \$2 "." \$3 "." \$4
+        # libreoffice-3.3 is way undertagged for now so we leave it out
+        # we can make a run for it later, when there are enough tags
+        # (or at least the release finals)
+        if(\$2=="3")
+            next;
         if(\$4=="1")
             TAGSFORBRANCH[MAJOR] = TAGSFORBRANCH[MAJOR] " " RC;
         TAGSFORBRANCH[MINOR] = TAGSFORBRANCH[MINOR] " " RC;
@@ -143,6 +191,16 @@ cat > $FINDREPOBRANCHES <<EOF
         sub(/_m[0-9]*\$/,"",BRANCH);
         TAGSFORBRANCH[BRANCH] = TAGSFORBRANCH[BRANCH] " " \$0;
     }
+    /^(LIBREOFFICE_|LO-BASE-INTEGRATION-DEV300_|OOO_BUILD_|linux-build-fridrich-20100930|OpenOffice_).*/ {
+        if(\$0 ~ /^OOO_BUILD/) {
+            BRANCH = "OOO_BUILD";
+        } else {
+            split(\$0, fields, "_");
+            BRANCH = fields[1];
+        }
+        TAGSFORBRANCH[BRANCH] = TAGSFORBRANCH[BRANCH] " " \$0;
+        BASEBRANCHES[BRANCH] = "T";
+    }
     END {
         for (BRANCH in BASEBRANCHES) {
             print "create_branch " BRANCH " '" TAGSFORBRANCH[BRANCH] "'";
@@ -153,9 +211,20 @@ cat > $FINDREPOBRANCHES <<EOF
     }
 EOF
 
-apply_fixes
+premerge_fixes
+ALLMISSINGTAGS=
+SKIPPEDTAGS=
 SPLITREPOTAGS=`cd $REPO; git tag|grep bootstrap|sed s/^bootstrap_//`
 echo $SPLITREPOTAGS|awk -f $FINDREPOBRANCHES > $TAGSFORBRANCH
+cat $TAGSFORBRANCH
+echo "SPLITREPOTAGS: $SPLITREPOTAGS"
 source $TAGSFORBRANCH
-
+for TAG in $SPLITREPOTAGS
+do
+    tag_to_notes $TAG
+done
 rm $FINDREPOBRANCHES $TAGSFORBRANCH
+postmerge_fixes
+echo "Missing tags: $ALLMISSINGTAGS"
+echo "Skipped tags: $SKIPPEDTAGS"
+
