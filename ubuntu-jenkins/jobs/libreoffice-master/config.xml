@@ -4,7 +4,41 @@
   <description></description>
   <keepDependencies>false</keepDependencies>
   <properties/>
-  <scm class="hudson.scm.NullSCM"/>
+  <scm class="hudson.plugins.git.GitSCM">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <name>origin</name>
+        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+        <url>${JENKINS_HOME}/jobs/repo-mirror/workspace/core.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <recursiveSubmodules>false</recursiveSubmodules>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <authorOrCommitter>false</authorOrCommitter>
+    <clean>false</clean>
+    <wipeOutWorkspace>false</wipeOutWorkspace>
+    <pruneBranches>false</pruneBranches>
+    <remotePoll>false</remotePoll>
+    <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
+    <gitTool>Default</gitTool>
+    <browser class="hudson.plugins.git.browser.GitWeb">
+      <url>http://cgit.freedesktop.org/libreoffice/core/commit</url>
+    </browser>
+    <submoduleCfg class="list"/>
+    <relativeTargetDir></relativeTargetDir>
+    <excludedRegions></excludedRegions>
+    <excludedUsers></excludedUsers>
+    <gitConfigName></gitConfigName>
+    <gitConfigEmail></gitConfigEmail>
+    <skipTag>false</skipTag>
+    <scmName></scmName>
+  </scm>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
@@ -14,22 +48,27 @@
   <builders>
     <hudson.tasks.Shell>
       <command>BASEURL=`readlink -f ${WORKSPACE}/../../repo-mirror/workspace/`
-[ -d ${WORKSPACE}/.git ] || git clone ${BASEURL}/core.git ${WORKSPACE}
-git pull
 ./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${JENKINS_HOME}/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
 cat ${JENKINS_HOME}/set_tarfile_location.sh &gt;&gt; Env.Host.sh
 echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; Env.Host.sh
 echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; Env.Host.sh
 echo &quot;export CCACHE_BASEDIR=\&quot;${WORKSPACE}\&quot;&quot; &gt;&gt; Env.Host.sh
+mkdir -p clone
+[ -d ${WORKSPACE}/clone/help/.git ] \
+    || git clone ${BASEURL}/help.git ${WORKSPACE}/clone/help
+[ -d ${WORKSPACE}/clone/dictionaries/.git ] \
+    || git clone ${BASEURL}/dictionaries.git ${WORKSPACE}/clone/dictionaries 
+cd ${WORKSPACE}
+./g checkout `git name-rev --name-only HEAD`
 ./download
 ./g stash save
 ./g pull -r
 ./g -f stash pop
 ./g branch -v
 #./g --set-push-user YOURUSERNAMEHERE
-. $WORKSPACE/Env.Host.sh &amp;&amp; make
-. $WORKSPACE/Env.Host.sh &amp;&amp; make dev-install
-. $WORKSPACE/Env.Host.sh &amp;&amp; make subsequentcheck -j5 -k -f $WORKSPACE/GNUmakefile.mk
+./g branch -v
+make all &amp;&amp; make dev-install
+. $WORKSPACE/Env.Host.sh &amp;&amp; cd $WORKSPACE &amp;&amp; $SOLARENV/bin/subsequenttests -j5 -k
 </command>
     </hudson.tasks.Shell>
   </builders>
