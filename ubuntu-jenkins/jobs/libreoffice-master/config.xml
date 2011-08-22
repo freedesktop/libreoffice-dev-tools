@@ -50,8 +50,6 @@
       <command>BASEURL=`readlink -f ${WORKSPACE}/../../repo-mirror/workspace/`
 ./autogen.sh --disable-mozilla --disable-binfilter --with-junit=${JENKINS_HOME}/junit-4.9b2.jar --with-num-cpus=4 --with-max-jobs=4
 cat ${JENKINS_HOME}/set_tarfile_location.sh &gt;&gt; Env.Host.sh
-echo &apos;export CC=&quot;ccache gcc&quot;&apos; &gt;&gt; Env.Host.sh
-echo &apos;export CXX=&quot;ccache g++&quot;&apos; &gt;&gt; Env.Host.sh
 echo &quot;export CCACHE_BASEDIR=\&quot;${WORKSPACE}\&quot;&quot; &gt;&gt; Env.Host.sh
 mkdir -p clone
 [ -d ${WORKSPACE}/clone/help/.git ] \
