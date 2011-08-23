@@ -169,6 +169,7 @@ int gmake_module = 0;
             fprintf(stderr, "error reading %s\n", buffer);
             exit(1);
         }
+        fclose(fp);
     }
     else
     {
@@ -177,7 +178,6 @@ int gmake_module = 0;
             fprintf(stderr, "skipping %s, probably not a module\n", filename);
         }
     }
-    fclose(fp);
     return module;
 }
 
