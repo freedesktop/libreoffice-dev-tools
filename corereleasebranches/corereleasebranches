@@ -1,62 +1,44 @@
 #!/bin/bash
 
 REPODIR=`readlink -f $1`
+CLEANSPACES=`readlink -f $2`
 
 OLDREPONAMES="artwork base bootstrap calc components extensions extras filters impress libs-core libs-extern-sys libs-extern libs-gui postprocess sdk testing ure writer" 
 
-BISECTFUNCTOR=`mktemp`
-chmod u+x $BISECTFUNCTOR
-cat > $BISECTFUNCTOR <<EOF
-#!/bin/bash
-for file in \`cd \$1 && find . -type f -not -path "./.git*"\`
-do
-    if [ -e \$file ]
-    then
-        if [ ! \$file -nt \$1/\$file ]
-        then
-            exit 1
-        fi
-    fi
-done
-exit 0
-EOF
-
 function recreate_repotag {
     local REPO=$1
-    local TAGTOFIND=$2
-    local LOWERBOUND=$3
-    local UPPERBOUND=$4
-    if [ -n "`cd $REPODIR/core && git tag|grep ${REPO}_${TAGTOFIND}`" ]
+    local TAGTOCREATE=$2
+    local BASETAG=$3
+    if [ -n "`cd $REPODIR/core && git tag|grep ${REPO}_${TAGTOCREATE}`" ]
     then
-        echo "tag ${REPO}_${TAGTOFIND} exists already in core."
+        echo "tag ${REPO}_${TAGTOCREATE} exists already in core."
         return
     fi
-    if [ -z "`cd $REPODIR/$REPO && git tag|grep ${TAGTOFIND}`" ]
+    if [ -z "`cd $REPODIR/$REPO && git tag|grep ${TAGTOCREATE}`" ]
     then
-        echo "tag ${TAGTOFIND} also missing in repo ${REPO}."
+        echo "tag ${TAGTOCREATE} also missing in repo ${REPO}."
         return
     fi
-    echo "searching for $TAGTOFIND from $REPO between $LOWERBOUND and $UPPERBOUND"
     pushd $REPODIR/core > /dev/null
-    #find the first commit with any file younger than in the reference
-    if [ "`git rev-list --no-walk ${REPO}_$LOWERBOUND`" = "`git rev-list --no-walk ${REPO}_${UPPERBOUND}`" ]
-    then
-        git tag ${REPO}_${TAGTOFIND} ${REPO}_$LOWERBOUND
-    else
-        `cd $REPODIR/$REPO && git checkout $TAGTOFIND`
-        git bisect reset
-        git bisect start ${REPO}_${UPPERBOUND} ${REPO}_${LOWERBOUND}^
-        git bisect skip 575c02a34623b3bb3e596708cbc917cbe2a4eba6
-        git bisect run $BISECTFUNCTOR $REPODIR/$REPO
-        if [ "$?" -eq "0" ]
-        then
-            git tag ${REPO}_${TAGTOFIND} `git rev-list --bisect-all ^${REPO}_${LOWERBOUND} ${HEAD}|grep dist=1|tail -n1|cut -f1 -d\ `
-        else
-            exit 1
-        fi
-        git bisect reset
-    fi
+    git checkout -b tmp/recreate_repotag ${REPO}_$BASETAG
+    git clean -df
+    rm -rf *
+    popd
+    pushd $REPODIR/$REPO > /dev/null
+    git archive --format=tar $TAGTOCREATE | tar -xC $REPODIR/core
+    find . -type f -not -path "./.git*" | $CLEANSPACES -p 8
+    local MSG=`mktemp`
+    echo "recreated tag $TAGTOCREATE which had these commits:" > $MSG
+    git log --stat --decorate=full ${BASETAG}..${TAGTOCREATE} >> $MSG
     popd > /dev/null
+    pushd $REPODIR/core > /dev/null
+    git add --all
+    git commit -F $MSG
+    rm $MSG
+    git tag ${REPO}_$TAGTOCREATE
+    git checkout master
+    git branch -D  tmp/recreate_repotag
+    popd
 }
 
 function premerge_fixes {
@@ -66,21 +48,20 @@ function premerge_fixes {
     git tag postprocess_LIBREOFFICE_3_3_0_1 98bb7da5f26a1644397dbe73d35e0a083e45da85
     git tag -d filters_feature/gnumake4_writerfilter_base
     git tag -d filters_feature/gnumake4_writerfilter_head
+
     for repo in $OLDREPONAMES
     do
-        #recreate_repotag ${repo} OOO_BUILD_3_2_98_1 OOO_BUILD_3_2_98_0 LIBREOFFICE_3_3_0_1
-        #recreate_repotag ${repo} LIBREOFFICE_3_2_99_1 OOO_BUILD_3_2_98_1 LIBREOFFICE_3_3_0_1
-
-        #recreate_repotag ${repo} libreoffice-3.3.1.2 libreoffice-3.3.0.3 libreoffice-3.3.2.1
-        #recreate_repotag ${repo} libreoffice-3.3.0.4 libreoffice-3.3.0.3 libreoffice-3.3.2.1
-        #recreate_repotag ${repo} libreoffice-3.3.1.1 libreoffice-3.3.0.4 libreoffice-3.3.1.2
-
-        #recreate_repotag ${repo} libreoffice-3.3.3.1 libreoffice-3.3.1.2 libreoffice-3.4.0.1
-        #recreate_repotag ${repo} libreoffice-3.3.4.1 libreoffice-3.3.3.1 libreoffice-3.4.0.1
-        #recreate_repotag ${repo} libreoffice-3.3.2.2 libreoffice-3.3.2.1 libreoffice-3.3.3.1
-
+        recreate_repotag ${repo} OOO_BUILD_3_2_98_1 OOO_BUILD_3_2_98_0
+        git tag ${repo}_LIBREOFFICE_3_2_99_1 ${repo}_LIBREOFFICE_CREATE
+        recreate_repotag ${repo} libreoffice-3.3.0.4 libreoffice-3.3.0.3
+        recreate_repotag ${repo} libreoffice-3.3.1.1 libreoffice-3.3.0.3
+        recreate_repotag ${repo} libreoffice-3.3.1.2 libreoffice-3.3.1.1
+        recreate_repotag ${repo} libreoffice-3.3.3.1 libreoffice-3.3.2.1
+        recreate_repotag ${repo} libreoffice-3.3.4.1 libreoffice-3.3.3.1
         git tag -d ${repo}_ooo/DEV300_last_svn_milestone
     done
+
+ 
     popd > /dev/null
 }
 
@@ -293,7 +274,7 @@ for TAG in $SPLITREPOTAGS
 do
     tag_to_notes $TAG
 done
-rm $FINDREPOBRANCHES $TAGSFORBRANCH $BISECTFUNCTOR
+rm $FINDREPOBRANCHES $TAGSFORBRANCH
 postmerge_fixes
 echo "Missing tags: $ALLMISSINGTAGS"
 echo "Skipped tags: $SKIPPEDTAGS"
