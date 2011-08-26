@@ -15,6 +15,10 @@ instdir=${1:-~/.jenkins}
 mkdir -p "$instdir"
 cd "$instdir"
 wget http://mirrors.jenkins-ci.org/war/latest/jenkins.war
+mkdir plugins
+cd plugins
+wget --no-check-certificate http://updates.jenkins-ci.org/latest/git.hpi
+cd ..
 wget --no-check-certificate https://github.com/downloads/KentBeck/junit/junit-4.9b2.jar
 git clone git://anongit.freedesktop.org/libreoffice/contrib/dev-tools dev-tools
 mv dev-tools/ubuntu-jenkins/jobs jobs
