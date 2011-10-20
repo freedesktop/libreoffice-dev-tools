@@ -4,6 +4,9 @@ use Date::Parse;
 use Date::Format;
 
 my %bydate;    # date -> page -> count
+my %bydate_direct;
+my %bydate_wiki; 
+my %bydate_google;
 my %referrers; # count of referrers by URL
 
 my @month_names = ( 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' );
@@ -79,7 +82,13 @@ while (<>) {
     $monthkey = "$year-$month-01";
 #    print "Date '$date' -> '$monthkey'\n";
     $bydate{$monthkey} = 0 if (!defined $bydate{$monthkey});
+    $bydate_direct{$monthkey} = 0 if (!defined $bydate_direct{$monthkey});
+    $bydate_wiki{$monthkey} = 0 if (!defined $bydate_wiki{$monthkey});
+    $bydate_google{$monthkey} = 0 if (!defined $bydate_google{$monthkey});
     $bydate{$monthkey} += 1;
+    $bydate_direct{$monthkey} += 1 if ($referrer eq '');
+    $bydate_wiki{$monthkey} += 1 if ($referrer =~ 'wiki.documentfoundation');
+    $bydate_google{$monthkey} += 1 if ($referrer =~ 'google');
 }
 
 print << 'EOF'
@@ -145,6 +154,18 @@ print << 'EOF'
                <table:table-cell table:style-name="boldheader" office:value-type="string">
                   <text:p>Hits</text:p>
                </table:table-cell>
+               <table:table-cell table:style-name="boldheader" office:value-type="string">
+                  <text:p>Direct</text:p>
+               </table:table-cell>
+               <table:table-cell table:style-name="boldheader" office:value-type="string">
+                  <text:p>Direct</text:p>
+               </table:table-cell>
+               <table:table-cell table:style-name="boldheader" office:value-type="string">
+                  <text:p>Wiki</text:p>
+               </table:table-cell>
+               <table:table-cell table:style-name="boldheader" office:value-type="string">
+                  <text:p>Google</text:p>
+               </table:table-cell>
             </table:table-row>
 EOF
 ;
@@ -154,6 +175,9 @@ print << "EOF"
                <table:table-cell table:style-name="isodate" office:value-type="date"
 	        office:date-value="$date"/>
                <table:table-cell office:value-type="float" office:value="$bydate{$date}"/>
+               <table:table-cell office:value-type="float" office:value="$bydate_direct{$date}"/>
+               <table:table-cell office:value-type="float" office:value="$bydate_wiki{$date}"/>
+               <table:table-cell office:value-type="float" office:value="$bydate_google{$date}"/>
             </table:table-row>
 EOF
 ;
