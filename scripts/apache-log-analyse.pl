@@ -1,5 +1,8 @@
 #!/usr/bin/perl -w
 
+use Date::Parse;
+use Date::Format;
+
 my %bydate;    # date -> page -> count
 my %referrers; # count of referrers by URL
 
@@ -42,12 +45,27 @@ while (<>) {
     $page =~ s/s*HTTP\s*$//;
     $page =~ s/\s*HTTP\/[\d\.]*$//;
 
+    # Mangle date into year-month
+    my ($year, $month, $day);
+    if ($date =~ m/([^\/]+)\/([^\/]+)\/([^\:]+):/) {
+	$day = $1; $month = $2; $year = $3;
+    } else {
+	die "invalid date '$date'";
+    }
+
     $referrers{$referrer} = 0 if (!defined $referrers{$referrer});
     $referrers{$referrer} += 1;
 
-#    print "server '$server' -> host '$host' -> page '$page' -> referrer '$referrer'\n";
+    $monthkey = "$month $year";
+#    print "Date '$date' -> '$monthkey'\n";
+    $bydate{$monthkey} = 0 if (!defined $bydate{$monthkey});
+    $bydate{$monthkey} += 1;
 }
 
-for my $ref (keys  %referrers) {
+for my $date (keys %bydate) {
+    print "$date\t" . $bydate{$date} . "\n";
+}
+
+for my $ref (sort { $referrers{$b} <=> $referrers{$a} } keys %referrers) {
     print "$ref\t" . $referrers{$ref} . "\n";
 }
