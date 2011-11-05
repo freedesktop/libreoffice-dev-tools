@@ -33,7 +33,7 @@ usage()
     echo "    -h        Display this help."
     echo "    -d <path> The location of the core repository for libreoffice. Default: ./libo"
     echo "    -p        Pretend. display what would be done, but do not actually do it."
-    echo "    -resume   try to re-use already downloaded/partially downloaded tar.bz2
+    echo "    -resume   try to re-use already downloaded/partially downloaded tar.bz2"
     echo "    -t <path> The location of the temporary directory used to download and extract repositories. Default: /tmp"
     echo ""
     echo "The arguments name the repositories to be downloaded, 'all' means... all of them. 'dev' means all but translations, which is the default."
@@ -43,7 +43,7 @@ usage()
     echo "Do not abuse this script. Once you have downloaded a set of git repos, it is much more efficient, for you and for us, to use ./g pull -r to refresh your git repositories"
     echo ""
     echo "Example:"
-    echo "$0 # will clone the core repo in ./core (right now: $(pwd)/core) and clone binfilter, help and dictionaries in ./core/clone"
+    echo "$0 # will clone the core repo in ./libo (right now: $(pwd)/libo) and clone binfilter, help and dictionaries in ./libo/clone"
     echo ""
     echo "$0 -d ~/core # clone the core repo in ~/core and clone binfilter, help and dictionaries in ~/core/clone"
     echo ""
