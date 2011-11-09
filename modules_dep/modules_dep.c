@@ -53,15 +53,15 @@ int gmake_module = 0;
         fprintf(stderr, "%s is not a directory, skip\n", filename);
         return NULL;
     }
-    sprintf(buffer, "%s/Makefile", filename);
-    if(stat(buffer, &st))
+    sprintf(buffer, "%s/prj/d.lst", filename);
+    if(!stat(buffer, &st))
     {
-        gmake_module = 0;
+        if(S_ISREG(st.st_mode) && st.st_size < 2)
+        {
+            gmake_module = 1;
+        }
     }
-    else
-    {
-        gmake_module = 1;
-    }
+
     sprintf(buffer, "%s/prj/build.lst", filename);
     fp = fopen(buffer, "r");
     if(fp)
