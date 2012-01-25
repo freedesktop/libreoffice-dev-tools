@@ -57,7 +57,7 @@ endif
 
 man_MANS =	make.1
 
-DEFS =		-DLOCALEDIR=\"$(localedir)\" -DLIBDIR=\"$(libdir)\" -DINCLUDEDIR=\"$(includedir)\" @DEFS@
+DEFS =		-DLOCALEDIR=\"$(localedir)\" -DLIBDIR=\"$(libdir)\" -DINCLUDEDIR=\"$(includedir)\" -DMULTIARCH_DIRS="$(MULTIARCH_DIRS)" @DEFS@
 
 AM_CPPFLAGS =	$(GLOBINC)
 # Only process if target is MS-Windows

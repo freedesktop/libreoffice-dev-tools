@@ -21,6 +21,8 @@ AC_INIT([GNU make],[3.81],[bug-make@gnu.org])
 AC_PREREQ(2.59)
 AC_REVISION([[$Id: configure.in,v 1.142 2006/04/01 06:36:40 psmith Exp $]])
 
+AM_MAINTAINER_MODE
+
 # Autoconf setup
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_SRCDIR(vpath.c)
@@ -371,6 +373,24 @@ AM_CONDITIONAL(USE_LOCAL_GLOB, test "$make_cv_sys_gnu_glob" = no)
 AC_DEFINE_UNQUOTED(MAKE_HOST,"$host",[Build host information.])
 MAKE_HOST="$host"
 AC_SUBST(MAKE_HOST)
+
+AC_PATH_TOOL([DPKG_ARCH], [dpkg-architecture])
+AC_MSG_CHECKING([for multiarch paths])
+multiarch_triplet=""
+if test -n "$DPKG_ARCH"; then
+	multiarch_triplet=$($DPKG_ARCH -qDEB_HOST_MULTIARCH)
+	if test -z "$multiarch_triplet"; then
+		multiarch_triplet=$($DPKG_ARCH -qDEB_HOST_GNU_TYPE)
+	fi
+fi
+if test -n "$multiarch_triplet"; then
+	MULTIARCH_DIRS="\\\"/lib/$multiarch_triplet\\\", \\\"/usr/lib/$multiarch_triplet\\\","
+	AC_MSG_RESULT([$MULTIARCH_DIRS])
+else
+	AC_MSG_RESULT([not found])
+fi
+
+AC_SUBST(MULTIARCH_DIRS)
 
 w32_target_env=no
 AM_CONDITIONAL([WINDOWSENV], false)
