@@ -68,6 +68,7 @@ struct itemT {
 //temporally
 struct macroT : public itemT {
     list<list<string> > par;
+    bool hasBody;
 };
 
 struct typeT {
@@ -132,8 +133,9 @@ struct methodT : public itemT {
     list<paramT> par;
     string content;
     bool isTor;
+    bool isOp;
 
-    methodT() {isTor = false;}
+    methodT() {isTor = false;isOp = false;}
     void clear() {
         ret.clear();
         content = "";
@@ -199,13 +201,13 @@ struct typedefF : public typedefB {
     ~typedefF() {}
 };
 
-string iclass;
 string ifile;
 string iruler;
 string irulep;
-classT* mainClass = 0;
 Token tok;
 Lexer* lex;
+list<nsT*> route;
+bool empty;
 
 void loadfile(const char*, char*&);
 bool parse(nsT*);
@@ -220,6 +222,9 @@ bool (*define)(ItemT,itemT*) = 0; //if we want to avoid definig something
 void filter(nsT*);
 void gen(nsT*);
 void printns(nsT*, stringstream&, tabulator&);
+void printfunc(methodT*, stringstream&, tabulator&);
+void printmacr(macroT*, stringstream&, tabulator&);
+void stubns(nsT*, stringstream&, tabulator&);
 void replace(string&, const string&, const string&);
 void loadrulefile(const string& f, map<string, string>& to);
 bool parsecmdlargs(const uint32_t&, char**);
@@ -232,11 +237,10 @@ bool parsevalue(list<string>&);
 int main(int argc, char* argv[]) {
     //------------testing------------//
 
-    argc = 5;
+    argc = 4;
     argv[1] = (char*)"-ifdoc.hxx";
-    argv[2] = (char*)"-icSwDoc";
-    argv[3] = (char*)"-rrrule_ret.txt";
-    argv[4] = (char*)"-rprule_print.txt";
+    argv[2] = (char*)"-rrrule_ret.txt";
+    argv[3] = (char*)"-rprule_print.txt";
 
     //---------------------------------
 
@@ -245,66 +249,28 @@ int main(int argc, char* argv[]) {
             if(item->sh == kS_Private && (type == kItem_Function || type == kItem_Var)) return false;
             if(type == kItem_Function) {
                 methodT* m = (methodT*) item;
-
-                bool mains = false;
-                if(m->name.size() > 1)
-                {
-                    nsT* parent = m->parent;
-                    auto jt = m->name.begin();
-                    while(jt != ----m->name.end()) {
-                        if(*jt == "::") {
-                            if(jt == m->name.begin()) {
-                                if(parent->parent)
-                                    parent = parent->parent;
-                                else break;
-                            } else {
-                                auto jt2 = jt;
-                                jt2--;
-                                if(*jt2 == "::") {
-                                    if(parent->parent)
-                                        parent = parent->parent;
-                                    else break;
-                                }
-                            }
-                            parent = parent->parent;
-                        } else if(*jt == "~") break;
-                        else {
-                            for(auto jt2 = parent->items.begin(); jt2 != parent->items.end();jt2++) {
-                                if((jt2->second)->name.back() == *jt) {
-                                    parent = (nsT*)jt2->second;
-                                    break;
-                                }
-                            }
-                        }
-                        jt++;
-                    }
-                    mains = (parent == mainClass);
-                } else mains = (m->parent == mainClass);
-
-                if(mains && m->parent != mainClass) return false;
-                if(mains) {
-                    m->isForward = true;
-                    if(m->name.back() == iclass) {
-                        m->isTor = true;
-                    }
-
-                    bool isStatic = false;
-                    bool isVirtual = false;
-                    for(auto it = m->lmod.begin(); it != m->lmod.end();) {
-                        if(*it == "static") {
-                            isStatic = true;
-                        }
-                        else if(*it == "virtual"){
-                            isVirtual = true;
-                        } else if(*it == "inline") {
-                            auto it2 = it;
-                            it++;
-                            m->lmod.erase(it2);
-                        }
-                        it++;
-                    }
-                    if(!isStatic && !isVirtual) m->lmod.push_back("virtual");
+                if(m->name.size() > 1) return false;//!!!temporally!!!//
+                m->isForward = true;
+                if(!m->parent->name.empty() && m->name.back() == m->parent->name.back()) {
+                    m->isTor = true;
                 }
+
+                bool isStatic = false;
+                bool isVirtual = false;
+                for(auto it = m->lmod.begin(); it != m->lmod.end();) {
+                    if(*it == "static") {
+                        isStatic = true;
+                    }
+                    else if(*it == "virtual"){
+                        isVirtual = true;
+                    } else if(*it == "inline") {
+                        auto it2 = it;
+                        it++;
+                        m->lmod.erase(it2);
+                    }
+                    it++;
+                }
+                if(!isStatic && !isVirtual) m->lmod.push_back("virtual");
             }
             return true;
     };
@@ -318,15 +284,22 @@ int main(int argc, char* argv[]) {
             } else if(type == kItem_Macro) {
                 macroT* m = (macroT*) item;
                 if(m->name.back() == "DECL_LINK" || m->name.back() == "DECL_DLLPRIVATE_LINK") {
+                    m->hasBody = true;
                     m->name.back() = "IMPL_LINK";
                     m->par.push_front(list<string>());
-                    m->par.front().push_back(iclass);
+                    m->par.front().push_back(m->parent->name.back());
                     m->par.push_back(list<string>());
                     m->par.back().push_back("EMPTYARG");
                 } else if(m->name.back() == "DECL_STATIC_LINK" || m->name.back() == "DECL_DLLPRIVATE_STATIC_LINK") {
+                    m->hasBody = true;
                     m->name.back() = "IMPL_STATIC_LINK";
                     m->par.push_back(list<string>());
                     m->par.back().push_back("EMPTYARG");
+                } else if(m->name.back() == "SV_DECL_PTRARR_DEL") {
+                    m->hasBody = false;
+                    m->name.back() = "SV_IMPL_PTRARR_GEN";
+                    m->par.back().clear();
+                    m->par.back().push_back("SvPtrarr");
                 }
                 return true;
             } else return false;
@@ -335,7 +308,7 @@ int main(int argc, char* argv[]) {
     //---------------------------------
 
     if(!parsecmdlargs(argc, argv)) {
-        cout << "Example usage: sm -ifdoc.hxx -icSwDoc -rrrule_ret.txt -rprule_print.txt\n";
+        cout << "Example usage: sm -ifdoc.hxx -rrrule_ret.txt -rprule_print.txt\n";
         return 1;
     }
 
@@ -345,16 +318,14 @@ int main(int argc, char* argv[]) {
     lex = new Lexer(buff);
     nsT global;
     global.itemType = kItem_Namespace;
-    if(parse(&global)) {
-        if (mainClass) {
-            filter(&global);
-            loadrulefile(iruler,rules_ret);
-            loadrulefile(irulep,rules_print);
-            gen(&global);
-        }
+    if(parse(&global)) {        
+        filter(&global);
+        loadrulefile(iruler,rules_ret);
+        loadrulefile(irulep,rules_print);
+        gen(&global);
         delete lex;
         delete[] buff;
-        return (mainClass == 0);
+        return 0;
     } else {
         delete lex;
         delete[] buff;
@@ -398,6 +369,7 @@ bool parse(nsT* ns) {
             itemT* nsh = new itemT;
             nsh->sh = sh;
             nsh->parent = ns;
+            nsh->itemType = kItem_Shw;
             ns->items.push_back(pair<ItemT, itemT*>(kItem_Shw, nsh));
         } else if(is(Namespace)) {
             next;
@@ -424,7 +396,6 @@ bool parse(nsT* ns) {
             cp->lmod.pop_back();
             cp->sh = sh;
             nns->itemType = kItem_Class;
-            if(cp->name.back() == iclass) mainClass = cp;
             if(is(SCol)) cp->isForward = true;
             else {
                 while(!is(LBrace)) {cp->rmod.push_back(ident);next;}
@@ -443,7 +414,7 @@ bool parse(nsT* ns) {
             parsens(cp->name);
             cp->lmod.pop_back();
             cp->sh = sh;
-            nns->itemType = kItem_Struct;
+            cp->itemType = kItem_Struct;
             if(is(SCol)) nns->isForward = true;
             else {
                 while(!is(LBrace)) {cp->rmod.push_back(ident);next;}
@@ -479,7 +450,9 @@ bool parse(nsT* ns) {
             parsetypedef(tdef, func);
             tdef->sh = sh;
             tdef->parent = ns;
-            ns->items.push_back(pair<ItemT, itemT*>(((func)?kItem_TypedefF:kItem_TypedefT), tdef));
+            ItemT type = (func)?kItem_TypedefF:kItem_TypedefT;
+            tdef    ->itemType = type;
+            ns->items.push_back(pair<ItemT, itemT*>(type, tdef));
         } else if(is(Template)) {
             list<string> temp;
             temp.push_back(ident);
@@ -517,23 +490,28 @@ bool parse(nsT* ns) {
             parsetype(t, true);
             list<string> name;
             parsens(name);
+            bool isop = false;
             if(name.back() == "operator") {
                 if(is(LParen)) {
                     next;
                     next;
                     name.back() += "()";
                 } else {
+                    stringstream op;
                     while(!is(LParen)) {
-                        name.back() += ident;
+                        op << ident;
                         next;
                     }
+                    name.push_back(op.str());
                 }
+                isop = true;
                 goto ismethod;
             }
             if(t.outer.empty() && (ns->name.empty() || ns->name.back() != name.back())) { //it's probably a macro
                 macroT* m = new macroT;
                 m->parent = ns;
                 m->name.swap(name);
+                m->itemType = kItem_Macro;
                 next;
                 m->par.push_back(list<string>());
                 uint32_t s = 0;
@@ -557,8 +535,10 @@ bool parse(nsT* ns) {
                 next;
                 m->sh = sh;
                 m->name.swap(name);
+                m->isOp = isop;
                 m->ret = t;
                 m->lmod.swap(lmod);
+                m->itemType = kItem_Function;
                 while(!is(RParen)) {
                     m->par.push_back(paramT());
                     bool once = false;
@@ -620,6 +600,7 @@ bool parse(nsT* ns) {
                 v->parent = ns;
                 v->name.swap(name);
                 v->lmod.swap(lmod);
+                v->itemType = kItem_Var;
                 v->type = t;
                 if(is(Col)) {
                     next;
@@ -773,7 +754,7 @@ void filter(nsT* ns) {
             else if(!custom(it->first, it->second)) {
                 auto tit = it;
                 it++;
-                mainClass->items.erase(tit);
+                ns->items.erase(tit);
             } else it++;
         }
     }
@@ -873,8 +854,7 @@ bool parsecmdlargs(const uint32_t& argc, char** argv) {
     for(uint32_t i = 1; i < argc; i++) {
         if(argv[i][0] == '-') {
             if(argv[i][1] == 'i') {
-                if(argv[i][2] == 'f') ifile = argv[i]+3;
-                else if(argv[i][2] == 'c') iclass = argv[i]+3;
+                if(argv[i][2] == 'f') ifile = argv[i]+3;               
                 else return false;
             } else if(argv[i][1] == 'r') {
                 if(argv[i][2] == 'r') iruler = argv[i]+3;
@@ -883,7 +863,7 @@ bool parsecmdlargs(const uint32_t& argc, char** argv) {
             } else return false;
         } else return false;
     }
-    return (ifile != "" && iclass != "");
+    return (ifile != "");
 }
 void loadrulefile(const string& f, map<string, string>& to) {
     char* rf;
@@ -1076,6 +1056,172 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
     }
 }
 
+void printfunc(methodT* m, stringstream& ss, tabulator& tab) {
+    empty = false;
+    ss << tab << m->lmod;
+    if(!m->lmod.empty()) ss << " ";
+    ss << m->ret;
+    if(!m->ret.outer.empty()) ss << " ";
+    for(auto it = route.begin(); it != route.end(); it++) ss << (*it)->name << "::";
+    ss << m->name << "(";
+    for(auto it = m->par.begin(); it != m->par.end(); it++) {
+        if(it != m->par.begin()) ss << ", ";
+        ss << it->type << " ";
+        ss << it->name;
+        if(!it->def.empty()) {ss << " = ";ss << it->def;}
+    }
+    ss << ") ";
+    if(!m->rmod.empty()) ss << m->rmod << " ";
+    ss << "{\n";
+    string pcout = "cout";
+    string pvout = "out";
+    string ptwhole;
+    {
+        stringstream tmp;
+        bool was = !m->ret.rmod.empty() && m->ret.rmod.back() == "&";
+        if(was) m->ret.rmod.pop_back();
+        tmp << m->ret;
+        if(was) m->ret.rmod.push_back("&");
+        ptwhole = tmp.str();
+    }
+    string pttype;
+    {
+        stringstream tmp;
+        tmp << m->ret.type;
+        pttype = tmp.str();
+    }
+    string pouter = m->ret.outer;
+
+    ++tab;
+    if(!m->ret.outer.empty() && m->ret.outer != "void") {
+        auto it = m->ret.rmod.rbegin();
+        for(;it != m->ret.rmod.rend() && *it != "*"; it++);
+        if(it != m->ret.rmod.rend()) {
+            ss << tab << ptwhole << " out = NULL;\n";
+        } else {
+            auto rit = rules_ret.find(ptwhole);
+            if(rit != rules_ret.end()) {
+                string str = rit->second;
+                replace(str, COUT, pcout);
+                replace(str, VOUT, pvout);
+                replace(str, TTYPE, pttype);
+                replace(str, TOUTER, pouter);
+                replace(str, TWHOLE, ptwhole);
+
+                ss << tab;
+                for(uint32_t i = 0; i < str.length()-1; i++) {
+                    if(str[i] == '\n' && str[i+1] != 0) {ss << "\n";ss << tab;}
+                    else ss << str[i];
+                }
+                ss << str[str.length()-1];
+            } else {
+                ss << tab << ptwhole << " out;\n";
+            }
+        }
+    }
+    ss << tab << "cout << \"";ss << m->name << "(\";\n";
+    for(auto it = m->par.begin(); it != m->par.end(); it++) {
+        if(it != m->par.begin()) ss << tab << "cout << \", \";\n";
+        string ptwhole;
+        {
+            stringstream tmp;
+            bool was = !it->type.rmod.empty() && it->type.rmod.back() == "&";
+            if(was) it->type.rmod.pop_back();
+            tmp << it->type.type;
+            if(was) it->type.rmod.push_back("&");
+            ptwhole = tmp.str();
+        }
+        string pttype;
+        {
+            stringstream tmp;
+            tmp << it->type.type;
+            pttype = tmp.str();
+        }
+        string pouter = it->type.outer;
+        auto jt = rules_print.find(ptwhole);
+        if(jt != rules_print.end()) {
+            string str = jt->second;
+            replace(str, COUT, pcout);
+            replace(str, VARG, it->name);
+            replace(str, VOUT, pvout);
+            replace(str, TWHOLE, ptwhole);
+            replace(str, TOUTER, pouter);
+            replace(str, TTYPE, pttype);
+            ss << tab << str;
+        } else {
+            ss << tab << "cout << \""<< ptwhole <<"\";\n";
+        }
+    }
+    ss << tab << "cout << \") -> \";\n";
+    {
+        auto it = rules_print.find(ptwhole);
+        if(it != rules_print.end()) {
+            string str = it->second;
+            replace(str, COUT, pcout);
+            replace(str, VARG, pvout);
+            replace(str, VOUT, pvout);
+            replace(str, TWHOLE, ptwhole);
+            replace(str, TOUTER, pouter);
+            replace(str, TTYPE, pttype);
+            ss << tab << str;
+        } else {
+            ss << tab << "cout << \"type: " << ((!ptwhole.empty())?ptwhole:"void") << "\";\n";
+        }
+    }
+    ss << tab << "cout << \"\\n\";\n";
+    if(!m->ret.outer.empty() && m->ret.outer != "void") {
+        ss << tab << "return out;\n";
+    }
+    --tab;
+    ss << tab << "}\n\n";
+}
+
+void printmacr(macroT* m, stringstream& ss, tabulator& tab) {
+    empty = false;
+    ss << tab << m->name << "(";
+    for(auto it = m->par.begin(); it != m->par.end(); it++) {
+        if(it != m->par.begin()) ss << ", ";
+        ss << *it;
+    }
+    ss << ")";
+    if(m->hasBody) {
+        ss << " {\n";
+        ss << tab << "\treturn 0;\n";
+        ss << tab << "}\n\n";
+    } else ss << "\n\n";
+}
+
+void stubns(nsT* ns, stringstream& ss, tabulator& tab) {
+    for(auto mit = ns->items.begin(); mit != ns->items.end(); mit++) {
+        if(mit->first == kItem_Class) {
+            route.push_back((nsT*)mit->second);
+            stubns((nsT*)mit->second, ss, tab);
+            route.pop_back();
+            continue;
+        } else if(mit->first == kItem_Struct) {
+            route.push_back((nsT*)mit->second);
+            stubns((nsT*)mit->second, ss, tab);
+            route.pop_back();
+            continue;
+        } else if(mit->first == kItem_Namespace) {
+            ss << tab << "namespace";
+            ss << mit->second->name << "{\n";
+            ++tab;
+            stubns((nsT*)mit->second, ss, tab);
+            --tab;
+            ss << tab << "}\n";
+            continue;
+        }
+        if(!define(mit->first, mit->second)) continue;
+        empty = false;
+        if(mit->first == kItem_Macro) {
+            printmacr((macroT*)mit->second, ss, tab);
+        } else if(mit->first == kItem_Function) {
+            printfunc((methodT*)mit->second, ss, tab);
+        }
+    }
+}
+
 void gen(nsT* ns) {
     stringstream ss;    
     tabulator tab;
@@ -1083,173 +1229,62 @@ void gen(nsT* ns) {
     string tmps = ifile.substr(0,ifile.find_last_of('.'));
 
     string hxx = tmps;
-    string cxx = tmps;
     hxx+="Stub.hxx";
-    cxx+="Stub.cxx";
 
     ofstream f;
-    f.open(hxx);
+    f.open("out/"+hxx);
     f << ss.str();
     f.close();
 
-    ss.str("");
-
-    ss << "#include <" << ifile << ">\n";
-    ss << "#include <iostream>\n";
-    list<string> route;
-    {
-        nsT* r = mainClass->parent;
-        while(r && !r->name.empty()) {
-            route.push_front(r->name.back());
-            r = r->parent;
-        }
-        for(auto it = route.begin(); it != route.end(); it++) {
-            ss << "namespace " << *it << " {\n";
+    stringstream gs;
+    bool gempty = true;
+    for(auto it = ns->items.begin(); it != ns->items.end(); it++) {
+        ss.str("");
+        ss << "#include <" << ifile << ">\n";
+        ss << "#include <iostream>\n";
+        ss << "\nusing namespace std;\n\n";
+        if(it->second->isForward) continue;
+        empty = true;
+        if(it->second->itemType == kItem_Namespace) {
+            ss << "namespace ";
+            ss << it->second->name << " {\n";
             ++tab;
-        }
-    }
-    ss << "\nusing namespace std;\n\n";
-    for(auto mit = mainClass->items.begin(); mit != mainClass->items.end(); mit++) {
-        if(!define(mit->first, mit->second)) continue;
-        if(mit->first == kItem_Macro) {
-            macroT* m = (macroT*) mit->second;
-            ss << tab << m->name << "(";
-            for(auto it = m->par.begin(); it != m->par.end(); it++) {
-                if(it != m->par.begin()) ss << ", ";
-                ss << *it;
-            }
-            ss << ") {\n";
-            ss << tab << "\treturn 0;\n";
-            ss << tab << "}\n\n";
-        } else if(mit->first == kItem_Function) {
-            methodT* m = (methodT*)mit->second;
-            ss << tab << m->lmod;
-            if(!m->lmod.empty()) ss << " ";
-            ss << m->ret;
-            if(!m->ret.outer.empty()) ss << " ";
-            ss << m->name << "(";
-            for(auto it = m->par.begin(); it != m->par.end(); it++) {
-                if(it != m->par.begin()) ss << ", ";
-                ss << it->type << " ";
-                ss << it->name;
-                if(!it->def.empty()) {ss << " = ";ss << it->def;}
-            }
-            ss << ") ";
-            if(!m->rmod.empty()) ss << m->rmod << " ";
-            ss << "{\n";
-            string pcout = "cout";
-            string pvout = "out";
-            string ptwhole;
-            {
-                stringstream tmp;
-                bool was = !m->ret.rmod.empty() && m->ret.rmod.back() == "&";
-                if(was) m->ret.rmod.pop_back();
-                tmp << m->ret;
-                if(was) m->ret.rmod.push_back("&");
-                ptwhole = tmp.str();
-            }
-            string pttype;
-            {
-                stringstream tmp;
-                tmp << m->ret.type;
-                pttype = tmp.str();
-            }
-            string pouter = m->ret.outer;
-
-            ++tab;
-            if(!m->ret.outer.empty() && m->ret.outer != "void") {
-                auto it = m->ret.rmod.rbegin();
-                for(;it != m->ret.rmod.rend() && *it != "*"; it++);
-                if(it != m->ret.rmod.rend()) {
-                    ss << tab << ptwhole << " out = NULL;\n";
-                } else {
-                    auto rit = rules_ret.find(ptwhole);
-                    if(rit != rules_ret.end()) {
-                        string str = rit->second;
-                        replace(str, COUT, pcout);
-                        replace(str, VOUT, pvout);
-                        replace(str, TTYPE, pttype);
-                        replace(str, TOUTER, pouter);
-                        replace(str, TWHOLE, ptwhole);
-
-                        ss << tab;
-                        for(uint32_t i = 0; i < str.length()-1; i++) {
-                            if(str[i] == '\n' && str[i+1] != 0) {ss << "\n";ss << tab;}
-                            else ss << str[i];
-                        }
-                        ss << str[str.length()-1];
-                    } else {
-                        ss << tab << ptwhole << " out;\n";
-                    }
-                }
-            }
-            ss << tab << "cout << \"";ss << m->name << "(\";\n";
-            for(auto it = m->par.begin(); it != m->par.end(); it++) {
-                if(it != m->par.begin()) ss << tab << "cout << \", \";\n";
-                string ptwhole;
-                {
-                    stringstream tmp;
-                    bool was = !it->type.rmod.empty() && it->type.rmod.back() == "&";
-                    if(was) it->type.rmod.pop_back();
-                    tmp << it->type.type;
-                    if(was) it->type.rmod.push_back("&");
-                    ptwhole = tmp.str();
-                }
-                string pttype;
-                {
-                    stringstream tmp;
-                    tmp << it->type.type;
-                    pttype = tmp.str();
-                }
-                string pouter = it->type.outer;
-                auto jt = rules_print.find(ptwhole);
-                if(jt != rules_print.end()) {
-                    string str = jt->second;
-                    replace(str, COUT, pcout);
-                    replace(str, VARG, it->name);
-                    replace(str, VOUT, pvout);
-                    replace(str, TWHOLE, ptwhole);
-                    replace(str, TOUTER, pouter);
-                    replace(str, TTYPE, pttype);
-                    ss << tab << str;
-                } else {
-                    ss << tab << "cout << \""<< ptwhole <<"\";\n";
-                }
-            }
-            ss << tab << "cout << \") -> \";\n";
-            {
-                auto it = rules_print.find(ptwhole);
-                if(it != rules_print.end()) {
-                    string str = it->second;
-                    replace(str, COUT, pcout);
-                    replace(str, VARG, pvout);
-                    replace(str, VOUT, pvout);
-                    replace(str, TWHOLE, ptwhole);
-                    replace(str, TOUTER, pouter);
-                    replace(str, TTYPE, pttype);
-                    ss << tab << str;
-                } else {
-                    ss << tab << "cout << \"type: " << ((!ptwhole.empty())?ptwhole:"void") << "\";\n";
-                }
-            }
-            ss << tab << "cout << \"\\n\";\n";
-            if(!m->ret.outer.empty() && m->ret.outer != "void") {
-                ss << tab << "return out;\n";
-            }
+            stubns((nsT*)it->second, ss, tab);
             --tab;
-            ss << tab << "}\n\n";
-        }
-    }
-    {
-        for(auto it = route.begin(); it != route.end(); it++) {
-            ss << tab << "}\n";
-            --tab;
-        }
+            ss << "}\n";
+        } else if(it->second->itemType == kItem_Class) {
+            route.push_back((nsT*)it->second);
+            stubns((nsT*)it->second, ss, tab);
+            route.pop_back();
+        } else if(it->second->itemType == kItem_Struct) {
+            route.push_back((nsT*)it->second);
+            stubns((nsT*)it->second, ss, tab);
+            route.pop_back();
+        } else if(it->second->itemType == kItem_Function) {
+            define(it->first, it->second);
+            printfunc((methodT*)it->second, gs, tab);
+            if(!empty) gempty = false;
+            continue;
+        } else if(it->second->itemType == kItem_Macro) {
+            define(it->first, it->second);
+            printmacr((macroT*)it->second, gs, tab);
+            if(!empty) gempty = false;
+            continue;
+        } else continue;
+
+        if(empty) continue;
+
+        stringstream name;
+        name << it->second->name << "Stub.cxx";
+
+        f.open("out/"+name.str());
+        f << ss.str();
+        f.close();
     }
 
-    f.open(cxx);
-    f << ss.str();
-    f.close();
-
-    ++tab;
+    if(!gempty) {
+        f.open("out/_globalScope.cxx");
+        f << gs.str();
+        f.close();
+    }
 }
