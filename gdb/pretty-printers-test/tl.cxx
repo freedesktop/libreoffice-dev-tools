@@ -33,19 +33,15 @@
 #include <tools/color.hxx>
 #include <tools/date.hxx>
 #include <tools/datetime.hxx>
-#include <tools/dynary.hxx>
 #include <tools/fract.hxx>
 #include <tools/list.hxx>
-#include <tools/stack.hxx>
 #include <tools/string.hxx>
 #include <tools/table.hxx>
 #include <tools/time.hxx>
 
 typedef int* value_type;
 
-DECLARE_DYNARRAY(dynarray_type, value_type);
 DECLARE_LIST(list_type, value_type);
-DECLARE_STACK(stack_type, value_type);
 DECLARE_TABLE(table_type, value_type);
 
 void stop() {}
@@ -53,26 +49,14 @@ void stop() {}
 int main()
 {
     // old-style strings
-    ByteString bs("ByteString");
     UniString us(UniString::CreateFromAscii("UniString"));
     UniString su_(UniString::CreateFromAscii("sal_Unicode"));
     sal_Unicode* su(su_.GetBufferAccess());
-
-    // old-style containers
-    dynarray_type empty_dynarray;
-    dynarray_type dynarray;
-    dynarray.Put(0, new int(0));
-    dynarray.Put(1, new int(1));
 
     list_type empty_list;
     list_type list;
     list.Insert(new int(0));
     list.Insert(new int(1));
-
-    stack_type empty_stack;
-    stack_type stack;
-    stack.Push(new int(0));
-    stack.Push(new int(1));
 
     table_type empty_table;
     table_type table;
@@ -92,14 +76,14 @@ int main()
     Fraction fraction_simple(2L);
     Fraction fraction(1, 5);
 
-    Date date_empty;
+    Date date_empty(Date::EMPTY);
     Date date(21, 7, 2011);
 
-    Time time_empty;
+    Time time_empty(Time::EMPTY);
     Time time_no_100sec(15, 52, 1);
     Time time(15, 52, 28, 42);
 
-    DateTime date_time_empty;
+    DateTime date_time_empty(DateTime::EMPTY);
     DateTime date_time_no_time(date);
     DateTime date_time_no_date(time);
     DateTime date_time(date, time);

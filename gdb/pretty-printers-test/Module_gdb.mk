@@ -25,38 +25,14 @@
 # in which case the provisions of the GPLv3+ or the LGPLv3+ are applicable
 # instead of those above.
 
-# This makefile sets up everything necessary to hook into the "main" gbuild
-# system. That means that we are using the "main" workdir/outdir, but I
-# hope that is not a big problem, becase all the produced executables
-# have pretty distinctive names. Also, it can only be invoked manually,
-# so noone can claim he did not know what was going on .-)
+$(eval $(call gb_Module_Module,gdb))
 
-# Use: make topdir=wherever-your-main-source-dir-is
-# default value is ../../..
-
-THISDIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-
-ifeq ($(topdir),)
-topdir := ../../..
-endif
-
-# We cannot use solenv/gbuild/partial_build.mk , because we need to
-# register executables _before_ the module is read
-
-gb_PARTIALBUILD := T
-
-ifeq ($(SOLARENV),)
-include $(topdir)/config_host.mk
-endif
-
-SRCDIR_RELATIVE := $(if $(patsubst $(SRCDIR)%,%,$(THISDIR),$(THISDIR)),$(patsubst $(SRCDIR)%,%,$(THISDIR)),$(error currently this only works if this dir is a subdir of $(SRCDIR)))
-
-include $(topdir)/solenv/gbuild/gbuild.mk
-
-$(eval $(call gb_Helper_add_repositories,$(THISDIR)))
-
-$(eval $(call gb_Helper_collect_knownlibs))
-
-$(eval $(call gb_Module_make_global_targets,Module_gdb.mk))
+$(eval $(call gb_Module_add_targets,gdb,\
+	Executable_cppu \
+	Executable_sal \
+	Executable_svl \
+	Executable_sw \
+	Executable_tl \
+))
 
 # vim:set shiftwidth=4 tabstop=4 noexpandtab:

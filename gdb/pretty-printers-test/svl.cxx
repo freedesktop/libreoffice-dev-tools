@@ -30,11 +30,11 @@
 
 void stop() {}
 
-SV_DECL_VARARR(vararray_type, int, 4, 4);
+SV_DECL_VARARR(vararray_type, int, 4);
 SV_IMPL_VARARR(vararray_type, int);
 
 typedef int* value_type;
-SV_DECL_PTRARR_DEL(ptrarray_type, value_type, 4, 4);
+SV_DECL_PTRARR_DEL(ptrarray_type, value_type, 4);
 SV_IMPL_PTRARR(ptrarray_type, value_type);
 
 int main()

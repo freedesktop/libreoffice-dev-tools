@@ -56,13 +56,16 @@ public:
     virtual oslInterlockedCount SAL_CALL acquire()
     {
         m_count += 1;
+        return m_count;
     }
 
     virtual oslInterlockedCount SAL_CALL release()
     {
         m_count -= 1;
+        oslInterlockedCount const count(m_count);
         if (m_count == 0)
             delete this;
+        return count;
     }
 
 private:
