@@ -101,18 +101,18 @@ Token Lexer::next() {
     if(*mCurr=='/' && *(mCurr+1)=='/') {
         mCurr=mCurr+2;
         while(*mCurr != '\n' && *mCurr) mCurr++;
-        if(!*mCurr) return kT__End;
+        if(!*mCurr) ret(kT__End);
         mCurr++;
         goto step;
     }
     if(*mCurr=='/' && *(mCurr+1)=='*') {
         mCurr=mCurr+2;
         while(!(*mCurr == '*' && *(mCurr+1) == '/') && *mCurr) mCurr++;
-        if(!*mCurr) return kT__End;
+        if(!*mCurr) ret(kT__End);
         mCurr+=2;
         goto step;
     }
-    if(*mCurr == 0) return kT__End;
+    if(*mCurr == 0) ret(kT__End);
 
     mHelper = mCurr;
 
@@ -131,6 +131,7 @@ Token Lexer::next() {
     chr('&', kT_And);
     chr('*', kT_Mul);
     chr('~', kT_Tilde);
+    chr('.', kT_Dot);
 
     chr2(':', kT_Col, ':', kT_DCol);
 
@@ -161,12 +162,40 @@ Token Lexer::next() {
     str("template", kT_Template);
     str("struct", kT_Struct);
     str("enum", kT_Enum);
+    str("union", kT_Union);
+    str("explicit", kT_Explicit);
 
     //constants
-    if(isdigit(*mCurr)) {
+    if(*mCurr == '-') {
         mCurr++;
+        if(isdigit(*mCurr)) {
+            mCurr++;
+            goto digittok;
+        } else if(*mCurr == '>') {
+            mCurr++;
+            ret(kT_Arrow);
+        } else ret(kT__Invalid);
+    }
+
+    if(isdigit(*mCurr)) {
+        if(*mCurr == '0') {
+            mCurr++;
+            if(*mCurr == 'x') { //hexa
+                mCurr++;
+                while(('0' <= *mCurr && '9' >= *mCurr) || ('a' <= *mCurr && 'f' >= *mCurr)) mCurr++;
+                ret(kT_Hex);
+            }
+        } else mCurr++;
+        digittok:
         while(isdigit(*mCurr)) *mCurr++;
-        ret(kT_Int);
+        if(*mCurr == '.') {
+            mCurr++;
+            while(isdigit(*mCurr)) mCurr++;
+            if(*mCurr == 'f') {
+                mCurr++;
+                ret(kT_Float);
+            } else ret(kT_Double);
+        } else ret(kT_Int);
     }
 
     if(*mCurr == '\"') {
@@ -196,7 +225,5 @@ Token Lexer::next() {
     chr2('=', kT_Binary, '=', kT_Binary);
 
     mCurr++;
-    mOld = *mCurr;
-    *mCurr = 0;
-    return kT__Invalid;
+    ret(kT__Invalid);
 }

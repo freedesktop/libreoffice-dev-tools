@@ -39,7 +39,7 @@ map<string,string> rules_print;
 
 enum shw {kS_Public, kS_Private, kS_Protected, kS_None};
 
-enum ItemT {kItem_Namespace, kItem_Class, kItem_Other,
+enum ItemT {kItem_Namespace, kItem_Class, kItem_Other, kItem_Union,
             kItem_Function, kItem_TypedefT, kItem_TypedefF, kItem_Struct, kItem_Var, kItem_Shw, kItem_Macro, kItem_Include};
 
 stringstream& operator<<(stringstream& f, list<string>& t) {
@@ -94,12 +94,6 @@ struct typeT {
     }
 };
 
-struct varT : itemT {
-    typeT type;
-    list<string> lmod;
-    list<string> def;
-};
-
 struct tabulator {
     uint32_t s;
     friend stringstream& operator<<(stringstream& f, tabulator& tab) {
@@ -126,24 +120,68 @@ struct paramT {
     }
 };
 
-struct methodT : public itemT {
+struct member : public itemT {
+    bool isStatic;
+    bool isVolatile;
+    bool isMutable;
+
+    member() {
+        isStatic = false;
+        isVolatile = false;
+        isMutable = false;
+    }
+
+    void clear() {
+        isStatic = false;
+        isVolatile = false;
+        isMutable = false;
+    }
+};
+
+struct methodT : public member {
+    bool isConst;
+    bool isNull;
+    bool isVirtual;
+    bool isFriend;
+    bool isExplicit;
+    //bool isInline;
+
     typeT ret;
-    list<string> lmod;
-    list<string> rmod;
     list<paramT> par;
     string content;
     bool isTor;
     bool isOp;
 
-    methodT() {isTor = false;isOp = false;}
+    methodT() : member() {
+        isTor = false;
+        isOp = false;
+
+        isConst = false;
+        isNull = false;
+        isVirtual = false;
+        isFriend = false;
+        isExplicit = false;
+    }
     void clear() {
         ret.clear();
         content = "";
-        lmod.clear();
-        rmod.clear();
+        member::clear();
+        isConst = false;
+        isNull = false;
+        isVirtual = false;
+        isExplicit = false;
+        isFriend = false;
+        //isInline = false;
         par.clear();
         isTor = false;
     }
+};
+
+struct varT : member {
+    typeT type;
+    list<string> def;
+
+    varT() : member() {}
 };
 
 class classT;
@@ -249,28 +287,12 @@ int main(int argc, char* argv[]) {
             if(item->sh == kS_Private && (type == kItem_Function || type == kItem_Var)) return false;
             if(type == kItem_Function) {
                 methodT* m = (methodT*) item;
-                if(m->name.size() > 1) return false;//!!!temporally!!!//
+                if(m->parent->name.empty() && m->name.size() > 1) return false;//!!!temporally!!!//
                 m->isForward = true;
                 if(!m->parent->name.empty() && m->name.back() == m->parent->name.back()) {
                     m->isTor = true;
                 }
-
-                bool isStatic = false;
-                bool isVirtual = false;
-                for(auto it = m->lmod.begin(); it != m->lmod.end();) {
-                    if(*it == "static") {
-                        isStatic = true;
-                    }
-                    else if(*it == "virtual"){
-                        isVirtual = true;
-                    } else if(*it == "inline") {
-                        auto it2 = it;
-                        it++;
-                        m->lmod.erase(it2);
-                    }
-                    it++;
-                }
-                if(!isStatic && !isVirtual) m->lmod.push_back("virtual");
+                if(!m->isStatic) m->isVirtual = true;
             }
             return true;
     };
@@ -279,7 +301,6 @@ int main(int argc, char* argv[]) {
     define = [&](ItemT type ,itemT* item) {
             if(type == kItem_Function) {
             methodT* m = (methodT*) item;
-                m->lmod.clear();
                 return !m->isTor;
             } else if(type == kItem_Macro) {
                 macroT* m = (macroT*) item;
@@ -422,6 +443,21 @@ bool parse(nsT* ns) {
                 parse(nns);
             }
             ns->items.push_back(pair<ItemT, itemT*>(kItem_Struct, nns));
+        } else if(is(Union)) {
+            next;
+            nns = new nsT;
+            nns->sh = sh;
+            nns->itemType = kItem_Union;
+            if(is(Ident)) {
+                nns->name.push_back(ident);
+                next;
+            }
+            if(is(SCol)) nns->isForward = true;
+            else {
+                nns->isForward = false;
+                parse(nns);
+            }
+            ns->items.push_back(pair<ItemT, itemT*>(kItem_Union, nns));
         } else if(is(Hash)) {
             next;
             if(is(Include)) {
@@ -537,7 +573,14 @@ bool parse(nsT* ns) {
                 m->name.swap(name);
                 m->isOp = isop;
                 m->ret = t;
-                m->lmod.swap(lmod);
+                for(auto it = lmod.begin(); it != lmod.end(); it++) {
+                    if(*it == "virtual") m->isVirtual = true;
+                    else if(*it == "static") m->isStatic = true;
+                    else if(*it == "explicit") m->isExplicit = true;
+                    else if(*it == "mutable") m->isMutable = true;
+                    else if(*it == "volatile") m->isVolatile = true;
+                    else if(*it == "friend") m->isFriend = true;
+                }
                 m->itemType = kItem_Function;
                 while(!is(RParen)) {
                     m->par.push_back(paramT());
@@ -574,7 +617,27 @@ bool parse(nsT* ns) {
                     m->par.back().name = argbuff;
                 }
                 next;
-                while(!is(SCol) && !is(LBrace)) {m->rmod.push_back(ident);next;}
+                if(is(Const)) {
+                    m->isConst = true;
+                    next;
+                }
+                if(is(Col)) {//emit initializer-list
+                    next;
+                    while(is(Ident)) {
+                        next;
+                        next;
+                        if(!is(RParen)) {
+                            list<string> unused;
+                            parsevalue(unused);
+                        }
+                        next;
+                        if(is(Comma)) next;
+                    }
+                } else if(is(Binary)) {
+                    m->isNull = true;
+                    next;
+                    next;
+                }
                 if(is(LBrace)) {
                     m->isForward = false;
                     char* begin = lex->pos();
@@ -599,10 +662,14 @@ bool parse(nsT* ns) {
                 varT* v = new varT;
                 v->parent = ns;
                 v->name.swap(name);
-                v->lmod.swap(lmod);
+                for(auto it = lmod.begin(); it != lmod.end(); it++) {
+                    if(*it == "static") v->isStatic = true;
+                    else if(*it == "mutable") v->isMutable = true;
+                    else if(*it == "volatile") v->isVolatile = true;
+                }
                 v->itemType = kItem_Var;
                 v->type = t;
-                if(is(Col)) {
+                if(is(Col) || is(Binary)) {
                     next;
                     parsevalue(v->def);
                 }
@@ -762,14 +829,20 @@ void filter(nsT* ns) {
 
 bool parsevalue(list<string>& str) {
     if(is(RParen) || is(Comma)) return false;
-    if(isCon(tok)) {
+    if(isCon(tok)) {//leaf
         str.push_back(ident);
         next;
         return true;
     }
     typeT tmp;
+    amember:
     parsetype(tmp, false);
     str.insert(str.end(), tmp.type.begin(), tmp.type.end());
+    if(is(Dot) || is(Arrow)) {
+        str.push_back(ident);
+        next;
+        goto amember;
+    }
     if(is(LParen)) {
         str.push_back("(");
         next;
@@ -982,10 +1055,26 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
                 --tab;
                 ss << tab << "};\n";
             }
+        } else if(it->first == kItem_Union) {
+            nsT* p = (nsT*) it->second;
+            ss << tab << "union ";ss << p->name;
+            if(p->isForward) ss << ";\n";
+            else {
+                ss << " {\n";
+                ++tab;
+                printns(p, ss, tab);
+                --tab;
+                ss << tab << "};\n";
+            }
         } else if(it->first == kItem_Function) {
             methodT* p = (methodT*) it->second;            
-            ss << tab << p->lmod;
-            if(!p->lmod.empty()) ss << " ";
+            ss << tab;
+            if(p->isStatic) ss << "static ";
+            if(p->isVirtual) ss << "virtual ";
+            if(p->isExplicit) ss << "explicit ";
+            if(p->isVolatile) ss << "volatile ";
+            if(p->isMutable) ss << "mutable ";
+            if(p->isFriend) ss << "friend ";
             ss << p->ret;
             if(!p->ret.outer.empty()) ss << " ";
             ss << p->name << "(";
@@ -995,7 +1084,8 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
                 if(!jt->def.empty()) {ss << " = ";ss << jt->def;}
             }
             ss << ")";
-            if(!p->rmod.empty()) {ss << " ";ss << p->rmod;}
+            if(p->isConst) ss << "const";
+            if(p->isNull) ss << " = 0";
             if(p->isForward) ss << ";\n";
             else {
                 ss << " {";
@@ -1035,10 +1125,18 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
             else ss << "private:\n";
         } else if(it->first == kItem_Var) {
             varT* p = (varT*) it->second;
-            ss << tab << p->lmod;
-            if(!p->lmod.empty()) ss << " ";
+            ss << tab;
+            if(p->isStatic) ss << "static ";
+            if(p->isVolatile) ss << "volatile ";
+            if(p->isMutable) ss << "mutable ";
             ss << p->type << " ";ss << p->name;
-            if(!p->def.empty()) {ss << "\t:\t";ss << p->def;}
+            if(!p->def.empty()) {
+                ss << "\t";
+                if(p->isStatic) ss << ":";
+                else ss << "=";
+                ss << "\t";
+                ss << p->def;
+            }
             ss << ";\n";
         } else if(it->first == kItem_Macro) {
             macroT* p = (macroT*) it->second;
@@ -1058,9 +1156,7 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
 
 void printfunc(methodT* m, stringstream& ss, tabulator& tab) {
     empty = false;
-    ss << tab << m->lmod;
-    if(!m->lmod.empty()) ss << " ";
-    ss << m->ret;
+    ss << tab << m->ret;
     if(!m->ret.outer.empty()) ss << " ";
     for(auto it = route.begin(); it != route.end(); it++) ss << (*it)->name << "::";
     ss << m->name << "(";
@@ -1071,7 +1167,7 @@ void printfunc(methodT* m, stringstream& ss, tabulator& tab) {
         if(!it->def.empty()) {ss << " = ";ss << it->def;}
     }
     ss << ") ";
-    if(!m->rmod.empty()) ss << m->rmod << " ";
+    if(m->isConst) ss << "const ";
     ss << "{\n";
     string pcout = "cout";
     string pvout = "out";
@@ -1204,7 +1300,7 @@ void stubns(nsT* ns, stringstream& ss, tabulator& tab) {
             route.pop_back();
             continue;
         } else if(mit->first == kItem_Namespace) {
-            ss << tab << "namespace";
+            ss << tab << "namespace ";
             ss << mit->second->name << "{\n";
             ++tab;
             stubns((nsT*)mit->second, ss, tab);
