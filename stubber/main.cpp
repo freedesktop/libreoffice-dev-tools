@@ -39,8 +39,8 @@ map<string,string> rules_print;
 
 enum shw {kS_Public, kS_Private, kS_Protected, kS_None};
 
-enum ItemT {kItem_Namespace, kItem_Class, kItem_Other, kItem_Union,
-            kItem_Function, kItem_TypedefT, kItem_TypedefF, kItem_Struct, kItem_Var, kItem_Shw, kItem_Macro, kItem_Include};
+enum ItemT {kItem_Namespace, kItem_Class, kItem_Other, kItem_Union, kItem_Pragma,
+            kItem_Function, kItem_TypedefT, kItem_TypedefF, kItem_Struct, kItem_Var, kItem_Shw, kItem_Macro, kItem_Enum};
 
 stringstream& operator<<(stringstream& f, list<string>& t) {
     for(auto it = t.begin(); it != t.end(); it++) {
@@ -49,6 +49,7 @@ stringstream& operator<<(stringstream& f, list<string>& t) {
         it2++;
         if(it2 != t.end()) {
             if(*it == "<" && *it2 == "::") f << " ";
+            if(*it == ">" && *it2 == ">") f << " ";
             else if(isalnum((*it).back()) && isalnum((*it2).front())) f << " ";
         }
     }
@@ -106,6 +107,10 @@ struct tabulator {
     tabulator& operator--() {s--;return *this;}
 };
 
+struct enumT : public itemT {
+    list<string> flags;
+};
+
 struct paramT {
     string name;
     list<string> def;
@@ -144,10 +149,13 @@ struct methodT : public member {
     bool isVirtual;
     bool isFriend;
     bool isExplicit;
-    //bool isInline;
+    bool isInline;
+
+    string lmod;
 
     typeT ret;
     list<paramT> par;
+    typeT throwT;
     string content;
     bool isTor;
     bool isOp;
@@ -156,6 +164,7 @@ struct methodT : public member {
         isTor = false;
         isOp = false;
 
+        isInline = false;
         isConst = false;
         isNull = false;
         isVirtual = false;
@@ -171,6 +180,7 @@ struct methodT : public member {
         isVirtual = false;
         isExplicit = false;
         isFriend = false;
+        throwT.clear();
         //isInline = false;
         par.clear();
         isTor = false;
@@ -205,17 +215,19 @@ struct nsT : public itemT {
 };
 
 struct classT : public nsT {
+    bool isFriend;
     list<string> lmod;
     list<string> rmod;
 
-    classT() {}
+    classT() {isFriend = 0;}
 };
 
 struct structT : public nsT {
+    bool isFriend;
     list<string> lmod;
     list<string> rmod;
 
-    structT() {}
+    structT() {isFriend = 0;}
 };
 
 struct typedefB : public itemT {
@@ -253,7 +265,6 @@ bool parsetype(typeT&, bool ret=false, bool=false);
 bool parsens(list<string>&);
 bool parsechr(typeT&);
 bool parsetypedef(typedefB*&,bool&);
-bool parselmodifier(list<string>&);
 bool parsermodifier(list<string>&);
 bool (*custom)(ItemT,itemT*) = 0; //custom filter for methods
 bool (*define)(ItemT,itemT*) = 0; //if we want to avoid definig something
@@ -292,7 +303,7 @@ int main(int argc, char* argv[]) {
                 if(!m->parent->name.empty() && m->name.back() == m->parent->name.back()) {
                     m->isTor = true;
                 }
-                if(!m->isStatic) m->isVirtual = true;
+                if(!m->isStatic && m->parent->parent) m->isVirtual = true;
             }
             return true;
     };
@@ -443,6 +454,25 @@ bool parse(nsT* ns) {
                 parse(nns);
             }
             ns->items.push_back(pair<ItemT, itemT*>(kItem_Struct, nns));
+        } else if(is(Enum)) {
+            next;
+            enumT* ep = new enumT;
+            parsens(ep->name);
+            ep->itemType = kItem_Enum;
+            ep->sh = sh;
+            if(is(SCol)) {
+                ep->isForward = true;
+            } else {
+                next;
+                ep->isForward = false;
+                while(!is(RBrace)) {
+                    ep->flags.push_back(ident);
+                    next;
+                    if(is(Comma)) next;
+                }
+                next;
+            }
+            ns->items.push_back(pair<ItemT, itemT*>(kItem_Enum, ep));
         } else if(is(Union)) {
             next;
             nns = new nsT;
@@ -458,28 +488,18 @@ bool parse(nsT* ns) {
                 parse(nns);
             }
             ns->items.push_back(pair<ItemT, itemT*>(kItem_Union, nns));
-        } else if(is(Hash)) {
-            next;
-            if(is(Include)) {
-                next;
-                itemT* nin = new itemT;
-                nin->sh = sh;
-                nin->itemType = kItem_Include;
-                if(is(String)) {
-                    nin->name.push_back(ident);
-                } else if(is(LCh)) {
-                    next;
-                    stringstream s;
-                    s << "<";                    
-                    while(!is(RCh)) {
-                        s << ident;
-                        next;
-                    }
-                    s << ">";
-                    nin->name.push_back(s.str());
-                }
-                ns->items.push_back(pair<ItemT, itemT*>(kItem_Include, nin));
-            } else lex->emitline();
+        } else if(is(Hash)) {            
+            itemT* p = new itemT;
+            p->name.push_back("#");
+            p->sh = kS_Public;
+            p->itemType = kItem_Pragma;
+            char* begin = lex->pos();
+            char* end = lex->emitline();
+            char* tmp;
+            lex->slice(tmp, begin, end);
+            p->name.push_back(tmp);
+            delete[] tmp;
+            ns->items.push_back(pair<ItemT, itemT*>(kItem_Pragma, p));
         } else if(is(Typedef)) {
             typedefB* tdef;
             bool func;
@@ -521,9 +541,92 @@ bool parse(nsT* ns) {
             break;
         } else if(isMod(tok) || is(DCol) || is(Ident) || is(Tilde)) {
             list<string> lmod;
-            parselmodifier(lmod);
+            uint32_t ic = 0;
+            if(is(Ident)) {//very-very ugly lookahead guessing solution, because we ain't have any semantic informations
+                if(ic) {
+
+                    continue;
+                }
+                lex->pushState();
+                #pragma push_macro("next")
+                #undef next
+                Token peek = lex->next();
+                if(peek != kT_DCol) {
+                    while(ic < 2) {
+                        if(peek == kT_Ident) {
+                            ic++;
+                            while(peek == kT_Ident) {
+                                    lex->pushState();
+                                    Token peek2 = lex->next();
+                                    lex->popState();
+                                    if(peek2 == kT_LParen) {
+                                        if(!ns->name.empty() && cmp(ident, ns->name.back().c_str())) ic++;
+                                        goto outoflookahead;
+                                        break;
+                                    }
+                                    peek = lex->next();
+                                    if(peek == kT_DCol) {
+                                        peek = lex->next();
+                                    } else break;
+                            }
+                        }
+                        else if(peek == kT_LCh) {
+                            if(ic) { //lmod
+                                ic++;
+                            }
+                            break;
+                        } else if(peek == kT_SCol || peek == kT_Binary || peek == kT_Col || peek == kT_LParen) {
+                            break;
+                        } else peek = lex->next();
+                    }
+                }
+                #pragma pop_macro("next")
+                outoflookahead:
+                lex->popState();
+                if(ic > 1) {
+                    lmod.push_back(ident);
+                    next;
+                }
+            }
+            while(isMod(tok) && tok != kT_Const) {
+                lmod.push_back(ident);
+                next;
+            }
+
+
+            if(is(Class)) {//probably friendly class/struct something...
+                next;
+                nns = (nsT*) new classT;
+                ((classT*)nns)->isFriend = true;
+                goto parseclass;
+            } if(is(Struct)) {
+                next;
+                nns = (nsT*) new structT;
+                ((structT*)nns)->isFriend = true;
+                goto parsestruct;
+            }
+
             typeT t;
-            parsetype(t, true);
+            parsetype(t, true);            
+            if(!ic && !is(Tilde)) {//the very ugly guessing #2
+                #pragma push_macro("next")
+                #undef next
+                lex->pushState();
+                Token peek = lex->next();
+                while(peek == kT_DCol) {
+                    peek = lex->next();
+                    if(peek == kT_Ident) {
+                        peek = lex->next();
+                    } else break;
+                }
+                lex->popState();
+                #pragma pop_macro("next")
+                if(peek != kT_LParen && peek != kT_SCol && peek != kT_Col && peek != kT_Binary) {
+                    lmod.push_back(ident);
+                    next;
+                }
+            }
+
             list<string> name;
             parsens(name);
             bool isop = false;
@@ -539,6 +642,18 @@ bool parse(nsT* ns) {
                         next;
                     }
                     name.push_back(op.str());
+                    if(name.back() == "++" || name.back() == "--") {
+                        lex->pushState();
+                        Token old = tok;
+                        next;
+                        if(cmp("int", ident) && (next) && is(RParen) && (next) && is(LParen)) {
+                            name.push_back("(int)");
+                            lex->rmState();
+                        } else {
+                            lex->popState();
+                            tok = old;
+                        }
+                    }
                 }
                 isop = true;
                 goto ismethod;
@@ -580,6 +695,8 @@ bool parse(nsT* ns) {
                     else if(*it == "mutable") m->isMutable = true;
                     else if(*it == "volatile") m->isVolatile = true;
                     else if(*it == "friend") m->isFriend = true;
+                    else if(*it == "inline") m->isInline = true;
+                    else m->lmod.swap(*it);
                 }
                 m->itemType = kItem_Function;
                 while(!is(RParen)) {
@@ -621,7 +738,17 @@ bool parse(nsT* ns) {
                     m->isConst = true;
                     next;
                 }
-                if(is(Col)) {//emit initializer-list
+                if(is(Throw)) {
+                    next;
+                    next;
+                    parsetype(m->throwT);
+                    next;
+                }
+                if(is(Binary)) {
+                   m->isNull = true;
+                   next;
+                   next;
+                } else if(is(Col)) {//emit initializer-list
                     next;
                     while(is(Ident)) {
                         next;
@@ -633,10 +760,6 @@ bool parse(nsT* ns) {
                         next;
                         if(is(Comma)) next;
                     }
-                } else if(is(Binary)) {
-                    m->isNull = true;
-                    next;
-                    next;
                 }
                 if(is(LBrace)) {
                     m->isForward = false;
@@ -793,14 +916,6 @@ bool parsens(list<string>& t) {
     return one;
 }
 
-bool parselmodifier(list<string>& m) {
-    while(isMod(tok) && tok != kT_Const) {
-        m.push_back(ident);
-        next;
-    }
-    if(is(Ident) || is(DCol) || is(Const) || is(Tilde)) return true;
-    return false;
-}
 bool parsermodifier(list<string>& m) {
     if(is(Const)) {
         m.push_back(ident);
@@ -1013,7 +1128,9 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
             }
         } else if(it->first == kItem_Class) {
             classT* p = (classT*) it->second;
-            ss << tab << p->temp;
+            ss << tab;
+            if(p->isFriend) ss << "friend ";
+            ss << p->temp;
             if(!p->temp.empty()) ss << " ";
             ss << "class ";ss << p->lmod;
             if(!p->lmod.empty()) ss << " ";
@@ -1036,7 +1153,9 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
             }
         } else if(it->first == kItem_Struct) {
             structT* p = (structT*) it->second;
-            ss << tab << p->temp;
+            ss << tab;
+            if(p->isFriend) ss << "friend ";
+            ss << p->temp;
             if(!p->temp.empty()) ss << " ";
             ss << "struct ";ss << p->name;
             if(p->isForward) ss << ";\n";
@@ -1055,6 +1174,9 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
                 --tab;
                 ss << tab << "};\n";
             }
+        } else if(it->first == kItem_Pragma) {
+            itemT* p = (itemT*) it->second;
+            ss << tab << p->name;
         } else if(it->first == kItem_Union) {
             nsT* p = (nsT*) it->second;
             ss << tab << "union ";ss << p->name;
@@ -1066,15 +1188,32 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
                 --tab;
                 ss << tab << "};\n";
             }
+        } else if(it->first == kItem_Enum) {
+            enumT* p = (enumT*) it->second;
+            ss << tab << "enum ";ss << p->name;
+            if(p->isForward) ss << ";\n";
+            else {
+                ss << " {\n";                
+                ++tab;
+                ss << tab;
+                for(auto it = p->flags.begin(); it != p->flags.end(); it++) {
+                    if(it != p->flags.begin()) ss << ", ";
+                    ss << *it;
+                }
+                --tab;
+                ss << tab << "\n};\n";
+            }
         } else if(it->first == kItem_Function) {
             methodT* p = (methodT*) it->second;            
-            ss << tab;
+            ss << tab << p->lmod;
+            if(!p->lmod.empty()) ss << " ";
             if(p->isStatic) ss << "static ";
             if(p->isVirtual) ss << "virtual ";
             if(p->isExplicit) ss << "explicit ";
             if(p->isVolatile) ss << "volatile ";
             if(p->isMutable) ss << "mutable ";
             if(p->isFriend) ss << "friend ";
+            if(p->isInline) ss << "inline ";
             ss << p->ret;
             if(!p->ret.outer.empty()) ss << " ";
             ss << p->name << "(";
@@ -1086,6 +1225,10 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
             ss << ")";
             if(p->isConst) ss << "const";
             if(p->isNull) ss << " = 0";
+            if(!p->throwT.type.empty()) {
+                ss << " throw (";
+                ss << p->throwT << ")";
+            }
             if(p->isForward) ss << ";\n";
             else {
                 ss << " {";
@@ -1146,10 +1289,6 @@ void printns(nsT* ns, stringstream& ss, tabulator& tab) {
                 ss << *jt;
             }
             ss << ")\n";
-        } else if(it->first == kItem_Include) {
-            ss << tab;
-            itemT* p = (itemT*) it->second;
-            ss << "#include ";ss << p->name << "\n";
         }
     }
 }

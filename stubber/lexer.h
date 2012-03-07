@@ -17,7 +17,7 @@ using namespace std;
 
 enum Token {kT__End = 0, kT__Invalid,
            kT_SCol, kT_Comma, kT_Col, kT_Hash, kT_DCol,
-           kT_Namespace, kT_Template, kT_Union,
+           kT_Namespace, kT_Template, kT_Union, kT_Throw,
 
            kT_ShwModB,
                kT_Public,
@@ -65,12 +65,13 @@ public:
 
     void pushState();
     void popState();
+    void rmState();
     Token next();
     const char* ident();
     char* pos();
     void slice(char*&, char*, char*);
 
-    void emitline();
+    char* emitline();
 };
 
 #endif // LEXER_H

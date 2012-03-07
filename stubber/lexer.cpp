@@ -87,11 +87,16 @@ void Lexer::popState() {
     mStack.pop_back();
 }
 
-void Lexer::emitline() {
+void Lexer::rmState() {
+    mStack.pop_back();
+}
+
+char* Lexer::emitline() {
     if(mCurr != mHelper) *mCurr = mOld;
     while(*mCurr != '\n' && *mCurr != '\0') mCurr++;
     if(*mCurr) mCurr++;
     mHelper = mCurr;
+    return mCurr;
 }
 
 Token Lexer::next() {
@@ -164,6 +169,7 @@ Token Lexer::next() {
     str("enum", kT_Enum);
     str("union", kT_Union);
     str("explicit", kT_Explicit);
+    str("throw", kT_Throw);
 
     //constants
     if(*mCurr == '-') {
