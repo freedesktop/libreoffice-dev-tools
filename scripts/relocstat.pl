@@ -290,6 +290,7 @@ if ($do_data_profile) {
     $do_print_relocs = 0;
     $do_print_data_breakdown = 0;
     $do_print_vtable_breakdown = 0;
+    $do_method_relocs = 0;
     $data_breakdown{vtable} = 0;
     $data_breakdown{vtable_count} = 0;
     $data_breakdown{rtti_count} = 0;
@@ -581,7 +582,7 @@ for $lib (sort by_internal @libs) {
 		    last;
 		}
 	    }
-#	    if ($bsect eq 'misc') {
+# 	    if ($bsect eq 'misc') {
 #		print "Section $sect size " . $lib->{sections}->{$sect} . " is misc...\n";
 #	    }
 	    $section_breakdown{$bsect} = 0 if (!defined $section_breakdown{$bsect});
