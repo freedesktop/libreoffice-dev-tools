@@ -68,6 +68,9 @@ public:
         return count;
     }
 
+protected:
+    ~foo() {}
+
 private:
     foo(foo const&);
     foo& operator=(foo const&);
