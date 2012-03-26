@@ -35,7 +35,7 @@ struct DummyEntry : public BigPtrEntry
 
 int main()
 {
-    BigPtrArray emtpy_array;
+    BigPtrArray empty_array;
     BigPtrArray array;
     array.Insert(new DummyEntry, 0);
     array.Insert(new DummyEntry, 1);
