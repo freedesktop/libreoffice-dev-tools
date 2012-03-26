@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for mod in cppu sal svl; do
+for mod in cppu sal svl tl; do
     ./runtest.sh ${mod}
 done
 
