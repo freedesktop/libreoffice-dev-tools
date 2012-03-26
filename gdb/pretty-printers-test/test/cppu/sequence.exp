@@ -52,6 +52,6 @@ libo_pp_test "sequence_char" {uno::Sequence of length 10 = \{104, 101, 108, 108,
 libo_pp_test "sequence_string" {uno::Sequence of length 2 = \{"hello, gdb", "blah blah"\}}
 libo_pp_test "sequence_type" {uno::Sequence of length 2 = \{uno::Type "long", uno::Type "string"\}}
 libo_pp_test "sequence_any" {uno::Sequence of length 2 = \{uno::Any 42, uno::Any uno::Sequence of length 4 = \{0, 1, 2, 3\}\}}
-libo_pp_test "sequence_sequence" {uno::Sequence of length 2 = \{uno::Sequence of length 4 = \{0, 1, 2, 3\}, uno::Sequence of length 2 = \{1, 2\}\}}
+libo_pp_test "sequence_sequence" {uno::Sequence of length 2 = \{uno::Sequence of length 4 = \{0, 1, 2, 3\}, uno::Sequence of length 2 = \{0, 1\}\}}
 
 # vim:set shiftwidth=4 tabstop=4 expandtab:
