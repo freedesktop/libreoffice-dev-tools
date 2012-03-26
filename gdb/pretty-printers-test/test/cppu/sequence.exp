@@ -1,0 +1,57 @@
+# Version: MPL 1.1 / GPLv3+ / LGPLv3+
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License or as specified alternatively below. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# Major Contributor(s):
+# Copyright (C) 2012 Red Hat, Inc., David Tardon <dtardon@redhat.com>
+#  (initial developer)
+#
+# All Rights Reserved.
+#
+# For minor contributions see the git repository.
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 3 or later (the "GPLv3+"), or
+# the GNU Lesser General Public License Version 3 or later (the "LGPLv3+"),
+# in which case the provisions of the GPLv3+ or the LGPLv3+ are applicable
+# instead of those above.
+
+load_lib libreoffice.exp
+
+libo_gdb_init $BINFILE $srcdir/$subdir
+
+if { ![libo_load_printers [list cppu sal]] } {
+    perror "could not load pretty printers"
+    return
+}
+
+if { ![libo_runto stop] } {
+    perror "the executable is not a proper pretty printer test"
+    return
+}
+
+libo_pp_test "empty_sequence" {empty uno::Sequence}
+libo_pp_test "sequence_boolean" {uno::Sequence of length 2 = \{0 '\\000', 1 '\\001'\}}
+# FIXME this is not nice
+libo_pp_test "sequence_byte" {uno::Sequence of length 4 = \{0 '\\000', 1 '\\001', 2 '\\002', 3 '\\003'\}}
+libo_pp_test "sequence_short" {uno::Sequence of length 4 = \{0, 1, 2, 3\}}
+libo_pp_test "sequence_long" {uno::Sequence of length 4 = \{0, 1, 2, 3\}}
+libo_pp_test "sequence_hyper" {uno::Sequence of length 4 = \{0, 1, 2, 3\}}
+# FIXME this is not nice
+libo_pp_test "sequence_char" {uno::Sequence of length 10 = \{104, 101, 108, 108, 111, 44, 32, 103, 100, 98\}}
+# FIXME does not work
+#libo_pp_test "sequence_char" "uno::Sequence of length 10 = {\'h\', \'e\', \'l\', \'l\', \'o\', \',\', \' \', \'w\', \'o\', \'r\', \'l\', \'d\'}"
+libo_pp_test "sequence_string" {uno::Sequence of length 2 = \{"hello, gdb", "blah blah"\}}
+libo_pp_test "sequence_type" {uno::Sequence of length 2 = \{uno::Type "long", uno::Type "string"\}}
+libo_pp_test "sequence_any" {uno::Sequence of length 2 = \{uno::Any 42, uno::Any uno::Sequence of length 4 = \{0, 1, 2, 3\}\}}
+libo_pp_test "sequence_sequence" {uno::Sequence of length 2 = \{uno::Sequence of length 4 = \{0, 1, 2, 3\}, uno::Sequence of length 2 = \{1, 2\}\}}
+
+# vim:set shiftwidth=4 tabstop=4 expandtab:
