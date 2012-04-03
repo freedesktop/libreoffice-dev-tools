@@ -3,17 +3,25 @@
 # This script parses, and interprets the output from:
 #   sudo -u postgres pg_dump -a mirrorbrain -f stats_counter -F plain -t stats_counter
 # on a mirrorbrain server, thus:
-#   cat dump.sql | ./stats.pl > /tmp/output.fods
+#   cat dump.sql | ./dlstats.pl --libo  > /tmp/output.fods
+#
+# It also parses the mirrorbrain data from an Apache server ...
+# wget http://download.services.openoffice.org/stats/csv/201201.csv # etc ...
+# cat 201201.csv 201202.csv 201203.csv | dlstats.pl --csv > /tmp/output.fods
+#
+# It also parses raw sql reload dumps
 #
 use strict;
 
 # segment by Date, then by Product, then count
 my %data;
 my %products;
+my %prod_names;
 my %byregion;
+my %countries;
 my %byversion;
 my %allversions;
-my %countries;
+my $total_downloads = 0;
 
 # FIXME: ODF is -incredibly- lame in this regard ... we badly want R1C1 style referencing here [!]
 sub coltoref($)
@@ -23,20 +31,38 @@ sub coltoref($)
     return chr (ord('A') + $col);
 }
 
+my $log_format;
+for my $arg (@ARGV) {
+    die "pass --csv --libo or --sql" if ($arg eq '--help' || $arg eq '-h');
+    $log_format = 'c' if ($arg eq '--csv' || $arg eq '-c');
+    $log_format = 'l' if ($arg eq '--libo' || $arg eq -'l');
+    $log_format = 's' if ($arg eq '--sql' || $arg eq -'s');
+}
+defined $log_format || die "you must pass a format type";
+# select the format you want
+
 # Analysing stats:
 #
 # grep for 'multi' - yields the Windows installer ... (also grep for 'all_lang') - all of them [!]
 # grep for 'Linux' and 'en-US' yields total Linux main binary downloads ...
 # grep for 'Mac' and 'en-US' yields total Mac main binary numbers ...
 
-while (<>) {
+while (<STDIN>) {
     chomp();
     my $line = $_;
-#    print "line '$_'\n";
-#    (id,     date,           product,  osname, version,        lang,           country, count)
+    my ($id, $date, $product, $osname, $version, $lang, $country, $count);
+
+    $line =~ s/[\s\r\n]*$//;
+#    print STDERR "line '$line'\n";
+
+    my $type;
+    my $clean_product;
+
+    if ($log_format eq 'l' && # a database dump from mirrorbrain:
 #    17424    2011-01-25      LibO	Win-x86	3.3.0	        all_lang	qa	1
-    if ($line =~ m/^\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$/) {
-	my ($id, $date, $product, $osname, $version, $lang, $country, $count) = ($1, $2, $3, $4, $5, $6, $7, $8);
+	$line =~ m/^\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$/) {
+	($id, $date, $product, $osname, $version, $lang, $country, $count) = ($1, $2, $3, $4, $5, $6, $7, $8);
+
 #	print "$count downloads on date $date, os $osname $lang\n";
 
 	if ($date lt '2011-01-25') {
@@ -44,8 +70,7 @@ while (<>) {
 	    next
 	}
 
-	my $clean_product;
-
+	$prod_names{$product} = 1;
 	# Ignore Mac / Linux help packs etc.
 	if (($osname =~ /Linux/ || $osname =~ /MacOS/) && $lang eq 'en-US') {
 	    $clean_product = $osname;
@@ -64,10 +89,9 @@ while (<>) {
 	# Detect DVD image
 	if ($product eq 'LibO-DVD') {
 	    $clean_product = "DVD";
-	}
+ 	}
 
 	# Count product downloads by region
-	my $type;
 	if (defined $clean_product) {
 	    $type = 'product';
 	} else {
@@ -75,46 +99,129 @@ while (<>) {
 	    $type = 'lang pack';
         }
 
-	# Accumulate versions by date for products
-	if ($type eq 'product') {
-	    my $byver;
-	    if (!defined $byversion{$date}) {
-		my %byver = ();
-		$byversion{$date} = \%byver;
-	    }
-	    my $norc_ver = $version; # remove 3.4.2-1 (rc1) type versions
-	    $norc_ver =~ s/\-\d$//;
-	    $allversions{$norc_ver} = 1;
-	    if (!defined $byversion{$date}->{$norc_ver}) {
-		$byversion{$date}->{$norc_ver} = 0;
-	    }
-	    $byversion{$date}->{$norc_ver} += $count;
+    } elsif ($log_format = 'c' &&
+#    2012-01-03,OOo,3.3.0,Linux_x86-64_langpack-deb,as,se,1
+	     $line =~ m/^\s*(\S+),(\S+),(\S+),(\S+),(\S+),(\S+),(\d+)\s*$/) {
+	my $project;
+	($date, $project, $version, $product, $lang, $country, $count) = ($1, $2, $3, $4, $5, $6, $7);
+#	ERROR - convert the product ! ... to
+#	    $clean_product and $type ...
+	if ($project =~ m/SDK/i) {
+	    $product = 'sdk';
 	}
+	if ($product =~ m/langpack/i) {
+	    $type = 'lang pack';
+	} else {
+	    $type = 'product'
+	}
+	$prod_names{$product} = 1;
+	$clean_product = $product;
+	$clean_product =~ s/_langpack//;
+	$clean_product =~ s/_install//;
+	$clean_product =~ s/-wJRE//;
+	$clean_product =~ s/-deb//;
+	$clean_product =~ s/-rpm//;
 
-	my %hash;
-	$byregion{$type} = \%hash if (!defined $byregion{$type});
-	$byregion{$type}->{$country} = 0 if (!defined $byregion{$type}->{$country});
-	$byregion{$type}->{$country} += $count;
-	$countries{$country} = 1;
+#	print STDERR "$count downloads of $clean_product on date $date, of $lang from $country\n";
+    } elsif ($log_format = 's') {
+#       INSERT INTO `clean_downloads` (`date`, `product`, `os`, `language`, `version`, `downloads`) VALUES
+#       ('2008-12-21', 'OpenOffice.org', 'winwjre', 'es', '3.0.0ï¿½', 1),
+	if ( $line =~ m/^\('(\S+)',\s*'(\S+)',\s*'(\S+)',\s*'(\S+)',\s*'([^']+)',\s*(\d+)\s*\)[,;]\s*$/) {
+	    my $project;
+	    ($date, $project, $product, $country, $version, $count) = ($1, $2, $3, $4, $5, $6);
 
-	if (!defined $clean_product) {
-#	    print "uninteresting line '$line'\n";
+	    if ($product =~ m/langpack/) {
+		$type = 'lang pack';
+	    } else {
+		$type = 'product';
+	    }
+
+	    if ($product =~ m/linux/i) {
+		$clean_product = "linux";
+	    } elsif ($product =~ m/win/i) {
+		$clean_product = "win";
+	    } elsif ($product =~ m/mac/i) {
+		$clean_product = "mac";
+	    } elsif ($product =~ m/solar/i) {
+		$clean_product = "solaris";
+	    } else {
+		$clean_product = "other";
+	    }
+	    if ($product =~ m/64/) {
+		$clean_product = $clean_product . "64";
+	    }
+
+	    if ($version =~ m/^(\d+\.\d+\.\d+)/) {
+		$version = $1;
+	    } elsif ($version =~ m/^(\d+\.\d+)/) {
+		$version = $1 . ".0";
+	    } elsif ($version =~ m/^(\d+)/) {
+		$version = $1 . ".0.0";
+	    } elsif ($version =~ /^(...\d\d\d_m\d+)/) {
+		$version = $1;
+	    } else {
+#		print STDERR "invalid version: '$version'\n";
+		$version = 'invalid';
+	    }
+
+#	    print STDERR "$count downloads of $product on date $date, from $country\n";
+# INSERT INTO `clean_downloads_summary` (`product`, `os`, `language`, `date`, `downloads`, `smooth_downloads`) VALUES'
+#       ('BrOffice.org', 'linuxintel', 'pt-BR', '2008-10-13', 155, 155),
+	} elsif ( $line =~ m/^\('(\S+)',\s*'(\S+)',\s*'(\S+)',\s*'(\S+)',\s*'([^']+)',\s*(\d+)\s*\)[,;]\s*$/) { # need new regex
+	    # odd - duplicate data ? ignore it ...
+	} else {
+#	    print STDERR "malformed sql line '$line'\n";
 	    next;
 	}
-
-	$products{$clean_product} = 1;
-	if (!defined $data{$date}) {
-	    my %byproduct;
-	    $data{$date} = \%byproduct;
-	}
-	if (!defined ($data{$date}->{$clean_product})) {
-	    $data{$date}->{$clean_product} = 0;
-	}
-	$data{$date}->{$clean_product} += $count;
-# 	print "count for '$date' and '$clean_product' == $data{$date}->{$clean_product} [ added $count ]\n";
     } else {
-#	print STDERR "malformed line '$_'\n";
+	print STDERR "malformed line '$line'\n";
+	next;
     }
+
+    # Accumulate versions by date for products
+    if ($type eq 'product') {
+	my $byver;
+	if (!defined $byversion{$date}) {
+	    my %byver = ();
+	    $byversion{$date} = \%byver;
+	}
+	my $norc_ver = $version; # remove 3.4.2-1 (rc1) type versions
+	$norc_ver =~ s/\-\d$//;
+	$allversions{$norc_ver} = 1;
+	if (!defined $byversion{$date}->{$norc_ver}) {
+	    $byversion{$date}->{$norc_ver} = 0;
+	}
+	$byversion{$date}->{$norc_ver} += $count;
+    }
+
+    my %hash;
+    $byregion{$type} = \%hash if (!defined $byregion{$type});
+    $byregion{$type}->{$country} = 0 if (!defined $byregion{$type}->{$country});
+    $byregion{$type}->{$country} += $count;
+    $countries{$country} = 1;
+
+    if (!defined $clean_product) {
+#	    print "uninteresting line '$line'\n";
+	next;
+    }
+
+    $total_downloads += $count;
+
+    $products{$clean_product} = 1;
+    if (!defined $data{$date}) {
+	my %byproduct;
+	$data{$date} = \%byproduct;
+    }
+    if (!defined ($data{$date}->{$clean_product})) {
+	$data{$date}->{$clean_product} = 0;
+    }
+    $data{$date}->{$clean_product} += $count;
+# 	print "count for '$date' and '$clean_product' == $data{$date}->{$clean_product} [ added $count ]\n";
+}
+
+print STDERR "Dirty product names:\n";
+for my $prod (sort keys %prod_names) {
+    print STDERR "\t$prod\n";
 }
 
 # now output this as a spreadsheet ... fods ...
@@ -282,6 +389,35 @@ EOF
 ;
 
 # By version sheet
+
+# First collaps trivial / invalid versions - under 0.1% - particularly for the sql dbase
+my @todelete = ();
+my $threshold = $total_downloads / 1000;
+for my $version (keys %allversions) {
+    my $total = 0;
+    for my $date (keys %byversion) {
+	my $count = $byversion{$date}->{$version};
+	$count = 0 if(!defined $count);
+	$total = $total + $count;
+    }
+    if ($total < $threshold) {
+	print STDERR "collapsing trivial version '$version' count $total into 'invalid'\n";
+	push @todelete, $version;
+	for my $date (keys %byversion) {
+	    my $count = $byversion{$date}->{$version};
+	    if (defined $count) {
+		if (!defined $byversion{$date}->{'invalid'}) {
+		    $byversion{$date}->{'invalid'} = $count;
+		} else {
+		    $byversion{$date}->{'invalid'} += $count;
+		}
+	    }
+	}
+    }
+}
+for my $version (@todelete) {
+    delete $allversions{$version};
+}
 
 print << "EOF"
          <table:table table:name="Versions">
