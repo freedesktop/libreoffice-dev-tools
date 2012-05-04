@@ -1,9 +1,9 @@
 #!/usr/bin/perl -w
 #
 # This script parses, and interprets the output from:
-#   sudo -u postgres pg_dump -a mirrorbrain -f stats_counter -F plain -t stats_counter
+#   pg_dump -a downloadstats -f stats_counter -F plain -t stats_counter
 # on a mirrorbrain server, thus:
-#   cat dump.sql | ./dlstats.pl --libo  > /tmp/output.fods
+#   cat stats_counter | ./dlstats.pl --libo  > /tmp/output.fods
 #
 # It also parses the mirrorbrain data from an Apache server ...
 # wget http://download.services.openoffice.org/stats/csv/201201.csv # etc ...
@@ -40,6 +40,8 @@ for my $arg (@ARGV) {
 }
 defined $log_format || die "you must pass a format type";
 # select the format you want
+
+print STDERR "Log format: $log_format\n";
 
 # Analysing stats:
 #
@@ -99,7 +101,7 @@ while (<STDIN>) {
 	    $type = 'lang pack';
         }
 
-    } elsif ($log_format = 'c' &&
+    } elsif ($log_format eq 'c' &&
 #    2012-01-03,OOo,3.3.0,Linux_x86-64_langpack-deb,as,se,1
 	     $line =~ m/^\s*(\S+),(\S+),(\S+),(\S+),(\S+),(\S+),(\d+)\s*$/) {
 	my $project;
@@ -123,7 +125,7 @@ while (<STDIN>) {
 	$clean_product =~ s/-rpm//;
 
 #	print STDERR "$count downloads of $clean_product on date $date, of $lang from $country\n";
-    } elsif ($log_format = 's') {
+    } elsif ($log_format eq 's') {
 #       INSERT INTO `clean_downloads` (`date`, `product`, `os`, `language`, `version`, `downloads`) VALUES
 #       ('2008-12-21', 'OpenOffice.org', 'winwjre', 'es', '3.0.0ï¿½', 1),
 	if ( $line =~ m/^\('(\S+)',\s*'(\S+)',\s*'(\S+)',\s*'(\S+)',\s*'([^']+)',\s*(\d+)\s*\)[,;]\s*$/) {
