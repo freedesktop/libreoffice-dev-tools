@@ -3,7 +3,7 @@
 # This script parses, and interprets the output from:
 #   pg_dump -a downloadstats -f stats_counter -F plain -t stats_counter
 # on a mirrorbrain server, thus:
-#   cat stats_counter | ./dlstats.pl --libo  > /tmp/output.fods
+#   cat stats_counter | ./dlstats.pl --libo --weekify > /tmp/output.fods
 #
 # It also parses the mirrorbrain data from an Apache server ...
 # wget http://download.services.openoffice.org/stats/csv/201201.csv # etc ...
@@ -12,6 +12,8 @@
 # It also parses raw sql reload dumps
 #
 use strict;
+use Date::Parse;
+use POSIX qw(strftime);
 
 # segment by Date, then by Product, then count
 my %data;
@@ -22,6 +24,11 @@ my %countries;
 my %byversion;
 my %allversions;
 my $total_downloads = 0;
+my $crunch_langs;
+my $top_n_countries = 10;
+my %by_date_country;
+my $weekify = 0;
+my %weekified_dates;
 
 # FIXME: ODF is -incredibly- lame in this regard ... we badly want R1C1 style referencing here [!]
 sub coltoref($)
@@ -31,12 +38,31 @@ sub coltoref($)
     return chr (ord('A') + $col);
 }
 
+sub print_date_cell($$)
+{
+    my ($style,$date) = @_;
+    if (!$weekify) {
+print << "EOF"
+            <table:table-cell table:style-name="$style" office:value-type="date" office:date-value="$date"/>
+EOF
+;
+    } else {
+print << "EOF"
+            <table:table-cell table:style-name="$style" office:value-type="string">
+                  <text:p>$date</text:p>
+	    </table:table-cell>
+EOF
+;
+    }
+}
+
 my $log_format;
 for my $arg (@ARGV) {
-    die "pass --csv --libo or --sql" if ($arg eq '--help' || $arg eq '-h');
+    die "pass --csv --libo or --sql and/or --weekify" if ($arg eq '--help' || $arg eq '-h');
     $log_format = 'c' if ($arg eq '--csv' || $arg eq '-c');
     $log_format = 'l' if ($arg eq '--libo' || $arg eq -'l');
     $log_format = 's' if ($arg eq '--sql' || $arg eq -'s');
+    $weekify = 1 if ($arg eq '--weekify');
 }
 defined $log_format || die "you must pass a format type";
 # select the format you want
@@ -180,6 +206,15 @@ while (<STDIN>) {
 	next;
     }
 
+    if ($weekify) {
+	if (!defined $weekified_dates{$date}) {
+	    my @time = gmtime (str2time($date. "T01:01:01.000001"));
+	    $weekified_dates{$date} = (1900 + $time[5]) . "-". POSIX::strftime("%V", @time); # 2012-1 (week number)
+	}
+#	print STDERR "weekify date '$date' to '".$weekified_dates{$date}."'\n";
+	$date = $weekified_dates{$date};
+    }
+
     # Accumulate versions by date for products
     if ($type eq 'product') {
 	my $byver;
@@ -194,6 +229,9 @@ while (<STDIN>) {
 	    $byversion{$date}->{$norc_ver} = 0;
 	}
 	$byversion{$date}->{$norc_ver} += $count;
+
+	$by_date_country{$date}->{$country} = 0 if (!defined $by_date_country{$date}->{$country});
+	$by_date_country{$date}->{$country} += $count;
     }
 
     my %hash;
@@ -225,6 +263,10 @@ print STDERR "Dirty product names:\n";
 for my $prod (sort keys %prod_names) {
     print STDERR "\t$prod\n";
 }
+
+my @countries_by_product;
+@countries_by_product = sort { $byregion{'product'}->{$b} <=> $byregion{'product'}->{$a} } keys %countries;
+my @top_countries = splice(@countries_by_product, 0, $top_n_countries);
 
 # now output this as a spreadsheet ... fods ...
 print << 'EOF'
@@ -276,7 +318,7 @@ print << 'EOF'
       <style:style style:name="boldheader" style:family="table-cell" style:parent-style-name="Default">
          <style:text-properties fo:font-style="italic" fo:font-weight="bold"/>
       </style:style>
-      <style:style style:name="isodate" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="isodatenum"/>
+      <style:style style:name="isodate" style:family="table-cell" style:parent-style-name="Default"/> <!-- style:data-style-name="isodatenum" -->
    </office:styles>
    <office:body>
       <office:spreadsheet>
@@ -315,9 +357,9 @@ print STDERR "cols: $colcount - colname $colname @prods\n";
 for my $date (sort keys %data) {
 print << "EOF"
             <table:table-row>
-               <table:table-cell table:style-name="isodate" office:value-type="date" office:date-value="$date"/>
 EOF
 ;
+    print_date_cell("isodate", $date);
     for my $product (@prods) {
 	my $count = $data{$date}->{$product};
 	$count = 0 if (!defined $count);
@@ -335,8 +377,8 @@ EOF
 }
 
 # Summary / formulae
-
-print << "EOF"
+{
+    print << "EOF"
             <table:table-row>
                <table:table-cell/>
 EOF
@@ -349,10 +391,32 @@ EOF
 
 print << "EOF"
             </table:table-row>
+EOF
+    ;
+}
+
+# Summary as %ages ...
+
+{
+    print << "EOF"
+            <table:table-row>
+               <table:table-cell/>
+EOF
+    ;
+    my $col;
+    $row++;
+    my $totalref = coltoref($colcount + 1) . "$row";
+    for ($col = 1; $col <= $colcount + 1; $col++) {
+	my $ref = coltoref ($col);
+	print ("               <table:table-cell table:formula=\"of:=[.$ref$row]/[.$totalref]\" office:value-type=\"float\"/>\n");
+    }
+
+print << "EOF"
+            </table:table-row>
          </table:table>
 EOF
     ;
-
+}
 
 # LangData sheet
 
@@ -371,7 +435,7 @@ print << "EOF"
             </table:table-row>
 EOF
     ;
-    for my $country (sort keys %countries) {
+    for my $country (@countries_by_product) {
 	my $product = 0; my $lang_pack = 0;
 	$product += $byregion{'product'}->{$country} if (defined $byregion{'product'}->{$country});
 	$lang_pack += $byregion{'lang pack'}->{$country} if (defined $byregion{'lang pack'}->{$country});
@@ -392,7 +456,7 @@ EOF
 
 # By version sheet
 
-# First collaps trivial / invalid versions - under 0.1% - particularly for the sql dbase
+# First collapse trivial / invalid versions - under 0.1% - particularly for the sql dbase
 my @todelete = ();
 my $threshold = $total_downloads / 1000;
 for my $version (keys %allversions) {
@@ -444,9 +508,9 @@ EOF
     for my $date (sort keys %byversion) {
 print << "EOF"
             <table:table-row>
-               <table:table-cell table:style-name="isodate" office:value-type="date" office:date-value="$date"/>
 EOF
 ;
+        print_date_cell("isodate", $date);
         for my $ver (sort keys %allversions) {
 	    my $count = $byversion{$date}->{$ver};
 	    $count = 0 if(!defined $count);
@@ -463,7 +527,59 @@ EOF
 
 print << "EOF"
          </table:table>
+EOF
+    ;
 
+# Language product download / comparison sheet ...
+print << "EOF"
+         <table:table table:name="TopLanguages">
+            <table:table-row>
+               <table:table-cell table:style-name="boldheader" office:value-type="string">
+                  <text:p>Date</text:p>
+               </table:table-cell>
+EOF
+;
+
+for my $lang (@top_countries) {
+print << "EOF"
+               <table:table-cell table:style-name="boldheader" office:value-type="string">
+                  <text:p>$lang</text:p>
+               </table:table-cell>
+EOF
+	    ;
+}
+print << "EOF"
+            </table:table-row>
+EOF
+;
+
+for my $date (sort keys %data) {
+print << "EOF"
+            <table:table-row>
+EOF
+;
+    print_date_cell("isodate", $date);
+    for my $lang (@top_countries) {
+	my $count = $by_date_country{$date}->{$lang};
+	$count = 0 if (!defined $count);
+print << "EOF"
+               <table:table-cell office:value-type="float" office:value="$count"/>
+EOF
+;
+    }
+print << "EOF"
+            </table:table-row>
+EOF
+;
+}
+print << "EOF"
+         </table:table>
+EOF
+    ;
+
+# end of spreadsheet ...
+
+print << "EOF"
       </office:spreadsheet>
    </office:body>
 </office:document>
