@@ -266,7 +266,8 @@ for my $prod (sort keys %prod_names) {
 
 my @countries_by_product;
 @countries_by_product = sort { $byregion{'product'}->{$b} <=> $byregion{'product'}->{$a} } keys %countries;
-my @top_countries = splice(@countries_by_product, 0, $top_n_countries);
+my @top_countries = @countries_by_product;
+my @top_countries = splice(@top_countries, 0, $top_n_countries);
 
 # now output this as a spreadsheet ... fods ...
 print << 'EOF'
