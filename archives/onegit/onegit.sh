@@ -51,6 +51,7 @@ local r="$1"
     log "merge $r into onegit"
     git remote add $r "${GIT_TEMP?}/$r" || die "Error adding remote ${GIT_TEMP?}/$r"
     git fetch $r || die "Error fetching $r"
+    git fetch --tags $r || die "Error fetching tags from $r"
     git merge -Xours $r/master || die "Error merging $r/master"
     git remote rm $r || die "Error removing remote $r/master"
 
