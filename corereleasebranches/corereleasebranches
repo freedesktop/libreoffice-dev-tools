@@ -239,6 +239,7 @@ cat > $FINDREPOBRANCHES <<EOF
         BASEBRANCHES[MAJOR] = "T";
     }
     /^ooo\/OOO/ {
+        sub(/\n?$/,"",\$0);
         BRANCH=\$0
         sub(/_m[0-9]*\$/,"",BRANCH);
         TAGSFORBRANCH[BRANCH] = TAGSFORBRANCH[BRANCH] " " \$0;
