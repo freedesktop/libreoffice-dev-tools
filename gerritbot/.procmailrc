@@ -1,0 +1,12 @@
+MAILDIR=$HOME/.Maildir/
+LOCKFILE=$HOME/.Maildir/.procmaillock
+VERBOSE=no
+LOGFILE=$HOME/.Maildir/procmail.log
+
+:0c:
+* ^X-Gerrit-MessageType:
+| /home/gerritbot/mangleandmailtodevlist
+#! libreoffice@lists.freedesktop.org
+
+:0:
+all/

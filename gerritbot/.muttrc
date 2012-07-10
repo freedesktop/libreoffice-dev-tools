@@ -1,0 +1,10 @@
+set folder="~/.Maildir/"
+set mbox_type = 'Maildir' # default: 'mbox'
+set use_from = yes
+set use_envelope_from = yes
+set spoolfile="~/.Maildir/all/"
+set mask="!^\\.[^.]"
+set record="+/../sent"
+set postponed="+/../drafts"
+set header_cache="~/.Maildir/headercache"
+set header_cache_compress= no

@@ -1,0 +1,15 @@
+[options]
+message_log = ~/.Maildir/getmail.log
+message_log_verbose = false
+read_all = false
+max_messages_per_session=300000
+
+[retriever]
+type = SimpleIMAPSSLRetriever
+server = mail.jpberlin.de
+username = gerrit@libreoffice.org
+password = nicetrybuddy
+
+[destination]
+type = MDA_external
+path = /usr/bin/procmail

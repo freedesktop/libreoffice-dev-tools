@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+import sys
+import email
+import smtplib
+
+def prefixsubject(message):
+        subject = message['Subject']
+        messagetype = message['X-Gerrit-MessageType']
+        if messagetype == 'merged':
+                subject = '[PUSHED] %s' % subject
+        elif messagetype == 'newchange':
+                subject = '[PATCH] %s' % subject
+        del message['Subject']
+        message['Subject'] = subject
+
+def removeboilerplate(message):
+        boilerplate = 'Change in core[master]:'
+        subject = message['Subject']
+        if subject.startswith(boilerplate):
+                del message['Subject']
+                message['Subject'] = subject.replace(boilerplate, '', 1)
+
+def adddevlisttocc(message):
+        devlist = 'LibreOffice Developer List <libreoffice@lists.freedesktop.org>'
+        if 'cc' in message:
+		cc = message['cc']
+                del message['cc']
+                message['cc'] = '%s, %s' % (cc, devlist)
+        else:
+                message['cc'] = devlist
+
+message = email.message_from_file(sys.stdin)
+adddevlisttocc(message)
+removeboilerplate(message)
+prefixsubject(message)
+
+server = smtplib.SMTP('localhost')
+server.sendmail('gerrit@libreoffice.org', 'libreoffice@lists.freedesktop.org', str(message))
+server.quit()
