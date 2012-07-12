@@ -37,7 +37,7 @@ prefixsubject(message)
 
 # we are watching for comments but not sending mails for those in hope to evade
 # http://code.google.com/p/gerrit/issues/detail?id=1465
-if not message['X-Gerrit-MessageType'] = 'comment':
+if not message['X-Gerrit-MessageType'] == 'comment':
 	server = smtplib.SMTP('localhost')
 	server.sendmail('gerrit@libreoffice.org', 'libreoffice@lists.freedesktop.org', str(message))
 	server.quit()
