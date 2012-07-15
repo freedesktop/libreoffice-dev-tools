@@ -1,11 +1,65 @@
-#!/bin/bash
-date >> /home/gerritbot/syncgerrit.log
-git --git-dir=/home/gerritbot/core/.git fetch --all >> /home/gerritbot/syncgerrit.log 2>&1
-# this should probably be a repo created with git clone --bare --mirror instead
-# so that these checkouts and pulls are not needed anymore.
-cd /home/gerritbot/core
-git checkout master && git pull -r
-git checkout libreoffice-3-5 && git pull -r
-git checkout libreoffice-3-6 && git pull -r
-git checkout libreoffice-3-5-5 && git pull -r
-git --git-dir=/home/gerritbot/core/.git push -f ssh://logerrit/core master:master libreoffice-3-5:libreoffice-3-5 libreoffice-3-6:libreoffice-3-6 libreoffice-3-5-5:libreoffice-3-5-5 >> /home/gerritbot/syncgerrit.log 2>&1
+#!/usr/bin/env python
+
+import os
+import os.path
+import logging
+import minilog
+
+repodir = os.path.join(os.environ['HOME'], 'syncrepos')
+sourceurl = 'http://anongit.freedesktop.org/git/libreoffice/'
+desturl = 'ssh://logerrit'
+repos = ['core', 'contrib/dev-tools']
+branches = {}
+branches['core']              = ['master', 'libreoffice-3-5', 'libreoffice-3-5-5', 'libreoffice-3-6']
+branches['contrib/dev-tools'] = ['master']
+
+loglevel='INFO'
+logfile=os.path.join(os.environ['HOME'], 'sync.log')
+
+class RepoSyncer():
+    def __init__(self, repo, logger, loghandler):
+        self.repo = repo
+        self.logger = logger
+        self.localpath = os.path.join(repodir, self.repo + '.git')
+
+    def make_extra(self, phase):
+        return { 'repo' : self.repo, 'phase' : phase }
+
+    def ensure_exists(self, remotebaseurl):
+        if not os.path.exists(self.localpath):
+            os.makedirs(self.localpath)
+            minilog.logged_call( \
+                ['git', 'clone', '--bare', '--mirror', remotebaseurl + self.repo + '.git', self.localpath], \
+                self.logger, \
+                self.make_extra('clone'))
+
+    def update_repo(self):
+        minilog.logged_call( \
+            ['git', '--git-dir=%s' % self.localpath, 'fetch', '--all'], \
+            self.logger, \
+            self.make_extra('update'))
+
+    def push_branches(self, remotebaseurl, branches):
+        contribprefix = 'contrib/'
+        destinationpath = repo
+        if destinationpath.startswith(contribprefix):
+            destinationpath = destinationpath[len(contribprefix):]
+        refspec = ['%s:%s' % (branch, branch) for branch in branches]
+        minilog.logged_call( \
+            ['git', '--git-dir=%s' % self.localpath, 'push', '-f', remotebaseurl + destinationpath] + refspec, \
+            self.logger, \
+            self.make_extra('push'))
+
+logger = logging.getLogger('sync')
+loghandler = logging.FileHandler(logfile)
+loghandler.setFormatter(logging.Formatter('%(asctime)s %(repo)-8s %(phase)-6s %(levelname)-8s %(message)s'))
+logger.addHandler(loghandler)
+logger.setLevel(loglevel)
+for repo in repos:
+    try:
+        syncer = RepoSyncer(repo, logger, loghandler)
+        syncer.ensure_exists(sourceurl)
+        syncer.update_repo()
+        syncer.push_branches(desturl, branches[repo])
+    except Exception as e:
+        logger.error('syncing failed: %s.' % str(e), {'repo' : repo, 'phase' : 'fail'})
