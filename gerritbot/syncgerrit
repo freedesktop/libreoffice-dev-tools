@@ -62,4 +62,4 @@ for repo in repos:
         syncer.update_repo()
         syncer.push_branches(desturl, branches[repo])
     except Exception as e:
-        logger.error('syncing failed: %s.' % str(e), {'repo' : repo, 'phase' : 'fail'})
+        logger.error('syncing failed: %s.' % str(e), extra={'repo' : repo, 'phase' : 'fail'})
