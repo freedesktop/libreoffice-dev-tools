@@ -21,4 +21,4 @@
 # 
 # m h  dom mon dow   command
 */5 * * * * getmail -q
-*/15 * * * * /home/gerritbot/syncgerritmaster.sh
+*/15 * * * * /home/gerritbot/syncgerrit
