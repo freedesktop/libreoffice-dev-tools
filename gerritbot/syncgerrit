@@ -52,7 +52,7 @@ class RepoSyncer():
 
 logger = logging.getLogger('sync')
 loghandler = logging.FileHandler(logfile)
-loghandler.setFormatter(logging.Formatter('%(asctime)s %(repo)-8s %(phase)-6s %(levelname)-8s %(message)s'))
+loghandler.setFormatter(logging.Formatter('%(asctime)s %(repo)-15s %(phase)-6s %(levelname)-8s %(message)s'))
 logger.addHandler(loghandler)
 logger.setLevel(loglevel)
 for repo in repos:
