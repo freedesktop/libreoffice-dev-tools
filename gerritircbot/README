@@ -1,0 +1,17 @@
+This directory contains configuration files for irc gerritbot from OpenStack project.
+
+https://github.com/openstack-ci/gerritbot
+
+Installation:
+install the dependencies:
+
+python-daemon
+python-yaml
+python-irclib
+
+Adjust the config files.
+
+Run:
+install gerritbot.init
+or just start it manually
+

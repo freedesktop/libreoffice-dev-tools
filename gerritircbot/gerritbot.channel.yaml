@@ -1,0 +1,9 @@
+libreoffice-dev:
+    events:
+      - patchset-created
+      - change-merged
+    projects:
+      - core
+      - dev-tools
+    branches:
+      - master
