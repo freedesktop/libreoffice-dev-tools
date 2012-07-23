@@ -55,7 +55,7 @@ usage()
 #
 sanity_check()
 {
-    which wget > /dev/null 2>&1 || die "This script need wget in the PATH to function"
+    which wget > /dev/null 2>&1 || which curl > /dev/null 2>&1 || die "This script need wget or curl in the PATH to function"
     which tar > /dev/null 2>&1 || die "This script need tar in the PATH to function"
     which bzip2 > /dev/null 2>&1 || die "This script need bzips in the PATH to function"
 }
@@ -75,6 +75,21 @@ shift
        $@ || die "$die_message"
    fi
 }
+
+###
+# Wrapper for curl / wget
+#
+download()
+{
+    if command -v wget; then
+        wget -c $1 -P $2
+    else
+        if command -v curl; then
+            curl -C --create-dirs $1 -o $2/$(basename $1)
+        fi
+    fi
+}
+
 
 ###
 # Create the links, if needed, in the core repo for a given child repos
@@ -109,7 +124,7 @@ process_child_repo()
 local repo="$1"
 
     if ! $resume ; then do_action "Remove old copy of $repo tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-$repo.tar.bz2"  rm -f ${temp_dir}/libreoffice-$repo.tar.bz2 ; fi
-    do_action "Download the $repo repo tar.bz2 file" "downloading package for the $repo repo" wget -c http://dev-www.libreoffice.org/bundles/libreoffice-$repo.tar.bz2 -P ${temp_dir}
+    do_action "Download the $repo repo tar.bz2 file" "downloading package for the $repo repo" download http://dev-www.libreoffice.org/bundles/libreoffice-$repo.tar.bz2 ${temp_dir}
 
     if [ -e ./clone/$repo ] ; then
         do_action "Remove the current $repo repo" "removing ./clone/$repo" rm -fr ./clone/$repo
@@ -176,7 +191,7 @@ fi
 
 if $do_core ; then
     if ! $resume ; then do_action "Remove any old copy of core tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-core.tar.bz2"  rm -f ${temp_dir}/libreoffice-core.tar.bz2 ; fi
-    do_action "Download the core repo tar.bz2 file" "downloading package for the core repo" wget -c http://dev-www.libreoffice.org/bundles/libreoffice-core.tar.bz2 -P ${temp_dir}
+    do_action "Download the core repo tar.bz2 file" "downloading package for the core repo" download http://dev-www.libreoffice.org/bundles/libreoffice-core.tar.bz2 ${temp_dir}
     do_action "" "cannot create the directory ${core_path}" mkdir ${core_path?}
     do_action "" "cannot cd to ${core_path?}" pushd ${core_path?} > /dev/null
     do_action "Unpack the core repo tar.bz2 file to ${core_path}" "unpacking the core tar.bz2 file" tar --strip-components=1 -xf ${temp_dir}/libreoffice-core.tar.bz2
