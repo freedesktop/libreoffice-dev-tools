@@ -13,10 +13,10 @@ import minilog
 
 repodir = os.path.join(os.environ['HOME'], 'syncrepos')
 sourceurl = 'git://anongit.freedesktop.org/libreoffice/'
-desturl = 'ssh://logerrit'
+desturl = 'ssh://logerrit/'
 repos = ['core', 'contrib/dev-tools']
 branches = {}
-branches['core']              = ['master', 'libreoffice-3-5', 'libreoffice-3-5-5', 'libreoffice-3-6']
+branches['core']              = ['master', 'libreoffice-3-5', 'libreoffice-3-5-5', 'libreoffice-3-6', 'libreoffice-3-6-0']
 branches['contrib/dev-tools'] = ['master']
 
 loglevel='INFO'
