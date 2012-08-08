@@ -90,7 +90,7 @@ branches['dictionaries'] = [
         'feature/gbuild_dictionaries',
         'feature/submodules',
     ]
-branches['dictionaries'] = [
+branches['help'] = [
     'master',
     'libreoffice-3-3',
         'libreoffice-3-3-0',
