@@ -31,7 +31,7 @@ branches['binfilter'] = [
         'feature/cmclayout',
         'feature/submodules',
     # distro
-        'distro/ubuntu-oneiric-3.4'
+        'distro/ubuntu/oneiric-3.4'
     ]
 branches['core'] = [
     'master',
@@ -70,8 +70,8 @@ branches['core'] = [
         'feature/submodules',
         'feature/unitymenus',
     # distro
-        'distro/ubuntu-oneiric-3.4',
-        'distro/ubuntu-oneiric-3.4-all'
+        'distro/ubuntu/oneiric-3.4',
+        'distro/ubuntu/oneiric-3.4-all'
     ]
 branches['contrib/dev-tools'] = ['master']
 
