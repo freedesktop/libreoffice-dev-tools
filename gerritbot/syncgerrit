@@ -14,7 +14,7 @@ import minilog
 repodir = os.path.join(os.environ['HOME'], 'syncrepos')
 sourceurl = 'git://anongit.freedesktop.org/libreoffice/'
 desturl = 'ssh://logerrit/'
-repos = ['binfilter', 'core', 'contrib/dev-tools']
+repos = ['binfilter', 'core', 'contrib/dev-tools', 'dictionaries']
 branches = {}
 branches['binfilter'] = [
     'master',
@@ -74,6 +74,22 @@ branches['core'] = [
         'distro/ubuntu/oneiric-3.4-all'
     ]
 branches['contrib/dev-tools'] = ['master']
+branches['dictionaries'] = [
+    'master',
+    'libreoffice-3-5',
+        'libreoffice-3-5-0',
+        'libreoffice-3-5-1',
+        'libreoffice-3-5-2',
+        'libreoffice-3-5-3',
+        'libreoffice-3-5-4',
+        'libreoffice-3-5-5',
+    'libreoffice-3-6',
+        'libreoffice-3-6-0',
+    # feature
+        'feature/cmclayouttrans',
+        'feature/gbuild_dictionaries',
+        'feature/submodules',
+    ]
 
 loglevel='INFO'
 logfile=os.path.join(os.environ['HOME'], 'sync.log')
