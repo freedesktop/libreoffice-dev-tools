@@ -14,7 +14,7 @@ import minilog
 repodir = os.path.join(os.environ['HOME'], 'syncrepos')
 sourceurl = 'git://anongit.freedesktop.org/libreoffice/'
 desturl = 'ssh://logerrit/'
-repos = ['binfilter', 'core', 'contrib/dev-tools', 'dictionaries']
+repos = ['binfilter', 'core', 'contrib/dev-tools', 'dictionaries', 'help']
 branches = {}
 branches['binfilter'] = [
     'master',
@@ -89,6 +89,59 @@ branches['dictionaries'] = [
         'feature/cmclayouttrans',
         'feature/gbuild_dictionaries',
         'feature/submodules',
+    ]
+branches['dictionaries'] = [
+    'master',
+    'libreoffice-3-3',
+        'libreoffice-3-3-0',
+        'libreoffice-3-3-1',
+        'libreoffice-3-3-2',
+        'libreoffice-3-3-3',
+        'libreoffice-3-3-4',
+    'libreoffice-3-4',
+        'libreoffice-3-4-0',
+        'libreoffice-3-4-1',
+        'libreoffice-3-4-2',
+        'libreoffice-3-4-3',
+        'libreoffice-3-4-4',
+        'libreoffice-3-4-5',
+        'libreoffice-3-4-6',
+    'libreoffice-3-5',
+        'libreoffice-3-5-0',
+        'libreoffice-3-5-1',
+        'libreoffice-3-5-2',
+        'libreoffice-3-5-3',
+        'libreoffice-3-5-4',
+        'libreoffice-3-5-5',
+        'libreoffice-3-5-6',
+    'libreoffice-3-6',
+        'libreoffice-3-6-0',
+    # feature
+        'feature/bootstrap-build',
+        'feature/calc-multiline-input',
+        'feature/cmclayout',
+        'feature/cmclayouttrans',
+        'feature/currency-64bit',
+        'feature/gbuild_help',
+        'feature/gbuild_scp2',
+        'feature/gnumake4',
+        'feature/gsoc-calc-perf',
+        'feature/gsoc2011_wizards',
+        'feature/helppack',
+        'feature/layout',
+        'feature/onemsi',
+        'feature/pptx-export-ooxml11',
+        'feature/rodatastrings',
+        'feature/soenv2',
+        'feature/submodules',
+        'feature/winshrink',
+    # integration
+        'integration/dev300_m101',
+        'integration/dev300_m106',
+        'integration/dev300_m98',
+    # cruft?
+        'gr2',
+        'origin/feature/submodules'
     ]
 
 loglevel='INFO'
