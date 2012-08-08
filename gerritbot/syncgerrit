@@ -66,7 +66,7 @@ branches['core'] = [
         'feature/opengl-canvas',
         'feature/orcus-integration',
         'feature/remote',
-        'feature/stub-writer',
+        'feature/stub_writer',
         'feature/submodules',
         'feature/unitymenus',
     # distro
