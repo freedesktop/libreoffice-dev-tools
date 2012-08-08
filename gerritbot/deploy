@@ -1,0 +1,2 @@
+git tag laststable-`date +%s`
+git pull
