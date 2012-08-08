@@ -5,7 +5,7 @@ LOGFILE=$HOME/.Maildir/procmail.log
 
 :0c:
 * ^X-Gerrit-MessageType:
-| /home/gerritbot/mangleandmailtodevlist
+| /home/gerritbot/dev-tools/gerritbot/mangleandmailtodevlist
 #! libreoffice@lists.freedesktop.org
 
 :0:
