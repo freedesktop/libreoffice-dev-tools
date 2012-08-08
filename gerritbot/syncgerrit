@@ -14,9 +14,65 @@ import minilog
 repodir = os.path.join(os.environ['HOME'], 'syncrepos')
 sourceurl = 'git://anongit.freedesktop.org/libreoffice/'
 desturl = 'ssh://logerrit/'
-repos = ['core', 'contrib/dev-tools']
+repos = ['binfilter', 'core', 'contrib/dev-tools']
 branches = {}
-branches['core']              = ['master', 'libreoffice-3-5', 'libreoffice-3-5-5', 'libreoffice-3-6', 'libreoffice-3-6-0']
+branches['binfilter'] = [
+    'master',
+    'libreoffice-3-5',
+        'libreoffice-3-5-0',
+        'libreoffice-3-5-1',
+        'libreoffice-3-5-2',
+        'libreoffice-3-5-3',
+        'libreoffice-3-5-4',
+        'libreoffice-3-5-5',
+    'libreoffice-3-6',
+        'libreoffice-3-6-0',
+    # feature
+        'feature/cmclayout',
+        'feature/submodules',
+    # distro
+        'distro/ubuntu-oneiric-3.4'
+    ]
+branches['core'] = [
+    'master',
+    'libreoffice-3-5',
+        'libreoffice-3-5-0',
+        'libreoffice-3-5-1',
+        'libreoffice-3-5-2',
+        'libreoffice-3-5-3',
+        'libreoffice-3-5-4',
+        'libreoffice-3-5-5',
+    'libreoffice-3-6',
+        'libreoffice-3-6-0',
+    # feature
+        'feature/accfixes2',
+        'feature/base-preview',
+        'feature/calc-empty-string-config',
+        'feature/cmclayouttrans',
+        'feature/coretext',
+        'feature/external_gbuild',
+        'feature/gbuild_dictionaries',
+        'feature/gbuild_help',
+        'feature/gbuild_mkdir',
+        'feature/gbuild_ure',
+        'feature/gsoc-calc-perf',
+        'feature/gsoc-calc-perf2',
+        'feature/gsoc-test-improvements',
+        'feature/gsoc-test-improvements2',
+        'feature/gsoc-test-improvements3',
+        'feature/gstreamer-1.0',
+        'feature/layout',
+        'feature/mork',
+        'feature/opengl-canvas',
+        'feature/orcus-integration',
+        'feature/remote',
+        'feature/stub-writer',
+        'feature/submodules',
+        'feature/unitymenus',
+    # distro
+        'distro/ubuntu-oneiric-3.4',
+        'distro/ubuntu-oneiric-3.4-all'
+    ]
 branches['contrib/dev-tools'] = ['master']
 
 loglevel='INFO'
