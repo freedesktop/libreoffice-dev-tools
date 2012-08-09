@@ -119,7 +119,6 @@ branches['help'] = [
     # feature
         'feature/bootstrap-build',
         'feature/calc-multiline-input',
-        'feature/cmclayout',
         'feature/cmclayouttrans',
         'feature/currency-64bit',
         'feature/gbuild_help',
@@ -132,7 +131,6 @@ branches['help'] = [
         'feature/onemsi',
         'feature/pptx-export-ooxml11',
         'feature/rodatastrings',
-        'feature/soenv2',
         'feature/submodules',
         'feature/winshrink',
     # integration
