@@ -165,13 +165,11 @@ branches['translations'] = [
         'libreoffice-3-6-0',
     # feature
         'feature/calc-multiline-input',
-        'feature/cmclayout',
         'feature/cmclayouttrans',
         'feature/gbuild_scp2',
         'feature/gsoc-calc-perf',
         'feature/layout',
         'feature/onemsi',
-        'feature/soenv2',
         'feature/submodules'
 ]
 
