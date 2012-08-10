@@ -218,8 +218,9 @@ reply['Subject'] = '[CHANGEUPLOAD %s] %s ' % (sucesstext[success], message['Subj
 
 try:
     s = smtplib.SMTP('localhost')
-    s.sendmail(reply['From'], reply['To'].split(',') + reply[Cc].split(','), reply.as_string())
-    logger.info('successfully send reply to %s.')
+    receivers = reply['To'].split(',') + reply[Cc].split(',')
+    s.sendmail(reply['From'], receivers, reply.as_string())
+    logger.info('successfully send reply to %s.' % ','.join(receivers))
     s.quit()
 except Exception as e:
-    logger.error('failed to send reply to %s.')
+    logger.info('failed to send reply to %s: %s.' % (','.join(receivers), str(e)))
