@@ -9,15 +9,15 @@ LOGFILE=$HOME/.Maildir/procmail.log
 #! libreoffice@lists.freedesktop.org
 
 :0c:
-* ^Subject: [PATCH]
+* ^Subject: \[PATCH\]
 | /home/gerritbot/dev-tools/gerritbot/patchpickup
 
 :0c:
-* ^Subject: [CHERRYPICK]
+* ^Subject: \[CHERRYPICK\]
 | /home/gerritbot/dev-tools/gerritbot/patchpickup
 
 :0c:
-* ^Subject: [HELP]
+* ^Subject: \[HELP\]
 | /home/gerritbot/dev-tools/gerritbot/patchpickup
 
 :0:
