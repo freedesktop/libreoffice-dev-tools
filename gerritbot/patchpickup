@@ -182,6 +182,9 @@ class EmailCommand():
         self.logger.info('and the word \'commit\' followed by the SHA1 of the commit to cherrypick')
         self.logger.info('add the word \'branch\' followed by the target branch to the subject too.')
 
+    def do_None(self):
+        self.do_help()
+
 
 logger = logging.getLogger('patchpickup')
 logstring = StringIO.StringIO()
