@@ -218,7 +218,9 @@ reply['Subject'] = '[CHANGEUPLOAD %s] %s ' % (sucesstext[success], message['Subj
 receivers = []
 try:
     s = smtplib.SMTP('localhost')
-    receivers = reply['To'].split(',') + reply['Cc'].split(',')
+    receivers = reply['To'].split(',')
+    if reply['Cc']:
+        receivers = receivers + reply['Cc'].split(',')
     s.sendmail(reply['From'], receivers, reply.as_string())
     logger.info('successfully send reply to %s.' % ','.join(receivers))
     s.quit()
