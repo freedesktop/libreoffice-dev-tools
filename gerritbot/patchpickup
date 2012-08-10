@@ -196,9 +196,11 @@ logger.setLevel(loglevel)
 success = False
 sucesstext = { True : 'SUCCESS', False : 'FAILED' }
 
-message = email.message_from_file(sys.stdin)
 
 try:
+    message = email.message_from_file(sys.stdin)
+    logger.info('Handling incoming mail from %s' % message['From'])
+    logger.info('subject: \'%s\'' % message['Subject'])
     success = EmailCommand(message, sourceurl, desturl, logger).execute().success
 except Exception as e:
     logger.error(e)
