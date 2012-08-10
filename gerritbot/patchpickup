@@ -1,0 +1,223 @@
+#!/usr/bin/env python
+#
+# This file is part of the LibreOffice project.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import email
+import io
+import logging
+import minilog
+import os.path
+import smtplib
+import subprocess
+import sys
+import tempfile
+import StringIO
+import shutil
+from  email.mime.text import MIMEText
+
+
+sourceurl = '/home/gerritbot/syncrepos/core.git'
+desturl = 'shh://logerrit/core'
+legalbranches = [ 'master', 'libreoffice-3-6', 'libreoffice-3-5', 'libreoffice-3-5-6' ]
+
+logfile=os.path.join(os.environ['HOME'], 'patchpickup.log')
+loglevel='INFO'
+
+class PatchPusher():
+    def __init__(self, branch, logger):
+        self.tmpdir = tempfile.mkdtemp()
+        self.workrepo = os.path.join(self.tmpdir, 'repo')
+        self.branch = branch
+        self.logger = logger
+
+    def clone_base(self, sourceurl):
+        minilog.logged_call( \
+            ['git', 'clone', '--branch', self.branch, sourceurl, self.workrepo], \
+             self.logger, \
+            {})
+        
+    def fetch_all(self):
+        minilog.logged_call( \
+            ['git','--work-tree=%s' % self.workrepo, 'fetch', '--all'], \
+            self.logger, \
+            {})
+
+    def checkout(self, branch):
+        minilog.logged_call( \
+            ['git','--work-tree=%s' % self.workrepo, 'checkout', branch], \
+            self.logger, \
+            {})
+
+    def disable_gc(self):
+        os.chdir(self.workrepo)
+        minilog.logged_call( \
+            ['git', 'config', 'gc.auto', '0'], \
+            self.logger, \
+            {})
+
+    def cherry_pick(self, commit):
+        minilog.logged_call( \
+            ['git','--work-tree=%s' % self.workrepo, 'cherry-pick', commit], \
+            self.logger, \
+            {})
+
+    def status(self):
+        minilog.logged_call( \
+            ['git','--work-tree=%s' % self.workrepo, 'status'], \
+            self.logger, \
+            {})
+        
+    def apply_message(self, message):
+        messagefilename = os.path.join(self.tmpdir,'message')
+        messagefile = open(messagefilename, 'w')
+        logger.info('filename: %s' % messagefilename)
+        messagefile.write(str(message))
+        messagefile.close()
+        os.chdir(self.workrepo)
+        minilog.logged_call( \
+            ['git', 'am', messagefilename], \
+            self.logger, \
+            {})
+
+    def upload_change(self, desturl):
+        minilog.logged_call( \
+            ['git','--work-tree=%s' % self.workrepo, 'push', desturl, 'HEAD:refs/for/%s' % self.branch], \
+            self.logger, \
+            {})
+
+    def dispose(self):
+        shutil.rmtree(self.tmpdir)
+
+class EmailCommand():
+    def __init__(self, message, sourceurl, desturl, logger):
+        self.message = message
+        self.sourceurl = sourceurl
+        self.desturl = desturl
+        self.logger = logger
+        self.command = None
+        self.branch = 'master'
+        self.commit = None
+        self.success = False
+        if not message.has_key('subject'):
+            raise Exception('message has no subject header -- ignoring.')
+        subject = message['subject']
+        self.parse_params(subject)
+        self.parse_command(subject)
+
+    def parse_params(self, subject):
+        state = None
+        words = subject.split(' ')
+        for word in words:
+            if state == 'branch':
+                self.branch = word
+                state = None
+            if state == 'commit':
+                self.commit = word
+                state = None
+            elif state is None and word == 'branch':
+                state = 'branch'
+            if state is None and word == 'commit':
+                state = 'commit'
+        if self.commit is None and len(words) > 1:
+            self.commit = words[1]
+        if not self.branch in legalbranches:
+            raise Exception('%s does not look like a legal branch to me.' % self.branch)
+
+    def parse_command(self, subject):
+        if subject.startswith('[PATCH]'):
+            self.command = 'apply'
+        elif subject.startswith('[CHERRYPICK]'):
+            self.command = 'cherrypick'
+        elif subject.startswith('[HELP]'):
+            self.command = 'help'
+
+    def execute(self):
+        self.logger.info('executing command: %s, branch: %s, commit: %s' % (self.command, self.branch, self.commit))
+        try:
+            getattr(self, 'do_%s' % self.command)()
+            self.success = True
+        except Exception as e:
+            self.logger.error(e)
+        return self
+
+    def do_apply(self):
+        patchpusher = PatchPusher(self.branch, self.logger)
+        try:
+            patchpusher.clone_base(self.sourceurl)
+            patchpusher.disable_gc()
+            patchpusher.apply_message(self.message)
+            patchpusher.upload_change(self.desturl)
+        except Exception as e:
+            patchpusher.dispose()
+            raise e
+
+    def do_cherrypick(self):
+        if self.commit is None:
+            raise Exception('could not find what to cherrypick from subject: %s' % subject)
+        patchpusher = PatchPusher(self.branch, self.logger)
+        try:
+            patchpusher.clone_base(self.sourceurl)
+            patchpusher.disable_gc()
+            patchpusher.fetch_all()
+            patchpusher.checkout(self.branch)
+            try:
+                patchpusher.cherry_pick(self.commit)
+                patchpusher.upload_change(self.desturl)
+            except Exception as e:
+                patchpusher.status() 
+                raise e
+        except Exception as e:
+            patchpusher.dispose()
+            raise e
+
+    def do_help(self):
+        self.logger.info('To upload a patch, send a mail with subject starting with [PATCH]')
+        self.logger.info('add the word \'branch\' followed by the target branch to the subject too, if needed')
+        self.logger.info('')
+        self.logger.info('To cherry-pick a change to a release branch, send a mail with subject starting with [CHERRYPICK]')
+        self.logger.info('and the word \'commit\' followed by the SHA1 of the commit to cherrypick')
+        self.logger.info('add the word \'branch\' followed by the target branch to the subject too.')
+
+
+logger = logging.getLogger('patchpickup')
+logstring = StringIO.StringIO()
+loghandler = logging.StreamHandler(logstring)
+loghandler.setFormatter(logging.Formatter('%(asctime)s %(levelname)-8s %(message)s'))
+logger.addHandler(loghandler)
+logfilehandler = logging.FileHandler(logfile)
+logfilehandler.setFormatter(logging.Formatter('%(asctime)s %(levelname)-8s %(message)s'))
+logger.addHandler(logfilehandler)
+logger.setLevel(loglevel)
+
+success = False
+sucesstext = { True : 'SUCCESS', False : 'FAILED' }
+
+message = email.message_from_file(sys.stdin)
+
+try:
+    success = EmailCommand(message, sourceurl, desturl, logger).execute().success
+except Exception as e:
+    logger.error(e)
+
+reply = MIMEText(logstring.getvalue())
+reply['To'] = message['From']
+if message.has_key('Reply-To'):
+    reply['To'] = message['Reply-To']
+reply['From'] = 'gerrit@libreoffice.org'
+reply['Cc'] = message['Cc']
+if success:
+    status = 'SUCCESS'
+
+reply['Subject'] = '[CHANGEUPLOAD %s] %s ' % (sucesstext[success], message['Subject'])
+
+try:
+    s = smtplib.SMTP('localhost')
+    s.sendmail(reply['From'], reply['To'].split(',') + reply[Cc].split(','), reply.as_string())
+    logger.info('successfully send reply to %s.')
+    s.quit()
+except Exception as e:
+    logger.error('failed to send reply to %s.')
