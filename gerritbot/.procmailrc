@@ -16,5 +16,9 @@ LOGFILE=$HOME/.Maildir/procmail.log
 * ^Subject: [CHERRYPICK]
 | /home/gerritbot/dev-tools/gerritbot/patchpickup
 
+:0c:
+* ^Subject: [HELP]
+| /home/gerritbot/dev-tools/gerritbot/patchpickup
+
 :0:
 all/
