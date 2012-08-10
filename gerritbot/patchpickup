@@ -215,7 +215,7 @@ if success:
     status = 'SUCCESS'
 
 reply['Subject'] = '[CHANGEUPLOAD %s] %s ' % (sucesstext[success], message['Subject'])
-
+receivers = []
 try:
     s = smtplib.SMTP('localhost')
     receivers = reply['To'].split(',') + reply[Cc].split(',')
