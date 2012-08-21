@@ -21,7 +21,7 @@ import shutil
 from  email.mime.text import MIMEText
 
 
-sourceurl = '/home/gerritbot/syncrepos/core.git'
+desturl = 'ssh://logerrit/core'
 desturl = 'ssh://logerrit/core'
 legalbranches = [ 'master', 'libreoffice-3-6', 'libreoffice-3-5', 'libreoffice-3-5-6' ]
 
