@@ -167,7 +167,6 @@ class EmailCommand():
             raise Exception('could not find what to cherrypick from subject: %s' % subject)
         patchpusher = PatchPusher(self.branch, self.logger)
         try:
-            patchpusher.fetch_all_source(self.sourceurl)
             patchpusher.update_and_clone_base(self.sourceurl)
             patchpusher.disable_gc()
             patchpusher.fetch_all()
