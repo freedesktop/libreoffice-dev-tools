@@ -21,7 +21,7 @@ import shutil
 from  email.mime.text import MIMEText
 
 
-desturl = 'ssh://logerrit/core'
+sourceurl = 'ssh://logerrit/core'
 desturl = 'ssh://logerrit/core'
 legalbranches = [ 'master', 'libreoffice-3-6', 'libreoffice-3-5', 'libreoffice-3-5-6' ]
 
