@@ -12,6 +12,7 @@ import logging
 import minilog
 import os.path
 import smtplib
+import string
 import subprocess
 import sys
 import tempfile
@@ -110,7 +111,7 @@ class EmailCommand():
 
     def parse_params(self, subject):
         state = None
-        words = subject.split(' ')
+        words = subject.translate(string.maketrans('\r\n','  ').split(' ')
         for word in words:
             if state == 'branch':
                 self.branch = word
