@@ -35,11 +35,7 @@ class PatchPusher():
         self.branch = branch
         self.logger = logger
 
-    def update_and_clone_base(self, sourceurl):
-        minilog.logged_call( \
-            ['git','--work-tree=%s' % self.sourceurl, 'fetch', '--all'], \
-            self.logger, \
-            {})
+    def clone_base(self, sourceurl):
         minilog.logged_call( \
             ['git', 'clone', '--branch', self.branch, sourceurl, self.workrepo], \
              self.logger, \
@@ -154,7 +150,7 @@ class EmailCommand():
     def do_apply(self):
         patchpusher = PatchPusher(self.branch, self.logger)
         try:
-            patchpusher.update_and_clone_base(self.sourceurl)
+            patchpusher.clone_base(self.sourceurl)
             patchpusher.disable_gc()
             patchpusher.apply_message(self.message)
             patchpusher.upload_change(self.desturl)
@@ -167,8 +163,7 @@ class EmailCommand():
             raise Exception('could not find what to cherrypick from subject: %s' % subject)
         patchpusher = PatchPusher(self.branch, self.logger)
         try:
-            patchpusher.fetch_all_source(self.sourceurl)
-            patchpusher.update_and_clone_base(self.sourceurl)
+            patchpusher.clone_base(self.sourceurl)
             patchpusher.disable_gc()
             patchpusher.fetch_all()
             patchpusher.checkout(self.branch)
