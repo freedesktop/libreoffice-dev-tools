@@ -113,6 +113,8 @@ class EmailCommand():
         state = None
         words = subject.translate(string.maketrans('\r\n','  ')).split(' ')
         for word in words:
+            if word == '':
+                continue
             if state == 'branch':
                 self.branch = word
                 state = None
