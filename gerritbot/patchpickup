@@ -37,7 +37,7 @@ class PatchPusher():
 
     def update_and_clone_base(self, sourceurl):
         minilog.logged_call( \
-            ['git','--work-tree=%s' % self.sourceurl, 'fetch', '--all'], \
+            ['git','--work-tree=%s' % sourceurl, 'fetch', '--all'], \
             self.logger, \
             {})
         minilog.logged_call( \
