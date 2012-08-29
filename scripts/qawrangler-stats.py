@@ -31,11 +31,11 @@ try:
     topwranglers = Counter(wranglers).most_common(30)
 
     print('\n=== ' + month[5:] + ' ' + month[:4] + '===')
-    print('\n--- Top 10 reporters ---')
+    print('\n--- Top 30 reporters ---')
     for reporter in topreporters:
         print('{0:40}{1:5d}'.format(reporter[0], reporter[1]))
 
-    print('\n--- Top 10 wranglers ---')
+    print('\n--- Top 30 wranglers ---')
     for wrangler in topwranglers:
         print('{0:40}{1:5d}'.format(wrangler[0], wrangler[1]))
 
