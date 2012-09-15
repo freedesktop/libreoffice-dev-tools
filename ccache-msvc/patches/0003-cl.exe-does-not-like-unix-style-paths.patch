@@ -1,0 +1,57 @@
+From e090ba015d393cc968246c7b0c8765d1c987add1 Mon Sep 17 00:00:00 2001
+From: Peter Foley <pefoley2@verizon.net>
+Date: Sun, 16 Sep 2012 12:08:49 -0400
+Subject: [PATCH 3/3] cl.exe does not like unix-style paths
+
+---
+ ccache.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/ccache.c b/ccache.c
+index 5963cee..a8f689e 100644
+--- a/ccache.c
++++ b/ccache.c
+@@ -26,6 +26,9 @@
+ #else
+ #include "getopt_long.h"
+ #endif
++#ifdef __CYGWIN__
++#include <sys/cygwin.h>
++#endif
+ #include "hashtable.h"
+ #include "hashtable_itr.h"
+ #include "hashutil.h"
+@@ -273,6 +276,15 @@ clean_up_tmp_files()
+	}
+ }
+
++static char *
++conv_path_to_win(char * unix_path)
++{
++	ssize_t size = cygwin_conv_path(CCP_POSIX_TO_WIN_A, unix_path, NULL, 0);
++	char *win_path = (char*)malloc(size);
++	cygwin_conv_path(CCP_POSIX_TO_WIN_A, unix_path, win_path, size);
++	return win_path;
++}
++
+ static const char *
+ temp_dir()
+ {
+@@ -1461,6 +1473,7 @@ find_compiler(char **argv)
+			/* are we using Visual C++? */
+			if (str_eq(basename(orig_args->argv[0]), "cl") || str_eq(basename(orig_args->argv[0]), "cl.exe")) {
+				type = COMPILER_MSVC;
++				conf->cache_dir = conv_path_to_win(conf->cache_dir);
+			}
+			return;
+		}
+@@ -1474,6 +1487,7 @@ find_compiler(char **argv)
+	/* are we using Visual C++? */
+		if (str_eq(base, "cl") || str_eq(base, "cl.exe")) {
+			type = COMPILER_MSVC;
++			conf->cache_dir = conv_path_to_win(conf->cache_dir);
+		}
+
+	compiler = find_executable(base, MYNAME);
+--
+1.7.9

@@ -1,0 +1,135 @@
+From b5e87e9392c098c28a6023fbbec8d99aeac608b8 Mon Sep 17 00:00:00 2001
+From: Peter Foley <pefoley2@verizon.net>
+Date: Fri, 14 Sep 2012 19:22:53 -0400
+Subject: [PATCH 2/3] redirect stdout for -showIncludes
+
+---
+ ccache.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 65 insertions(+), 1 deletions(-)
+
+diff --git a/ccache.c b/ccache.c
+index 2235656..5963cee 100644
+--- a/ccache.c
++++ b/ccache.c
+@@ -116,6 +116,9 @@ static char *cached_obj;
+  */
+ static char *cached_stderr;
+
++/* for MSVC */
++static char *cached_stdout;
++
+ /*
+  * Full path to the file containing the dependency information
+  * (cachedir/a/b/cdef[...]-size.d).
+@@ -641,7 +644,8 @@ to_cache(struct args *args)
+		tmp_unlink(tmp_obj);
+		failed();
+	}
+-	tmp_unlink(tmp_stdout);
++	if (type != COMPILER_MSVC)
++		tmp_unlink(tmp_stdout);
+
+	/*
+	 * Merge stderr from the preprocessor (if any) and stderr from the real
+@@ -674,6 +678,22 @@ to_cache(struct args *args)
+			cc_log("Failed opening %s: %s", tmp_stderr, strerror(errno));
+			failed();
+		}
++		if (type == COMPILER_MSVC) {
++			int fd_stdout = open(tmp_stdout, O_RDONLY | O_BINARY);
++			if (fd_stdout == -1) {
++				cc_log("Failed opening %s: %s", tmp_stdout, strerror(errno));
++				failed();
++			}
++			copy_fd(fd_stdout, fd_result);
++			close(fd_stdout);
++			fd_stdout = open(tmp_stdout, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);
++			if (fd_stdout == -1) {
++				cc_log("Failed opening %s: %s", tmp_stdout, strerror(errno));
++				failed();
++			}
++			copy_fd(fd_cpp_stderr, fd_stdout);
++			close(fd_stdout);
++		}
+		copy_fd(fd_cpp_stderr, fd_result);
+		copy_fd(fd_real_stderr, fd_result);
+		close(fd_cpp_stderr);
+@@ -699,11 +719,15 @@ to_cache(struct args *args)
+				copy_fd(fd, 2);
+				close(fd);
+				tmp_unlink(tmp_stderr);
++				if (type == COMPILER_MSVC)
++					tmp_unlink(tmp_stdout);
+				exit(status);
+			}
+		}
+
+		tmp_unlink(tmp_stderr);
++		if (type == COMPILER_MSVC)
++			tmp_unlink(tmp_stdout);
+		tmp_unlink(tmp_obj);
+		failed();
+	}
+@@ -747,6 +771,36 @@ to_cache(struct args *args)
+		}
+	}
+
++	if (type == COMPILER_MSVC) {
++		if (stat(tmp_stdout, &st) != 0) {
++			cc_log("Failed to stat %s: %s", tmp_stdout, strerror(errno));
++			stats_update(STATS_ERROR);
++			failed();
++		}
++		if (st.st_size > 0) {
++			if (move_uncompressed_file(
++					tmp_stdout, cached_stdout,
++					conf->compression ? conf->compression_level : 0) != 0) {
++				cc_log("Failed to move %s to %s: %s", tmp_stdout, cached_stdout,
++					   strerror(errno));
++				stats_update(STATS_ERROR);
++				failed();
++			}
++			cc_log("Stored in cache: %s", cached_stdout);
++			if (conf->compression) {
++				stat(cached_stdout, &st);
++			}
++			added_bytes += file_size(&st);
++			added_files += 1;
++		} else {
++			tmp_unlink(tmp_stdout);
++			if (conf->recache) {
++				/* If recaching, we need to remove any previous .stdout. */
++				x_unlink(cached_stdout);
++			}
++	}
++	}
++
+	if (output_to_real_object_first) {
+		int ret;
+		if (conf->hard_link && !conf->compression) {
+@@ -927,6 +981,8 @@ update_cached_result_globals(struct file_hash *hash)
+	cached_obj_hash = hash;
+	cached_obj = get_path_in_cache(object_name, ".o");
+	cached_stderr = get_path_in_cache(object_name, ".stderr");
++	if (type == COMPILER_MSVC)
++		cached_stdout = get_path_in_cache(object_name, ".stdout");
+	cached_dep = get_path_in_cache(object_name, ".d");
+	stats_file = format("%s/%c/stats", conf->cache_dir, object_name[0]);
+	free(object_name);
+@@ -1334,6 +1390,14 @@ from_cache(enum fromcache_call_mode mode, bool put_object_in_manifest)
+		copy_fd(fd_stderr, 2);
+		close(fd_stderr);
+	}
++	/* Send the stdout for MSVC */
++	if (type == COMPILER_MSVC) {
++		int fd_stdout = open(cached_stdout, O_RDONLY | O_BINARY);
++		if (fd_stdout != -1) {
++			copy_fd(fd_stdout, 1);
++			close(fd_stdout);
++		}
++	}
+
+	/* Create or update the manifest file. */
+	if (conf->direct_mode
+--
+1.7.9
