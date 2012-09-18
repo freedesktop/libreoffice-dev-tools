@@ -57,12 +57,16 @@ EOF
 }
 
 my $log_format;
+my $country_match;
 for my $arg (@ARGV) {
-    die "pass --csv --libo or --sql and/or --weekify" if ($arg eq '--help' || $arg eq '-h');
+    die "pass --csv --libo or --sql and/or --weekify and/or --country=NN" if ($arg eq '--help' || $arg eq '-h');
     $log_format = 'c' if ($arg eq '--csv' || $arg eq '-c');
     $log_format = 'l' if ($arg eq '--libo' || $arg eq -'l');
     $log_format = 's' if ($arg eq '--sql' || $arg eq -'s');
     $weekify = 1 if ($arg eq '--weekify');
+    if ($arg =~ m/--country=(\S+)$/) {
+	$country_match = $1;
+    }
 }
 defined $log_format || die "you must pass a format type";
 # select the format you want
@@ -123,7 +127,7 @@ while (<STDIN>) {
 	if (defined $clean_product) {
 	    $type = 'product';
 	} else {
-#	    print STDERR "lang pack line '$line'\n";
+#	    print STDERR "lang pack line '$line' => '$lang' '$country' '$count'\n";
 	    $type = 'lang pack';
         }
 
@@ -206,6 +210,10 @@ while (<STDIN>) {
 	next;
     }
 
+    if (defined $country_match) {
+	$country =~ m/$country_match/ || next;
+    }
+
     if ($weekify) {
 	if (!defined $weekified_dates{$date}) {
 	    my @time = gmtime (str2time($date. "T01:01:01.000001"));
@@ -267,7 +275,7 @@ for my $prod (sort keys %prod_names) {
 my @countries_by_product;
 @countries_by_product = sort { $byregion{'product'}->{$b} <=> $byregion{'product'}->{$a} } keys %countries;
 my @top_countries = @countries_by_product;
-my @top_countries = splice(@top_countries, 0, $top_n_countries);
+@top_countries = splice(@top_countries, 0, $top_n_countries);
 
 # now output this as a spreadsheet ... fods ...
 print << 'EOF'
@@ -533,7 +541,7 @@ EOF
 
 # Language product download / comparison sheet ...
 print << "EOF"
-         <table:table table:name="TopLanguages">
+         <table:table table:name="TopDownloadLocations">
             <table:table-row>
                <table:table-cell table:style-name="boldheader" office:value-type="string">
                   <text:p>Date</text:p>
