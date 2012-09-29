@@ -27,6 +27,16 @@ static int verbose;
 #define SHOW_F_PARENTS  (int)(1<<0)
 #define SHOW_F_CHILDREN (int)(1<<1)
 #define SHOW_F_UNIQUE   (int)(1<<2)
+#define SHOW_F_NO_GMAKE_MODULES (int)(1<<3)
+#define SHOW_F_GRAPH (int)(1<<4)
+
+const char* graph_boilerplate =
+"digraph G {\n"
+"node [shape=\"Mrecord\", color=\"#BBBBBB\"]\n"
+" node  [fontname=Verdana, fontsize=10, height=0.02, width=0.02]\n"
+" edge  [color=\"#31CEF0\", len=0.5]\n"
+" edge  [fontname=Arial, fontsize=10, fontcolor=\"#31CEF0\"]\n"
+    ;
 
 static int _compare_module(struct module** a, struct module** b)
 {
@@ -257,53 +267,16 @@ struct module_ref* mr;
     return rc;
 }
 
-static int _print_module(struct module* module, int show, int level)
+static int is_subtree_gbuildified(struct module* module, int show)
 {
-int rc = 0;
-int i;
-struct module_ref* cursor = NULL;
-
-    if(show & SHOW_F_UNIQUE)
+    if(is_subtree_gbuildified)
     {
-        if(module->traversed)
+        if(verbose)
         {
-            return rc;
-        }
-        module->traversed = 1;
-    }
-    if(level > 512)
-    {
-        fprintf(stderr, "Error runaway recursion... recursive dependencies ?\n");
-        exit(1);
-    }
-    for(i = 0; i < level - 1; i++)
-    {
-        printf("   ");
-    }
-    if(i < level)
-    {
-        if(module->gmake)
-        {
-            printf("  + %s (*)\n", module->name);
-        }
-        else
-        {
-            printf("  + %s\n", module->name);
-            rc += 1;
+            printf("=> is_subtree_gbuildified(%s)\n", module->name);
         }
     }
-    else
-    {
-        if(module->gmake)
-        {
-            printf("%s (*)\n", module->name);
-        }
-        else
-        {
-            printf("%s\n", module->name);
-            rc += 1;
-        }
-    }
+    struct module_ref* cursor = NULL;
     if(show & SHOW_F_CHILDREN)
     {
         cursor = module->children;
@@ -314,7 +287,135 @@ struct module_ref* cursor = NULL;
     }
     while(cursor)
     {
-        rc += _print_module(cursor->module, show, level + 1);
+        int rc = is_subtree_gbuildified(cursor->module, show);
+        if (!rc)
+        {
+            if (verbose)
+            {
+                printf ("returns %d\n", rc);
+            }
+            return 0;
+        }
+        cursor = cursor->next;
+    }
+
+    int rc = module->gmake;
+    if(verbose)
+    {
+        printf ("returns %d\n", rc);
+    }
+    return rc;
+}
+
+static int _print_module_data(struct module* module, int show, int level)
+{
+    int rc = 0;
+    if (show & SHOW_F_GRAPH)
+    {
+        struct module_ref* visitor = NULL;
+        if(show & SHOW_F_CHILDREN)
+        {
+            visitor = module->children;
+        }
+        if(show & SHOW_F_PARENTS)
+        {
+            visitor = module->parents;
+        }
+        if (!module->gmake)
+        {
+            rc += 1;
+            printf ("\"%s\" [shape=box, color=deeppink]\n", module->name);
+        }
+        while(visitor)
+        {
+            if(show & SHOW_F_CHILDREN)
+            {
+                printf ("\"%s\" -> \"%s\"\n", visitor->module->name, module->name);
+            }
+            else
+            {
+                printf ("\"%s\" -> \"%s\"\n", module->name, visitor->module->name);
+            }
+            visitor = visitor->next;
+        }
+    }
+    else
+    {
+        int i;
+        for(i = 0; i < level - 1; i++)
+        {
+            printf("   ");
+        }
+        if(i < level)
+        {
+            if(module->gmake)
+            {
+                printf("  + %s (*)\n", module->name);
+            }
+            else
+            {
+                printf("  + %s\n", module->name);
+                rc += 1;
+            }
+        }
+        else
+        {
+            if(module->gmake)
+            {
+                printf("%s (*)\n", module->name);
+            }
+            else
+            {
+                printf("%s\n", module->name);
+                rc += 1;
+            }
+        }
+    }
+    return rc;
+}
+
+static int _traverse_module(struct module* module, int show, int level)
+{
+struct module_ref* cursor = NULL;
+int rc;
+
+    if(show & SHOW_F_UNIQUE)
+    {
+        if(module->traversed)
+        {
+            return 0;
+        }
+        module->traversed = 1;
+    }
+
+    if(show & SHOW_F_NO_GMAKE_MODULES)
+    {
+        if (is_subtree_gbuildified(module, show))
+        {
+            module->traversed = 1;
+            return 0;
+        }
+    }
+
+    if(level > 512)
+    {
+        fprintf(stderr, "Error runaway recursion... recursive dependencies ?\n");
+        exit(1);
+    }
+
+    rc = _print_module_data(module, show, level);
+
+    if(show & SHOW_F_CHILDREN)
+    {
+        cursor = module->children;
+    }
+    if(show & SHOW_F_PARENTS)
+    {
+        cursor = module->parents;
+    }
+    while(cursor)
+    {
+        rc += _traverse_module(cursor->module, show, level + 1);
         cursor = cursor->next;
     }
     return rc;
@@ -329,10 +430,21 @@ struct module* base;
     base = _lookup_module(name, modules, nb_modules);
     if(base)
     {
-        nb_non_gmake = _print_module(base, show, 0);
-        if(show & SHOW_F_CHILDREN)
+        if (show & SHOW_F_GRAPH)
         {
-            printf("\n%d non gbuild children\n", nb_non_gmake);
+            printf("%s", graph_boilerplate);
+        }
+        nb_non_gmake = _traverse_module(base, show, 0);
+        if (show & SHOW_F_GRAPH)
+        {
+            printf("\n}\n");
+        }
+        else
+        {
+            if(show & SHOW_F_CHILDREN)
+            {
+                printf("\n%d non gbuild children\n", nb_non_gmake);
+            }
         }
     }
     else
@@ -345,7 +457,14 @@ struct module* base;
 
 static void _usage(void)
 {
-   fprintf(stderr, "Usage: module_dep ( -c | --children | -p | --parent ) <list_of_build.lst_filename>\n");
+   fprintf(stderr, "Usage: module_dep [options] (-c | --children | -p | --parent) module <list_of_build.lst_filename>\n");
+   fprintf(stderr, "       where options are a combination of:\n");
+   fprintf(stderr, "       --unique   | -u unique occurence of each module\n");
+   fprintf(stderr, "       --suppress | -s suppress completely gbuildified subtrees\n");
+   fprintf(stderr, "       --graph    | -g output graphviz dot file format\n\n");
+   fprintf(stderr, "Sample 1: module_dep -u -c svx\n");
+   fprintf(stderr, "Sample 2: module_dep -c svx -g | dot -Tpng -osvx.png\n");
+   exit(1);
 }
 
 int main(int argc, char** argv)
@@ -377,6 +496,15 @@ int nb_modules = 0;
         else if(!strcmp(argv[i],"-u") || !strcmp(argv[i], "--unique"))
         {
             show |= SHOW_F_UNIQUE;
+        }
+        else if(!strcmp(argv[i],"-s") || !strcmp(argv[i], "--suppress"))
+        {
+            show |= SHOW_F_NO_GMAKE_MODULES;
+        }
+        else if(!strcmp(argv[i],"-g") || !strcmp(argv[i], "--graph"))
+        {
+            show |= SHOW_F_UNIQUE;
+            show |= SHOW_F_GRAPH;
         }
         else if(!strcmp(argv[i],"-p") || !strcmp(argv[i], "--parent"))
         {
