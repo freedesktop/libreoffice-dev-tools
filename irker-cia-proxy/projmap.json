@@ -1,0 +1,7 @@
+{
+    "LibreOffice": {
+        "template": "%(project)s (%(module)s) [%(branch)s] %(author)s * %(files)s: %(log)s",
+        "template-None": "%(project)s (%(module)s) %(author)s * %(files)s: %(log)s",
+        "to": "irc://irc.freenode.net/#libreoffice-dev"
+    }
+}
