@@ -15,6 +15,108 @@ use strict;
 use Date::Parse;
 use POSIX qw(strftime);
 
+# First a massive database of population statistics
+# source: the CIA:
+# https://www.cia.gov/library/publications/the-world-factbook/rankorder/2119rank.html
+my %locale_to_population = (
+#	Location => Citizens # Comment
+	'cn' => 1343239923,
+	'in' => 1205073612,
+	'us' => 313847465,
+	'id' => 248645008,
+	'br' => 199321413,
+	'pk' => 190291129, # Pakistan
+	'ng' => 170123740, # Nigeria
+	'bd' => 161083804, # Bangladesh
+	'ru' => 142517670,
+	'jp' => 127368088,
+	'mx' => 114975406,
+	'ph' => 103775002,
+	'vn' => 91519289, # Vietnam
+	'eg' => 83688164, # Egypt
+	'de' => 81305856,
+	'tr' => 79749461,
+	'ir' => 78868711, # Iran
+	'th' => 67091089,
+	'fr' => 65630692,
+	'gb' => 63047162,
+	'it' => 61261254,
+	'lt' => 61261254,
+	'kr' => 48860500,
+	'za' => 48810427,
+	'es' => 47042984,
+	'co' => 45239079,
+	'ua' => 44854065,
+	'ke' => 43013341, # Kenya
+	'ar' => 42192494,
+	'pl' => 38415284,
+	'dz' => 37367226, # Algeria
+	'ca' => 34300083,
+	'ma' => 32309239, # Morocco
+	'pe' => 29549517, # Peru
+	'my' => 29179952, # Malaysia
+	've' => 28047938,
+	'sa' => 26534504, # Saudi Arabia
+	'tw' => 23234936,
+	'au' => 22015576,
+	'ro' => 21848504,
+	'lk' => 21481334, # Sri Lanka
+	'kz' => 17522010, # Kazakhstan
+	'cl' => 17067369,
+	'nl' => 16730632,
+	'ec' => 15223680, # Ecuador
+	'gt' => 14099032, # Guatemala
+	'cu' => 11075244, # Vcuba
+	'pt' => 10781459,
+	'gr' => 10767827,
+	'tn' => 10732900, # Tunisia
+	'be' => 10438353,
+	'bo' => 10290003, # Bolivia
+	'cz' => 10177300,
+	'do' => 10088598, # Dominican Republic
+	'hu' => 9958453,
+	'by' => 9643566, # Belarus
+	'se' => 9103788,
+	'hn' => 8296693, # Honduras
+	'at' => 8219743,
+	'ch' => 7925517,
+	'il' => 7590758, # Israel
+	'rs' => 7276604,
+	'hk' => 7153519,
+	'bg' => 7037935, # Bulgaria
+	'py' => 6541591, # Paraguay
+	'sv' => 6090646, # El Salvador
+	'ni' => 5727707, # Nicaragua
+	'dk' => 5543453,
+	'sk' => 5483088,
+	'sg' => 5353494, # Singapore
+	'ae' => 5314317, # United Arab Emirates
+	'fi' => 5262930,
+	'ie' => 4722028, # Republic of Ireland
+	'no' => 4707270,
+	'cr' => 4636348, # Costa Rica
+	'hr' => 4480043, # Croatia
+	'nz' => 4327944,
+	'ba' => 3879296, # Bosnia and Herzegovina
+	'pr' => 3690923, # Puerto Rico
+	'md' => 3656843, # Moldova
+	'pa' => 3510045, # Panama
+	'uy' => 3316328, # Uruguay
+	'jm' => 2889187, # Jamaica
+	'kw' => 2646314, # Kuwait
+	'lv' => 2191580, # Latvia
+	'mk' => 2082370, # Republic of Macedonia
+	'si' => 1996617, # Slovenia
+	'ee' => 1274709, # Estonia
+	'tt' => 1226383, # Republic of Trinidad and Tobago
+	'cy' => 1138071, # Cyprus
+	'lu' => 509074,  # Luxembourg
+	'mt' => 409836,  # Malta
+	'mq' => 403795,  # Martinique
+	'is' => 313183,  # Iceland
+	'nc' => 260166,  # New Caledonia
+    );
+
 # segment by Date, then by Product, then count
 my %data;
 my %products;
@@ -60,12 +162,18 @@ my $log_format;
 my $country_match;
 for my $arg (@ARGV) {
     die "pass --csv --libo or --sql and/or --weekify and/or --country=NN" if ($arg eq '--help' || $arg eq '-h');
-    $log_format = 'c' if ($arg eq '--csv' || $arg eq '-c');
-    $log_format = 'l' if ($arg eq '--libo' || $arg eq -'l');
-    $log_format = 's' if ($arg eq '--sql' || $arg eq -'s');
-    $weekify = 1 if ($arg eq '--weekify');
-    if ($arg =~ m/--country=(\S+)$/) {
+    if ($arg eq '--csv' || $arg eq '-c') {
+	$log_format = 'c';
+    } elsif ($arg eq '--libo' || $arg eq -'l') {
+	$log_format = 'l';
+    } elsif ($arg eq '--sql' || $arg eq -'s') {
+	$log_format = 's';
+    } elsif ($arg eq '--weekify') {
+	$weekify = 1;
+    } elsif ($arg =~ m/--country=(\S+)$/) {
 	$country_match = $1;
+    } else {
+	die "Unknown argument '$arg'";
     }
 }
 defined $log_format || die "you must pass a format type";
