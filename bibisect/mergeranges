@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+
+import sys
+import subprocess
+
+def justrunit(arglist):
+    print(subprocess.check_output(arglist).decode('utf-8'))
+
+def init_branch(startpoint):
+    justrunit(['git', 'checkout', '-b', 'mergeranges', startpoint])
+
+def cherry_pick_theirs(revision):
+    try:
+        justrunit(['git', 'rm', '-rf', '.'])
+    except:
+        pass
+    justrunit(['git', 'checkout', revision, '--', '.'])
+    justrunit(['git', 'commit', '-C', revision])
+    tag = subprocess.check_output(['git', 'log', '-1', '--pretty=%s', 'HEAD']).decode('utf-8').rstrip()
+    justrunit(['git', 'tag', tag])
+    
+
+initBranch = False
+for line in open(sys.argv[1]).readlines():
+    revisions = [r for r in subprocess.check_output(['git', 'rev-list', '--reverse', line.rstrip()]).decode('utf-8').split('\n') if r.rstrip()]
+    for revision in revisions:
+        if not initBranch:
+            init_branch(revision)
+            initBranch = True
+        else:
+            cherry_pick_theirs(revision)
