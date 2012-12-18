@@ -32,6 +32,14 @@ include bibisect.cfg
 BINREPO:=$(WORKDIR)/binrepo
 BUILDDIR:=$(WORKDIR)/build
 ARTIFACTDIR:=$(WORKDIR)/artifact
+ORDERMODE?=master
+
+ifeq ($(ORDERMODE),master)
+SOURCETYPE:=hash
+endif
+ifeq ($(ORDERMODE),tags)
+SOURCETYPE:=tag
+endif
 
 .DEFAULT_GOAL=all
 .PHONY: all clean
@@ -47,7 +55,7 @@ cd $(BINREPO) && git checkout -f $(1) && \
 cd $(ARTIFACTDIR) && \
 git --git-dir=$(BINREPO)/.git --work-tree=$(ARTIFACTDIR) add -A && \
 git --git-dir=$(BINREPO)/.git --work-tree=$(ARTIFACTDIR) commit -F $(ARTIFACTDIR)/commitmsg && \
-git --git-dir=$(BINREPO)/.git tag source-hash-$(2) && \
+git --git-dir=$(BINREPO)/.git tag source-$(SOURCETYPE)-$(2) && \
 echo "$(2) $(3)" > $@;
 endef
 
@@ -69,12 +77,22 @@ ifneq ($(MAKECMDGOALS),clean)
 include $(WORKDIR)/buildorder
 endif
 
+
+ifeq ($(ORDERMODE),master)
 $(WORKDIR)/buildorder: $(WORKDIR)/init
 		git --git-dir=$(SOURCEREPO) rev-list --reverse $(FROM)..$(TO) | \
 			awk \
 				'BEGIN { last="$@" } \
 				NR % $(INTERVAL) == 1 { current="$(WORKDIR)/milestone/" $$0; printf "%s: %s\n", current, last; last = current} \
 				END { printf "$(TO): %s\nall: $(TO)", last }' > $@
+
+endif
+
+ifeq ($(ORDERMODE),tags)
+$(WORKDIR)/buildorder: $(WORKDIR)/init
+	git --git-dir=$(SOURCEREPO) tag|grep ^libreoffice|sed -e 's/\./-/g'|paste - <(git --git-dir=$(SOURCEREPO) tag|grep ^libreoffice)|sort|cut -f2 > $@
+
+endif
 
 $(WORKDIR)/init:
 		mkdir -p $(WORKDIR)/milestone
