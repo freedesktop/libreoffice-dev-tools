@@ -292,6 +292,9 @@ def loadFromURL(xContext, url):
 
 def handleCrash(file):
     print("File: " + file + " crashed")
+    crashLog = open("Writer crashlog.txt", "a")
+    crashLog.write('Crash:' + file + '\n')
+    crashLog.close()
 # add here the remaining handling code for crashed files
 
 class LoadFileTest:
@@ -345,7 +348,7 @@ if __name__ == "__main__":
     if len(args) == 0:
         usage()
         sys.exit(1)
-    if "-h" in opts or "--help" in opts: #
+    if "-h" in opts or "--help" in opts:
         usage()
         sys.exit()
     elif "--soffice" in opts:
