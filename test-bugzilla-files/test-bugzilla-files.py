@@ -264,7 +264,6 @@ def loadFromURL(xContext, url):
     try:
 # we need to check if this method returns after loading or after invoking the loading
 # depending on this we might need to put a timeout around it
-        xDoc = None
         xDoc = xDesktop.loadComponentFromURL(url, "_blank", 0, loadProps)
         time_ = 0
         while time_ < 30:
@@ -276,8 +275,10 @@ def loadFromURL(xContext, url):
         print("timeout: no OnLayoutFinished received")
         return xDoc
     except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
+        xListener = None
         raise # means crashed, handle it later
     except pyuno.getClass("com.sun.star.lang.DisposedException"):
+        xListener = None
         raise # means crashed, handle it later
     except:
         if xDoc:
@@ -289,7 +290,7 @@ def loadFromURL(xContext, url):
             xGEB.removeDocumentEventListener(xListener)
 
 def handleCrash(file):
-    print("File: " + file + " crahsed")
+    print("File: " + file + " crashed")
 # add here the remaining handling code for crashed files
 
 class LoadFileTest:
@@ -303,12 +304,12 @@ class LoadFileTest:
             xDoc = loadFromURL(xContext, url)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
+            handleCrash(self.file)
             connection.setUp()
-            handleCrash(file)
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
             print("caught DisposedException " + self.file)
+            handleCrash(self.file)
             connection.setUp()
-            handleCrash(file)
         finally:
             if xDoc:
                 xDoc.close(True)
