@@ -55,32 +55,32 @@ except ImportError:
 
 ### utilities ###
 
-def partition(list, pred): #defineer functie 'partition' met argumenten list en pred
-    left = [] #nieuwe lijst left
-    right = [] #nieuwe lijst rechts
-    for e in list: #voor elke e in list
-        if pred(e): #als 
-            left.append(e) #linkse kant toevoegen aan lijst links
+def partition(list, pred):
+    left = []
+    right = []
+    for e in list:
+        if pred(e):
+            left.append(e)
         else:
-            right.append(e) #rechtse kant toevoegen aan lijst rechts
-    return (left, right) #geef linkse en rechtse lijst terug
+            right.append(e)
+    return (left, right)
 
-def filelist(dir, suffix): #defineer functie 'filelist' met argumenten dir en suffix
-    if len(dir) == 0: #als de lengte van het argument dir gelijk is aan nul
-        raise Exception("filelist: empty directory") #geef melding dat directory leeg is
-    if not(dir[-1] == "/"): #als de directory niet met een / begint, een / voorzetten
+def filelist(dir, suffix):
+    if len(dir) == 0:
+        raise Exception("filelist: empty directory")
+    if not(dir[-1] == "/"):
         dir += "/"
-    files = [dir + f for f in os.listdir(dir)] #lijst files is dir + f voor elke f die in os.listdir(dir) is
+    files = [dir + f for f in os.listdir(dir)]
 #    print(files)
-    return [f for f in files 
+    return [f for f in files
                     if os.path.isfile(f) and os.path.splitext(f)[1] == suffix]
 
-def getFiles(dirs, suffix): #defineer functie 'getfiles' met argumenten dirs en suffix
+def getFiles(dirs, suffix):
     print( dirs )
-    files = [] #lege lijst
-    for dir in dirs: #voor elke directory in dirs
-        files += filelist(dir, suffix) #resultaat optellen bij files
-    return files #files teruggeven
+    files = []
+    for dir in dirs:
+        files += filelist(dir, suffix)
+    return files
 
 ### UNO utilities ###
 
@@ -92,31 +92,31 @@ class OfficeConnection:
         self.xContext = None
     def setUp(self):
         (method, sep, rest) = self.args["--soffice"].partition(":")
-        if sep != ":": #als seperator niet gelijk is aan ":" 
-            raise Exception("soffice parameter does not specify method") #soffice parameter is nt gespecifieerd
-        if method == "path": #als methode gelijk is aan path
+        if sep != ":":
+            raise Exception("soffice parameter does not specify method")
+        if method == "path":
                 socket = "pipe,name=pytest" + str(uuid.uuid1())
                 try:
-                    userdir = self.args["--userdir"] #probeer userdir 
+                    userdir = self.args["--userdir"]
                 except KeyError:
-                    raise Exception("'path' method requires --userdir") #userdir moet opgegeven worden
-                if not(userdir.startswith("file://")): #als er geen URL wordt opgegeven
-                    raise Exception("--userdir must be file URL") #melding URL nodig
+                    raise Exception("'path' method requires --userdir")
+                if not(userdir.startswith("file://")):
+                    raise Exception("--userdir must be file URL")
                 self.soffice = self.bootstrap(rest, userdir, socket)
-        elif method == "connect": #als methode connect is
-                socket = rest #socket laten rusten
-        else: # andere methoden worden niet 
+        elif method == "connect":
+                socket = rest
+        else:
             raise Exception("unsupported connection method: " + method)
         self.xContext = self.connect(socket)
 
-    def bootstrap(self, soffice, userdir, socket): #defineer fctie 'bootstrap' met soffice, userdir, socket
+    def bootstrap(self, soffice, userdir, socket):
         argv = [ soffice, "--accept=" + socket + ";urp",
                 "-env:UserInstallation=" + userdir,
                 "--quickstart=no", "--nofirststartwizard",
-                "--norestore", "--nologo", "--headless" ] 
-        if "--valgrind" in self.args: #als valgrind voorkomt in argS
-            argv.append("--valgrind") #valgrid toevoegen aan argv
-        return subprocess.Popen(argv) #waarde argv teruggeven 'Execute a child program in a new process.'
+                "--norestore", "--nologo", "--headless" ]
+        if "--valgrind" in self.args:
+            argv.append("--valgrind")
+        return subprocess.Popen(argv)
 
     def connect(self, socket):
         xLocalContext = uno.getComponentContext()
@@ -141,7 +141,7 @@ class OfficeConnection:
                     xMgr = self.xContext.ServiceManager
                     xDesktop = xMgr.createInstanceWithContext(
                             "com.sun.star.frame.Desktop", self.xContext)
-                    xDesktop.terminate() #afsluiten
+                    xDesktop.terminate()
                     print("...done")
 #                except com.sun.star.lang.DisposedException:
                 except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
@@ -264,6 +264,7 @@ def loadFromURL(xContext, url):
     try:
 # we need to check if this method returns after loading or after invoking the loading
 # depending on this we might need to put a timeout around it
+        xDoc = None
         xDoc = xDesktop.loadComponentFromURL(url, "_blank", 0, loadProps)
         time_ = 0
         while time_ < 30:
@@ -328,7 +329,7 @@ def parseArgs(argv):
 #    print optlist
     return (dict(optlist), args)
 
-def usage(): #te gebruiken tags
+def usage():
     message = """usage: {program} [option]... [directory]..."
  -h | --help:      print usage information
  --soffice=method:location
@@ -341,13 +342,13 @@ def usage(): #te gebruiken tags
 
 if __name__ == "__main__":
     (opts,args) = parseArgs(sys.argv)
-    if len(args) == 0: #als lengte van args nul is -> afsluiten
-        usage() #print de verschillende mogelijkheden
+    if len(args) == 0:
+        usage()
         sys.exit(1)
     if "-h" in opts or "--help" in opts: #
-        usage() #print de verschillende mogelijkheden
-        sys.exit() #als -h of --help wordt ingegeven -> ?
-    elif "--soffice" in opts: #als --soffice in opts voorkomt
+        usage()
+        sys.exit()
+    elif "--soffice" in opts:
         runLoadFileTests(opts, args, ".odt")
     else:
         usage()
