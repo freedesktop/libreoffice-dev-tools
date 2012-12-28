@@ -292,16 +292,18 @@ def loadFromURL(xContext, url):
         if xListener:
             xGEB.removeDocumentEventListener(xListener)
 
-def handleCrash(file):
+def handleCrash(file, crashed_files):
     print("File: " + file + " crashed")
-    crashLog = open("Writer crashlog.txt", "a")
+    crashLog = open("crashlog.txt", "a")
     crashLog.write('Crash:' + file + '\n')
     crashLog.close()
+    crashed_files.append(file)
 # add here the remaining handling code for crashed files
 
 class LoadFileTest:
-    def __init__(self, file):
+    def __init__(self, file, crashed_files):
         self.file = file
+        self.crashed_files = crashed_files
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
         try:
@@ -310,11 +312,11 @@ class LoadFileTest:
             xDoc = loadFromURL(xContext, url)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
-            handleCrash(self.file)
+            handleCrash(self.file, self.crashed_files)
             connection.setUp()
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
             print("caught DisposedException " + self.file)
-            handleCrash(self.file)
+            handleCrash(self.file, self.crashed_files)
             connection.setUp()
         finally:
             if xDoc:
@@ -323,10 +325,12 @@ class LoadFileTest:
 
 def runLoadFileTests(opts, dirs, suffix):
     files = getFiles(dirs, suffix)
-    tests = (LoadFileTest(file) for file in files)
+    crashed_files = []
+    tests = (LoadFileTest(file, crashed_files) for file in files)
     connection = PersistentConnection(opts)
 #    connection = PerTestConnection(opts)
     runConnectionTests(connection, simpleInvoke, tests)
+    print(crashed_files)
 
 def parseArgs(argv):
     (optlist,args) = getopt.getopt(argv[1:], "hr",
@@ -354,7 +358,7 @@ if __name__ == "__main__":
         usage()
         sys.exit()
     elif "--soffice" in opts:
-        runLoadFileTests(opts, args, ".odt")
+        runLoadFileTests(opts, args, ".docx")
     else:
         usage()
         sys.exit(1)
