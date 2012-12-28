@@ -281,6 +281,8 @@ def loadFromURL(xContext, url):
     except pyuno.getClass("com.sun.star.lang.DisposedException"):
         xListener = None
         raise # means crashed, handle it later
+    except pyuno.getClass("com.sun.star.lang.IllegalArgumentException"):
+        pass # means could not open the file, ignore it
     except:
         if xDoc:
             print("CLOSING")
