@@ -322,9 +322,14 @@ class LoadFileTest:
             if xDoc:
                 xDoc.close(True)
             print("...done with: " + self.file)
+            
+validFileExtensions = [ ".docx" , ".rtf", ".odt", ".doc" ]
 
-def runLoadFileTests(opts, dirs, suffix):
-    files = getFiles(dirs, suffix)
+def runLoadFileTests(opts, dirs):
+    files = []
+    for suffix in validFileExtensions:
+        files.extend(getFiles(dirs, suffix))
+    files.sort()
     crashed_files = []
     tests = (LoadFileTest(file, crashed_files) for file in files)
     connection = PersistentConnection(opts)
@@ -358,7 +363,7 @@ if __name__ == "__main__":
         usage()
         sys.exit()
     elif "--soffice" in opts:
-        runLoadFileTests(opts, args, ".docx")
+        runLoadFileTests(opts, args)
     else:
         usage()
         sys.exit(1)
