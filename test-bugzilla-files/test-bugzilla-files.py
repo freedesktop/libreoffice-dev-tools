@@ -149,12 +149,10 @@ class OfficeConnection:
                     print("...done")
 #                except com.sun.star.lang.DisposedException:
                 except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
-                    print("caught UnknownPropertyException")
-                    print("crashed")
+                    print("caught UnknownPropertyException while TearDown")
                     pass # ignore, also means disposed
                 except pyuno.getClass("com.sun.star.lang.DisposedException"):
-                    print("caught DisposedException")
-                    print("crashed")
+                    print("caught DisposedException while TearDown")
                     pass # ignore
             else:
                 self.soffice.terminate()
@@ -292,12 +290,12 @@ def loadFromURL(xContext, url, connection):
         if xListener:
             xGEB.removeDocumentEventListener(xListener)
 
-def handleCrash(file, crashed_files):
+def handleCrash(file):
     print("File: " + file + " crashed")
     crashLog = open("crashlog.txt", "a")
     crashLog.write('Crash:' + file + '\n')
     crashLog.close()
-    crashed_files.append(file)
+#    crashed_files.append(file)
 # add here the remaining handling code for crashed files
 
 class Alarm(Exception):
@@ -307,9 +305,9 @@ def alarm_handler():
     os.system("killall -9 soffice.bin")
 
 class LoadFileTest:
-    def __init__(self, file, crashed_files):
+    def __init__(self, file, stateNew):
         self.file = file
-        self.crashed_files = crashed_files
+        self.stateNew = stateNew
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
         t = None
@@ -325,7 +323,8 @@ class LoadFileTest:
                 t.cancel()
                 print("TIMEOUT!")
             t.cancel()
-            handleCrash(self.file, self.crashed_files)
+            handleCrash(self.file)
+            self.stateNew.badFiles.append(self.file)
             connection.setUp()
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
             print("caught DisposedException " + self.file)
@@ -333,7 +332,8 @@ class LoadFileTest:
                 print("TIMEOUT!")
             else:
                 t.cancel()
-                handleCrash(self.file, self.crashed_files)
+                handleCrash(self.file)
+                self.stateNew.badFiles.append(self.file)
             connection.tearDown()
             connection.setUp()
         finally:
@@ -342,6 +342,13 @@ class LoadFileTest:
             if xDoc:
                 xDoc.close(True)
             print("...done with: " + self.file)
+
+class State:
+    def __init__(self):
+        self.goodFiles = []
+        self.badFiles = []
+        self.unknown = []
+
             
 validFileExtensions = [ ".docx" , ".rtf", ".odt", ".doc" ]
 
@@ -350,13 +357,14 @@ def runLoadFileTests(opts, dirs):
     for suffix in validFileExtensions:
         files.extend(getFiles(dirs, suffix))
     files.sort()
-    crashed_files = []
-    tests = (LoadFileTest(file, crashed_files) for file in files)
+    stateNew = State() #create stateNew instance
+    tests = (LoadFileTest(file, stateNew) for file in files)
     connection = PersistentConnection(opts)
-#    connection = PerTestConnection(opts)
     runConnectionTests(connection, simpleInvoke, tests)
     connection.tearDown()
-    print(crashed_files)
+    print(stateNew.goodFiles)
+    print(stateNew.badFiles)
+    print(stateNew.unknown)
 
 def parseArgs(argv):
     (optlist,args) = getopt.getopt(argv[1:], "hr",
