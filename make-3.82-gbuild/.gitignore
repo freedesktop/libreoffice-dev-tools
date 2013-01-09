@@ -1,6 +1,5 @@
 *.o
 Makefile
-Makefile.in
 .deps
 build.sh
 make
@@ -9,12 +8,9 @@ config.h
 config.log
 config.status
 config/Makefile
-config/Makefile.in
 po/Makefile
 po/Makefile.in
 po/POTFILES
 doc/Makefile
-doc/Makefile.in
 glob/.deps
-glob/Makefile.in
 
