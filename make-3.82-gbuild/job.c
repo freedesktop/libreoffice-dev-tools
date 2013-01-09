@@ -1139,12 +1139,14 @@ start_job_command (struct child *child)
       return;
     }
 
+  int ran_as_builtin = try_run_as_builtin( argv );
+
   /* Print out the command.  If silent, we call `message' with null so it
      can log the working directory before the command's own error messages
      appear.  */
 
   message (0, (just_print_flag || (!(flags & COMMANDS_SILENT) && !silent_flag))
-	   ? "%s" : (char *) 0, p);
+	   ? "%s%s" : (char *) 0, ran_as_builtin ? "(Built-in) " : "", p);
 
   /* Tell update_goal_chain that a command has been started on behalf of
      this target.  It is important that this happens here and not in
@@ -1154,6 +1156,13 @@ start_job_command (struct child *child)
      chain (i.e., update_file recursion chain) we are processing.  */
 
   ++commands_started;
+
+  if( ran_as_builtin )
+  {
+    free (argv[0]);
+    free (argv);
+    goto next_command;
+  }
 
   /* Optimize an empty command.  People use this for timestamp rules,
      so avoid forking a useless shell.  Do this after we increment
