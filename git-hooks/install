@@ -1,0 +1,32 @@
+#!/bin/bash
+
+die()
+{
+    echo "$@"
+    exit 1
+}
+
+if [ -z "$1" ]; then
+    die "usage: $0 /path/to/git/libreoffice"
+fi
+
+prefix=$1
+
+for i in $(find . -name hooks)
+do
+    for j in $i/*
+    do
+        [ -e $prefix/$j ] || die "$prefix/$j doesn't exists, remove from repo"
+        if ! diff -q -u $j $prefix/$j; then
+            if [ ! -w $prefix/$j ]; then
+                echo "$prefix/$j is not writable, skipping"
+                continue
+            fi
+            cat $j > $prefix/$j
+        else
+            echo "$prefix/$j is up to date"
+        fi
+    done
+done
+
+# vim:set shiftwidth=4 softtabstop=4 expandtab:
