@@ -3,6 +3,6 @@ fdo server after each push. They are responsible for sending out mails to the
 -commits list, and also prevent directly pushing changes to fdo, when the
 read-write repo is hosted on gerrit.
 
-If you review a change on gerrit, affecting a hook in this directly, please do
+If you review a change on gerrit, affecting a hook in this directory, please do
 it only in case you update the real hook on the fdo server as well. The
 'install' script should make this easy for you. Thanks!
