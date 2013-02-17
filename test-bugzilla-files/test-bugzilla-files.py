@@ -33,6 +33,7 @@ import time
 import uuid
 
 import signal
+import threading
 try:
     from urllib.parse import quote
 except ImportError:
@@ -164,8 +165,6 @@ class OfficeConnection:
             if ret != 0:
                 raise Exception("Exit status indicates failure: " + str(ret))
 #            return ret
-    def kill(self):
-        os.system("killall -9 soffice.bin")
 
 class PerTestConnection:
     def __init__(self, args):
@@ -209,10 +208,6 @@ class PersistentConnection:
                 self.connection.tearDown()
             finally:
                 self.connection = None
-    def kill(self):
-        if self.connection:
-            os.system("killall -9 soffice.bin")
-        self.connection = None
 
 def simpleInvoke(connection, test):
     try:
@@ -272,26 +267,14 @@ def loadFromURL(xContext, url, connection):
         "com.sun.star.frame.GlobalEventBroadcaster", xContext)
     xGEB.addDocumentEventListener(xListener)
     try:
-# we need to check if this method returns after loading or after invoking the loading
-# depending on this we might need to put a timeout around it
         xDoc = None
-        try:
-            signal.signal(signal.SIGALRM, alarm_handler)
-            signal.alarm(10)        
-            xDoc = xDesktop.loadComponentFromURL(url, "_blank", 0, loadProps)
-            while True:
-                if xListener.layoutFinished:
-                    signal.alarm(0)  # reset the alarm
-                    return xDoc
-                print("delaying...")
-                time.sleep(1)
-        except Alarm:
-            print("timeout: no OnLayoutFinished received")
-            print("file not loaded in time: " + url)
-            connection.kill()
-            xListener = None
-            connection.setUp()
-            return None
+        xDoc = xDesktop.loadComponentFromURL(url, "_blank", 0, loadProps)
+        while True:
+            if xListener.layoutFinished:
+                t.cancel()
+                return xDoc
+            print("delaying...")
+            time.sleep(1)
     except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
         xListener = None
         raise # means crashed, handle it later
@@ -320,9 +303,8 @@ def handleCrash(file, crashed_files):
 class Alarm(Exception):
     pass
 
-def alarm_handler(signum, frame):
+def alarm_handler():
     os.system("killall -9 soffice.bin")
-    raise Alarm
 
 class LoadFileTest:
     def __init__(self, file, crashed_files):
@@ -330,19 +312,33 @@ class LoadFileTest:
         self.crashed_files = crashed_files
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
+        t = None
         try:
             url = "file://" + quote(self.file)
             xDoc = None
+            t = threading.Timer(5, alarm_handler)
+            t.start()      
             xDoc = loadFromURL(xContext, url, connection)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
+            if not t.is_alive():
+                t.cancel()
+                print("TIMEOUT!")
+            t.cancel()
             handleCrash(self.file, self.crashed_files)
             connection.setUp()
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
             print("caught DisposedException " + self.file)
-            handleCrash(self.file, self.crashed_files)
+            if not t.is_alive():
+                print("TIMEOUT!")
+            else:
+                t.cancel()
+                handleCrash(self.file, self.crashed_files)
+            connection.tearDown()
             connection.setUp()
         finally:
+            if t.is_alive():
+                t.cancel()
             if xDoc:
                 xDoc.close(True)
             print("...done with: " + self.file)
@@ -359,8 +355,8 @@ def runLoadFileTests(opts, dirs):
     connection = PersistentConnection(opts)
 #    connection = PerTestConnection(opts)
     runConnectionTests(connection, simpleInvoke, tests)
+    connection.tearDown()
     print(crashed_files)
-    os.system("killall -9 soffice.bin")
 
 def parseArgs(argv):
     (optlist,args) = getopt.getopt(argv[1:], "hr",
