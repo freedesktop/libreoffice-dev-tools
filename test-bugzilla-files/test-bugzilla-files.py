@@ -31,6 +31,7 @@ import subprocess
 import sys
 import time
 import uuid
+import datetime
 
 import signal
 import threading
@@ -267,11 +268,12 @@ def loadFromURL(xContext, url, connection):
     try:
         xDoc = None
         xDoc = xDesktop.loadComponentFromURL(url, "_blank", 0, loadProps)
-        while True:
+        time_ = 0
+        while time_ < 30:
             if xListener.layoutFinished:
-                t.cancel()
                 return xDoc
             print("delaying...")
+            time_ += 1
             time.sleep(1)
     except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
         xListener = None
@@ -298,42 +300,42 @@ def handleCrash(file):
 #    crashed_files.append(file)
 # add here the remaining handling code for crashed files
 
-class Alarm(Exception):
-    pass
-
 def alarm_handler():
     os.system("killall -9 soffice.bin")
 
 class LoadFileTest:
-    def __init__(self, file, stateNew):
+    def __init__(self, file, state):
         self.file = file
-        self.stateNew = stateNew
+        self.state = state
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
         t = None
         try:
             url = "file://" + quote(self.file)
             xDoc = None
-            t = threading.Timer(5, alarm_handler)
+            t = threading.Timer(40, alarm_handler)
             t.start()      
             xDoc = loadFromURL(xContext, url, connection)
+            self.state.goodFiles.append(self.file)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
             if not t.is_alive():
-                t.cancel()
                 print("TIMEOUT!")
-            t.cancel()
-            handleCrash(self.file)
-            self.stateNew.badFiles.append(self.file)
+                self.state.timeoutFiles.append(self.file)
+            else:
+                t.cancel()
+                handleCrash(self.file)
+                self.state.badFiles.append(self.file)
             connection.setUp()
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
             print("caught DisposedException " + self.file)
             if not t.is_alive():
                 print("TIMEOUT!")
+                self.state.timeoutFiles.append(self.file)
             else:
                 t.cancel()
                 handleCrash(self.file)
-                self.stateNew.badFiles.append(self.file)
+                self.state.badFiles.append(self.file)
             connection.tearDown()
             connection.setUp()
         finally:
@@ -347,24 +349,50 @@ class State:
     def __init__(self):
         self.goodFiles = []
         self.badFiles = []
-        self.unknown = []
+        self.timeoutFiles = []
 
             
 validFileExtensions = [ ".docx" , ".rtf", ".odt", ".doc" ]
 
+def writeReport(state, startTime):
+    goodFiles = open("goodFiles.log", "w")
+    goodFiles.write("All files tested which opened perfectly:\n")
+    goodFiles.write("Starttime: " + startTime.isoformat() +"\n")
+    for file in state.goodFiles:
+        goodFiles.write(file)
+        goodFiles.write("\n")
+    goodFiles.close()
+    badFiles = open("badFiles.log", "w")
+    badFiles.write("All files tested which crashed:\n")
+    badFiles.write("Starttime: " + startTime.isoformat() + "\n")
+    for file in state.badFiles:
+        badFiles.write(file)
+        badFiles.write("\n")
+    badFiles.close()
+    timeoutFiles = open("timeoutFiles.log", "w")
+    timeoutFiles.write("All files tested which timed out:\n")
+    timeoutFiles.write("Starttime: " + startTime.isoformat() + "\n")
+    for file in state.timeoutFiles:
+        timeoutFiles.write(file)
+        timeoutFiles.write("\n")
+    timeoutFiles.close()
+
+
+
 def runLoadFileTests(opts, dirs):
-    files = []
-    for suffix in validFileExtensions:
-        files.extend(getFiles(dirs, suffix))
-    files.sort()
-    stateNew = State() #create stateNew instance
-    tests = (LoadFileTest(file, stateNew) for file in files)
-    connection = PersistentConnection(opts)
-    runConnectionTests(connection, simpleInvoke, tests)
-    connection.tearDown()
-    print(stateNew.goodFiles)
-    print(stateNew.badFiles)
-    print(stateNew.unknown)
+    startTime = datetime.datetime.now()
+    try:
+        files = []
+        for suffix in validFileExtensions:
+            files.extend(getFiles(dirs, suffix))
+        files.sort()
+        state = State()
+        tests = (LoadFileTest(file, state) for file in files)
+        connection = PersistentConnection(opts)
+        runConnectionTests(connection, simpleInvoke, tests)
+        connection.tearDown()
+    finally:
+        writeReport(state, startTime)
 
 def parseArgs(argv):
     (optlist,args) = getopt.getopt(argv[1:], "hr",
