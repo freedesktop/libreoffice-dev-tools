@@ -401,8 +401,8 @@ def runLoadFileTests(opts, dirs):
         tests = (LoadFileTest(file, state) for file in files)
         connection = PersistentConnection(opts)
         runConnectionTests(connection, simpleInvoke, tests)
-        connection.kill()
     finally:
+        connection.kill()
         writeReport(state, startTime)
 
 def parseArgs(argv):
