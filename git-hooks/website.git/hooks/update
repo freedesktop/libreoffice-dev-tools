@@ -21,13 +21,6 @@ recipients="libreoffice-commits@lists.freedesktop.org"
 
 ref_type=$(git cat-file -t "$3")
 
-# Avoid re-introducing obsolete tags
-if grep -q "^$1$" hooks/obsolete-tags; then
-	echo "*** Re-introducing an obsolete tag ($1) is not allowed in this repo" >&2
-	echo "*** Use corereleasebranches/killtagslocal.sh from contrib/dev-tools.git to get rid of them." >&2
-	exit 1
-fi
-
 # Only allow annotated tags in a shared repo
 # Remove this code to treat dumb tags the same as everything else
 case "$1","$ref_type" in
