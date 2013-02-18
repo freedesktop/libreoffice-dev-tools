@@ -332,8 +332,19 @@ class LoadFileTest:
         finally:
             if t.is_alive():
                 t.cancel()
-            if xDoc:
-                xDoc.close(True)
+            try:
+                if xDoc:
+                    xDoc.close(True)
+            except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
+                print("caught UnknownPropertyException while closing")
+                self.state.badFiles.append(self.file)
+                connection.tearDown()
+                connection.setUp()
+            except pyuno.getClass("com.sun.star.lang.DisposedException"):
+                print("caught DisposedException while closing")
+                self.state.badFiles.append(self.file)
+                connection.tearDown()
+                connection.setUp()
             print("...done with: " + self.file)
 
 class State:
