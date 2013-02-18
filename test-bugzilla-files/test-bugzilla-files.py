@@ -328,6 +328,7 @@ class LoadFileTest:
             t.start()      
             xDoc = loadFromURL(xContext, url, connection)
             self.state.goodFiles.append(self.file)
+            t.cancel()
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
             if not t.is_alive():
