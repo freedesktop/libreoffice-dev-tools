@@ -364,8 +364,6 @@ class State:
         self.timeoutFiles = []
 
             
-validFileExtensions = [ ".docx" , ".rtf", ".odt", ".doc" ]
-
 def writeReport(state, startTime):
     goodFiles = open("goodFiles.log", "w")
     goodFiles.write("All files tested which opened perfectly:\n")
@@ -390,6 +388,7 @@ def writeReport(state, startTime):
     timeoutFiles.close()
 
 
+validFileExtensions = [ ".docx" , ".rtf", ".odt", ".fodt", ".doc" ]
 
 def runLoadFileTests(opts, dirs):
     startTime = datetime.datetime.now()
