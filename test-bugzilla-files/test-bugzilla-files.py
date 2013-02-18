@@ -122,6 +122,7 @@ class OfficeConnection:
         if "--valgrind" in self.args:
             argv.append("--valgrind")
         self.pro = subprocess.Popen(argv)
+        print(self.pro.pid)
 
     def connect(self, socket):
         xLocalContext = uno.getComponentContext()
@@ -164,6 +165,11 @@ class OfficeConnection:
             if ret != 0:
                 raise Exception("Exit status indicates failure: " + str(ret))
 #            return ret
+    def kill(self):
+        command = "kill " + str(self.pro.pid)
+        print("kill")
+        print(command)
+        os.system(command)
 
 class PerTestConnection:
     def __init__(self, args):
@@ -207,6 +213,9 @@ class PersistentConnection:
                 self.connection.tearDown()
             finally:
                 self.connection = None
+    def kill(self):
+        if self.connection:
+            self.connection.kill()
 
 def simpleInvoke(connection, test):
     try:
@@ -238,7 +247,8 @@ def runConnectionTests(connection, invoker, tests):
         for test in tests:
             invoker(connection, test)
     finally:
-        connection.tearDown()
+        pass
+        #connection.tearDown()
 
 class EventListener(XDocumentEventListener,unohelper.Base):
     def __init__(self):
@@ -300,8 +310,8 @@ def handleCrash(file):
 #    crashed_files.append(file)
 # add here the remaining handling code for crashed files
 
-def alarm_handler():
-    os.system("killall -9 soffice.bin")
+def alarm_handler(args):
+    args.kill()
 
 class LoadFileTest:
     def __init__(self, file, state):
@@ -313,7 +323,8 @@ class LoadFileTest:
         try:
             url = "file://" + quote(self.file)
             xDoc = None
-            t = threading.Timer(40, alarm_handler)
+            args = [connection]
+            t = threading.Timer(5, alarm_handler, args)
             t.start()      
             xDoc = loadFromURL(xContext, url, connection)
             self.state.goodFiles.append(self.file)
@@ -390,7 +401,7 @@ def runLoadFileTests(opts, dirs):
         tests = (LoadFileTest(file, state) for file in files)
         connection = PersistentConnection(opts)
         runConnectionTests(connection, simpleInvoke, tests)
-        connection.tearDown()
+        connection.kill()
     finally:
         writeReport(state, startTime)
 
