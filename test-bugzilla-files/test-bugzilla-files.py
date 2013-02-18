@@ -171,27 +171,6 @@ class OfficeConnection:
         print(command)
         os.system(command)
 
-class PerTestConnection:
-    def __init__(self, args):
-        self.args = args
-        self.connection = None
-    def getContext(self):
-        return self.connection.xContext
-    def setUp(self):
-        assert(not(self.connection))
-    def preTest(self):
-        conn = OfficeConnection(self.args)
-        conn.setUp()
-        self.connection = conn
-    def postTest(self):
-        if self.connection:
-            try:
-                self.connection.tearDown()
-            finally:
-                self.connection = None
-    def tearDown(self):
-        assert(not(self.connection))
-
 class PersistentConnection:
     def __init__(self, args):
         self.args = args
