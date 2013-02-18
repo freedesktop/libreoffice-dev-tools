@@ -324,7 +324,7 @@ class LoadFileTest:
             url = "file://" + quote(self.file)
             xDoc = None
             args = [connection]
-            t = threading.Timer(5, alarm_handler, args)
+            t = threading.Timer(45, alarm_handler, args)
             t.start()      
             xDoc = loadFromURL(xContext, url, connection)
             self.state.goodFiles.append(self.file)
