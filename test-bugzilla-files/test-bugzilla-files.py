@@ -317,6 +317,7 @@ class LoadFileTest:
                 t.cancel()
                 handleCrash(self.file)
                 self.state.badFiles.append(self.file)
+            connection.tearDown()
             connection.setUp()
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
             print("caught DisposedException " + self.file)
