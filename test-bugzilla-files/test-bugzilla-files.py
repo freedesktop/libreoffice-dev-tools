@@ -245,7 +245,7 @@ def mkPropertyValue(name, value):
 
 ### tests ###
 
-def loadFromURL(xContext, url, connection):
+def loadFromURL(xContext, url):
     xDesktop = xContext.ServiceManager.createInstanceWithContext(
             "com.sun.star.frame.Desktop", xContext)
     props = [("Hidden", True), ("ReadOnly", True)] # FilterName?
@@ -305,7 +305,7 @@ class LoadFileTest:
             args = [connection]
             t = threading.Timer(45, alarm_handler, args)
             t.start()      
-            xDoc = loadFromURL(xContext, url, connection)
+            xDoc = loadFromURL(xContext, url)
             self.state.goodFiles.append(self.file)
             t.cancel()
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
