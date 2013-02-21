@@ -281,10 +281,12 @@ def loadFromURL(xContext, url):
         if xListener:
             xGEB.removeDocumentEventListener(xListener)
 
-def handleCrash(file):
+def handleCrash(file, disposed):
     print("File: " + file + " crashed")
     crashLog = open("crashlog.txt", "a")
-    crashLog.write('Crash:' + file + '\n')
+    crashLog.write('Crash:' + file + ' ')
+    if disposed == 1:
+        crashLog.write('through disposed\n')
     crashLog.close()
 #    crashed_files.append(file)
 # add here the remaining handling code for crashed files
@@ -315,8 +317,8 @@ class LoadFileTest:
                 self.state.timeoutFiles.append(self.file)
             else:
                 t.cancel()
-                handleCrash(self.file)
-                self.state.badFiles.append(self.file)
+                handleCrash(self.file, 0)
+                self.state.badPropertyFiles.append(self.file)
             connection.tearDown()
             connection.setUp()
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
@@ -326,8 +328,8 @@ class LoadFileTest:
                 self.state.timeoutFiles.append(self.file)
             else:
                 t.cancel()
-                handleCrash(self.file)
-                self.state.badFiles.append(self.file)
+                handleCrash(self.file, 1)
+                self.state.badDisposedFiles.append(self.file)
             connection.tearDown()
             connection.setUp()
         finally:
@@ -338,12 +340,12 @@ class LoadFileTest:
                     xDoc.close(True)
             except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
                 print("caught UnknownPropertyException while closing")
-                self.state.badFiles.append(self.file)
+                self.state.badPropertyFiles.append(self.file)
                 connection.tearDown()
                 connection.setUp()
             except pyuno.getClass("com.sun.star.lang.DisposedException"):
                 print("caught DisposedException while closing")
-                self.state.badFiles.append(self.file)
+                self.state.badDisposedFiles.append(self.file)
                 connection.tearDown()
                 connection.setUp()
             print("...done with: " + self.file)
@@ -351,7 +353,8 @@ class LoadFileTest:
 class State:
     def __init__(self):
         self.goodFiles = []
-        self.badFiles = []
+        self.badDisposedFiles = []
+        self.badPropertyFiles = []
         self.timeoutFiles = []
 
             
@@ -363,13 +366,20 @@ def writeReport(state, startTime):
         goodFiles.write(file)
         goodFiles.write("\n")
     goodFiles.close()
-    badFiles = open("badFiles.log", "w")
-    badFiles.write("All files tested which crashed:\n")
-    badFiles.write("Starttime: " + startTime.isoformat() + "\n")
-    for file in state.badFiles:
-        badFiles.write(file)
-        badFiles.write("\n")
-    badFiles.close()
+    badDisposedFiles = open("badDisposedFiles.log", "w")
+    badDisposedFiles.write("All files tested which crashed:\n")
+    badDisposedFiles.write("Starttime: " + startTime.isoformat() + "\n")
+    for file in state.badDisposedFiles:
+        badDisposedFiles.write(file)
+        badDisposedFiles.write("\n")
+    badDisposedFiles.close()
+    badPropertyFiles = open("badPropertyFiles.log", "w")
+    badPropertyFiles.write("All files tested which crashed:\n")
+    badPropertyFiles.write("Starttime: " + startTime.isoformat() + "\n")
+    for file in state.badPropertyFiles:
+        badPropertyFiles.write(file)
+        badPropertyFiles.write("\n")
+    badPropertyFiles.close()
     timeoutFiles = open("timeoutFiles.log", "w")
     timeoutFiles.write("All files tested which timed out:\n")
     timeoutFiles.write("Starttime: " + startTime.isoformat() + "\n")
