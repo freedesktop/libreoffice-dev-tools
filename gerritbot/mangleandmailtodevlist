@@ -4,23 +4,6 @@ import sys
 import email
 import smtplib
 
-def prefixsubject(message):
-        subject = message['Subject']
-        messagetype = message['X-Gerrit-MessageType']
-        if messagetype == 'merged':
-                subject = '[PUSHED] %s' % subject
-        elif messagetype == 'newchange':
-                subject = '[PATCH] %s' % subject
-        del message['Subject']
-        message['Subject'] = subject
-
-def removeboilerplate(message):
-        boilerplate = 'Change in core[master]:'
-        subject = message['Subject']
-        if subject.startswith(boilerplate):
-                del message['Subject']
-                message['Subject'] = subject.replace(boilerplate, '', 1)
-
 def adddevlisttocc(message):
         devlist = 'LibreOffice Developer List <libreoffice@lists.freedesktop.org>'
         if 'cc' in message:
@@ -32,8 +15,6 @@ def adddevlisttocc(message):
 
 message = email.message_from_file(sys.stdin)
 adddevlisttocc(message)
-removeboilerplate(message)
-prefixsubject(message)
 
 # we are watching for comments but not sending mails for those in hope to evade
 # http://code.google.com/p/gerrit/issues/detail?id=1465
