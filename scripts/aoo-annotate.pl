@@ -67,6 +67,30 @@ sub read_log($)
     return \@revisions;
 }
 
+sub dump_breakdown($)
+{
+    my $revs = shift;
+
+    my $rev_count = scalar (@{$revs});
+    my $annotated = 0;
+    my %frequency;
+    for my $rev (@{$revs}) {
+	if($rev->{note} ne "") {
+	    my $stem = $rev->{note};
+	    $stem =~ s/^merged as.*$/merged:/;
+	    $stem =~ s/^prefer.*$/prefer:/;
+	    $frequency{$stem} = 0 if (!defined $frequency{$stem});
+	    $frequency{$stem}++;
+	    $annotated++;
+	}
+    }
+
+    print STDERR "$annotated annotations of $rev_count commits\n";
+    for my $stem (sort { $frequency{$b} <=> $frequency{$a} } keys %frequency) {
+	print STDERR "$frequency{$stem}\t$stem\n";
+    }
+}
+
 my $git_dir = shift @ARGV;
 
 if (!defined $git_dir) {
@@ -76,13 +100,16 @@ if (!defined $git_dir) {
 my $has_note = read_git_notes($git_dir);
 my $revs = read_log($git_dir);
 
-my $rev_count = scalar (@{$revs});
 
-print STDERR "Commits to scan $rev_count\n";
 
+print STDERR "\n";
+print STDERR "Commits:\n";
 for my $rev (@{$revs}) {
 
     my $note = $rev->{note};
     chomp ($note);
     print "$rev->{hash}\t$rev->{note}\n";
 }
+
+print STDERR "\n";
+dump_breakdown ($revs);
