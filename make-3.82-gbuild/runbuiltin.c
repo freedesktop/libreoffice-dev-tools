@@ -479,41 +479,58 @@ int try_run_as_builtin( char** orig_argv )
         if( mkdir_p( argv[ 2 ] ))
             builtin = 1;
     }
+    /* cp <srcfile> <destfile> */
     /* cp [--remove-destination] --no-dereference --force --preserve=timestamps <srcfile> <destfile> */
     else if( equals( argv[ 0 ], "/usr/bin/cp" ) || equals( argv[ 0 ], "/bin/cp" ) || equals( argv[ 0 ], "cp" ))
     {
-        int remove = 0;
-        if( equals( argv[ 1 ], "--remove-destination" )) // may not be present
-            remove = 1;
-        if( equals( argv[ 1 + remove ], "--no-dereference" )
-            && equals( argv[ 2 + remove ], "--force" )
-            && equals( argv[ 3 + remove ], "--preserve=timestamps" )
-            && argv[ 4 + remove ] != NULL
-            && argv[ 5 + remove ] != NULL
-            && argv[ 6 + remove ] == NULL )
+        if( argv[ 1 ] != NULL
+            && argv[ 2 ] != NULL
+            && argv[ 3 ] == NULL )
         {
 #ifdef MYWIN
-            const char* srcfile = argv[ 4 + remove ];
-            const char* destfile = argv[ 5 + remove ];
-            struct stat st;
-            if( remove )
-                DeleteFile( destfile );
-            /* Do we ever actually copy symlinks this way? Handle --no-dereference.
-               Not sure if Windows can handle them, so use POSIX. */
-            if( lstat( srcfile, &st ) == 0 && S_ISLNK( st.st_mode ))
-            {
-                DeleteFile( destfile );
-                if( symlink( srcfile, destfile ) == 0 )
-                    builtin = 1;
-            }
-            else
-            {
-                if( CopyFile( srcfile, destfile, 0 ))
-                    builtin = 1;
-            }
+            const char* srcfile = argv[ 1 ];
+            const char* destfile = argv[ 2 ];
+            if( CopyFile( srcfile, destfile, 0 ))
+                builtin = 1;
 #else
-        builtin = 1;
+            builtin = 1;
 #endif
+        }
+        else
+        {
+            int remove = 0;
+            if( equals( argv[ 1 ], "--remove-destination" )) // may not be present
+                remove = 1;
+            if( equals( argv[ 1 + remove ], "--no-dereference" )
+                && equals( argv[ 2 + remove ], "--force" )
+                && equals( argv[ 3 + remove ], "--preserve=timestamps" )
+                && argv[ 4 + remove ] != NULL
+                && argv[ 5 + remove ] != NULL
+                && argv[ 6 + remove ] == NULL )
+            {
+#ifdef MYWIN
+                const char* srcfile = argv[ 4 + remove ];
+                const char* destfile = argv[ 5 + remove ];
+                struct stat st;
+                if( remove )
+                    DeleteFile( destfile );
+                /* Do we ever actually copy symlinks this way? Handle --no-dereference.
+                   Not sure if Windows can handle them, so use POSIX. */
+                if( lstat( srcfile, &st ) == 0 && S_ISLNK( st.st_mode ))
+                {
+                    DeleteFile( destfile );
+                    if( symlink( srcfile, destfile ) == 0 )
+                        builtin = 1;
+                }
+                else
+                {
+                    if( CopyFile( srcfile, destfile, 0 ))
+                        builtin = 1;
+                }
+#else
+            builtin = 1;
+#endif
+            }
         }
     }
     /* make has decided to run the command using shell */
