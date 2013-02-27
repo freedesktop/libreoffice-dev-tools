@@ -74,10 +74,10 @@ sub dump_breakdown($)
     }
 
     print STDERR "$annotated annotations of $rev_count commits\n";
-    print STDERR "with an initial block of $contiguous annotation\n";
     for my $stem (sort { $frequency{$b} <=> $frequency{$a} } keys %frequency) {
 	print STDERR "$frequency{$stem}\t$stem\n";
     }
+    print STDERR "contiguous annotations: $contiguous\n";
 }
 
 sub usage()
@@ -120,15 +120,13 @@ if (!defined $git_dir) {
 
 my $revs = read_log($git_dir);
 
-if (!$stats) {
-    print STDERR "Commits:\n";
-    for my $rev (@{$revs}) {
-	my $note = $rev->{note};
-	chomp ($note);
-	my $has_note = ($note ne "");
-	my $printit = $all || ($has_note && $notes) || (!$has_note && !$notes);
-	print "$rev->{hash}\t$rev->{note}\n" if ($printit);
-    }
+print STDERR "Commits:\n";
+for my $rev (@{$revs}) {
+    my $note = $rev->{note};
+    chomp ($note);
+    my $has_note = ($note ne "");
+    my $printit = $all || ($has_note && $notes) || (!$has_note && !$notes);
+    print "$rev->{hash}\t$rev->{note}\t$rev->{name}\t$rev->{subject}\n" if ($printit);
 }
 
 if ($stats == 1) {
