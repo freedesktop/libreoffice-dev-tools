@@ -59,11 +59,12 @@ sub dump_breakdown($)
     my %frequency;
     my $contiguous = 0;
     my $in_start_run = 1;
-    for my $rev (@{$revs}) {
+    for my $rev (reverse @{$revs}) {
 	if($rev->{note} ne "") {
 	    my $stem = $rev->{note};
-	    $stem =~ s/^merged as.*$/merged:/;
+	    $stem =~ s/^merged as.*$/merged as:/;
 	    $stem =~ s/^prefer.*$/prefer:/;
+	    $stem =~ s/^reject.*$/reject:/;
 	    $frequency{$stem} = 0 if (!defined $frequency{$stem});
 	    $frequency{$stem}++;
 	    $annotated++;
@@ -73,11 +74,27 @@ sub dump_breakdown($)
 	}
     }
 
-    print STDERR "$annotated annotations of $rev_count commits\n";
+    print "$annotated annotations of $rev_count commits\n";
     for my $stem (sort { $frequency{$b} <=> $frequency{$a} } keys %frequency) {
-	print STDERR "$frequency{$stem}\t$stem\n";
+	print "$frequency{$stem}\t$stem\n";
     }
-    print STDERR "contiguous annotations: $contiguous\n";
+    print "contiguous annotations: $contiguous\n";
+}
+
+sub sanity_check_revs($$)
+{
+    my $git_dir = shift;
+    my $revs = shift;
+    my $note_count = 0;
+    for my $rev (@{$revs}) {
+	my $note = $rev->{note};
+	$note_count++ if ($note ne "");
+    }
+    if ($note_count < 100) {
+	print STDERR "It looks as if you have not fetched your git notes please do\n";
+	print STDERR "( cd $git_dir ; git fetch origin refs/notes/commits:refs/notes/commits )\n";
+	exit 1;
+    }
 }
 
 sub usage()
@@ -119,6 +136,7 @@ if (!defined $git_dir) {
 }
 
 my $revs = read_log($git_dir);
+sanity_check_revs($git_dir, $revs);
 
 print STDERR "Commits:\n";
 for my $rev (@{$revs}) {
