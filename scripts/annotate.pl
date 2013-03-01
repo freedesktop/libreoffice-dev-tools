@@ -40,7 +40,7 @@ sub validate_git_hash($)
 sub validate_check_note($)
 {
     my $note_text = shift;
-    $note_text =~ m/^(\S+):\s+(.+)$/ || die "note: '$note_text' is missing a explanation: reason";
+    $note_text =~ m/^(\S.+):\s+(.+)$/ || die "note: '$note_text' is missing a explanation: reason";
     my $reason = $1;
     my $expl = $2;
 
