@@ -135,8 +135,11 @@ sub sanity_check_revs($$)
 	$note_count++ if ($note ne "");
     }
     if ($note_count < 100) {
-	print STDERR "It looks as if you have not fetched your git notes please do\n";
-	print STDERR "( cd $git_dir ; git fetch origin refs/notes/commits:refs/notes/commits )\n";
+	print STDERR "It looks as if you have not fetched your git notes please add the -f parameter to do that, or in extremis do:\n";
+	print STDERR "(cd '$git_dir'; git --no-pager fetch -f origin refs/notes/commits:refs/notes/commits)\n";
+	print STDERR "attempting to fetch notes for you ...\n";
+	fetch_git_notes($git_dir);
+	print STDERR "exiting, re-start me ...\n";
 	exit 1;
     }
 }
