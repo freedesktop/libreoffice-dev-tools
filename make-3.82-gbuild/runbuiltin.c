@@ -480,6 +480,7 @@ int try_run_as_builtin( char** orig_argv )
             builtin = 1;
     }
     /* cp <srcfile> <destfile> */
+    /* cp -f <srcfile> <destfile> */
     /* cp [--remove-destination] --no-dereference --force --preserve=timestamps <srcfile> <destfile> */
     else if( equals( argv[ 0 ], "/usr/bin/cp" ) || equals( argv[ 0 ], "/bin/cp" ) || equals( argv[ 0 ], "cp" ))
     {
@@ -490,6 +491,20 @@ int try_run_as_builtin( char** orig_argv )
 #ifdef MYWIN
             const char* srcfile = argv[ 1 ];
             const char* destfile = argv[ 2 ];
+            if( CopyFile( srcfile, destfile, 0 ))
+                builtin = 1;
+#else
+            builtin = 1;
+#endif
+        } else if( equals( argv[ 1 ], "-f" )
+            && argv[ 2 ] != NULL
+            && argv[ 3 ] != NULL
+            && argv[ 4 ] == NULL )
+        {
+#ifdef MYWIN
+            const char* srcfile = argv[ 2 ];
+            const char* destfile = argv[ 3 ];
+            DeleteFile( destfile );
             if( CopyFile( srcfile, destfile, 0 ))
                 builtin = 1;
 #else
