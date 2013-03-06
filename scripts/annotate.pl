@@ -199,7 +199,7 @@ if (!defined $git_dir) {
     chomp ($git_dir);
 }
 
-if (!$list && !$stats) {
+if (!$list && !$stats && !$fetch) {
 
     print "$note_text' '$note_hash\n";
     if (!defined $note_text || !defined $note_hash) {
