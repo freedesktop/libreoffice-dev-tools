@@ -144,6 +144,17 @@ sub sanity_check_revs($$)
     }
 }
 
+# ensure the hash we're annotating is in the right tree
+sub check_hash_for_note($$)
+{
+    my ($git_dir, $hash) = @_;
+    my $revs = read_log($git_dir);
+    for my $rev (@{$revs}) {
+	return if ($rev->{hash} eq $hash);
+    }
+    die "Unknown hash '$hash' - did you get your hashes the wrong way around ?";
+}
+
 sub usage()
 {
     print STDERR "Usage: aoo-annotate.pl [args] [--git /path/to/git] ['merged as: 1234' <hash>]\n";
@@ -211,6 +222,7 @@ if (!$list && !$stats && !$fetch) {
     validate_git_hash($note_hash) ||
 	    die "Hash on master '$note_hash' doesn't look like a git hash\n";
 
+    check_hash_for_note($git_dir, $note_hash);
     fetch_git_notes($git_dir);
     `( cd '$git_dir' ; git --no-pager notes add -m '$note_text' $note_hash )`;
     push_git_notes($git_dir);
