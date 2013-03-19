@@ -102,7 +102,11 @@ sub dump_breakdown($)
     my $annotated = 0;
     my %frequency;
     my $contiguous = 0;
+    my $contiguous_limit = 0;
     my $in_start_run = 1;
+    my $in_start_limit_run = 1;
+    my $in_start_limit_max = 5;
+    my $in_start_limit = $in_start_limit_max;
     for my $rev (reverse @{$revs}) {
 	if($rev->{note} ne "") {
 	    my $stem = $rev->{note};
@@ -113,8 +117,14 @@ sub dump_breakdown($)
 	    $frequency{$stem}++;
 	    $annotated++;
 	    $contiguous++ if ($in_start_run);
+	    $contiguous_limit++ if ($in_start_limit_run);
 	} else {
 	    $in_start_run = 0;
+	    if ($in_start_limit > 0) {
+		$in_start_limit--;
+	    } else {
+		$in_start_limit_run = 0;
+	    }
 	}
     }
 
@@ -122,7 +132,8 @@ sub dump_breakdown($)
     for my $stem (sort { $frequency{$b} <=> $frequency{$a} } keys %frequency) {
 	print "$frequency{$stem}\t$stem\n";
     }
-    print "contiguous annotations: $contiguous\n";
+    print "contiguous annotations: $contiguous - contiguous\n";
+    print "contiguous tolerating $in_start_limit_max missing: $contiguous_limit\n";
 }
 
 sub sanity_check_revs($$)
