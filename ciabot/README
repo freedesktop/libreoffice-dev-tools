@@ -1,0 +1,21 @@
+How the IRC nofication part works:
+
+1) After a reboot, start-irker.sh and start-ciabot.sh has to be started
+manually. The first starts irkerd, which -- in case of no errors -- has no
+output. The second starts run-libreoffice-ciabot.pl in screen.
+
+2) run-libreoffice-ciabot.pl invokes libreoffice-ciabot.pl for each commit, which
+has an XML output, piped into irker-cia-proxy.py, which sends the info to
+irkerd.
+
+How to test the IRC notification part:
+
+1) Take the IRC bot "offline", by editing ~/bin/irker-cia-proxy/projmap.json,
+e.g. redirect the channel from #libreoffice-dev to some test channel.
+
+2) Run:
+
+cd ~/libreoffice/core
+perl ~/bin/libreoffice-ciabot.pl core f9453275d2710f9d3e9a4cc1285a57db334a5e2e | (cd ~/bin/irker-cia-proxy; python irker-cia-proxy.py -s)
+
+3) Once you're happy with the result, change projmap.json back.
