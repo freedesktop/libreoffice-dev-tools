@@ -1,0 +1,6 @@
+The following steps are needed to use this code:
+
+- have this directory as ~/bin
+- git clone git://gitorious.org/irker/irker.git ~/bin/irker
+- git clone git://github.com/nenolod/irker-cia-proxy.git ~/bin/irker-cia-proxy
+- cd ~/bin/irker-cia-proxy; ln -s ../projmap.json
