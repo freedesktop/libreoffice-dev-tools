@@ -69,7 +69,7 @@ while getopts r:t:skhq opt ; do
 		r) RES="$OPTARG" ;;
 		t) TMP="$OPTARG" ;;
 		s) SORT="sort -n -k2,2" ;;
-		s) KEEP=1 ;;
+		k) KEEP=1 ;;
 		q) QUIET=1; GS="gs -q";;
 		h) usage; exit ;;
 		?) usage; exit ;;
