@@ -121,7 +121,7 @@ else
 	esac
 	bytes=0
 	IFS="$(echo)"
-	git-rev-list "$3" "^$base" | while read rev; do git-show $rev; done | sed 's#\\#\\\\#g' |
+	git-rev-list "$3" "^$base" | while read rev; do git-show -M $rev; done | sed 's#\\#\\\\#g' |
 		while read line
 		do
 			if [ "$bytes" -ge "0" ] ; then
