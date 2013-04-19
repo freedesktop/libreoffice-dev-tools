@@ -167,6 +167,9 @@ class OfficeConnection:
 #            return ret
     def kill(self):
         command = "kill " + str(self.pro.pid)
+        killFile = open("killFile.log", "a")
+        killFile.write(command + "\n")
+        killFile.close()
         print("kill")
         print(command)
         os.system(command)
@@ -245,25 +248,44 @@ def mkPropertyValue(name, value):
 
 ### tests ###
 
-def loadFromURL(xContext, url):
+def loadFromURL(xContext, url, t, component):
     xDesktop = xContext.ServiceManager.createInstanceWithContext(
             "com.sun.star.frame.Desktop", xContext)
     props = [("Hidden", True), ("ReadOnly", True)] # FilterName?
     loadProps = tuple([mkPropertyValue(name, value) for (name, value) in props])
-    xListener = EventListener()
-    xGEB = xContext.ServiceManager.createInstanceWithContext(
-        "com.sun.star.frame.GlobalEventBroadcaster", xContext)
-    xGEB.addDocumentEventListener(xListener)
+    xListener = None
+    if component == "writer":
+        xListener = EventListener()
+        xGEB = xContext.ServiceManager.createInstanceWithContext(
+            "com.sun.star.frame.GlobalEventBroadcaster", xContext)
+        xGEB.addDocumentEventListener(xListener)
     try:
         xDoc = None
         xDoc = xDesktop.loadComponentFromURL(url, "_blank", 0, loadProps)
-        time_ = 0
-        while time_ < 30:
-            if xListener.layoutFinished:
-                return xDoc
-            print("delaying...")
-            time_ += 1
-            time.sleep(1)
+        if component == "calc":
+            try:
+                if xDoc:
+                    xDoc.calculateAll()
+            except AttributeError:
+                pass
+            t.cancel()
+            return xDoc
+        elif component == "writer":
+            time_ = 0
+            t.cancel()
+            while time_ < 30:
+                if xListener.layoutFinished:
+                    return xDoc
+                print("delaying...")
+                time_ += 1
+                time.sleep(1)
+        else:
+            t.cancel()
+            return xDoc
+        file = open("file.log", "a")
+        file.write("layout did not finish\n")
+        file.close()
+        return xDoc
     except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
         xListener = None
         raise # means crashed, handle it later
@@ -295,21 +317,25 @@ def alarm_handler(args):
     args.kill()
 
 class LoadFileTest:
-    def __init__(self, file, state):
+    def __init__(self, file, state, component):
         self.file = file
         self.state = state
+        self.component = component
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
         t = None
+        args = None
         try:
             url = "file://" + quote(self.file)
+            file = open("file.log", "a")
+            file.write(url + "\n")
+            file.close()
             xDoc = None
             args = [connection]
-            t = threading.Timer(45, alarm_handler, args)
+            t = threading.Timer(60, alarm_handler, args)
             t.start()      
-            xDoc = loadFromURL(xContext, url)
+            xDoc = loadFromURL(xContext, url, t, self.component)
             self.state.goodFiles.append(self.file)
-            t.cancel()
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
             if not t.is_alive():
@@ -337,7 +363,10 @@ class LoadFileTest:
                 t.cancel()
             try:
                 if xDoc:
+                    t = threading.Timer(10, alarm_handler, args)
+                    t.start()
                     xDoc.close(True)
+                    t.cancel()
             except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
                 print("caught UnknownPropertyException while closing")
                 self.state.badPropertyFiles.append(self.file)
@@ -345,7 +374,10 @@ class LoadFileTest:
                 connection.setUp()
             except pyuno.getClass("com.sun.star.lang.DisposedException"):
                 print("caught DisposedException while closing")
-                self.state.badDisposedFiles.append(self.file)
+                if t.is_alive():
+                    t.cancel()
+                else:
+                    self.state.badDisposedFiles.append(self.file)
                 connection.tearDown()
                 connection.setUp()
             print("...done with: " + self.file)
@@ -388,19 +420,26 @@ def writeReport(state, startTime):
         timeoutFiles.write("\n")
     timeoutFiles.close()
 
-
-validFileExtensions = [ ".docx" , ".rtf", ".odt", ".fodt", ".doc" ]
+validCalcFileExtensions = [ ".xlsx", ".xls", ".ods", ".fods" ]
+validWriterFileExtensions = [ ".docx" , ".rtf", ".odt", ".fodt", ".doc" ]
+validImpressFileExtensions = [ ".ppt", ".pptx", ".odp", ".fodp" ]
+validDrawFileExtensions = [ ".odg", ".fodg" ]
+validRevereseFileExtensions = [ ".vsd", ".vdx", ".cdr", ".pub", ".wpd" ]
+validFileExtensions = dict([("calc", validCalcFileExtensions), ("writer", validWriterFileExtensions), ("impress", validImpressFileExtensions), ("draw", validDrawFileExtensions), ("reverse", validRevereseFileExtensions) ])
 
 def runLoadFileTests(opts, dirs):
     startTime = datetime.datetime.now()
+    connection = PersistentConnection(opts)
     try:
-        files = []
-        for suffix in validFileExtensions:
-            files.extend(getFiles(dirs, suffix))
-        files.sort()
+        tests = []
         state = State()
-        tests = (LoadFileTest(file, state) for file in files)
-        connection = PersistentConnection(opts)
+        print("before map")
+        for component, validExtension in validFileExtensions.items():
+            files = []
+            for suffix in validExtension:
+                files.extend(getFiles(dirs, suffix))
+            files.sort()
+            tests.extend( (LoadFileTest(file, state, component) for file in files) )
         runConnectionTests(connection, simpleInvoke, tests)
     finally:
         connection.kill()
