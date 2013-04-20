@@ -21,7 +21,7 @@ try:
     txt = gz.read().decode('us-ascii')
     gz.close()
 
-    reportedby = re.compile(r'^.*ReportedBy:.(.*)$', re.MULTILINE)
+    reportedby = re.compile(r'^.*Reporter:.(.*)$', re.MULTILINE)
     reporters = re.findall(reportedby, txt)
 
     wrangledby = re.compile(r'^.*<(.*)> changed:$', re.MULTILINE)
