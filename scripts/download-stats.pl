@@ -64,7 +64,7 @@ sub find_logs($)
     my @logfiles;
 
     if (-f $path ) {
-	if ($path =~ m/documentfoundation\.org.*access_log/) {
+	if ($path =~ m/documentfoundation\.org.*-access_log/) {
 	    if ($verbose) {
 		print STDERR "hit: $path\n";
 	    }
@@ -441,15 +441,15 @@ if (!defined $path_to_log_tree) {
     $path_to_log_tree = "$path_to_log_tree/downloads";
 }
 
-my @log_filenames = find_logs ($path_to_log_tree);
-if ($verbose) {
-    print STDERR "Have log paths of:\n\t" . (join("\n\t", @log_filenames)) . "\n";
-}
-
 # update first
 if ($rsync_first) {
     system('rsync --delete -av bilbo.documentfoundation.org:/var/log/apache2/download.documentfoundation.org/ downloads/download.documentfoundation.org/ 1>&2');
     system('rsync --delete -av bilbo.documentfoundation.org:/var/log/apache2/downloadarchive.documentfoundation.org/ downloads/downloadarchive.documentfoundation.org/ 1>&2');
+}
+
+my @log_filenames = find_logs ($path_to_log_tree);
+if ($verbose) {
+    print STDERR "Have log paths of:\n\t" . (join("\n\t", @log_filenames)) . "\n";
 }
 
 # the slow piece - parsing the logs
