@@ -78,7 +78,7 @@ else
 	if( $next == -1 ) {
 		my $tags = "libreoffice-"."$1.$2.0.*";
 		open TAGS, "git tag -l $tags |" or die "cannot get the tags";
-		my $beta = -1;
+		my $beta = 0;
 		my $RC = 0;
 		while (defined (my $tag = <TAGS>)) {
 			if( $tag =~ /libreoffice-([0-9]+)\.([0-9]+)\.0\.0\.beta([0-9]+)/) {
