@@ -29,7 +29,7 @@ my $bug_regex = 'fdo#(\d+)';
 
 # This contains the target version for all commits to master
 # Adjust it if a new version branch has been created
-my $master_target = '4.1.0';
+my $master_target = '4.2.0';
 
 
 ##### End user configurable section
