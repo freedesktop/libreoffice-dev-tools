@@ -124,6 +124,7 @@ print timestamp() . " Checking for changes in the libreoffice repo & sending rep
     "core",
     "dictionaries",
     "help",
+    "si-gui",
 );
 
 $test = 0;
