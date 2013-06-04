@@ -71,8 +71,13 @@ sub report($$$) {
                             chomp;
                             print timestamp() . " Sending report about $_ in $key\n";
                             if (!$test) {
-                                qx($ciabot $repo $_ $branch_name $ciaproxy);
-                                qx(perl -I ~/bin ~/bin/libreoffice-bugzilla.pl $repo $_ $branch_name);
+                                if ($repo == "si-gui")
+                                {
+                                    qx(perl -I ~/bin ~/bin/sigui-bugzilla.pl $repo $_ $branch_name);
+                                } else {
+                                    qx($ciabot $repo $_ $branch_name $ciaproxy);
+                                    qx(perl -I ~/bin ~/bin/libreoffice-bugzilla.pl $repo $_ $branch_name);
+                                }
                             } else {
                                 print "$ciabot '$repo' '$_' '$branch_name' $ciaproxy\n";
                                 print "perl -I ~/bin ~/bin/libreoffice-bugzilla.pl '$repo' '$_' '$branch_name'\n";
