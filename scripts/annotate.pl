@@ -128,7 +128,9 @@ sub dump_breakdown($)
 	}
     }
 
-    print "$annotated annotations of $rev_count commits\n";
+    my $todo = $rev_count - $annotated;
+
+    print "$annotated annotations of $rev_count commits. $todo unannotated\n";
     for my $stem (sort { $frequency{$b} <=> $frequency{$a} } keys %frequency) {
 	print "$frequency{$stem}\t$stem\n";
     }
