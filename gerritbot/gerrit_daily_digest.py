@@ -30,7 +30,7 @@ def main():
     status = args['status']
     project = args['project']
     branch = args['branch']
-    cmd = "ssh " + gerrit_host_name + " gerrit query --format=JSON status:" + status + " project:core branch:master"
+    cmd = 'ssh %s gerrit query --format=JSON status:%s project:%s branch:%s' % (gerrit_host_name, status, project, branch)
     lines = check_output(cmd, shell=True, stderr=STDOUT).strip()
     for chunk in lines.split("\n"):
         data = loads(chunk)
