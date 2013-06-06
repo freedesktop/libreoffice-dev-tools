@@ -64,8 +64,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('gerrit daily digest generator')
     parser.add_argument('-g', '--gerrit', help='(i. e. logerrit or gerrit.libreoffice.org, use alias in your ~/.ssh(config with your public key)', required=True)
     args=vars(parser.parse_args())
-    #server = smtplib.SMTP('localhost')
-    #server.sendmail('gerrit@libreoffice.org', 'libreoffice@lists.freedesktop.org', str(message))
-    #server.quit()
-    print(create_message(args['gerrit'], 25))
+    server = smtplib.SMTP('localhost')
+    server.sendmail('gerrit@libreoffice.org', 'libreoffice@lists.freedesktop.org', str(message))
+    server.quit()
 # vim: set et sw=4 ts=4:
