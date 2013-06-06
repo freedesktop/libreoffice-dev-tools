@@ -8,7 +8,8 @@ To install gerritbot::
 
 * install prerequisites::
 
-    sudo apt-get install python getmail4 procmail
+    sudo apt-get install python getmail4 procmail python-pip
+    sudo pip install sh
 
 * create a user gerritbot and log in as it::
 
