@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+# -*- Mode: makefile-gmake; tab-width: 4; indent-tabs-mode: t -*-
+#
+# This file is part of the LibreOffice project.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+import argparse
+import codecs
+import datetime
+import email
+import json
+import os
+import sh
+import smtplib
+import sys
+
+def get_daily_query(status, age):
+    return 'project:core branch:master status:%s -age:%dh' % (status, age)
+
+def get_digest(gerrit, query):
+    digest = ''
+    for line in sh.ssh(gerrit, 'gerrit query --format=JSON \'%s\'' % query).strip().split('\n'):
+        change = json.loads(line)
+        if 'url' in change.keys():
+            digest += '%s %s %s\n' % (change['url'], change['subject'].ljust(75)[:75], change['owner']['email'])
+    if digest == '':
+        digest = 'None'
+    return digest
+    
+def create_message(gerrit, age):
+    now = datetime.datetime.now()
+    message = '''From: gerrit@libreoffice.org
+To: libreoffice@lists.freedesktop.org
+Date: %s
+Subject: LibreOffice Gerrit news %s
+Reply-To: libreoffice@lists.freedesktop.org
+X-Mailer: LibreOfficeGerritDigestMailer 1.0
+
+''' % (now, now.date().isoformat())
+    message += 'Moin!\n\n'
+    message += 'open changes on master for project core changed in the last %d hours:\n' % age
+    message += get_digest(gerrit, get_daily_query('open', age))
+    message += '\n\nmerged changes on master for project core changed in the last %d hours:\n' % age
+    message += get_digest(gerrit, get_daily_query('merged', age))
+    message += '\n\nabandoned changes on master for project core changed in the last %d hours:\n' % age
+    message += get_digest(gerrit, get_daily_query('abandoned', age))
+    message += '\n\nOpen changes needing tweaks, but being untouched for more than a week:\n'
+    message += get_digest(gerrit, 'project:core branch:master status:open (label:Code-Review<=-1 label:Verified<=-1) age:1w')
+    message += '''
+
+Best,
+
+Your friendly LibreOffice Gerrit Digest Mailer'''
+    return message
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('gerrit daily digest generator')
+    parser.add_argument('-g', '--gerrit', help='(i. e. logerrit or gerrit.libreoffice.org, use alias in your ~/.ssh(config with your public key)', required=True)
+    args=vars(parser.parse_args())
+	#server = smtplib.SMTP('localhost')
+    #server.sendmail('gerrit@libreoffice.org', 'libreoffice@lists.freedesktop.org', str(message))
+	#server.quit()
+    sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
+    print(create_message(args['gerrit'], 25))
+# vim: set et sw=4 ts=4:
