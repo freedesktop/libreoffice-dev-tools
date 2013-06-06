@@ -10,6 +10,8 @@
 
 import argparse
 import datetime
+import time
+import email
 import email.mime.text
 import json
 import os
@@ -52,7 +54,7 @@ Note: The bot generating this message can be found and improved here:
     msg = email.mime.text.MIMEText(body, 'plain', 'UTF-8')
     msg['From'] = 'gerrit@libreoffice.org'
     msg['To'] = 'libreoffice@lists.freedesktop.org'
-    msg['Date'] = str(now)
+    msg['Date'] = email.utils.formatdate(time.mktime((now.timetuple())))
     msg['Subject'] = 'LibreOffice Gerrit News %s' % now.date().isoformat()
     msg['Reply-To'] = 'ibreoffice@lists.freedesktop.org'
     msg['X-Mailer'] = 'LibreOfficeGerritDigestMailer 1.0'
