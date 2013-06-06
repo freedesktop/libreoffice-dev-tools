@@ -9,9 +9,8 @@
 #
 
 import argparse
-import codecs
 import datetime
-import email
+import email.mime.text
 import json
 import os
 import sh
@@ -33,24 +32,16 @@ def get_digest(gerrit, query):
     
 def create_message(gerrit, age):
     now = datetime.datetime.now()
-    message = '''From: gerrit@libreoffice.org
-To: libreoffice@lists.freedesktop.org
-Date: %s
-Subject: LibreOffice Gerrit news %s
-Reply-To: libreoffice@lists.freedesktop.org
-X-Mailer: LibreOfficeGerritDigestMailer 1.0
-
-''' % (now, now.date().isoformat())
-    message += 'Moin!\n\n'
-    message += 'open changes on master for project core changed in the last %d hours:\n' % age
-    message += get_digest(gerrit, get_daily_query('open', age))
-    message += '\n\nmerged changes on master for project core changed in the last %d hours:\n' % age
-    message += get_digest(gerrit, get_daily_query('merged', age))
-    message += '\n\nabandoned changes on master for project core changed in the last %d hours:\n' % age
-    message += get_digest(gerrit, get_daily_query('abandoned', age))
-    message += '\n\nOpen changes needing tweaks, but being untouched for more than a week:\n'
-    message += get_digest(gerrit, 'project:core branch:master status:open (label:Code-Review<=-1 label:Verified<=-1) age:1w')
-    message += '''
+    body = 'Moin!\n\n'
+    body += 'open changes on master for project core changed in the last %d hours:\n' % age
+    body += get_digest(gerrit, get_daily_query('open', age))
+    body += '\n\nmerged changes on master for project core changed in the last %d hours:\n' % age
+    body += get_digest(gerrit, get_daily_query('merged', age))
+    body += '\n\nabandoned changes on master for project core changed in the last %d hours:\n' % age
+    body += get_digest(gerrit, get_daily_query('abandoned', age))
+    body += '\n\nOpen changes needing tweaks, but being untouched for more than a week:\n'
+    body += get_digest(gerrit, 'project:core branch:master status:open (label:Code-Review<=-1 label:Verified<=-1) age:1w')
+    body += '''
 
 Best,
 
@@ -58,7 +49,14 @@ Your friendly LibreOffice Gerrit Digest Mailer
 
 Note: The bot generating this message can be found and improved here:
        https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=gerritbot/send-daily-digest'''
-    return message
+    msg = email.mime.text.MIMEText(body, 'plain', 'UTF-8')
+    msg['From'] = 'gerrit@libreoffice.org'
+    msg['To'] = 'libreoffice@lists.freedesktop.org'
+    msg['Date'] = str(now)
+    msg['Subject'] = 'LibreOffice Gerrit News %s' % now.date().isoformat()
+    msg['Reply-To'] = 'ibreoffice@lists.freedesktop.org'
+    msg['X-Mailer'] = 'LibreOfficeGerritDigestMailer 1.0'
+    return msg
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('gerrit daily digest generator')
@@ -67,6 +65,5 @@ if __name__ == '__main__':
 	#server = smtplib.SMTP('localhost')
     #server.sendmail('gerrit@libreoffice.org', 'libreoffice@lists.freedesktop.org', str(message))
 	#server.quit()
-    sys.stdout = codecs.getwriter("utf-8")(sys.stdout)
     print(create_message(args['gerrit'], 25))
 # vim: set et sw=4 ts=4:
