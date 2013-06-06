@@ -54,7 +54,10 @@ X-Mailer: LibreOfficeGerritDigestMailer 1.0
 
 Best,
 
-Your friendly LibreOffice Gerrit Digest Mailer'''
+Your friendly LibreOffice Gerrit Digest Mailer
+
+Note: The bot generating this message can be found and improved here:
+       https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=gerritbot/send-daily-digest'''
     return message
 
 if __name__ == '__main__':
