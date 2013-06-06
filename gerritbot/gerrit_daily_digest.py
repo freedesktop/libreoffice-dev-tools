@@ -13,11 +13,9 @@ Created on 19.06.2012
 @author: david ostrovsky
 '''
 
-from subprocess import check_output, STDOUT
 from json import loads
-import getopt, sys
 import argparse
-#from pprint import pprint
+import sh
 
 def main():
     parser = argparse.ArgumentParser('gerrit daily digest generator')
@@ -30,11 +28,9 @@ def main():
     status = args['status']
     project = args['project']
     branch = args['branch']
-    cmd = 'ssh %s gerrit query --format=JSON status:%s project:%s branch:%s' % (gerrit_host_name, status, project, branch)
-    lines = check_output(cmd, shell=True, stderr=STDOUT).strip()
-    for chunk in lines.split("\n"):
+    lines = sh.ssh(gerrit_host_name, 'gerrit', 'query', '--format=JSON', 'status:%s' % status, 'project:%s' % project, 'branch:%s' % branch)
+    for chunk in lines.strip().split("\n"):
         data = loads(chunk)
-        #pprint(data)
         if 'url' in data.keys():
             print data['url'] + " \"" + data['subject'] + "\" " + data['owner']['email'] 
     
