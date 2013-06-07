@@ -8,17 +8,5 @@ LOGFILE=$HOME/.Maildir/procmail.log
 | /home/gerritbot/dev-tools/gerritbot/mangleandmailtodevlist
 #! libreoffice@lists.freedesktop.org
 
-:0c:
-* ^Subject: \[PATCH\]
-| /home/gerritbot/dev-tools/gerritbot/patchpickup
-
-:0c:
-* ^Subject: \[CHERRYPICK\]
-| /home/gerritbot/dev-tools/gerritbot/patchpickup
-
-:0c:
-* ^Subject: \[HELP\]
-| /home/gerritbot/dev-tools/gerritbot/patchpickup
-
 :0:
 all/

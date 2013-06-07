@@ -23,7 +23,7 @@ from  email.mime.text import MIMEText
 
 sourceurl = 'ssh://logerrit/core'
 desturl = 'ssh://logerrit/core'
-legalbranches = [ 'master', 'libreoffice-3-6', 'libreoffice-3-5', 'libreoffice-3-5-6' ]
+legalbranches = [ 'master', 'libreoffice-3-6', 'libreoffice-3-5', 'libreoffice-3-5-6', 'libreoffice-4-0' ]
 
 logfile=os.path.join(os.environ['HOME'], 'patchpickup.log')
 loglevel='INFO'
