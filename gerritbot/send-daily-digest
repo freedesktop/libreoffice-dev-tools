@@ -24,24 +24,24 @@ def get_daily_query(status, age):
 
 def get_digest(gerrit, query):
     digest = ''
-    for line in sh.ssh(gerrit, 'gerrit query --format=JSON \'%s\'' % query).strip().split('\n'):
+    for line in sh.ssh(gerrit, 'gerrit query --format=JSON -- \'%s\'' % query).strip().split('\n'):
         change = json.loads(line)
         if 'url' in change.keys():
-            digest += '%s %s %s\n' % (change['url'], change['subject'].ljust(75)[:75], change['owner']['email'])
+            digest += '%s\n  in %s from %s\n' % (change['subject'].ljust(75)[:75], change['url'], change['owner']['name'])
     if digest == '':
         digest = 'None'
     return digest
-    
+
 def create_message(gerrit, age):
     now = datetime.datetime.now()
     body = 'Moin!\n\n'
-    body += 'open changes on master for project core changed in the last %d hours:\n' % age
+    body += '* Open changes on master for project core changed in the last %d hours:\n\n' % age
     body += get_digest(gerrit, get_daily_query('open', age))
-    body += '\n\nmerged changes on master for project core changed in the last %d hours:\n' % age
+    body += '\n\n* Merged changes on master for project core changed in the last %d hours:\n\n' % age
     body += get_digest(gerrit, get_daily_query('merged', age))
-    body += '\n\nabandoned changes on master for project core changed in the last %d hours:\n' % age
+    body += '\n\n* Abandoned changes on master for project core changed in the last %d hours:\n\n' % age
     body += get_digest(gerrit, get_daily_query('abandoned', age))
-    body += '\n\nOpen changes needing tweaks, but being untouched for more than a week:\n'
+    body += '\n\n* Open changes needing tweaks, but being untouched for more than a week:\n\end-daily-digest'
     body += get_digest(gerrit, 'project:core branch:master status:open (label:Code-Review<=-1 label:Verified<=-1) age:1w')
     body += '''
 
