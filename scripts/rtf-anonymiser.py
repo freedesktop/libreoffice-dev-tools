@@ -85,7 +85,9 @@ class RtfAnonymiser(RtfParser):
         if self.hexCount > 0:
             self.handleHexChar(ch)
         else:
-            if ch.isupper():
+            if ch == " ":
+                self.out.append(" ")
+            elif ch.isupper():
                 self.out.append("X")
             else:
                 self.out.append("x")
