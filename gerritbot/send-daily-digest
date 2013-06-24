@@ -54,9 +54,10 @@ Note: The bot generating this message can be found and improved here:
     msg = email.mime.text.MIMEText(body, 'plain', 'UTF-8')
     msg['From'] = 'gerrit@libreoffice.org'
     msg['To'] = 'libreoffice@lists.freedesktop.org'
+    msg['Cc'] = 'qa@fr.libreoffice.org'
     msg['Date'] = email.utils.formatdate(time.mktime((now.timetuple())))
     msg['Subject'] = 'LibreOffice Gerrit News %s' % now.date().isoformat()
-    msg['Reply-To'] = 'ibreoffice@lists.freedesktop.org'
+    msg['Reply-To'] = 'libreoffice@lists.freedesktop.org'
     msg['X-Mailer'] = 'LibreOfficeGerritDigestMailer 1.0'
     return msg
 
@@ -65,6 +66,6 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--gerrit', help='(i. e. logerrit or gerrit.libreoffice.org, use alias in your ~/.ssh(config with your public key)', required=True)
     args=vars(parser.parse_args())
     server = smtplib.SMTP('localhost')
-    server.sendmail('gerrit@libreoffice.org', 'libreoffice@lists.freedesktop.org', str(create_message(args['gerrit'], 25)))
+    server.sendmail('gerrit@libreoffice.org', ['libreoffice@lists.freedesktop.org', 'qa@fr.libreoffice.org'], str(create_message(args['gerrit'], 25)))
     server.quit()
 # vim: set et sw=4 ts=4:
