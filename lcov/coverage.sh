@@ -32,6 +32,10 @@ coverage()
 parallelism=$(make -s cmd cmd='echo $(CHECK_PARALLELISM)'|tail -n 1)
 
 case "$1" in
+    sw_docxexport)
+        # Writer DOCX export
+        coverage sw source/filter/ww8 'docx*' sw CppunitTest_sw_ooxmlexport
+    ;;
     sw_rtfimport)
         # Writer RTF import
         coverage writerfilter source/rtftok '*' sw 'CppunitTest_sw_rtfimport CppunitTest_sw_rtfexport'
@@ -43,6 +47,7 @@ case "$1" in
     *)
         echo "Unknown code area. The currently supported ones are:"
         echo
+        echo "sw_docxexport"
         echo "sw_rtfexport"
         echo "sw_rtfimport"
     ;;
