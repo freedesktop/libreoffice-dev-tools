@@ -63,8 +63,12 @@ sub find_logs($)
     my $dirh;
     my @logfiles;
 
+    if (-l $path) {
+	$path = readlink $path;
+    }
+
     if (-f $path ) {
-	if ($path =~ m/documentfoundation\.org.*-access_log/) {
+	if ($path =~ m/documentfoundation\.org.*[0-9][-_]access[_.]log/) {
 	    if ($verbose) {
 		print STDERR "hit: $path\n";
 	    }
@@ -72,6 +76,10 @@ sub find_logs($)
 	} else {
 	    return;
 	}
+    }
+
+    if (!-d $path) {
+	return;
     }
 
     opendir ($dirh, $path) || die "can't open '$path': $!";
@@ -445,6 +453,7 @@ if (!defined $path_to_log_tree) {
 if ($rsync_first) {
     system('rsync --delete -av bilbo.documentfoundation.org:/var/log/apache2/download.documentfoundation.org/ downloads/download.documentfoundation.org/ 1>&2');
     system('rsync --delete -av bilbo.documentfoundation.org:/var/log/apache2/downloadarchive.documentfoundation.org/ downloads/downloadarchive.documentfoundation.org/ 1>&2');
+    system('rsync -av bilbo2.documentfoundation.org:/var/log/apache2/download.documentfoundation.org/ downloads/bilbo2.documentfoundation.org/ 1>&2');
 }
 
 my @log_filenames = find_logs ($path_to_log_tree);
