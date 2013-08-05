@@ -154,6 +154,26 @@ static AXError findLibreOfficeTextComponent(AXObserverCallback callback, AXObser
     return err;
 }
 
+static AXError findPagesTextComponent(AXObserverCallback callback, AXObserverRef *observer, AXUIElementRef *component) {
+    AXError err = kAXErrorSuccess;
+    AX_APPLICATION(@"Pages", Pages, callback, observer) {
+        AX_CHILD(Pages, Window, 0, window) {
+            AX_CHILD(window, SplitGroup, 0, splitGroup) {
+                AX_CHILD(splitGroup, ScrollArea, 0, scrollArea) {
+                    AX_CHILD(scrollArea, LayoutArea, 0, layoutArea) {
+                        AX_CHILD(layoutArea, Group, 0, group) {
+                            AX_CHILD(group, TextArea, 0, textArea) {
+                                *component = textArea;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return err;
+}
+
 static AXError reportOnAXTextArea(AXUIElementRef textArea) {
     AXError err = kAXErrorSuccess;
     AX_VALUE(textArea, CFNumberRef, length, NumberOfCharacters) {
