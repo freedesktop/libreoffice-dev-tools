@@ -117,7 +117,7 @@ $component_count{'Migration'} = get_deps("https://bugs.freedesktop.org/showdepen
 $component_count{'Crashes'} = get_query("https://bugs.freedesktop.org/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
 $component_count{'Borders'} = get_query("https://bugs.freedesktop.org/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
 
-my @reg_toquery = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing', 'LibreOffice', 'Writer', 'BASIC' );
+my @reg_toquery = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing', 'Libreoffice', 'Writer', 'BASIC' );
 for my $component (@reg_toquery) {
     $component_count{$component} = get_query("https://bugs.freedesktop.org/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&bug_status=PLEASETEST&component=$component&product=LibreOffice");
 }
@@ -290,7 +290,7 @@ EOF
 ;
 
 my @output_order = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing',
-		     'LibreOffice', 'Borders', 'Crashes', 'BASIC', 'Writer/RTF',
+		     'Libreoffice', 'Borders', 'Crashes', 'BASIC', 'Writer/RTF',
 		     'Writer', 'Migration' );
 
 for my $foo (@output_order) {
