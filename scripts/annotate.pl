@@ -224,12 +224,12 @@ if (!defined $git_dir) {
 }
 
 if (!$list && !$stats && !$fetch) {
-
-    print "$note_text' '$note_hash\n";
     if (!defined $note_text || !defined $note_hash) {
 	usage();
-	die "need some note text";
+	exit 1;
     }
+
+    print "$note_text' '$note_hash\n";
 
     validate_check_note($note_text);
     validate_git_hash($note_hash) ||
