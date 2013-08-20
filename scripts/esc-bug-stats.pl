@@ -3,6 +3,12 @@
 # use me for testing XML pretty printing etc.
 my $fast_debug = 0;
 
+my @time = localtime;
+$time[5] += 1900;
+$time[4]++;
+
+my $date_value = sprintf "%04d-%02d-%02d", @time[5,4,3];
+
 sub get_url($)
 {
     my $url = shift;
@@ -126,8 +132,6 @@ print STDERR "\t* ~Component   count net *\n";
 for my $component (sort { $component_count{$b} <=> $component_count{$a} } keys %component_count) {
     printf STDERR "\t  %12s - %2d (+?)\n", $component, $component_count{$component};
 }
-
-my $date_value = "2001-01-01";
 
 print << "EOF"
 <?xml version="1.0" encoding="UTF-8"?>
