@@ -57,6 +57,10 @@ my %versions = (
     '0eaa50a932c8f2199a615e1eb30f7ac74279539' => '4.0.3_RC3',
 
     '9e9821abd0ffdbc09cd8c52eaa574fa09eb08f2' => '4.0.4_RC2',
+
+    '89ea49ddacd9aa532507cbf852f2bb22b1ace28' => '4.1.0.4',
+
+    '7e4286b58adc75a14f6d83f53a03b6c11fa2903' => '4.1.1.2',
 );
 
 my %month_to_num = (
