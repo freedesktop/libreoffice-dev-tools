@@ -138,7 +138,7 @@ fi
 workdir=$(mktemp -d --tmpdir="$currentdir" git_from_bundle_XXX)
 if [ -z "$workdir" ] ; then
     echo "creating workdir failed - trying in temporary directory"
-    workdir=$(mktemp -d --tmpdir git_from_bundle_XXX)
+    workdir=$(TMPDIR="$currentdir" mktemp -d -t git_from_bundle_XXX)
     if [ -z "$workdir" ] ; then echo "giving up "; exit 1; fi
 fi
 
