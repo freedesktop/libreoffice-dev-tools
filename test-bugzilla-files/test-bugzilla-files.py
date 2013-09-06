@@ -80,7 +80,7 @@ def filelist(dir, suffix):
                     if os.path.isfile(f) and os.path.splitext(f)[1] == suffix]
 
 def getFiles(dirs, suffix):
-    print( dirs )
+#    print( dirs )
     files = []
     for dir in dirs:
         files += filelist(dir, suffix)
@@ -276,7 +276,7 @@ def loadFromURL(xContext, url, t, component):
             while time_ < 30:
                 if xListener.layoutFinished:
                     return xDoc
-                print("delaying...")
+#                print("delaying...")
                 time_ += 1
                 time.sleep(1)
         else:
@@ -392,28 +392,28 @@ class State:
             
 def writeReport(state, startTime):
     goodFiles = open("goodFiles.log", "w")
-    goodFiles.write("All files tested which opened perfectly:\n")
+    goodFiles.write("Files which loaded perfectly:\n")
     goodFiles.write("Starttime: " + startTime.isoformat() +"\n")
     for file in state.goodFiles:
         goodFiles.write(file)
         goodFiles.write("\n")
     goodFiles.close()
     badDisposedFiles = open("badDisposedFiles.log", "w")
-    badDisposedFiles.write("All files tested which crashed:\n")
+    badDisposedFiles.write("Files which crashed with DisposedException:\n")
     badDisposedFiles.write("Starttime: " + startTime.isoformat() + "\n")
     for file in state.badDisposedFiles:
         badDisposedFiles.write(file)
         badDisposedFiles.write("\n")
     badDisposedFiles.close()
     badPropertyFiles = open("badPropertyFiles.log", "w")
-    badPropertyFiles.write("All files tested which crashed:\n")
+    badPropertyFiles.write("Files which crashed with UnknownPropertyException:\n")
     badPropertyFiles.write("Starttime: " + startTime.isoformat() + "\n")
     for file in state.badPropertyFiles:
         badPropertyFiles.write(file)
         badPropertyFiles.write("\n")
     badPropertyFiles.close()
     timeoutFiles = open("timeoutFiles.log", "w")
-    timeoutFiles.write("All files tested which timed out:\n")
+    timeoutFiles.write("Files which timed out:\n")
     timeoutFiles.write("Starttime: " + startTime.isoformat() + "\n")
     for file in state.timeoutFiles:
         timeoutFiles.write(file)
@@ -433,7 +433,7 @@ def runLoadFileTests(opts, dirs):
     try:
         tests = []
         state = State()
-        print("before map")
+#        print("before map")
         for component, validExtension in validFileExtensions.items():
             files = []
             for suffix in validExtension:
@@ -458,7 +458,10 @@ def usage():
                    specify soffice instance to connect to
                    supported methods: 'path', 'connect'
  --userdir=URL     specify user installation directory for 'path' method
- --valgrind        pass --valgrind to soffice for 'path' method"""
+ --valgrind        pass --valgrind to soffice for 'path' method
+
+ 'location' is a pathname, not a URL. 'userdir' is a URL. the 'directory' parameters should be
+  full absolute pathnames, not URLs."""
     print(message.format(program = os.path.basename(sys.argv[0])))
 
 
@@ -477,4 +480,3 @@ if __name__ == "__main__":
         sys.exit(1)
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab:
-
