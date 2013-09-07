@@ -128,9 +128,11 @@ static AXError findTextMateTextComponent(AXObserverCallback callback, AXObserver
     AXError err = kAXErrorSuccess;
     AX_APPLICATION(@"TextMate", TextMate, callback, observer) {
         AX_CHILD(TextMate, Window, 0, window) {
-            AX_CHILD(window, ScrollArea, 0, scrollArea) {
-                AX_CHILD(scrollArea, TextArea, 0, textArea) {
-                    *component = textArea;
+            AX_CHILD(window, Group, 0, group) {
+                AX_CHILD(group, ScrollArea, 0, scrollArea) {
+                    AX_CHILD(scrollArea, TextArea, 0, textArea) {
+                        *component = textArea;
+                    }
                 }
             }
         }
