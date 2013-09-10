@@ -32,9 +32,13 @@ sub get_deps($)
 
     my $bug_count = -1;
     while (my $line = shift (@bugs)) {
-	if ($line =~ m/^\s*depends on\s*$/) {
+	if ($line =~ m/does not depend on any open bugs/) {
+	    $bug_count = 0;
+	    last;
+	}
+	elsif ($line =~ m/^\s*depends on\s*$/) {
 	    $line = shift @bugs;
-#	    print STDERR "Have depends on\n";
+#	    print STDERR "Have depends on '$line'\n";
 	    if ($line =~ m/^\s*(\d+)\s*$/) {
 		my $num = $1;
 		$line = shift @bugs;
@@ -43,6 +47,9 @@ sub get_deps($)
 		    $bug_count = $num;
 		    last;
 		}
+	    } elsif ($line =~ m/\s+one\s+/) { # special case for one
+		$bug_count = 1;
+		last;
 	    } else {
 		print STDERR "odd depends on follow-on: '$line'\n";
 	    }
