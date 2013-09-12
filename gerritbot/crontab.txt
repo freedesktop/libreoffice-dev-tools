@@ -20,6 +20,6 @@
 # For more information see the manual pages of crontab(5) and cron(8)
 # 
 # m h  dom mon dow   command
-*/5 * * * * getmail -q
+#*/5 * * * * getmail -q
 #*/15 * * * * /home/gerritbot/dev-tools/gerritbot/syncgerrit
 0 6 * * * /home/gerritbot/dev-tools/gerritbot/send-daily-digest -g logerrit
