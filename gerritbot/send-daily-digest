@@ -19,12 +19,12 @@ import sh
 import smtplib
 import sys
 
-def get_daily_query(status, age):
-    return 'project:core branch:master status:%s -age:%dh' % (status, age)
+def get_daily_query(status, project):
+    return 'project:%s branch:master status:%s -age:%dh' % (project, status, args['age'])
 
-def get_digest(gerrit, query):
+def get_digest(query):
     digest = ''
-    for line in sh.ssh(gerrit, 'gerrit query --format=JSON -- \'%s\'' % query).strip().split('\n'):
+    for line in sh.ssh(args['gerrit'], 'gerrit query --format=JSON -- \'%s\'' % query).strip().split('\n'):
         change = json.loads(line)
         if 'url' in change.keys():
             digest += '+ %s\n  in %s from %s\n' % (change['subject'][:73], change['url'], change['owner']['name'])
@@ -32,17 +32,55 @@ def get_digest(gerrit, query):
         digest = 'None'
     return digest
 
-def create_message(gerrit, age):
-    now = datetime.datetime.now()
-    body = 'Moin!\n\n'
-    body += '* Open changes on master for project core changed in the last %d hours:\n\n' % age
-    body += get_digest(gerrit, get_daily_query('open', age))
-    body += '\n\n* Merged changes on master for project core changed in the last %d hours:\n\n' % age
-    body += get_digest(gerrit, get_daily_query('merged', age))
-    body += '\n\n* Abandoned changes on master for project core changed in the last %d hours:\n\n' % age
-    body += get_digest(gerrit, get_daily_query('abandoned', age))
+def get_project_body(project):
+    none = True
+
+    body = '* Open changes on master for project %s changed in the last %d hours:\n\n' % (project, args['age'])
+    dig = get_digest(get_daily_query('open', project))
+    if dig != 'None': none = False
+    body += dig
+
+    body += '\n\n* Merged changes on master for project %s changed in the last %d hours:\n\n' % (project, args['age']) 
+    dig = get_digest(get_daily_query('merged', project))
+    if dig != 'None': none = False
+    body += dig
+
+    body += '\n\n* Abandoned changes on master for project %s changed in the last %d hours:\n\n' % (project, args['age'])
+    dig = get_digest(get_daily_query('abandoned', project))
+    if dig != 'None': none = False
+    body += dig
+
     body += '\n\n* Open changes needing tweaks, but being untouched for more than a week:\n\n'
-    body += get_digest(gerrit, 'project:core branch:master status:open (label:Code-Review<=-1 OR label:Verified<=-1) age:1w')
+    dig = get_digest('project:%s branch:master status:open (label:Code-Review<=-1 OR label:Verified<=-1) age:1w' % project)
+    if dig != 'None': none = False
+    body += dig
+
+    if none: return ""
+    else: return body
+
+def send_message_for_project(project):
+    now = datetime.datetime.now()
+    nothing = 'Nothing moved in the project for the last %d hours' % args['age']
+    body = 'Moin!\n\n'
+
+    if project == 'submodules':
+        dict = get_project_body('dictionaries')
+        tran = get_project_body('translations')
+        help = get_project_body('help')
+
+        if dict + tran + help == "": return 'Nothing'
+
+        body += '\n\n~~~~~~ Project dictionaries ~~~~~~\n\n'
+        body += dict if bool(dict) else nothing
+        body += '\n\n~~~~~~ Project translations ~~~~~~\n\n'
+        body += tran if bool(tran) else nothing
+        body += '\n\n~~~~~~ Project help ~~~~~~\n\n'
+        body += help if bool(help) else nothing
+    else:
+        proj = get_project_body(project)
+        if proj == "": return 'Nothing'
+        body += proj
+
     body += '''
 
 Best,
@@ -52,20 +90,32 @@ Your friendly LibreOffice Gerrit Digest Mailer
 Note: The bot generating this message can be found and improved here:
        https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=gerritbot/send-daily-digest'''
     msg = email.mime.text.MIMEText(body, 'plain', 'UTF-8')
-    msg['From'] = 'gerrit@libreoffice.org'
-    msg['To'] = 'libreoffice@lists.freedesktop.org'
-    msg['Cc'] = 'qa@fr.libreoffice.org'
+    msg['From'] = msg_from
+    msg['To'] = msg_to[0]
+    msg['Cc'] = ', '.join(msg_to[1:]) # Works only if at least 2 items in tuple
     msg['Date'] = email.utils.formatdate(time.mktime((now.timetuple())))
-    msg['Subject'] = 'LibreOffice Gerrit News %s' % now.date().isoformat()
-    msg['Reply-To'] = 'libreoffice@lists.freedesktop.org'
-    msg['X-Mailer'] = 'LibreOfficeGerritDigestMailer 1.0'
-    return msg
+    msg['Subject'] = 'LibreOffice Gerrit News for %s on %s' % (project, now.date().isoformat())
+    msg['Reply-To'] = msg_to[0]
+    msg['X-Mailer'] = 'LibreOfficeGerritDigestMailer 1.1'
+    server.sendmail(msg_from, msg_to, str(msg))
+    server.quit()
+    return project
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('gerrit daily digest generator')
-    parser.add_argument('-g', '--gerrit', help='(i. e. logerrit or gerrit.libreoffice.org, use alias in your ~/.ssh(config with your public key)', required=True)
+    parser.add_argument('-g', '--gerrit', help='(i. e. logerrit or gerrit.libreoffice.org, use the alias in your ~/.ssh(config with your public key)', required=True)
+    parser.add_argument('-r', '--repo', help='(A single project from gerrit (core, ...) or "submodules" (... of core) or "all" (core + contrib + submodules)', required=False, default='all')
+    parser.add_argument('-a', '--age', help='(A number expressed in hours.)', required=False, default=25)
     args=vars(parser.parse_args())
+    msg_from = 'gerrit@libreoffice.org'
+    msg_to = ['libreoffice@lists.freedesktop.org', 'qa@fr.libreoffice.org']
     server = smtplib.SMTP('localhost')
-    server.sendmail('gerrit@libreoffice.org', ['libreoffice@lists.freedesktop.org', 'qa@fr.libreoffice.org'], str(create_message(args['gerrit'], 25)))
-    server.quit()
+
+    if args['repo'] == 'all':
+        send_message_for_project('core')
+        send_message_for_project('submodules')
+        send_message_for_project('contrib')
+    else:
+        send_message_for_project(args['repo'])
+
 # vim: set et sw=4 ts=4:
