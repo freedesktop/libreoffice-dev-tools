@@ -1,0 +1,19 @@
+#!/bin/bash
+
+file=$(mktemp)
+cat > $file
+kind=$(file -i $file |sed 's/.*: \(.*\); .*/\1/')
+
+mydir=$(dirname $0)
+[ -h $0 ] && mydir=$(dirname $(readlink $0))
+
+if [ "$kind" == "text/rtf" ]; then
+	$mydir/formatrtf $file
+elif [ "$kind" == "application/xml" ]; then
+	#xmllint --format --recover $file 2>/dev/null
+	$mydir/formatxml $file
+else
+	echo "unknown type: $kind"
+fi
+
+rm -f $file
