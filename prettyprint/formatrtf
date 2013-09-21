@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+
+import sys, getopt
+
+def usage(code):
+	print("Usage: %s [-i|--inline] input.rtf" % sys.argv[0])
+	print()
+	print("The pretty-printer acts as a filter: it just inserts newlines\n" + \
+		"around '{' and '}' characters for better readability.\n\n" + \
+		"The -i switch makes the filter in-place, instead of just\n" + \
+		"reading the input and outputting the result to stdout.")
+	sys.exit(code)
+
+# opt parsing
+inline = False
+argv = sys.argv[1:]
+try:
+	opts, args = getopt.getopt(argv, "i", ["inline"])
+except getopt.GetoptError:
+	usage(1)
+optind = 0
+for opt, arg in opts:
+	if opt in ("-i", "--inline"):
+		inline = True
+	optind += 1
+
+if optind < len(argv):
+	input = argv[optind]
+else:
+	usage(0)
+
+sock = open(input)
+
+out = []
+
+while True:
+	char = sock.read(1)
+	after = None
+	if not len(char):
+		break
+	if ord(char) == 0x0d:
+		continue
+	if char == "{" and len(out) and out[-1][-1] not in ("\n", "\\"):
+		out.append("\n")
+	elif char == "}" and out[-1][-1] != "\\":
+		after = "\n"
+	if char == "\n" and len(out) and out[-1][-1] == "\n":
+		pass
+	else:
+		out.append(char)
+	if after:
+		out.append(after)
+
+if not inline:
+	sys.stdout.write("".join(out))
+else:
+	sock.close()
+	sock = open(input, "w")
+	sock.write("".join(out))
+	sock.close()
