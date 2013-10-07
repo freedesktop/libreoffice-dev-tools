@@ -58,9 +58,13 @@ my %versions = (
 
     '9e9821abd0ffdbc09cd8c52eaa574fa09eb08f2' => '4.0.4_RC2',
 
-    '89ea49ddacd9aa532507cbf852f2bb22b1ace28' => '4.1.0.4',
+    '5464147a081647a250913f19c0715bca595af2f' => '4.0.5_RC2',
 
-    '7e4286b58adc75a14f6d83f53a03b6c11fa2903' => '4.1.1.2',
+    '89ea49ddacd9aa532507cbf852f2bb22b1ace28' => '4.1.0_RC4',
+
+    '7e4286b58adc75a14f6d83f53a03b6c11fa2903' => '4.1.1_RC2',
+
+    '40b2d7fde7e8d2d7bc5a449dc65df4d08a7dd38' => '4.1.2_RC3',
 );
 
 my %month_to_num = (
