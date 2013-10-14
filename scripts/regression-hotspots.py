@@ -49,6 +49,7 @@ if __name__ == '__main__':
     sys.stderr.write('found %d fixed regressions: %s\n' % (len(fixed_regression_ids), fixed_regression_ids))
     for bug_id in fixed_regression_ids:
         sys.stderr.write('working on bug %d\n' % bug_id)
+        # FIXME: use --numstat instead, which does not abbreviate filenames
         logstat = sh.git('--no-pager', 'log', '--grep', 'fdo#%d' % bug_id, '--stat')
         for line in logstat:
             match = statregex.search(line)
