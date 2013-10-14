@@ -32,9 +32,9 @@ def get_dir_counts(file_counts, level):
         if len(fileparts) > level:
             dirpart = '/'.join(fileparts[:level])
             if dirpart in dir_counts:
-                dir_counts[dirpart]+=1
+                dir_counts[dirpart]+=count
             else:
-                dir_counts[dirpart]=1
+                dir_counts[dirpart]=count
     return dir_counts
 
 def print_counts(counts):
