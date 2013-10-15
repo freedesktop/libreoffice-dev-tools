@@ -66,5 +66,7 @@ if __name__ == '__main__':
     print_counts(get_dir_counts(file_counts, 2))
     print('\nthird level dirs:')
     print_counts(get_dir_counts(file_counts, 3))
+    print('\nfourth level dirs:')
+    print_counts(get_dir_counts(file_counts, 4))
     print('\nfiles:')
     print_counts(file_counts)
