@@ -81,17 +81,19 @@ fi
 
 cat <<EOF > autogen.lastrun
 --disable-dependency-tracking
---disable-mozilla
---disable-binfilter
 --disable-linkoo
+--disable-option-checking
 --without-junit
 --without-help
 --without-myspell-dicts
 --without-doxygen
+--disable-gnome-vfs
+--disable-odk
+--without-system-jpeg
 --with-external-tar=`readlink -f ${BUILDDIR}/../tarfiles`
 EOF
 
-export CCACHE_DIR=`readlink -f ${BUILDDIR}/../ccache`
+export CCACHE_DIR=`readlink -f /root/ccache`
 export CCACHE_BASEDIR=`readlink -f .`
 #export CCACHE_PREFIX=distcc
 #export DISTCC_HOSTS="localhost/8 192.168.0.103/8 192.168.0.98/16"
@@ -109,17 +111,27 @@ echo "second try:" >> ${ARTIFACTDIR}/make.log 2>&1
 make > ${ARTIFACTDIR}/make.log 2>&1
 make dev-install > ${ARTIFACTDIR}/dev-install.log 2>&1
 echo "second try:" >> ${ARTIFACTDIR}/make.log 2>&1
-make dev-install > ${ARTIFACTDIR}/dev-install.log 2>&1
+make dev-install >> ${ARTIFACTDIR}/dev-install.log 2>&1
+
 # shelve away the ccache, just in case
 ccache -s > ${ARTIFACTDIR}/ccache.log
 #mkdir -p ../ccaches
 #cp -a ${CCACHE_DIR} ../ccaches/ccache-`git log -1 --pretty=format:%H`
-if test -n `find . -name opt -type d`
+#pwd
+#echo ${BUILDDIR}
+if test -d ${BUILDDIR}/solver/unxlngx6.pro/installation/opt
 then
-    mv `find . -name opt -type d` ${ARTIFACTDIR}/opt
-    if test -f ${ARTIFACTDIR}/opt/program/soffice
-    then
-        exit 0
-    fi
+    echo "found install"
+    cp -a ${BUILDDIR}/solver/unxlngx6.pro/installation/opt ${ARTIFACTDIR}/opt
+else
+    echo "no install found"
+fi
+if test ! -f ${ARTIFACTDIR}/opt/program/soffice.bin
+then
+    cp -a `find . -name instdir -type d`/unxlngx6.pro ${ARTIFACTDIR}/opt
+fi
+if test -f ${ARTIFACTDIR}/opt/program/soffice.bin
+then
+    exit 0
 fi
 exit 1

@@ -33,6 +33,7 @@ BINREPO:=$(WORKDIR)/binrepo
 BUILDDIR:=$(WORKDIR)/build
 ARTIFACTDIR:=$(WORKDIR)/artifact
 ORDERMODE?=master
+SHELL:=/bin/bash
 
 ifeq ($(ORDERMODE),master)
 SOURCETYPE:=hash
@@ -90,7 +91,11 @@ endif
 
 ifeq ($(ORDERMODE),tags)
 $(WORKDIR)/buildorder: $(WORKDIR)/init
-	git --git-dir=$(SOURCEREPO) tag|grep ^libreoffice|sed -e 's/\./-/g'|paste - <(git --git-dir=$(SOURCEREPO) tag|grep ^libreoffice)|sort|cut -f2 > $@
+	git --git-dir=$(SOURCEREPO) tag|grep ^libreoffice|sed -e 's/\./-/g'|paste - <(git --git-dir=$(SOURCEREPO) tag|grep ^libreoffice)|sort|cut -f2| \
+		awk \
+			'BEGIN { last="$@" } \
+			{ current="$(WORKDIR)/milestone/" $$0; printf "%s: %s\n", current, last; last = current} \
+			END { printf "$(TO): %s\nall: $(TO)", last }' > $@
 
 endif
 
