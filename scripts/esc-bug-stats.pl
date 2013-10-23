@@ -1,5 +1,17 @@
 #!/usr/bin/perl -w
 
+# config for eliding top bug contributors who are
+# not (yet) libreoffice hackers.
+my %sadly_non_libreoffice = (
+    'Chris Wilson' => 1,
+    'Bastien Nocera' => 1,
+    'Kristian Høgsberg' => 1,
+    'Simon McVittie' => 1,
+    'Søren Sandmann Pedersen' => 1,
+    'Daniel Vetter' => 1,
+    'Sergey V. Udaltsov' => 1,
+);
+
 # use me for testing XML pretty printing etc.
 my $fast_debug = 0;
 
@@ -76,6 +88,84 @@ sub get_query($)
     return $bug_count;
 }
 
+sub extract_number($)
+{
+    my $line = shift;
+    chomp ($line);
+    $line =~ s/^.*\"\>//;
+    $line =~ s/<.*$//;
+    return $line;
+}
+
+sub crunch_bugstat_lines()
+{
+    print STDERR "Querying overall / top bug stats\n";
+    my $url = 'https://bugs.freedesktop.org/page.cgi?id=weekly-bug-summary.html';
+    my @lines = @_;
+
+    my $region = 'header';
+    my $closer_name;
+    my %closed_stats;
+
+    print STDERR "  + $url\n";
+
+    while ((my $line = shift @lines) && $region ne 'end') {
+	print "$region -> $line";
+	if ($region eq 'header' && $line =~ /<h2>Top .* modules<\/h2>/) {
+	    $region = 'top-modules';
+
+	} elsif ($region eq 'top-modules' &&
+		 $line =~ /<td>LibreOffice<\/td>/) {
+	    my ($total, $opened, $closed);
+	    $total = extract_number (shift @lines);
+	    $opened = extract_number (shift @lines);
+	    $closed = extract_number (shift @lines);
+	    my $sign = '', $delta = $opened + $closed;
+	    $sign = '+' if ($delta > 0);
+	    print STDERR "    $opened    $closed	($sign$delta overall)\n";
+	    $region = 'seek-end-top-modules';
+
+	} elsif ($region eq 'seek-end-top-modules' &&
+		 $line =~ /<h2>Top .* bug closers<\/h2>/) {
+	    $region = 'top-closers';
+
+	} elsif ($region eq 'top-closers' && $line =~ m/<tr class/) {
+	    undef $closer_name;
+	    $region = 'top-closer-name';
+
+	} elsif ($region eq 'top-closers' && $line =~ m/<\/table>/) {
+	    $region = 'end';
+
+	} elsif ($region eq 'top-closer-name' && $line =~ m/<span class=".*">(.*)<\/span>/) {
+	    $closer_name = $1;
+	    print "$closer_name\n";
+	    $region = 'top-closer-count';
+
+	} elsif ($region eq 'top-closer-count' && $line =~ m/">([0-9]+)<\/a><\/td>/) {
+	    die "no closer name for '$line'" if (!defined $closer_name);
+	    $closed_stats{$closer_name} = $1;
+	    $region = 'top-closers'
+	}
+    }
+
+    $region eq 'end' || die "Failed to parse weekly bug summary - in region '$region'";
+
+    print STDERR "    many thanks to the top five bug squashers:\n";
+    for my $name (sort { $closed_stats{$b} <=> $closed_stats{$a} } keys %closed_stats) {
+	next if (defined $sadly_non_libreoffice{$name});
+	printf STDERR "        %-20s%2s\n", $name, $closed_stats{$name};
+    }
+}
+
+sub build_overall_bugstats()
+{
+    print STDERR "Querying overall / top bug stats\n";
+    my $url = 'https://bugs.freedesktop.org/page.cgi?id=weekly-bug-summary.html';
+
+    print STDERR "  + $url\n";
+    crunch_bugstat_lines(get_url($url));
+}
+
 my %bug_to_ver = (
     '4.2' => '65675',
     '4.1' => '60270',
@@ -139,6 +229,8 @@ print STDERR "\t* ~Component   count net *\n";
 for my $component (sort { $component_count{$b} <=> $component_count{$a} } keys %component_count) {
     printf STDERR "\t  %12s - %2d (+?)\n", $component, $component_count{$component};
 }
+
+build_overall_bugstats();
 
 print << "EOF"
 <?xml version="1.0" encoding="UTF-8"?>
