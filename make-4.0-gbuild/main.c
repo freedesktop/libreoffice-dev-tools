@@ -3282,6 +3282,7 @@ print_version (void)
 %sThis is free software: you are free to change and redistribute it.\n\
 %sThere is NO WARRANTY, to the extent permitted by law.\n"),
             precede, precede, precede);
+  printf ("LibreOffice patched version\n");
 
   printed_version = 1;
 
