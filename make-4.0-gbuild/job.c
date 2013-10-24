@@ -1274,10 +1274,12 @@ start_job_command (struct child *child)
     output_dump (&child->output);
 #endif
 
+  int ran_as_builtin = try_run_as_builtin( argv );
+
   /* Print the command if appropriate.  */
   if (just_print_flag || trace_flag
       || (!(flags & COMMANDS_SILENT) && !silent_flag))
-    message (0, "%s", p);
+    message (0, "%s%s", ran_as_builtin ? "(Built-in) " : "", p);
 
   /* Tell update_goal_chain that a command has been started on behalf of
      this target.  It is important that this happens here and not in
@@ -1287,6 +1289,13 @@ start_job_command (struct child *child)
      chain (i.e., update_file recursion chain) we are processing.  */
 
   ++commands_started;
+
+  if( ran_as_builtin )
+  {
+    free (argv[0]);
+    free (argv);
+    goto next_command;
+  }
 
   /* Optimize an empty command.  People use this for timestamp rules,
      so avoid forking a useless shell.  Do this after we increment
