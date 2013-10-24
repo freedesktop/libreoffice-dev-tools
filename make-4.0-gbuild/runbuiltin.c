@@ -95,6 +95,28 @@ static char** split_shell_args( char* line )
     {
       assert (ap <= end);
 
+#ifndef ORIGINAL_CODE
+      /* Expand variables from gb_Helper_abbreviate_dirs. They are one char long and
+         are used for paths. Do not expand them inside single quotes. */
+      if( instring != '\''
+        && *p == '$' && isalpha( p[ 1 ] ) && ( p[ 2 ] == '/' || p[ 2 ] == ' ' ))
+      {
+        int j;
+        for( j = 0;
+             j < i;
+             ++j )
+        {
+          if( new_argv[ j ][ 0 ] == p[ 1 ] && new_argv[ j ][ 1 ] == '=' )
+          { /* Found var definition, expand. */
+             ++p;
+             const char* from = new_argv[ j ] + 2;
+             while( *from != '\0' )
+                *ap++ = *from++;
+             break;
+          }
+        }
+      }
+#endif
       if (instring)
 	{
 	  /* Inside a string, just copy any char except a closing quote
@@ -154,26 +176,6 @@ static char** split_shell_args( char* line )
 	/* `...' is a wildcard in DJGPP.  */
 	goto slow;
 #endif
-#else /* ORIGINAL_CODE */
-      /* Expand variables from gb_Helper_abbreviate_dirs. They are one char long and
-         are used for paths. */
-      else if( *p == '$' && isalpha( p[ 1 ] ) && ( p[ 2 ] == '/' || p[ 2 ] == ' ' ))
-      {
-        int j;
-        for( j = 0;
-             j < i;
-             ++j )
-        {
-          if( new_argv[ j ][ 0 ] == p[ 1 ] && new_argv[ j ][ 1 ] == '=' )
-          { /* Found var definition, expand. */
-             ++p;
-             const char* from = new_argv[ j ] + 2;
-             while( *from != '\0' )
-                *ap++ = *from++;
-             break;
-          }
-        }
-      }
 #endif
       else
 	/* Not a special char.  */
@@ -555,11 +557,14 @@ int try_run_as_builtin( char** orig_argv )
         && argv[ 3 ] == NULL )
     {
         argv = split_shell_args( orig_argv[ 2 ] );
-/*        fprintf( stderr, "SH \'%s\' \'%s\' \'%s\' \'%s\' \'%s\'\n", argv ? argv[ 0 ] : NULL,
+/*        fprintf( stderr, "SH \'%s\' \'%s\' \'%s\' \'%s\' \'%s\' \'%s\' \'%s\'\n",
+            argv ? argv[ 0 ] : NULL,
             argv && argv[ 0 ] ? argv[ 1 ] : NULL,
             argv && argv[ 0 ] && argv[ 1 ] ? argv[ 2 ] : NULL,
             argv && argv[ 0 ] && argv[ 1 ] && argv[ 2 ] ? argv[ 3 ] : NULL,
-            argv && argv[ 0 ] && argv[ 1 ] && argv[ 2 ] && argv[ 3 ] ? argv[ 4 ] : NULL );
+            argv && argv[ 0 ] && argv[ 1 ] && argv[ 2 ] && argv[ 3 ] ? argv[ 4 ] : NULL,
+            argv && argv[ 0 ] && argv[ 1 ] && argv[ 2 ] && argv[ 3 ] && argv[ 4 ] ? argv[ 5 ] : NULL,
+            argv && argv[ 0 ] && argv[ 1 ] && argv[ 2 ] && argv[ 3 ] && argv[ 4 ] && argv[ 5 ] ? argv[ 6 ] : NULL );
 */
         if( argv == NULL )
             ; /* possibly sh given empty command given, but let it process anyway, just in case */
