@@ -2475,7 +2475,10 @@ func_call (char *o, char **argv, const char *funcname UNUSED)
   v = lookup_variable (fname, flen);
 
   if (v == 0)
+  {
     warn_undefined (fname, flen);
+    warn_undefined_function (fname, flen);
+  }
 
   if (v == 0 || *v->value == '\0')
     return o;

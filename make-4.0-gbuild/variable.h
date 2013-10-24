@@ -211,6 +211,13 @@ void undefine_variable_in_set (const char *name, unsigned int length,
                                enum variable_origin origin,
                                struct variable_set *set);
 
+#define warn_undefined_function(n,l) do{\
+                              if (warn_undefined_functions_flag) \
+                                error (reading_file, \
+                                       _("warning: undefined function `%.*s'"), \
+                                (int)(l), (n)); \
+                              }while(0)
+
 /* Remove variable from the current variable set. */
 
 #define undefine_variable_global(n,l,o) \

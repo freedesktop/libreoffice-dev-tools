@@ -284,6 +284,11 @@ static int print_usage_flag = 0;
 
 int warn_undefined_variables_flag;
 
+/* If nonzero, we should print a warning message
+   for each attemtp to call an undefined user function.  */
+
+int warn_undefined_functions_flag;
+
 /* If nonzero, always build all targets, regardless of whether
    they appear out of date or not.  */
 
@@ -382,6 +387,8 @@ static const char *const usage[] =
                               Consider FILE to be infinitely new.\n"),
     N_("\
   --warn-undefined-variables  Warn when an undefined variable is referenced.\n"),
+    N_("\
+  --warn-undefined-functions  Warn when an undefined user function is called.\n"),
     NULL
   };
 
@@ -445,6 +452,8 @@ static const struct command_switch switches[] =
       "warn-undefined-variables" },
     { CHAR_MAX+6, string, &eval_strings, 1, 0, 0, 0, 0, "eval" },
     { CHAR_MAX+7, string, &sync_mutex, 1, 1, 0, 0, 0, "sync-mutex" },
+    { CHAR_MAX+8, flag, &warn_undefined_functions_flag, 1, 1, 0, 0, 0,
+      "warn-undefined-functions" },
     { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
   };
 
