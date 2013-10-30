@@ -15,6 +15,7 @@ import email
 import email.mime.text
 import json
 import os
+import subprocess
 import sh
 import smtplib
 import sys
@@ -24,13 +25,41 @@ def get_daily_query(status, project):
 
 def get_digest(query):
     digest = ''
-    for line in sh.ssh(args['gerrit'], 'gerrit query --format=JSON -- \'%s\'' % query).strip().split('\n'):
+    freshers = ''
+
+    # we want first time contributors on new changes for core
+    do_fresh = query.split(':')[1].split(' ')[0] == 'core' and \
+               query.split(':')[3].split(' ')[0] == 'open' and \
+               query.split(':')[3].split(' ')[1] == '-age'
+
+    if do_fresh: all_users = init_freshers()
+
+    for line in sh.ssh(args['gerrit'], 'gerrit query --format=JSON -- \'%s\'' % query).encode('utf8').strip().split('\n'):
         change = json.loads(line)
         if 'url' in change.keys():
-            digest += '+ %s\n  in %s from %s\n' % (change['subject'][:73], change['url'], change['owner']['name'])
+            if do_fresh and change['owner']['name'].encode('utf8') not in all_users:
+                freshers += '+ %s\n  in %s from %s\n' % (change['subject'][:73], change['url'], change['owner']['name'])
+            else:
+                digest += '+ %s\n  in %s from %s\n' % (change['subject'][:73], change['url'], change['owner']['name'])
+    if freshers != '':
+        digest = '~~~~ First time contributors doing great things ! ~~~~\n' + freshers + \
+                 "~~~~ End of freshness ~~~~\n\n" + digest
     if digest == '':
         digest = 'None'
     return digest
+
+
+def init_freshers():
+    repo_dir='/var/tmp/core.git'
+    if not os.path.exists(repo_dir):os.makedirs(repo_dir)
+    os.chdir(repo_dir)
+
+    if not os.path.exists(os.path.join(repo_dir,'config')):
+        subprocess.call(['git','clone','--bare','git://gerrit.libreoffice.org/core',repo_dir])
+    else:
+        subprocess.call(['git','fetch','origin'])
+    return subprocess.check_output(['git','shortlog','-s'])
+
 
 def get_project_body(project):
     none = True
@@ -97,6 +126,7 @@ Note: The bot generating this message can be found and improved here:
     msg['Subject'] = 'LibreOffice Gerrit News for %s on %s' % (project, now.date().isoformat())
     msg['Reply-To'] = msg_to[0]
     msg['X-Mailer'] = 'LibreOfficeGerritDigestMailer 1.1'
+
     server.sendmail(msg_from, msg_to, str(msg))
     server.quit()
     return project
@@ -104,7 +134,7 @@ Note: The bot generating this message can be found and improved here:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('gerrit daily digest generator')
     parser.add_argument('-g', '--gerrit', help='(i. e. logerrit or gerrit.libreoffice.org, use the alias in your ~/.ssh(config with your public key)', required=True)
-    parser.add_argument('-r', '--repo', help='(A single project from gerrit (core, ...) or "submodules" (... of core) or "all" (core + contrib + submodules)', required=False, default='all')
+    parser.add_argument('-r', '--repo', help='(A single project from gerrit (core, ...) or "submodules" (... of core) or "all" (core + dev-tools + submodules)', required=False, default='all')
     parser.add_argument('-a', '--age', help='(A number expressed in hours.)', required=False, default=25)
     args=vars(parser.parse_args())
     msg_from = 'gerrit@libreoffice.org'
@@ -114,7 +144,7 @@ if __name__ == '__main__':
     if args['repo'] == 'all':
         send_message_for_project('core')
         send_message_for_project('submodules')
-        send_message_for_project('contrib')
+        send_message_for_project('dev-tools')
     else:
         send_message_for_project(args['repo'])
 
