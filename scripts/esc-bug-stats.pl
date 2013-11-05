@@ -97,20 +97,16 @@ sub extract_number($)
     return $line;
 }
 
-sub crunch_bugstat_lines()
+sub crunch_bugstat_lines(@)
 {
-    print STDERR "Querying overall / top bug stats\n";
-    my $url = 'https://bugs.freedesktop.org/page.cgi?id=weekly-bug-summary.html';
     my @lines = @_;
 
     my $region = 'header';
     my $closer_name;
     my %closed_stats;
 
-    print STDERR "  + $url\n";
-
     while ((my $line = shift @lines) && $region ne 'end') {
-	print "$region -> $line";
+#	print "$region -> $line";
 	if ($region eq 'header' && $line =~ /<h2>Top .* modules<\/h2>/) {
 	    $region = 'top-modules';
 
@@ -176,6 +172,8 @@ my %bug_to_ver = (
 my %ver_open;
 my %ver_total;
 
+build_overall_bugstats();
+
 print STDERR "Querying for open MABs:\n";
 for my $ver (sort keys %bug_to_ver) {
     my $bug = $bug_to_ver{$ver};
@@ -229,8 +227,6 @@ print STDERR "\t* ~Component   count net *\n";
 for my $component (sort { $component_count{$b} <=> $component_count{$a} } keys %component_count) {
     printf STDERR "\t  %12s - %2d (+?)\n", $component, $component_count{$component};
 }
-
-build_overall_bugstats();
 
 print << "EOF"
 <?xml version="1.0" encoding="UTF-8"?>
