@@ -10,6 +10,9 @@ my %sadly_non_libreoffice = (
     'Søren Sandmann Pedersen' => 1,
     'Daniel Vetter' => 1,
     'Sergey V. Udaltsov' => 1,
+    'Marek Olšák' => 1,
+    'Emil Velikov' => 1,
+    'ajax at nwnk dot net' => 1,
 );
 
 # use me for testing XML pretty printing etc.
@@ -134,7 +137,7 @@ sub crunch_bugstat_lines(@)
 
 	} elsif ($region eq 'top-closer-name' && $line =~ m/<span class=".*">(.*)<\/span>/) {
 	    $closer_name = $1;
-	    print "$closer_name\n";
+#	    print "$closer_name\n";
 	    $region = 'top-closer-count';
 
 	} elsif ($region eq 'top-closer-count' && $line =~ m/">([0-9]+)<\/a><\/td>/) {
@@ -146,7 +149,7 @@ sub crunch_bugstat_lines(@)
 
     $region eq 'end' || die "Failed to parse weekly bug summary - in region '$region'";
 
-    print STDERR "    many thanks to the top five bug squashers:\n";
+    print STDERR "    many thanks to the top bug squashers:\n";
     for my $name (sort { $closed_stats{$b} <=> $closed_stats{$a} } keys %closed_stats) {
 	next if (defined $sadly_non_libreoffice{$name});
 	printf STDERR "        %-20s%2s\n", $name, $closed_stats{$name};
