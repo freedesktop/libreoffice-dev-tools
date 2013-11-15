@@ -9,7 +9,7 @@
 
 #include "clew.h"
 
-#ifdef WIN32
+#if defined(WIN32) | defined(_WIN32) || defined(__WIN32)
 #include <Windows.h>
 #define OPENCL_DLL_NAME "OpenCL.dll"
 #elif defined(MACOSX)
@@ -20,6 +20,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <vector>
 
 const size_t PLATFORM_INFO_SIZE = 512;
 const size_t DEVICE_INFO_SIZE = 512;
@@ -47,6 +49,13 @@ void log_device(std::ofstream& file, cl_device_id id)
         return;
 
     file << "   Vendor: " << vendor << std::endl;
+
+    cl_uint compute_units;
+    state = clGetDeviceInfo(id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(compute_units), &compute_units, NULL);
+    if(state != CL_SUCCESS)
+        return;
+
+    file << "   Compute Units: " << compute_units << std::endl;
 
     char driver[DEVICE_INFO_SIZE];
     state = clGetDeviceInfo(id, CL_DRIVER_VERSION, DEVICE_INFO_SIZE, driver, NULL);
@@ -96,8 +105,8 @@ void log_platform(std::ofstream& file, cl_platform_id id)
     if(state != CL_SUCCESS)
         return;
 
-    cl_device_id deviceIDs[devices];
-    state = clGetDeviceIDs(id, CL_DEVICE_TYPE_ALL, devices, deviceIDs, NULL);
+    std::vector<cl_device_id> deviceIDs(devices);
+    state = clGetDeviceIDs(id, CL_DEVICE_TYPE_ALL, devices, &deviceIDs[0], NULL);
     if(state != CL_SUCCESS)
         return;
 
@@ -116,8 +125,8 @@ void list_platforms(std::ofstream& file)
     if(state != CL_SUCCESS)
         return;
 
-    cl_platform_id platformIDs[platforms];
-    state = clGetPlatformIDs(platforms, platformIDs, NULL);
+    std::vector<cl_platform_id> platformIDs(platforms);
+    state = clGetPlatformIDs(platforms, &platformIDs[0], NULL);
     if(state != CL_SUCCESS)
         return;
 
