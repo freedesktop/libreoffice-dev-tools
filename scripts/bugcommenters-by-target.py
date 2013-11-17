@@ -13,7 +13,7 @@ from urllib.request import urlopen, URLError
 from io import BytesIO
 
 def get_bugs_for_target(target):
-    url = 'https://bugs.freedesktop.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=RESOLVED&bug_status=VERIFIED&bug_status=CLOSED&bug_status=NEEDINFO&bug_status=PLEASETEST&columnlist=&list_id=351988&product=LibreOffice&query_format=advanced&resolution=FIXED&status_whiteboard=target%%3A%s&status_whiteboard_type=allwords&ctype=csv' % target
+    url = 'https://bugs.libreoffice.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=RESOLVED&bug_status=VERIFIED&bug_status=CLOSED&bug_status=NEEDINFO&bug_status=PLEASETEST&columnlist=&list_id=351988&product=LibreOffice&query_format=advanced&resolution=FIXED&status_whiteboard=target%%3A%s&status_whiteboard_type=allwords&ctype=csv' % target
     try:
         resp = urlopen(url)
     except URLError:
@@ -27,7 +27,7 @@ def get_bugs_for_target(target):
 def get_bug_xml(bug_id):
     xml=''
     try:
-        url = 'https://bugs.freedesktop.org/show_bug.cgi?ctype=xml&id=%d' % bug_id
+        url = 'https://bugs.libreoffice.org/show_bug.cgi?ctype=xml&id=%d' % bug_id
         resp = urlopen(url)
     except URLError:
         sys.stderr.write('Error fetching {}'.format(url))
