@@ -14,7 +14,7 @@ from urllib.request import urlopen, URLError
 from io import BytesIO
 
 def get_fixed_regression_bugs():
-    url = 'https://bugs.freedesktop.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=RESOLVED&bug_status=VERIFIED&bug_status=CLOSED&bug_status=NEEDINFO&bug_status=PLEASETEST&columnlist=&keywords=regression%2C%20&keywords_type=allwords&limit=0&list_id=354018&product=LibreOffice&query_format=advanced&resolution=FIXED&ctype=csv&human=0'
+    url = 'https://bugs.libreoffice.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=RESOLVED&bug_status=VERIFIED&bug_status=CLOSED&bug_status=NEEDINFO&bug_status=PLEASETEST&columnlist=&keywords=regression%2C%20&keywords_type=allwords&limit=0&list_id=354018&product=LibreOffice&query_format=advanced&resolution=FIXED&ctype=csv&human=0'
     try:
         resp = urlopen(url)
     except URLError:
