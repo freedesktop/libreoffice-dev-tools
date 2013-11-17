@@ -5,7 +5,7 @@ use strict;
 # The bugzilla has contains the server, username and password for the targeted
 # bugzilla installation. There's NO 'http://' in the server line.
 our $bugzilla = {
-    server   => 'bugs.freedesktop.org/',
+    server   => 'bugs.libreoffice.org/',
     user     => 'libreoffice-commits@lists.freedesktop.org',
     password => 'secret', # CHANGE THIS!
 };
