@@ -13,6 +13,8 @@ my %sadly_non_libreoffice = (
     'Marek Olšák' => 1,
     'Emil Velikov' => 1,
     'ajax at nwnk dot net' => 1,
+    'Jesse Barnes' => 1,
+    'Albert Astals Cid' => 1,
 );
 
 # use me for testing XML pretty printing etc.
