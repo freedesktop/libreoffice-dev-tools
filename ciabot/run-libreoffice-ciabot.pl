@@ -71,7 +71,7 @@ sub report($$$) {
                             chomp;
                             print timestamp() . " Sending report about $_ in $key\n";
                             if (!$test) {
-                                if ($repo == "si-gui")
+                                if ($repo eq "si-gui")
                                 {
                                     qx(perl -I ~/bin ~/bin/sigui-bugzilla.pl $repo $_ $branch_name);
                                 } else {
