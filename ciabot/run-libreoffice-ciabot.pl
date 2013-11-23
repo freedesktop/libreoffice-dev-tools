@@ -170,8 +170,8 @@ while ( 1 ) {
 
     if (!$test) {
         # check every 5 minutes
-        print timestamp() . " Sleeping for 5 minutes...\n";
-        sleep 5*60;
+        print timestamp() . " Sleeping for 1 minute...\n";
+        sleep 1*60;
     } else {
         print "Hit enter to report...\n";
         <STDIN>;
