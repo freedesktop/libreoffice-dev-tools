@@ -2,11 +2,19 @@
 
 use POSIX;
 
-if ( ! -d 'core' ) {
+my $suffix;
+my $cwd;
+
+$cwd = `pwd`;
+chomp $cwd;
+
+if ( ! -d 'core' && ! -d 'core.git' ) {
     print STDERR "Not a directory with libreoffice repos!\n";
     exit 1;
 }
-
+if ( -d 'core.git' ) {
+    $suffix=".git"
+}
 sub error($) {
     my ( $message ) = @_;
     print STDERR "$message\n";
@@ -40,8 +48,8 @@ sub report($$$) {
     my ( $repo, $old_ref, $new_ref ) = @_;
     my %old = %{$old_ref};
     my %new = %{$new_ref};
-    my $ciabot = "timeout 60 libreoffice-ciabot.pl";
-    my $ciaproxy = "| ( cd ~/bin/irker-cia-proxy/; python irker-cia-proxy.py -s )";
+    my $ciabot = "timeout 60 $cwd/libreoffice-ciabot.pl";
+    my $ciaproxy = "| ( cd $cwd && python irker-cia-proxy.py -s ";
 
     foreach my $key ( keys %new ) {
         my $branch_name = $key;
@@ -73,14 +81,14 @@ sub report($$$) {
                             if (!$test) {
                                 if ($repo eq "si-gui")
                                 {
-                                    qx(perl -I ~/bin ~/bin/sigui-bugzilla.pl $repo $_ $branch_name);
+                                    qx(perl -I $cwd $cwd/sigui-bugzilla.pl $repo $_ $branch_name);
                                 } else {
                                     qx($ciabot $repo $_ $branch_name $ciaproxy);
-                                    qx(perl -I ~/bin ~/bin/libreoffice-bugzilla.pl $repo $_ $branch_name);
+                                    qx(perl -I $cwd $cwd/libreoffice-bugzilla.pl $repo $_ $branch_name);
                                 }
                             } else {
                                 print "$ciabot '$repo' '$_' '$branch_name' $ciaproxy\n";
-                                print "perl -I ~/bin ~/bin/libreoffice-bugzilla.pl '$repo' '$_' '$branch_name'\n";
+                                print "perl -I $cwd $cwd/libreoffice-bugzilla.pl '$repo' '$_' '$branch_name'\n";
                             }
                         }
                         close COMMITS;
@@ -125,7 +133,6 @@ sub report($$$) {
 print timestamp() . " Checking for changes in the libreoffice repo & sending reports to CIA.vc.\n";
 
 @all_repos = (
-    "binfilter",
     "core",
     "dictionaries",
     "help",
@@ -138,11 +145,10 @@ if ($test) {
     @all_repos = ("test");
 }
 
-chomp( my $cwd = `pwd` );
 
 my %old_ref;
 foreach $repo (@all_repos) {
-    chdir "$cwd/$repo";
+    chdir "$cwd/$repo$suffix";
     qx(git fetch origin);
     qx(git fetch --tags origin);
     $old_ref{$repo} = get_branches();
@@ -150,7 +156,7 @@ foreach $repo (@all_repos) {
 
 while ( 1 ) {
     foreach $repo (@all_repos) {
-        chdir "$cwd/$repo";
+        chdir "$cwd/$repo$suffix";
 
         # update
         qx(git fetch origin);
