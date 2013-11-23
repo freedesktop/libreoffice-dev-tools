@@ -2,7 +2,7 @@
 
 use POSIX;
 
-my $suffix;
+my $suffix = "";
 my $cwd;
 
 $cwd = `pwd`;
