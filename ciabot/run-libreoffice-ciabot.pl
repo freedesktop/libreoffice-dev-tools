@@ -49,7 +49,7 @@ sub report($$$) {
     my %old = %{$old_ref};
     my %new = %{$new_ref};
     my $ciabot = "timeout 60 $cwd/libreoffice-ciabot.pl";
-    my $ciaproxy = "| ( cd $cwd && python irker-cia-proxy.py -s ";
+    my $ciaproxy = "| ( cd $cwd && python irker-cia-proxy.py -s )";
 
     foreach my $key ( keys %new ) {
         my $branch_name = $key;
