@@ -21,7 +21,11 @@ use strict;
 
 our $bugzilla = {};
 
-do $ENV{'HOME'} . "/bin/config.pl";
+use File::Basename;
+
+my $config = dirname($0) . "/config.pl";
+
+do $config;
 
 # The bug_regex should extract the bug id from the commit message and place
 # it in $1
