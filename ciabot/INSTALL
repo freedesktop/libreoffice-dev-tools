@@ -1,6 +1,7 @@
 The following steps are needed to use this code:
 
-- have this directory as ~/bin
-- git clone git://gitorious.org/irker/irker.git ~/bin/irker
-- git clone git://github.com/vmiklos/irker-cia-proxy.git ~/bin/irker-cia-proxy
-- cd ~/bin/irker-cia-proxy; ln -s ../projmap.json
+- have this directory as e.g. ~/prod
+- git clone git://gitorious.org/irker/irker.git ~/git/irker
+- git clone git://github.com/vmiklos/irker-cia-proxy.git ~/git/irker-cia-proxy
+- ~/git/dev-tools/ciabot/setup/install
+- Class::MethodMaker perl module: perl-Class-MethodMaker or libclass-methodmaker-perl package
