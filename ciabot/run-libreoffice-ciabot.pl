@@ -1,6 +1,10 @@
 #!/usr/bin/perl -w
 
 use POSIX;
+use File::Basename;
+
+open STDOUT, '>', dirname($0) . "/ciabot.out";
+open STDERR, '>', dirname($0) . "/ciabot.err";
 
 my $suffix = "";
 my $cwd;
