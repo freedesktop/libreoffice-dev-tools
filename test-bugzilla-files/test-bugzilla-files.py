@@ -308,7 +308,8 @@ def handleCrash(file, disposed):
     crashLog = open("crashlog.txt", "a")
     crashLog.write('Crash:' + file + ' ')
     if disposed == 1:
-        crashLog.write('through disposed\n')
+        crashLog.write('through disposed')
+    crashLog.write('\n')
     crashLog.close()
 #    crashed_files.append(file)
 # add here the remaining handling code for crashed files
