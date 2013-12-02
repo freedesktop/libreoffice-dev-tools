@@ -9,7 +9,7 @@ use POSIX qw(strftime);
 
 my $verbose = 0;
 my $rsync_first = 0;
-my $cpus_to_use = 32;    # level of parallelism
+my $cpus_to_use = 16;    # level of parallelism
 my $bzcat_grouping = 10; # files to pass to bzcat at once
 my $path_to_log_tree;
 my $threaded = 1;
