@@ -60,11 +60,15 @@ my %versions = (
 
     '5464147a081647a250913f19c0715bca595af2f' => '4.0.5_RC2',
 
+    '2e2573268451a50806fcd60ae2d9fe01dd0ce24' => '4.0.6_RC2',
+
     '89ea49ddacd9aa532507cbf852f2bb22b1ace28' => '4.1.0_RC4',
 
     '7e4286b58adc75a14f6d83f53a03b6c11fa2903' => '4.1.1_RC2',
 
     '40b2d7fde7e8d2d7bc5a449dc65df4d08a7dd38' => '4.1.2_RC3',
+
+    '70feb7d99726f064edab4605a8ab840c50ec57a' => '4.1.3_RC3',
 );
 
 my %month_to_num = (
