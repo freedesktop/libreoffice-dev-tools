@@ -317,6 +317,51 @@ def handleCrash(file, disposed):
 def alarm_handler(args):
     args.kill()
 
+def exportDoc(xDoc, filterName, validationCommand, filename):
+    props = [ ("FilterName", filterName) ]
+    saveProps = tuple([mkPropertyValue(name, value) for (name, value) in props])
+    fileURL = file:///tmp/filename + extension
+    #xDoc.storeToURL(fileURL, saveProps)
+    print("xDoc.storeToURL " + fileURL + " " + filterName + "\n")
+    if validationCommand:
+        pass
+
+class ExportFileTest:
+    def __init__(self, xDoc, component, filename):
+        self.xDoc = xDoc
+        self.component = component
+        self.filename = filename
+    def run(self, connection):
+        formats = getExportFormats()
+        for format in formats:
+            filterName = getFilterName(format)
+            validation = getValidationCommand(filterName)
+            if filterName is not None
+                xExportedDoc = exportDoc(self.xDoc, filterName, validation, self.filename)
+                if xExportedDoc:
+                    xExportedDoc.close(True)
+
+    def getExportFormats():
+        formats = { "calc": ["ods", "xls", "xlsx"],
+                "writer" : ["odt", "doc", "docx"],
+                "impress" : ["odp", "ppt", "pptx"],
+                "draw" : ["odg"],
+                "base" : [],
+                "math" : [],
+                "chart" : ["odc"] }
+        return formats[self.component]
+    def getValidationCommand():
+        return None
+
+    def getFilterName(format)
+        filterNames = { "ods": "calc8",
+                "xls": "MS Excel 97",
+                "xlsx": "Calc Office Open XML"
+                }
+        return filterNames[format]
+
+
+
 class LoadFileTest:
     def __init__(self, file, state, component):
         self.file = file
@@ -336,6 +381,10 @@ class LoadFileTest:
             t = threading.Timer(60, alarm_handler, args)
             t.start()      
             xDoc = loadFromURL(xContext, url, t, self.component)
+            t.cancel()
+            if xDoc:
+                exportTest = ExportFileTest(xDoc, self.component, self.file)
+                exportTest.run()
             self.state.goodFiles.append(self.file)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
