@@ -58,7 +58,7 @@ def get_digest(query):
                 digest += '+ %s\n  in %s from %s%s\n' % (change['subject'][:73],
                             change['url'], change['owner']['name'], about)
     if freshers != '':
-        digest = ('~~~~ First time contributors doing great things ! ~~~~\n' + freshers +
+        digest = ('~~~~ First time contributors doing great things! ~~~~\n' + freshers +
                  "~~~~ End of freshness ~~~~\n\n" + digest )
     if digest == '':
         digest = 'None'
