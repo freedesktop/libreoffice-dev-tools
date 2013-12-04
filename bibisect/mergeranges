@@ -8,6 +8,10 @@
 import sys
 import subprocess
 
+# Helper function to run code in a subprocess.
+def subrun(arglist):
+    return subprocess.check_output(arglist).decode('utf-8')
+
 def justrunit(arglist):
     print(subprocess.check_output(arglist).decode('utf-8'))
 
@@ -59,3 +63,10 @@ for line in open(sys.argv[1]).readlines():
             init_branch(revision)
         else:
             cherry_pick_theirs(revision)
+
+# Tag the latest commit.
+justrunit(['git', 'tag', '-f', 'latest',
+           subrun(['git', 'rev-parse', 'HEAD']).rstrip()])
+
+print("")
+print("Mergeranges: script done.")
