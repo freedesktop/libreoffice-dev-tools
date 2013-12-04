@@ -57,10 +57,15 @@ def cherry_pick_theirs(revision):
     # such as 'bibisect.sh' or 'run-libreoffice.sh') will be left in
     # place and not committed to the repository.
     justrunit(['git', 'commit', '-C', revision])
-    tag = subprocess.check_output(['git', 'log', '-1', '--pretty=%s', 'HEAD']).decode('utf-8').rstrip()
-    justrunit(['git', 'tag', tag])
-    
 
+    # Create a tag using the first line of the commit message we just
+    # picked.
+    argsHeadTag = ['git', 'log', '-1', '--pretty=%s', 'HEAD']
+    tag = subrun(argsHeadTag).rstrip()
+
+    # Tag our cherry-picked commit. If the tag already exists, replace
+    # it (quietly).
+    justrunit(['git', 'tag', '-f', tag])
 
 # Take input from the 'ranges' file passed-in on the command line.
 for line in open(sys.argv[1]).readlines():
