@@ -64,9 +64,16 @@ def cherry_pick_theirs(revision):
 
 # Take input from the 'ranges' file passed-in on the command line.
 for line in open(sys.argv[1]).readlines():
-    revisions = [r for r in subprocess.check_output(['git', 'rev-list', '--reverse', line.rstrip()]).decode('utf-8').split('\n') if r.rstrip()]
+    print(line)
+
+    # Assemble a list of revisions in the given range.
+    argsRevRevList = ['git', 'rev-list', '--reverse',
+                      # We have to modify the range to make it inclusive.
+                      line.rstrip().replace("..", "^..")]
+    revisions = [r for r in subrun(argsRevRevList).split('\n') if r.rstrip()]
     for revision in revisions:
         if not initBranch:
+            print("init_branch: " + revision)
             init_branch(revision)
         else:
             cherry_pick_theirs(revision)
