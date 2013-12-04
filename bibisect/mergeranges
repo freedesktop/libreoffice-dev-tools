@@ -7,8 +7,22 @@ def justrunit(arglist):
     print(subprocess.check_output(arglist).decode('utf-8'))
 
 def init_branch(startpoint):
-    justrunit(['git', 'checkout', '-b', 'mergeranges', startpoint])
+    global initBranch, branchName
 
+    try:
+        justrunit(['git', 'checkout', branchName])
+    except CalledProcessError as e:
+        # If the branch does not exist, we need to create it.
+        justrunit(['git', 'checkout', '-b', branchName, startpoint])
+        print("Creating branch " + branchName)
+    else:
+        # If the branch already existed, we want to cherry-pick the
+        # 'startpoint' commit.
+        cherry_pick_theirs(startpoint)
+
+    initBranch = True
+
+# Pull a commit into the git repository.
 def cherry_pick_theirs(revision):
     try:
         justrunit(['git', 'rm', '-rf', '.'])
@@ -26,6 +40,5 @@ for line in open(sys.argv[1]).readlines():
     for revision in revisions:
         if not initBranch:
             init_branch(revision)
-            initBranch = True
         else:
             cherry_pick_theirs(revision)
