@@ -15,6 +15,14 @@ my %sadly_non_libreoffice = (
     'ajax at nwnk dot net' => 1,
     'Jesse Barnes' => 1,
     'Albert Astals Cid' => 1,
+    'Daniel Stone' => 1,
+    'Eric Anholt' => 1,
+    'Lennart Poettering' => 1,
+    'Ilia Mirkin' => 1,
+    'Behdad Esfahbod' => 1,
+    'Richard Hughes' => 1,
+    'Ben Widawsky' => 1,
+    'Chengwei Yang' => 1,
 );
 
 # use me for testing XML pretty printing etc.
@@ -180,12 +188,12 @@ my %ver_total;
 build_overall_bugstats();
 
 print STDERR "Querying for open MABs:\n";
-for my $ver (sort keys %bug_to_ver) {
+for my $ver (reverse sort keys %bug_to_ver) {
     my $bug = $bug_to_ver{$ver};
     my $base_url = "https://bugs.libreoffice.org/showdependencytree.cgi?id=" . $bug;
     my $all = get_deps($base_url);
     my $open = get_deps($base_url . "&hide_resolved=1");
-    $percent = ($open * 100.0) / $all;
+    $percent = sprintf("%2d", (($open * 100.0) / $all));
     print STDERR "$ver: $open/$all - $percent%\n";
     $ver_open{$ver} = $open;
     $ver_total{$ver} = $all;
@@ -369,7 +377,7 @@ print << "EOF"
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.1'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.2'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.B2]+[.D2]+[.F2]+[.H2]" office:value-type="float"/>
-     <table:table-cell table:formula="of:=[.C2]+[.E2]+[.G2]+[.I2]" office:value-type="float"/>
+     <table:table-cell table:formula="of:=SUM([.L2:.P2])-[.Q2]" office:value-type="float"/>
     </table:table-row>
 
     <table:table-row/>
