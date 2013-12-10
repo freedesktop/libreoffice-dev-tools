@@ -317,14 +317,64 @@ def handleCrash(file, disposed):
 def alarm_handler(args):
     args.kill()
 
-def exportDoc(xDoc, filterName, validationCommand, filename):
+def writeExportCrash(fileName):
+    exportCrash = open("exportCrash.txt", "a")
+    exportCrash.write(fileName + '\n')
+    exportCrash.close()
+
+def exportDoc(xDoc, filterName, validationCommand, filename, connection):
     props = [ ("FilterName", filterName) ]
     saveProps = tuple([mkPropertyValue(name, value) for (name, value) in props])
-    fileURL = file:///tmp/filename + extension
-    #xDoc.storeToURL(fileURL, saveProps)
+    extensions = { "calc8": ".ods",
+                    "MS Excel 97": ".xls",
+                    "Calc Office Open XML": ".xlsx",
+                    "writer8": ".odt",
+                    "Office Open XML Text": ".docx",
+                    "Rich Text Format": ".rtf",
+                    "MS Word 97": ".doc",
+                    "impress8": ".odp",
+                    "draw8": ".odg",
+                    "Office Open XML Presentation": ".pptx",
+                    "MS PowerPoint 97": ".ppt"
+                    }
+    base = os.path.splitext(filename)[0]
+    filename = base + extensions[filterName]
+    fileURL = "file:///srv/crashtestdata/current" + filename
+    t = None
+    try:
+        args = [connection]
+        t = threading.Timer(180, alarm_handler, args)
+        t.start()      
+        xDoc.storeToURL(fileURL, saveProps)
+    except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
+        writeExportCrash(filename)
+        raise # means crashed, handle it later
+    except pyuno.getClass("com.sun.star.lang.DisposedException"):
+        writeExportCrash(filename)
+        raise # means crashed, handle it later
+    except pyuno.getClass("com.sun.star.lang.IllegalArgumentException"):
+        pass # means could not open the file, ignore it
+    except pyuno.getClass("com.sun.star.task.ErrorCodeIOException"):
+        pass
+    finally:
+        if t.is_alive():
+            t.cancel()
+
     print("xDoc.storeToURL " + fileURL + " " + filterName + "\n")
     if validationCommand:
-        pass
+        validationCommandWithURL = validationCommand + " " + fileURL[7:]
+        print(validationCommandWithURL)
+        try:
+            output = str(subprocess.check_output(validationCommandWithURL, shell=True), encoding='utf-8')
+            print(output)
+            if ("Error" in output) or ("error" in output):
+                print("Error validating file")
+                validLog = open(fileURL[7:]+".log", "w")
+                validLog.write(output)
+                validLog.close()
+        except subprocess.CalledProcessError:
+            pass # ignore that exception
+            
 
 class ExportFileTest:
     def __init__(self, xDoc, component, filename):
@@ -332,31 +382,55 @@ class ExportFileTest:
         self.component = component
         self.filename = filename
     def run(self, connection):
-        formats = getExportFormats()
+        formats = self.getExportFormats()
+        print(formats)
         for format in formats:
-            filterName = getFilterName(format)
-            validation = getValidationCommand(filterName)
-            if filterName is not None
-                xExportedDoc = exportDoc(self.xDoc, filterName, validation, self.filename)
+            filterName = self.getFilterName(format)
+            validation = self.getValidationCommand(filterName)
+            print(format)
+            print(filterName)
+            if filterName:
+                xExportedDoc = exportDoc(self.xDoc, filterName, validation, self.filename, connection)
                 if xExportedDoc:
                     xExportedDoc.close(True)
 
-    def getExportFormats():
+    def getExportFormats(self):
         formats = { "calc": ["ods", "xls", "xlsx"],
-                "writer" : ["odt", "doc", "docx"],
+                "writer" : ["odt", "doc", "docx", "rtf"],
                 "impress" : ["odp", "ppt", "pptx"],
                 "draw" : ["odg"],
                 "base" : [],
-                "math" : [],
-                "chart" : ["odc"] }
+                "math" : []
+                }
+        if not self.component in formats:
+            return []
         return formats[self.component]
-    def getValidationCommand():
-        return None
 
-    def getFilterName(format)
+    def getValidationCommand(self, filterName):
+        validationCommand = { "calc8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
+                            "writer8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
+                            "impress8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
+                            "draw8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
+                                "Calc Office Open XML": "java -jar /home/buildslave/source/bin/officeotron.jar",
+                                "Office Open XML Text": "java -jar /home/buildslave/source/bin/officeotron.jar",
+                                "Office Open XML Presentation": "java -jar /home/buildslave/source/bin/officeotron.jar"
+                            }
+        if not filterName in validationCommand:
+            return None
+        return validationCommand[filterName]
+
+    def getFilterName(self, format):
         filterNames = { "ods": "calc8",
                 "xls": "MS Excel 97",
-                "xlsx": "Calc Office Open XML"
+                "xlsx": "Calc Office Open XML",
+                "odt": "writer8",
+                "doc": "MS Word 97",
+                "docx": "Office Open XML Text",
+                "rtf": "Rich Text Format",
+                "odp": "impress8",
+                "odg": "draw8",
+                "pptx": "Office Open XML Presentation",
+                "ppt": "MS PowerPoint 97"
                 }
         return filterNames[format]
 
@@ -381,10 +455,11 @@ class LoadFileTest:
             t = threading.Timer(60, alarm_handler, args)
             t.start()      
             xDoc = loadFromURL(xContext, url, t, self.component)
+            print("doc loaded")
             t.cancel()
             if xDoc:
                 exportTest = ExportFileTest(xDoc, self.component, self.file)
-                exportTest.run()
+                exportTest.run(connection)
             self.state.goodFiles.append(self.file)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
@@ -397,6 +472,7 @@ class LoadFileTest:
                 self.state.badPropertyFiles.append(self.file)
             connection.tearDown()
             connection.setUp()
+            xDoc = None
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
             print("caught DisposedException " + self.file)
             if not t.is_alive():
@@ -408,6 +484,7 @@ class LoadFileTest:
                 self.state.badDisposedFiles.append(self.file)
             connection.tearDown()
             connection.setUp()
+            xDoc = None
         finally:
             if t.is_alive():
                 t.cancel()
@@ -415,6 +492,7 @@ class LoadFileTest:
                 if xDoc:
                     t = threading.Timer(10, alarm_handler, args)
                     t.start()
+                    print("closing document")
                     xDoc.close(True)
                     t.cancel()
             except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
