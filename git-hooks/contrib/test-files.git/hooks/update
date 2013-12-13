@@ -14,13 +14,19 @@ if [ "$(id -u -n )" != "logerrit" ] ; then
        echo "*** The reference for this repo is gerrit. do not push directly to fdo" >&2
        exit 1
 fi
+from="$(git show -s --pretty=format:'%an <%ae>' $3^{})"
 
-
-project="LibreOffice test files"
+project=$(cat $GIT_DIR/description)
 recipients="libreoffice-commits@lists.freedesktop.org"
 
-
 ref_type=$(git cat-file -t "$3")
+
+# Avoid re-introducing obsolete tags
+if grep -q "^$1$" hooks/obsolete-tags; then
+	echo "*** Re-introducing an obsolete tag ($1) is not allowed in this repo" >&2
+	echo "*** Use corereleasebranches/killtagslocal.sh from contrib/dev-tools.git to get rid of them." >&2
+	exit 1
+fi
 
 # Only allow annotated tags in a shared repo
 # Remove this code to treat dumb tags the same as everything else
@@ -49,8 +55,9 @@ date_format="%F %R %z"
 num_path_components=2
 
 # Set subject
+repo=$(basename $(cd $GIT_DIR ; pwd))
 if expr "$2" : '0*$' >/dev/null ; then
-	subject="Changes to '${1##refs/heads/}'"
+	subject="$repo: Changes to '${1##refs/heads/}'"
 else
 	base=$(git-merge-base "$2" "$3")
 	subject=$(git-diff-tree -r --name-only "$base" "$3" |
@@ -63,6 +70,7 @@ else
 	if [ "$branch" != "master" ] ; then
 		subject="Branch '$branch' - $subject"
 	fi
+	subject="$repo: $subject"
 fi
 
 if expr "$2" : '0*$' >/dev/null
@@ -111,7 +119,22 @@ else
 		echo "Rebased ref, commits from common ancestor:"
 		;;
 	esac
-	git-rev-list "$3" "^$base" | while read rev; do git-show $rev; done
+	bytes=0
+	IFS="$(echo)"
+	git-rev-list "$3" "^$base" | while read rev; do git-show -M $rev; done | sed 's#\\#\\\\#g' |
+		while read line
+		do
+			if [ "$bytes" -ge "0" ] ; then
+				bytes=$(( $bytes + ${#line} + 1 ))
+				if [ "$bytes" -gt "100000" ] ; then
+					bytes=-1
+					echo -e "\n... etc. - the rest is truncated"
+				else
+					echo "$line"
+				fi
+			fi
+		done
 fi |
-mail -s "$subject" -a "X-Git-Repository: git://git.cairographics.org/git/cairo" $recipients
+mail -s "$subject" -a "X-Git-Repository: git://anongit.freedesktop.org/git/libreoffice/contrib/test-files.git" \
+     -a "List-Post: <mailto:libreoffice@lists.freedesktop.org>" -a "From: $from" $recipients
 exit 0
