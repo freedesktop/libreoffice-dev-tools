@@ -1,5 +1,9 @@
 #!/usr/bin/perl -w
 
+# Please take the time to check that the script still runs
+# before changing this to something else.
+my $bugserver = "bugs.freedesktop.org";
+
 # config for eliding top bug contributors who are
 # not (yet) libreoffice hackers.
 my %sadly_non_libreoffice = (
@@ -119,7 +123,7 @@ sub crunch_bugstat_lines(@)
     my %closed_stats;
 
     while ((my $line = shift @lines) && $region ne 'end') {
-#	print "$region -> $line";
+	print "$region -> $line";
 	if ($region eq 'header' && $line =~ /<h2>Top .* modules<\/h2>/) {
 	    $region = 'top-modules';
 
@@ -169,7 +173,7 @@ sub crunch_bugstat_lines(@)
 sub build_overall_bugstats()
 {
     print STDERR "Querying overall / top bug stats\n";
-    my $url = 'https://bugs.libreoffice.org/page.cgi?id=weekly-bug-summary.html';
+    my $url = "https://$bugserver/page.cgi?id=weekly-bug-summary.html";
 
     print STDERR "  + $url\n";
     crunch_bugstat_lines(get_url($url));
@@ -190,7 +194,7 @@ build_overall_bugstats();
 print STDERR "Querying for open MABs:\n";
 for my $ver (reverse sort keys %bug_to_ver) {
     my $bug = $bug_to_ver{$ver};
-    my $base_url = "https://bugs.libreoffice.org/showdependencytree.cgi?id=" . $bug;
+    my $base_url = "https://$bugserver/showdependencytree.cgi?id=" . $bug;
     my $all = get_deps($base_url);
     my $open = get_deps($base_url . "&hide_resolved=1");
     $percent = sprintf("%2d", (($open * 100.0) / $all));
@@ -202,14 +206,14 @@ for my $ver (reverse sort keys %bug_to_ver) {
 my ($reg_all, $reg_open);
 
 print STDERR "Querying for regressions:\n";
-my $regression_query="https://bugs.libreoffice.org/buglist.cgi?columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&keywords=regression%2C%20&keywords_type=allwords&list_id=267671&product=LibreOffice&query_format=advanced&order=bug_id&limit=0";
-my $regression_open_query="https://bugs.libreoffice.org/buglist.cgi?keywords=regression%2C%20&keywords_type=allwords&list_id=267687&columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&resolution=---&query_based_on=Regressions&query_format=advanced&product=LibreOffice&known_name=Regressions&limit=0";
+my $regression_query="https://$bugserver/buglist.cgi?columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&keywords=regression%2C%20&keywords_type=allwords&list_id=267671&product=LibreOffice&query_format=advanced&order=bug_id&limit=0";
+my $regression_open_query="https://$bugserver/buglist.cgi?keywords=regression%2C%20&keywords_type=allwords&list_id=267687&columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&resolution=---&query_based_on=Regressions&query_format=advanced&product=LibreOffice&known_name=Regressions&limit=0";
 $reg_all = get_query($regression_query);
 $reg_open = get_query($regression_open_query);
 
 print STDERR "Querying for bibisection:\n";
-my $bibisect_query = "https://bugs.libreoffice.org/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267679&o1=substring&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=MOVED&resolution=NOTABUG&resolution=NOTOURBUG&query_based_on=BibisectedAll&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=BibisectedAll&limit=0";
-my $bibisect_open_query = "https://bugs.libreoffice.org/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267685&o1=substring&resolution=---&query_based_on=Bibisected&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=Bibisected&limit=0";
+my $bibisect_query = "https://$bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267679&o1=substring&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=MOVED&resolution=NOTABUG&resolution=NOTOURBUG&query_based_on=BibisectedAll&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=BibisectedAll&limit=0";
+my $bibisect_open_query = "https://$bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267685&o1=substring&resolution=---&query_based_on=Bibisected&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=Bibisected&limit=0";
 
 my ($all, $open);
 $all = get_query($bibisect_query);
@@ -227,13 +231,13 @@ print STDERR "\n";
 my %component_count;
 
 # custom pieces
-$component_count{'Migration'} = get_deps("https://bugs.libreoffice.org/showdependencytree.cgi?id=43489&hide_resolved=1");
-$component_count{'Crashes'} = get_query("https://bugs.libreoffice.org/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
-$component_count{'Borders'} = get_query("https://bugs.libreoffice.org/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
+$component_count{'Migration'} = get_deps("https://$bugserver/showdependencytree.cgi?id=43489&hide_resolved=1");
+$component_count{'Crashes'} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
+$component_count{'Borders'} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
 
 my @reg_toquery = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing', 'Libreoffice', 'Writer', 'BASIC' );
 for my $component (@reg_toquery) {
-    $component_count{$component} = get_query("https://bugs.libreoffice.org/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&bug_status=PLEASETEST&component=$component&product=LibreOffice");
+    $component_count{$component} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&bug_status=PLEASETEST&component=$component&product=LibreOffice");
 }
 
 print STDERR "\t* ~Component   count net *\n";
