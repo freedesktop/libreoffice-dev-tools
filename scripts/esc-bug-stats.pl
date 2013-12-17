@@ -123,7 +123,7 @@ sub crunch_bugstat_lines(@)
     my %closed_stats;
 
     while ((my $line = shift @lines) && $region ne 'end') {
-	print "$region -> $line";
+#	print "$region -> $line";
 	if ($region eq 'header' && $line =~ /<h2>Top .* modules<\/h2>/) {
 	    $region = 'top-modules';
 
