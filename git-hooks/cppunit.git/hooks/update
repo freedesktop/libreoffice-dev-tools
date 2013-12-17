@@ -14,6 +14,7 @@ if [ "$(id -u -n )" != "logerrit" ] ; then
        echo "*** The reference for this repo is gerrit. do not push directly to fdo" >&2
        exit 1
 fi
+from="$(git show -s --pretty=format:'%an <%ae>' $3^{})"
 
 project=$(cat $GIT_DIR/description)
 recipients="libreoffice-commits@lists.freedesktop.org"
@@ -54,8 +55,9 @@ date_format="%F %R %z"
 num_path_components=2
 
 # Set subject
+repo=$(basename $(cd $GIT_DIR ; pwd))
 if expr "$2" : '0*$' >/dev/null ; then
-	subject="Changes to '${1##refs/heads/}'"
+	subject="$repo: Changes to '${1##refs/heads/}'"
 else
 	base=$(git-merge-base "$2" "$3")
 	subject=$(git-diff-tree -r --name-only "$base" "$3" |
@@ -68,7 +70,6 @@ else
 	if [ "$branch" != "master" ] ; then
 		subject="Branch '$branch' - $subject"
 	fi
-	repo=$(basename $GIT_DIR)
 	subject="$repo: $subject"
 fi
 
@@ -120,7 +121,7 @@ else
 	esac
 	bytes=0
 	IFS="$(echo)"
-	git-rev-list "$3" "^$base" | while read rev; do git-show $rev; done | sed 's#\\#\\\\#g' |
+	git-rev-list "$3" "^$base" | while read rev; do git-show -M $rev; done | sed 's#\\#\\\\#g' |
 		while read line
 		do
 			if [ "$bytes" -ge "0" ] ; then
@@ -135,5 +136,5 @@ else
 		done
 fi |
 mail -s "$subject" -a "X-Git-Repository: git://anongit.freedesktop.org/git/libreoffice/cppunit.git" \
-     -a "List-Post: <mailto:libreoffice@lists.freedesktop.org>" $recipients
+     -a "List-Post: <mailto:libreoffice@lists.freedesktop.org>" -a "From: $from" $recipients
 exit 0
