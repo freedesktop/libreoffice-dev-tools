@@ -27,6 +27,14 @@ my %sadly_non_libreoffice = (
     'Richard Hughes' => 1,
     'Ben Widawsky' => 1,
     'Chengwei Yang' => 1,
+    'Dan Nicholson' => 1,
+    'Zbigniew Jedrzejewski-Szmek' => 1,
+    'Tanu Kaskinen' => 1,
+    'Vinson Lee' => 1,
+    'Sylvain BERTRAND' => 1,
+    'lu hua' => 1,
+    'Kenneth Graunke' => 1,
+    'Seif Lotfy' => 1,
 );
 
 # use me for testing XML pretty printing etc.
@@ -366,9 +374,9 @@ print << "EOF"
       <text:p>$date_value</text:p>
      </table:table-cell>
      <table:table-cell/>
-     <table:table-cell table:formula="of:=[.L2]-[.B2]" office:value-type="float" calcext:value-type="float"/>
      <table:table-cell/>
-     <table:table-cell table:formula="of:=[.M2]-[.D2]" office:value-type="float" calcext:value-type="float"/>
+     <table:table-cell/>
+     <table:table-cell/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.0'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.N2]-[.F2]" office:value-type="float" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.1'}" calcext:value-type="float"/>
