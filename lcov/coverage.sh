@@ -18,18 +18,18 @@ coverage()
     tests="$5"
 
     set -ex
-    rm -rf workdir/*/CxxObject/$srcmodule/$srcdir/$srcfiles.{gcda,gcno} libreoffice.info coverage
+    rm -rf workdir/CxxObject/$srcmodule/$srcdir/$srcfiles.{gcda,gcno} libreoffice.info coverage
     cd $srcmodule
     touch $srcdir/$srcfiles
     make -sr -j$parallelism gb_GCOV=YES
     cd ../$testmodule
     make -sr -j$parallelism $tests
     cd ..
-    lcov --directory workdir/*/CxxObject/$srcmodule/$srcdir --capture --output-file libreoffice.info
+    lcov --directory workdir/CxxObject/$srcmodule/$srcdir --capture --output-file libreoffice.info
     genhtml -o coverage libreoffice.info
 }
 
-parallelism=$(make -s cmd cmd='echo $(CHECK_PARALLELISM)'|tail -n 1)
+parallelism=$(make -s cmd cmd='echo $(PARALLELISM)'|tail -n 1)
 
 case "$1" in
     sw_docxexport)
@@ -40,9 +40,13 @@ case "$1" in
         # Writer RTF import
         coverage writerfilter source/rtftok '*' sw 'CppunitTest_sw_rtfimport CppunitTest_sw_rtfexport'
     ;;
+    sw_rtfpaste)
+        # Writer RTF paste
+        coverage sw source/filter/rtf '*' sw CppunitTest_sw_uiwriter
+    ;;
     sw_rtfexport)
         # Writer RTF export
-        coverage sw source/filter/ww8 'rtf*' sw CppunitTest_sw_rtfexport
+        coverage sw source/filter/ww8 'rtf*' sw 'CppunitTest_sw_rtfexport CppunitTest_sw_uiwriter'
     ;;
     *)
         echo "Unknown code area. The currently supported ones are:"
@@ -50,6 +54,7 @@ case "$1" in
         echo "sw_docxexport"
         echo "sw_rtfexport"
         echo "sw_rtfimport"
+        echo "sw_rtfpaste"
     ;;
 esac
 
