@@ -1,0 +1,25 @@
+Produces a csv list of pings per country from the Update pings.
+
+
+1. Ensure you have the GeoLite Country Database, "GeoIP.dat", and place
+   it in the script folder:
+
+   http://dev.maxmind.com/geoip/legacy/geolite/
+
+2. Place the stats data in data/ (relative to the script folder)
+
+3. Run compiler.py -- this can take a few hours, and places it's temporary data
+   in storage-country-months/
+
+4. Run analyser.py (is fast)
+
+If you have updated the ping data in data/, re-running compiler.py should take
+much less time as it reuses the previously parsed data (although this isn't
+fully tested yet).
+
+To count unique IPs per month rather than update pings, for a quick hack solution
+it would probably be sufficient to replace line 117:
+ipHits[sReadableVersion][sIP] = ipHits.get(sReadableVersion, {}).get(sIP,0) + 1
+with
+ipHits[sReadableVersion][sIP] = 1
+
