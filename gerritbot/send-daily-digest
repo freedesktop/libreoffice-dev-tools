@@ -74,7 +74,7 @@ def init_freshers():
         subprocess.call(['git','clone','--bare','git://gerrit.libreoffice.org/core',repo_dir])
     else:
         subprocess.call(['git','fetch','origin'])
-    return subprocess.check_output(['git','shortlog','-s'])
+    return subprocess.check_output(['git','shortlog','-s','master'])
 
 
 def get_project_body(project):
