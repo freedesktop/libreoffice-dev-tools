@@ -31,7 +31,7 @@ def filterDomain(changes, domain):
 def main(argv):
     domain = argv[0]
     blacklist = argv[1:]
-    buf = subprocess.check_output(['ssh', 'logerrit', 'gerrit', 'query', 'status:open', '--format', 'JSON', '--all-approvals', '--files'])
+    buf = subprocess.check_output(['ssh', 'gerrit.libreoffice.org', '-p', '29418', 'gerrit', 'query', 'status:open', '--format', 'JSON', '--all-approvals', '--files'])
     changes = []
     for line in buf.decode('utf-8').split('\n'):
         i = json.loads(line)
