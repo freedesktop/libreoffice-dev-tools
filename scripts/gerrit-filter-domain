@@ -57,11 +57,12 @@ def main(argv):
                         break
                 if skip:
                     break
-            for j in i['patchSets'][-1]['approvals']:
-                if j['value'] == "-1":
-                    skippedChanges.append((i, "-1 review"))
-                    skip = True
-                    break
+            if not skip:
+                for j in i['patchSets'][-1]['approvals']:
+                    if j['value'] == "-1":
+                        skippedChanges.append((i, "-1 review"))
+                        skip = True
+                        break
         except:
             pass
         if skip:
