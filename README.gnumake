@@ -1,0 +1,17 @@
+There used to be customized versions of GNU make here in the dirs:
+ make-3.81
+ make-3.82-gbuild
+ make-4.0-gbuild
+
+These have been moved to the repository hosted at:
+
+ git://gerrit.libreoffice.org/gnu-make-lo.git
+ https://gerrit.libreoffice.org/gitweb?p=gnu-make-lo.git
+
+in the branches:
+
+ gnu-make-lo-3.81
+ gnu-make-lo-3.82
+ gnu-make-lo-4.0
+
+Please find and use these new locations, thanks.
