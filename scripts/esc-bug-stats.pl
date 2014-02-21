@@ -36,6 +36,9 @@ my %sadly_non_libreoffice = (
     'Kenneth Graunke' => 1,
     'Seif Lotfy' => 1,
     'Alex Deucher' => 1,
+    'Ian Romanick' => 1,
+    'Tollef Fog Heen' => 1,
+    'Patrick Ohly' => 1,
 );
 
 # use me for testing XML pretty printing etc.
@@ -52,7 +55,7 @@ sub get_url($)
     my $url = shift;
     my @lines;
     my $handle;
-    open ($handle, "curl -s '$url' 2>&1 |") || die "can't exec curl: $!";
+    open ($handle, "curl -k -s '$url' 2>&1 |") || die "can't exec curl: $!";
     while (<$handle>) {
 	push @lines, $_;
     }
@@ -132,7 +135,7 @@ sub crunch_bugstat_lines(@)
     my %closed_stats;
 
     while ((my $line = shift @lines) && $region ne 'end') {
-#	print "$region -> $line";
+#	print STDERR "$region -> $line\n";
 	if ($region eq 'header' && $line =~ /<h2>Top .* modules<\/h2>/) {
 	    $region = 'top-modules';
 
@@ -189,6 +192,7 @@ sub build_overall_bugstats()
 }
 
 my %bug_to_ver = (
+    '4.3' => '75025',
     '4.2' => '65675',
     '4.1' => '60270',
     '4.0' => '54157',
@@ -348,6 +352,12 @@ print << "EOF"
       <text:p>Closed 4.2</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+      <text:p>Open 4.3</text:p>
+     </table:table-cell>
+     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+      <text:p>Closed 4.3</text:p>
+     </table:table-cell>
+     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
       <text:p>Total 3.5</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
@@ -361,6 +371,9 @@ print << "EOF"
      </table:table-cell>
      <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
       <text:p>Total 4.2</text:p>
+     </table:table-cell>
+     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+      <text:p>Total 4.3</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
       <text:p>Total Open</text:p>
@@ -379,18 +392,21 @@ print << "EOF"
      <table:table-cell/>
      <table:table-cell/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.0'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.N2]-[.F2]" office:value-type="float" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.P2]-[.F2]" office:value-type="float" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.1'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.O2]-[.H2]" office:value-type="float" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.Q2]-[.H2]" office:value-type="float" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.2'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.P2]-[.J2]" office:value-type="float"  calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.R2]-[.J2]" office:value-type="float"  calcext:value-type="float"/>
+     <table:table-cell office:value-type="float" office:value="$ver_open{'4.3'}" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.S2]-[.L2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="221" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'3.6'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.0'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.1'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.2'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.B2]+[.D2]+[.F2]+[.H2]" office:value-type="float"/>
-     <table:table-cell table:formula="of:=SUM([.L2:.P2])-[.Q2]" office:value-type="float"/>
+     <table:table-cell office:value-type="float" office:value="$ver_total{'4.3'}" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.B2]+[.D2]+[.F2]+[.H2]+[.L2]" office:value-type="float"/>
+     <table:table-cell table:formula="of:=SUM([.N2:.S2])-[.T2]" office:value-type="float"/>
     </table:table-row>
 
     <table:table-row/>
