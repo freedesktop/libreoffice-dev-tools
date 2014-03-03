@@ -24,6 +24,13 @@ sub error($) {
     print STDERR "$message\n";
 }
 
+#
+# Get a list of filtered branch HEADs
+#
+# Gets all branches, except HEAD.
+#
+# @returns \%{ branch name => git branch head hashval }
+#
 sub get_branches() {
     my %branches;
     if ( open REFS, "git show-ref |" ) {
@@ -44,10 +51,34 @@ sub get_branches() {
     return \%branches;
 }
 
+#
+# Should we generate Bugzilla comments?
+#
+# Report all commits for all repositories except 'core'. For 'core'
+# just report libreoffice-* and master branches to Bugzilla.
+#
+# @returns true, if this commit should be reported to Bugzilla.
+#
+sub is_valid_bugzilla_commit($$) {
+   my ( $repo, $branch ) = @_;
+   return 1 if ( $repo ne 'core' );
+   return ( $branch =~ /^(libreoffice-[^\/]*|master)$/ );
+}
+
 sub timestamp() {
         return strftime("[%Y-%m-%d %H:%M:%S]", localtime);
 }
 
+#
+# Report all branch changes to IRC and bugzilla.
+#
+# We just report changes filtered by is_valid_bugzilla_report to Bugzilla
+# but inform IRC off all changes.
+#
+# $1 = repository name
+# $2 = hashref of old branch heads (@see get_branches).
+# $3 = hashref of new branch heads (@see get_branches).
+#
 sub report($$$) {
     my ( $repo, $old_ref, $new_ref ) = @_;
     my %old = %{$old_ref};
@@ -87,10 +118,12 @@ sub report($$$) {
                                 {
                                     qx(perl -I $cwd $cwd/sigui-bugzilla.pl $repo $_ $branch_name);
                                 } else {
+                                    next if ( ! is_valid_bugzilla_commit( $repo, $branch_name ) );
                                     qx($ciabot $repo $_ $branch_name $ciaproxy);
                                     qx(perl -I $cwd $cwd/libreoffice-bugzilla.pl $repo $_ $branch_name);
                                 }
                             } else {
+                                next if ( ! is_valid_bugzilla_commit( $repo, $branch_name ) );
                                 print "$ciabot '$repo' '$_' '$branch_name' $ciaproxy\n";
                                 print "perl -I $cwd $cwd/libreoffice-bugzilla.pl '$repo' '$_' '$branch_name'\n";
                             }
