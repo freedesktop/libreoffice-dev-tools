@@ -118,13 +118,15 @@ sub report($$$) {
                                 {
                                     qx(perl -I $cwd $cwd/sigui-bugzilla.pl $repo $_ $branch_name);
                                 } else {
-                                    next if ( ! is_valid_bugzilla_commit( $repo, $branch_name ) );
-                                    qx($ciabot $repo $_ $branch_name $ciaproxy);
+                                    if ( is_valid_bugzilla_commit( $repo, $branch_name ) ) {
+                                        qx($ciabot $repo $_ $branch_name $ciaproxy);
+                                    }
                                     qx(perl -I $cwd $cwd/libreoffice-bugzilla.pl $repo $_ $branch_name);
                                 }
                             } else {
-                                next if ( ! is_valid_bugzilla_commit( $repo, $branch_name ) );
-                                print "$ciabot '$repo' '$_' '$branch_name' $ciaproxy\n";
+                                if ( is_valid_bugzilla_commit( $repo, $branch_name ) ) {
+                                    print "$ciabot '$repo' '$_' '$branch_name' $ciaproxy\n";
+                                }
                                 print "perl -I $cwd $cwd/libreoffice-bugzilla.pl '$repo' '$_' '$branch_name'\n";
                             }
                         }
