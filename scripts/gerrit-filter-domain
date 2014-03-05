@@ -74,7 +74,7 @@ def main(argv):
     print()
     print("Skipped %s changes:" % len(skippedChanges))
     for i in skippedChanges:
-        print("%s: %s" % (i[0]['number'], i[1]))
+        print("http://gerrit.libreoffice.org/%s: %s" % (i[0]['number'], i[1]))
 
 if __name__ == "__main__":
     try:
