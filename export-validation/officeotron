@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+java -jar /devel/officeotron/officeotron-read-only/dist/officeotron.jar $1
