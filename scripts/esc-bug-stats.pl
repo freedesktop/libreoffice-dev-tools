@@ -39,6 +39,9 @@ my %sadly_non_libreoffice = (
     'Ian Romanick' => 1,
     'Tollef Fog Heen' => 1,
     'Patrick Ohly' => 1,
+    'Peter Hutterer' => 1,
+    'Guillaume Desmottes' => 1,
+    'Bryce Harrington' => 1,
 );
 
 # use me for testing XML pretty printing etc.
@@ -387,12 +390,12 @@ print << "EOF"
      <table:table-cell table:style-name="isodate" office:value-type="date" office:date-value="$date_value" calcext:value-type="date">
       <text:p>$date_value</text:p>
      </table:table-cell>
+     <table:table-cell/> <!-- 3.5 -->
      <table:table-cell/>
+     <table:table-cell/> <!-- 3.6 -->
      <table:table-cell/>
+     <table:table-cell/> <!-- 4.0 -->
      <table:table-cell/>
-     <table:table-cell/>
-     <table:table-cell office:value-type="float" office:value="$ver_open{'4.0'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.P2]-[.F2]" office:value-type="float" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.1'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.Q2]-[.H2]" office:value-type="float" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.2'}" calcext:value-type="float"/>
