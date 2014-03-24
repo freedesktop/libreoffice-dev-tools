@@ -12,6 +12,7 @@
 #
 
 import json
+import re
 import subprocess
 import sys
 
@@ -23,7 +24,7 @@ def dumpChange(change):
 def filterDomain(changes, domain):
     ret = []
     for i in changes:
-        if i['owner']['email'].endswith(domain):
+        if re.match(domain, i['owner']['email']):
             ret.append(i)
     return ret
 
@@ -59,8 +60,8 @@ def main(argv):
                     break
             if not skip:
                 for j in i['patchSets'][-1]['approvals']:
-                    if j['value'] == "-1":
-                        skippedChanges.append((i, "-1 review"))
+                    if j['value'] in ("-1", "-2"):
+                        skippedChanges.append((i, "negative review"))
                         skip = True
                         break
         except:
