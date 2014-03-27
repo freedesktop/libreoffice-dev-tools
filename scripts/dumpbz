@@ -162,7 +162,7 @@ class SyncWorker:
         self.storage.read_config(self.config)
     def __sync_bug(self, bug_id):
         try:
-            with open(self.storage.get_bugfilename(bug_id), 'w') as bugfile:
+            with open(self.storage.get_bugfilename(bug_id), 'w', encoding='utf8') as bugfile:
                 bugfile.write(self.bzwrapper.get_bug_xml(bug_id))
                 time.sleep(float(self.config['DumpBz']['IdleTime'])/1000)
         except Exception as e:
