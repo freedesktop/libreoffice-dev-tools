@@ -28,7 +28,7 @@ def init_branch(startpoint):
 
     try:
         justrunit(['git', 'checkout', branchName])
-    except CalledProcessError as e:
+    except subprocess.CalledProcessError as e:
         # If the branch does not exist, we need to create it.
         justrunit(['git', 'checkout', '-b', branchName, startpoint])
         print("Creating branch " + branchName)
