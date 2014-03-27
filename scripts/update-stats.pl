@@ -69,6 +69,16 @@ my %versions = (
     '40b2d7fde7e8d2d7bc5a449dc65df4d08a7dd38' => '4.1.2_RC3',
 
     '70feb7d99726f064edab4605a8ab840c50ec57a' => '4.1.3_RC3',
+
+    '0a0440ccc0227ad9829de5f46be37cfb6edcf72' => '4.1.4_RC2',
+
+    '1c1366bba2ba2b554cd2ca4d87c06da81c05d24' => '4.1.5_RC3',
+
+    '05dceb5d363845f2cf968344d7adab8dcfb2ba71' => '4.2.0_RC4',
+
+    'd7dbbd7842e6a58b0f521599204e827654e1fb8b' => '4.2.1_RC1',
+
+    '3be8cda0bddd8e430d8cda1ebfd581265cca5a0f' => '4.2.2_RC1',
 );
 
 my %month_to_num = (
