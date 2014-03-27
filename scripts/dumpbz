@@ -1,0 +1,367 @@
+#!/usr/bin/env python3
+# 
+#  Version: MPL 1.1 / GPLv3+ / LGPLv3+
+# 
+#  The contents of this file are subject to the Mozilla Public License Version
+#  1.1 (the "License"); you may not use this file except in compliance with
+#  the License or as specified alternatively below. You may obtain a copy of
+#  the License at http://www.mozilla.org/MPL/
+# 
+#  Software distributed under the License is distributed on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+#  for the specific language governing rights and limitations under the
+#  License.
+# 
+#  Major Contributor(s):
+#  [ Copyright (C) 2014 Bjoern Michaelsen <bjoern.michaelsen@canonical.com>]
+# 
+#  All Rights Reserved.
+# 
+#  For minor contributions see the git repository.
+# 
+#  Alternatively, the contents of this file may be used under the terms of
+#  either the GNU General Public License Version 3 or later (the "GPLv3+"), or
+#  the GNU Lesser General Public License Version 3 or later (the "LGPLv3+"),
+#  in which case the provisions of the GPLv3+ or the LGPLv3+ are applicable
+#  instead of those above.
+
+import configparser
+import optparse
+import os
+import os.path
+import shutil
+import subprocess
+import sys
+import time
+import tempfile
+import unittest
+import urllib.request
+
+class DumpBzConfig(configparser.ConfigParser):
+    def set_defaults(self):
+        self['DumpBz'] = {
+            'BatchSize' : 1000,
+            'UpdateAge' : '30h',
+            'IdleTime' : 1000 }
+
+class DumpBzState(configparser.ConfigParser):
+    def set_defaults(self):
+        self['DumpBz'] = {
+            'LastBugSynced' : 0,
+            'UnresolvedSyned' : False }
+
+class WorkingBranchCopy:
+    def __init__(self, gitrepo, branch):
+        (self.gitrepo, self.branch) = (gitrepo, branch)
+    def __enter__(self):
+        self.workdir = tempfile.mkdtemp()
+        subprocess.check_output(['git', 'clone', '-s', '-b', self.branch, self.gitrepo, self.workdir], stderr=subprocess.DEVNULL)
+        return self
+    def __exit__(self, t, v, trace):
+        shutil.rmtree(self.workdir)
+    def commit_and_push(self, message):
+        subprocess.check_output(['git', '-C', self.workdir, 'add', '-A'], stderr=None)
+        subprocess.check_output(['git', '-C', self.workdir, 'commit', '--allow-empty', '-m', message], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.workdir, 'push', 'origin', self.branch + ':' + self.branch], stderr=subprocess.DEVNULL)
+
+class LocalGitStorage:
+    def __init__(self, basedir):
+        self.basedir = basedir
+    def __write_ini(self, branch, filename, ini):
+        with WorkingBranchCopy(self.basedir, branch) as workcopy:
+            with open(os.path.join(workcopy.workdir, filename), 'w') as inifile:
+                ini.write(inifile)
+            workcopy.commit_and_push('updated ' + filename)
+    def __read_ini(self, branch, filename, ini):
+        with WorkingBranchCopy(self.basedir, branch) as workcopy:
+            ini.read(os.path.join(workcopy.workdir, filename))
+    def write_config(self, config):
+        self.__write_ini('config', 'config', config)
+    def read_config(self, config):
+        return self.__read_ini('config', 'config', config)
+    def write_state(self, state):
+        self.__write_ini('state', 'state', state)
+    def read_state(self, state):
+        return self.__read_ini('state', 'state', state)
+    def create_pocket_dirs(self):
+        for pocket in range(0,1000):
+            asstring = "%03d" % pocket
+            dirname = os.path.join(asstring[-1], asstring)
+            dirpath = os.path.join(self.basedir, dirname)
+            if not os.path.isdir(dirpath):
+                os.makedirs(dirpath)
+    def setup(self):
+        subprocess.check_output(['git', 'init', self.basedir], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.basedir, 'commit', '--allow-empty', '-m', 'init'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.basedir, 'checkout', '-b', 'config'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.basedir, 'checkout', '-b', 'state'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.basedir, 'checkout', '-b', 'log'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.basedir, 'checkout', 'master'], stderr=subprocess.DEVNULL)
+        self.create_pocket_dirs()
+        config = DumpBzConfig()
+        config.set_defaults()
+        self.write_config(config)
+        state = DumpBzState()
+        state.set_defaults()
+        self.write_state(state)
+    def reset(self):
+        subprocess.check_output(['git', '-C', self.basedir, 'clean', '-dfx'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.basedir, 'reset', '--hard', 'HEAD'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.basedir, 'checkout', 'master'], stderr=subprocess.DEVNULL)
+        self.create_pocket_dirs()
+    def commit(self, message):
+        subprocess.check_output(['git', '-C', self.basedir, 'add', '-A'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.basedir, 'commit', '-m', message], stderr=subprocess.DEVNULL)
+    def get_bugfilename(self, bug_id):
+        bug_as_str = "%03d" % int(bug_id)
+        return os.path.join(self.basedir, bug_as_str[-1], bug_as_str[-3:], bug_id)
+
+class BugzillaWrapper:
+    def get_initial_bug_id(self):
+        pass
+    def get_batch_of_bug_ids(self, offset, batchsize, unresolved):
+        pass
+    def get_changed_bug_ids(self, since):
+        pass
+    def get_bug_xml(self, bug_id):
+        pass
+
+class FdoBugzillaWrapper:
+    FDOBZ='https://bugs.freedesktop.org/'
+    BATCHQUERY   = 'buglist.cgi?query_format=advanced&ctype=csv&f1=bug_id&columnlist=bug_id&o1=greaterthan&v1=%d&product=LibreOffice&limit=%d&order=bug_id'
+    CHANGEDQUERY = 'buglist.cgi?query_format=advanced&ctype=csv&f1=bug_id&columnlist=bug_id&chfieldto=Now&chfieldfrom=%s&product=LibreOffice'
+    UNRESOLVEDONLY='&resolution=---'
+    BUGXMLQUERY  = 'show_bug.cgi?ctype=xml&id=%d'
+    def __batch_buglist_url(self, offset, limit, unresolved_only):
+        url = FdoBugzillaWrapper.FDOBZ + FdoBugzillaWrapper.BATCHQUERY % (offset, limit)
+        if unresolved_only:
+            url += FdoBugzillaWrapper.UNRESOLVEDONLY
+        return url
+    def __changed_buglist_url(self, since):
+        url = FdoBugzillaWrapper.FDOBZ + FdoBugzillaWrapper.CHANGEDQUERY % (since)
+        return url
+    def __query_bug_list(self, query):
+        opener = urllib.request.urlopen(query)
+        bug_ids = str(opener.read(), encoding='utf8')
+        bug_ids = bug_ids.split('\n')[1:]
+        return bug_ids
+    def get_batch_of_bug_ids(self, offset, batchsize, unresolved):
+        return self.__query_bug_list(self.__batch_buglist_url(int(offset), int(batchsize), unresolved))
+    def get_initial_bug_id(self):
+        return '0'
+    def get_changed_bug_ids(self, since):
+        return self.__query_bug_list(self.__changed_buglist_url(since))
+    def get_bug_xml(self, bug_id):
+        opener = urllib.request.urlopen(FdoBugzillaWrapper.FDOBZ + FdoBugzillaWrapper.BUGXMLQUERY % int(bug_id))
+        return str(opener.read(), encoding='utf8')
+
+class SyncWorker:
+    def __init__(self, storage, bzwrapper):
+        (self.storage, self.bzwrapper, self.log) = (storage, bzwrapper, None)
+        self.config = DumpBzConfig()
+        self.storage.read_config(self.config)
+    def __sync_bug(self, bug_id):
+        try:
+            with open(self.storage.get_bugfilename(bug_id), 'w') as bugfile:
+                bugfile.write(self.bzwrapper.get_bug_xml(bug_id))
+                time.sleep(float(self.config['DumpBz']['IdleTime'])/1000)
+        except Exception as e:
+            self.log.write("syncing bug %s FAILED: %s\n" % (bug_id, str(e)))
+        else:
+            self.log.write("syncing bug %s succeeded.\n" % bug_id)
+    def __update_changed(self):
+        try:
+            since = self.config['DumpBz']['UpdateAge']
+            bug_ids = self.bzwrapper.get_changed_bug_ids("-1d")
+            self.log.write('Updating changed bugs since %s: %s\n' % (since, repr(bug_ids)))
+            for bug_id in self.bzwrapper.get_changed_bug_ids(self.config['DumpBz']['UpdateAge']):
+                self.__sync_bug(bug_id)
+        except Exception as e:
+            self.log.write("updating changed bugs FAILED: %s\n" % str(e))
+    def __update_batch(self, state):
+        try:
+            last_bug_id = state['DumpBz']['LastBugSynced']
+            if last_bug_id == '0':
+                last_bug_id = self.bzwrapper.get_initial_bug_id()
+            batchsize = self.config['DumpBz']['BatchSize']
+            unresolved = not state.getboolean('DumpBz', 'UnresolvedSyned')
+            unresolved_logaddition = ''
+            if unresolved:
+                unresolved_logaddition = 'unresolved '
+            bug_ids = self.bzwrapper.get_batch_of_bug_ids(last_bug_id, batchsize, unresolved)
+            self.log.write('Looked for %d %sbugs starting at %d, got: %s\n' % (int(batchsize), unresolved_logaddition, int(last_bug_id), repr(bug_ids)))
+            for bug_id in bug_ids:
+                self.__sync_bug(bug_id)
+                state['DumpBz']['LastBugSynced'] = bug_id
+            if len(bug_ids) < int(batchsize):
+                self.log.write('Last batch, starting next cycle.\n')
+                state['DumpBz']['UnresolvedSyned'] = True
+                state['DumpBz']['LastBugSynced'] = 0
+        except Exception as e:
+            self.log.write("updating old batch FAILED: %s\n" % str(e))
+        return state
+    def __do_update_step(self, state):
+        self.storage.reset()
+        self.__update_changed()
+        state = self.__update_batch(state)
+        self.storage.commit('update')
+        return state
+    def run(self):
+        with WorkingBranchCopy(self.storage.basedir, 'log') as logcopy:
+            try:
+                with open(os.path.join(logcopy.workdir, 'log'),'a') as self.log:
+                    state = DumpBzState()
+                    self.storage.read_state(state)
+                    self.storage.write_state(self.__do_update_step(state))
+            finally:
+                logcopy.commit_and_push('update log')
+
+# only test classes beyond this point
+
+class TestWorkingBranchCopy(unittest.TestCase):
+    def setUp(self):
+        self.testdir = tempfile.mkdtemp()
+        subprocess.check_output(['git', 'init', self.testdir], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.testdir, 'commit', '--allow-empty', '-m', 'init'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.testdir, 'checkout', '-b', 'somebranch'], stderr=subprocess.DEVNULL)
+        subprocess.check_output(['git', '-C', self.testdir, 'checkout', '-b', 'deadbranch'], stderr=subprocess.DEVNULL)
+    def tearDown(self):
+        shutil.rmtree(self.testdir)
+    def create_new_file(self, branch):
+        with WorkingBranchCopy(self.testdir, branch) as workcopy:
+            with open(os.path.join(workcopy.workdir, branch + '_testfile'), 'w') as testfile:
+                testfile.write(branch + '_filecontent')
+            workcopy.commit_and_push(branch + '_commitmessage')
+        last_commit = str(subprocess.check_output(['git', '-C', self.testdir, 'show', branch]))
+        self.assertRegex(last_commit, branch + '_filecontent')
+        self.assertRegex(last_commit, branch + '_commitmessage')
+        self.assertRegex(last_commit, branch + '_testfile')
+    def test_master(self):
+        self.create_new_file('master')
+    def test_branch(self):
+        self.create_new_file('somebranch')
+
+class TestDumpBzConfig(unittest.TestCase):
+    def setUp(self):
+        self.testdir = tempfile.mkdtemp()
+        self.testfile = os.path.join(self.testdir, 'config')
+    def tearDown(self):
+        shutil.rmtree(self.testdir)
+    def test_default_roundtrip(self):
+        config = DumpBzConfig()
+        config.set_defaults()
+        self.assertIn('DumpBz', config)
+        self.assertIn('BatchSize', config['DumpBz'])
+        self.assertIn('UpdateAge', config['DumpBz'])
+        self.assertIn('IdleTime', config['DumpBz'])
+        with open(self.testfile, 'w') as configfile:
+            config.write(configfile)
+        readconfig = DumpBzConfig()
+        readconfig.read(self.testfile)
+        self.assertIn('DumpBz', readconfig)
+        self.assertIn('BatchSize', readconfig['DumpBz'])
+        self.assertIn('UpdateAge', readconfig['DumpBz'])
+        self.assertIn('IdleTime', readconfig['DumpBz'])
+ 
+class TestLocalGitStorage(unittest.TestCase):
+    def setUp(self):
+        self.testdir = tempfile.mkdtemp()
+        self.storage = LocalGitStorage(self.testdir)
+    def tearDown(self):
+        shutil.rmtree(self.testdir)
+    def test_setup(self):
+        self.storage.setup() 
+        config = DumpBzConfig()
+        self.storage.read_config(config)
+        self.assertIn('DumpBz', config)
+        self.assertIn('BatchSize', config['DumpBz'])
+        self.assertIn('IdleTime', config['DumpBz'])
+        state = DumpBzState()
+        self.storage.read_state(config)
+        self.assertIn('DumpBz', config)
+        self.assertIn('LastBugSynced', config['DumpBz'])
+        self.assertIn('UnresolvedSyned', config['DumpBz'])
+    def test_update(self):
+        self.storage.setup()
+        self.storage.reset()
+        with open(self.storage.get_bugfilename('55555'), 'w') as testfile:
+            testfile.write('test_update_filecontent')
+        self.storage.commit('test_update_commitmessage')
+        last_commit = str(subprocess.check_output(['git', '-C', self.testdir, 'show', 'master']))
+        self.assertRegex(last_commit, 'test_update_filecontent')
+        self.assertRegex(last_commit, 'test_update_commitmessage')
+        self.assertRegex(last_commit, '55555')
+
+class BugzillaWrapperMock(BugzillaWrapper):
+    def get_initial_bug_id(self):
+        return '9999'
+    def get_batch_of_bug_ids(self, offset, batchsize, unresolved):
+        return [str(bug_id) for bug_id in range(int(offset), int(offset)-int(batchsize), -1)]
+    def get_changed_bug_ids(self, since):
+        return ['1', '2', '3']
+    def get_bug_xml(self, bug_id):
+        return 'bug content %s' % bug_id
+
+class TestSyncWorker(unittest.TestCase):
+    def setUp(self):
+        self.testdir = tempfile.mkdtemp()
+        self.storage = LocalGitStorage(self.testdir)
+        self.storage.setup()
+        config = DumpBzConfig()
+        self.storage.read_config(config)
+        config['DumpBz']['BatchSize'] = '10'
+        self.storage.write_config(config)
+        self.bzwrapper = BugzillaWrapperMock()
+        self.worker = SyncWorker(self.storage, self.bzwrapper)
+    def tearDown(self):
+        shutil.rmtree(self.testdir)
+    def verify_bug_id(self, commit, bug_id):
+        self.assertRegex(commit, 'bug content %s' % bug_id)
+        self.assertRegex(commit, self.storage.get_bugfilename(bug_id).replace(self.storage.basedir, '', 1))
+    def test_run(self):
+        self.worker.run()
+        commit = str(subprocess.check_output(['git', '-C', self.testdir, 'show', 'master']))
+        for bug_id in self.bzwrapper.get_changed_bug_ids(None):
+            self.verify_bug_id(commit, bug_id)
+        for bug_id in self.bzwrapper.get_batch_of_bug_ids('9999','10',True):
+            self.verify_bug_id(commit, bug_id)
+ 
+class TestFdoBugzillaWrapper(unittest.TestCase):
+    def setUp(self):
+        self.fdowrapper = FdoBugzillaWrapper()
+    def __check_bug_list(self, bug_ids):
+        for bug_id in bug_ids:
+            self.assertGreater(int(bug_id), 0)
+    def test_get_batch_of_bug_ids(self):
+        bug_ids = self.fdowrapper.get_batch_of_bug_ids(0, 15, False)
+        self.assertEqual(len(bug_ids), 15)
+        self.__check_bug_list(bug_ids)
+    def test_get_initial_bug_id(self):
+        bug_id = self.fdowrapper.get_initial_bug_id()
+    def test_get_changed_bug_ids(self):
+        bug_ids = self.fdowrapper.get_changed_bug_ids('1d')
+        self.__check_bug_list(bug_ids)
+    def test_get_bug_xml(self):
+        bug_xml = self.fdowrapper.get_bug_xml(10000)
+        self.assertRegex(bug_xml, 'bugzilla version')
+
+if __name__ == '__main__':
+    parser = optparse.OptionParser()
+    parser.add_option('--selftest', action='store_true', dest='selftest', default=False)
+    parser.add_option('--storage', action='store', dest='storage')
+    parser.add_option('--setup', action='store_true', dest='setup', default=False)
+    (options, args) = parser.parse_args()
+    if options.selftest:
+        unittest.main(argv=[sys.argv[0]])
+    else:
+        if not options.storage:
+            sys.exit(1)
+        bzwrapper = FdoBugzillaWrapper()
+        storage = LocalGitStorage(options.storage)
+        if options.setup:
+            storage.setup()
+            sys.exit(0)
+        worker = SyncWorker(storage, bzwrapper)
+        worker.run()
+
+#  vim:set shiftwidth=4 softtabstop=4 expandtab: */
