@@ -225,7 +225,7 @@ class SyncWorker:
             if len(bug_ids) < int(batchsize):
                 self.log.write('Last batch, starting next cycle.\n')
                 state['DumpBz']['UnresolvedSyned'] = 'true'
-                state['DumpBz']['LastBugSynced'] = 0
+                state['DumpBz']['LastBugSynced'] = '0'
         except Exception as e:
             self.log.write("updating old batch FAILED: %s\n" % str(e))
         return state
