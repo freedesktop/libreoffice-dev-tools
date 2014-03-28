@@ -48,7 +48,7 @@ class DumpBzState(configparser.ConfigParser):
     def set_defaults(self):
         self['DumpBz'] = {
             'LastBugSynced' : 0,
-            'UnresolvedSyned' : False }
+            'UnresolvedSyned' : 'false' }
 
 class WorkingBranchCopy:
     def __init__(self, gitrepo, branch):
@@ -224,7 +224,7 @@ class SyncWorker:
                 state['DumpBz']['LastBugSynced'] = bug_id
             if len(bug_ids) < int(batchsize):
                 self.log.write('Last batch, starting next cycle.\n')
-                state['DumpBz']['UnresolvedSyned'] = True
+                state['DumpBz']['UnresolvedSyned'] = 'true'
                 state['DumpBz']['LastBugSynced'] = 0
         except Exception as e:
             self.log.write("updating old batch FAILED: %s\n" % str(e))
