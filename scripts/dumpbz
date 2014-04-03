@@ -157,17 +157,17 @@ class FdoBugzillaWrapper:
 
 class AooBugzillaWrapper:
     AOOBZ='https://issues.apache.org/ooo/'
-    BATCHQUERY   = 'buglist.cgi?query_format=advanced&ctype=csv&f1=bug_id&columnlist=bug_id&o1=greaterthan&v1=%d&product=LibreOffice&limit=%d&order=bug_id'
+    BATCHQUERY   = 'buglist.cgi?query_format=advanced&ctype=csv&f1=bug_id&columnlist=bug_id&o1=greaterthan&v1=%d&limit=%d&order=bug_id'
     CHANGEDQUERY = 'buglist.cgi?query_format=advanced&ctype=csv&f1=bug_id&columnlist=bug_id&chfieldto=Now&chfieldfrom=%s&product=LibreOffice'
     UNRESOLVEDONLY='&resolution=---'
     BUGXMLQUERY  = 'show_bug.cgi?ctype=xml&id=%d'
     def __batch_buglist_url(self, offset, limit, unresolved_only):
-        url = FdoBugzillaWrapper.FDOBZ + FdoBugzillaWrapper.BATCHQUERY % (offset, limit)
+        url = AooBugzillaWrapper.AOOBZ + AooBugzillaWrapper.BATCHQUERY % (offset, limit)
         if unresolved_only:
-            url += FdoBugzillaWrapper.UNRESOLVEDONLY
+            url += AooBugzillaWrapper.UNRESOLVEDONLY
         return url
     def __changed_buglist_url(self, since):
-        url = FdoBugzillaWrapper.FDOBZ + FdoBugzillaWrapper.CHANGEDQUERY % (since)
+        url = AooBugzillaWrapper.AOOBZ + AooBugzillaWrapper.CHANGEDQUERY % (since)
         return url
     def __query_bug_list(self, query):
         opener = urllib.request.urlopen(query)
@@ -175,13 +175,14 @@ class AooBugzillaWrapper:
         bug_ids = bug_ids.split('\n')[1:]
         return bug_ids
     def get_batch_of_bug_ids(self, offset, batchsize, unresolved):
+        print('AOO batch url: %s' % self.__batch_buglist_url(int(offset), int(batchsize), unresolved))
         return self.__query_bug_list(self.__batch_buglist_url(int(offset), int(batchsize), unresolved))
     def get_initial_bug_id(self):
         return '0'
     def get_changed_bug_ids(self, since):
         return self.__query_bug_list(self.__changed_buglist_url(since))
     def get_bug_xml(self, bug_id):
-        opener = urllib.request.urlopen(FdoBugzillaWrapper.FDOBZ + FdoBugzillaWrapper.BUGXMLQUERY % int(bug_id))
+        opener = urllib.request.urlopen(AooBugzillaWrapper.AOOBZ + AooBugzillaWrapper.BUGXMLQUERY % int(bug_id))
         return str(opener.read(), encoding='utf8')
 
 class SyncWorker:
