@@ -175,7 +175,6 @@ class AooBugzillaWrapper:
         bug_ids = bug_ids.split('\n')[1:]
         return bug_ids
     def get_batch_of_bug_ids(self, offset, batchsize, unresolved):
-        print('AOO batch url: %s' % self.__batch_buglist_url(int(offset), int(batchsize), unresolved))
         return self.__query_bug_list(self.__batch_buglist_url(int(offset), int(batchsize), unresolved))
     def get_initial_bug_id(self):
         return '0'
