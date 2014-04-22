@@ -42,6 +42,8 @@ my %sadly_non_libreoffice = (
     'Peter Hutterer' => 1,
     'Guillaume Desmottes' => 1,
     'Bryce Harrington' => 1,
+    'Paolo Zanoni' => 1,
+    'David Faure' => 1,
 );
 
 # use me for testing XML pretty printing etc.

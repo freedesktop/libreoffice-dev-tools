@@ -113,6 +113,7 @@ sub dump_breakdown($)
 	    $stem =~ s/^merged as.*$/merged as:/;
 	    $stem =~ s/^prefer.*$/prefer:/;
 	    $stem =~ s/^reject.*$/reject:/;
+	    $stem =~ s/^ignore.*$/ignore:/; # don't breakdown reasons anymore.
 	    $frequency{$stem} = 0 if (!defined $frequency{$stem});
 	    $frequency{$stem}++;
 	    $annotated++;
@@ -135,7 +136,7 @@ sub dump_breakdown($)
 	print "$frequency{$stem}\t$stem\n";
     }
     print "contiguous annotations: $contiguous - contiguous\n";
-    print "contiguous tolerating $in_start_limit_max missing: $contiguous_limit\n";
+#    print "contiguous tolerating $in_start_limit_max missing: $contiguous_limit\n";
 }
 
 sub sanity_check_revs($$)
