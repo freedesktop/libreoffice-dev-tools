@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 
+use URI::Escape qw(uri_escape);
+
 # Please take the time to check that the script still runs
 # before changing this to something else.
 my $bugserver = "bugs.freedesktop.org";
@@ -117,7 +119,10 @@ sub get_query($)
 	if ($line =~ m/<span class="bz_result_count">(\d+) bugs found./) {
 	    $bug_count = $1;
 	    last;
-	}
+    } else { if ($line =~ m/One bug found./) {
+	    $bug_count = 1;
+	    last;
+	} }
     }
     return $bug_count;
 }
@@ -253,9 +258,10 @@ $component_count{'Migration'} = get_deps("https://$bugserver/showdependencytree.
 $component_count{'Crashes'} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
 $component_count{'Borders'} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
 
-my @reg_toquery = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing', 'Libreoffice', 'Writer', 'BASIC' );
+my @reg_toquery = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing', 'Libreoffice', 'Writer', 'BASIC', 'Chart', 'Extensions', 'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export', 'UI', 'filters and storage', 'framework', 'graphics stack', 'sdk' );
 for my $component (@reg_toquery) {
-    $component_count{$component} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&bug_status=PLEASETEST&component=$component&product=LibreOffice");
+    $component_uri = uri_escape($component);
+    $component_count{$component} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&bug_status=PLEASETEST&component=$component_uri&product=LibreOffice");
 }
 
 print STDERR "\t* ~Component   count net *\n";
@@ -437,7 +443,10 @@ EOF
 
 my @output_order = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing',
 		     'Libreoffice', 'Borders', 'Crashes', 'BASIC', 'Writer/RTF',
-		     'Writer', 'Migration' );
+		     'Writer', 'Migration',
+             'Chart', 'Extensions', 'Formula Editor', 'Impress Remote',
+             'Installation', 'Linguistic', 'Printing and PDF export', 'UI',
+             'filters and storage', 'framework', 'graphics stack', 'sdk' );
 
 for my $foo (@output_order) {
     print << "EOF"
