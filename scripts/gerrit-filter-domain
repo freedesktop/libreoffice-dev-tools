@@ -44,7 +44,7 @@ def main(argv):
 
     skippedChanges = []
     for i in domainChanges:
-        skip = False
+        skip = []
 
         files = (set([fileobj['file'] for pset in i['patchSets'] for fileobj in pset['files']]))
         files.remove('/COMMIT_MSG')
@@ -53,20 +53,18 @@ def main(argv):
             for j in files:
                 for k in blacklist:
                     if k in j:
-                        skippedChanges.append((i, k))
-                        skip = True
+                        skip.append(k)
                         break
                 if skip:
                     break
-            if not skip:
-                for j in i['patchSets'][-1]['approvals']:
-                    if j['value'] in ("-1", "-2"):
-                        skippedChanges.append((i, "negative review"))
-                        skip = True
-                        break
+            for j in i['patchSets'][-1]['approvals']:
+                if j['value'] in ("-1", "-2"):
+                    skip.append("%s review" % j['value'])
+                    break
         except:
             pass
-        if skip:
+        if len(skip):
+            skippedChanges.append((i, skip))
             continue
         print("http://gerrit.libreoffice.org/%s [%s] %s" % (i['number'], i['branch'], i['subject']))
         print("Changed files: %s" % ', '.join(files))
@@ -75,7 +73,7 @@ def main(argv):
     print()
     print("Skipped %s changes:" % len(skippedChanges))
     for i in skippedChanges:
-        print("http://gerrit.libreoffice.org/%s: %s" % (i[0]['number'], i[1]))
+        print("http://gerrit.libreoffice.org/%s: %s" % (i[0]['number'], ", ".join(i[1])))
 
 if __name__ == "__main__":
     try:
