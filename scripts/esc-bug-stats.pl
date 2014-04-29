@@ -46,6 +46,7 @@ my %sadly_non_libreoffice = (
     'Bryce Harrington' => 1,
     'Paolo Zanoni' => 1,
     'David Faure' => 1,
+    'Rex Dieter' => 1,
 );
 
 # use me for testing XML pretty printing etc.
@@ -119,10 +120,13 @@ sub get_query($)
 	if ($line =~ m/<span class="bz_result_count">(\d+) bugs found./) {
 	    $bug_count = $1;
 	    last;
-    } else { if ($line =~ m/One bug found./) {
+	} elsif ($line =~ m/One bug found./) {
 	    $bug_count = 1;
 	    last;
-	} }
+	} elsif ($line =~ m/Zarro Boogs found./) {
+	    $bug_count = 0;
+	    last;
+	}
     }
     return $bug_count;
 }
@@ -261,7 +265,7 @@ $component_count{'Borders'} = get_query("https://$bugserver/buglist.cgi?keywords
 my @reg_toquery = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing', 'Libreoffice', 'Writer', 'BASIC', 'Chart', 'Extensions', 'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export', 'UI', 'filters and storage', 'framework', 'graphics stack', 'sdk' );
 for my $component (@reg_toquery) {
     $component_uri = uri_escape($component);
-    $component_count{$component} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&bug_status=PLEASETEST&component=$component_uri&product=LibreOffice");
+    $component_count{$component} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=$component_uri&product=LibreOffice");
 }
 
 print STDERR "\t* ~Component   count net *\n";
