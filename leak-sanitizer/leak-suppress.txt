@@ -1,0 +1,6 @@
+
+#uno tepelib
+leak:cppu/source/typelib/typelib.cxx
+
+# global objects
+leak:SfxFilterContainer::ReadSingleFilter_Impl
