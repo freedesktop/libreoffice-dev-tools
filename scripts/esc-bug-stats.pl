@@ -420,7 +420,7 @@ print << "EOF"
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.1'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.2'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.3'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.B2]+[.D2]+[.F2]+[.H2]+[.L2]" office:value-type="float"/>
+     <table:table-cell table:formula="of:=[.B2]+[.D2]+[.F2]+[.H2]+[.J2]+[.L2]" office:value-type="float"/>
      <table:table-cell table:formula="of:=SUM([.N2:.S2])-[.T2]" office:value-type="float"/>
     </table:table-row>
 
