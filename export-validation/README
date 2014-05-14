@@ -1,4 +1,7 @@
-We use ODF Validator for ODF export validation and officeotron for OOXML export validation.
+We use ODF Validator [1] for ODF export validation and officeotron [2] for OOXML export validation.
 
 Both tools should be available through a wrapper script that is in the path and is called officeotron respectively
 odfvalidator and should have a form similar to the ones of the two scripts in this directory.
+
+[1] http://incubator.apache.org/odftoolkit/conformance/ODFValidator.html
+[2] https://code.google.com/p/officeotron/
