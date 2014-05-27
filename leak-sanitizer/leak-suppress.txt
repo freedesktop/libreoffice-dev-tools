@@ -1,9 +1,0 @@
-
-#uno typelib
-leak:cppu/source/typelib/typelib.cxx
-
-# uno component context
-leak:cppu::defaultBootstrap_InitialComponentContext
-
-# global objects
-leak:SfxFilterContainer::ReadSingleFilter_Impl
