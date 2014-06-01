@@ -62,6 +62,7 @@ sub get_branches() {
 sub is_valid_bugzilla_commit($$) {
    my ( $repo, $branch ) = @_;
    return 1 if ( $repo ne 'core' );
+   return 1 if ( $branch eq '' );
    return ( $branch =~ /^(libreoffice-[^\/]*|master)$/ );
 }
 
