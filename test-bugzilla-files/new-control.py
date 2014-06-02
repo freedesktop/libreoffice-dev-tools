@@ -19,7 +19,6 @@
 import os
 import os.path
 import concurrent.futures
-import urllib.request
 import time
 import subprocess
 
