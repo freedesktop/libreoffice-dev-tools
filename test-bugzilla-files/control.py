@@ -55,6 +55,7 @@ def parseArgs(argv):
 def usage():
     message = """usage: {program} [option]"
 -h | --help: print usage information
+--calc: test all files
 --calc: test calc files
 --writer: test writer files
 --impress: test impress files
@@ -71,7 +72,7 @@ if __name__ == "__main__":
     elif len(opts) == 0:
         usage()
         sys.exit()
-    elif "--writer" in opts or "--calc" in opts or "--impress" in opts or "--draw" in opts or "--reverse" in opts:
+    elif "--writer" in opts or "--calc" in opts or "--impress" in opts or "--draw" in opts or "--reverse" in opts or "--all" in opts:
         print(os.getcwd())
         print(os.listdir(os.getcwd()))
         execute_scripts(opts)
