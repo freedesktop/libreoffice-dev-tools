@@ -90,7 +90,7 @@ sub report($$$) {
     foreach my $key ( keys %new ) {
         my $branch_name = $key;
         $branch_name = '' if ( $branch_name eq 'master' );
-        if ($branch_name =~ /aoo\//) {
+        if ($branch_name =~ /aoo\/|distro\//) {
             next;
         }
 
