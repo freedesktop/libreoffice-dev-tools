@@ -61,7 +61,7 @@ def import_csv(filename):
 def export_csv(filename, data, reader):
     fieldnames = set(data.keys())
     if not reader is None:
-        fieldnames &= set(reader.fieldnames)
+        fieldnames |= set(reader.fieldnames)
     writer = csv.DictWriter(open(filename, "w"), fieldnames)
     writer.writeheader()
     if not reader is None:
