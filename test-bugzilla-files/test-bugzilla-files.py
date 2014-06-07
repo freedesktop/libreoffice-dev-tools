@@ -566,7 +566,7 @@ validDrawFileExtensions = [ ".odg", ".fodg", ".otg", ".sxd", ".std", ".vsd", ".v
 validBaseFileExtensions = [ ".odb" ]
 validMathFileExtensions = [ ".odf", ".otf", ".sxm", ".mml", ".smf", ".smf5" ]
 validOtherFileExtensions = [ ".pdf" ]
-validFileExtensions = dict([("calc", validCalcFileExtensions), ("writer", validWriterFileExtensions), ("impress", validImpressFileExtensions), ("draw", validDrawFileExtensions), ("base", validBaseFileExtensions), ("Math", validMathFileExtensions), ("other", validOtherFileExtensions) ])
+validFileExtensions = dict([("calc", validCalcFileExtensions), ("writer", validWriterFileExtensions), ("impress", validImpressFileExtensions), ("draw", validDrawFileExtensions), ("base", validBaseFileExtensions), ("math", validMathFileExtensions), ("other", validOtherFileExtensions) ])
 
 def runLoadFileTests(opts, dirs):
     startTime = datetime.datetime.now()
