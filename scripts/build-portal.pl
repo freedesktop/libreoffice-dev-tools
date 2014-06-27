@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
+use Bugzilla;
 
 my $git_dir = '/opt/libreoffice/push-tree';
 

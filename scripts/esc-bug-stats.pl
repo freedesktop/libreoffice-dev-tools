@@ -1,58 +1,8 @@
 #!/usr/bin/perl -w
 
-use URI::Escape qw(uri_escape);
-
-# Please take the time to check that the script still runs
-# before changing this to something else.
-my $bugserver = "bugs.freedesktop.org";
-
-# config for eliding top bug contributors who are
-# not (yet) libreoffice hackers.
-my %sadly_non_libreoffice = (
-    'Chris Wilson' => 1,
-    'Bastien Nocera' => 1,
-    'Kristian Høgsberg' => 1,
-    'Simon McVittie' => 1,
-    'Søren Sandmann Pedersen' => 1,
-    'Daniel Vetter' => 1,
-    'Sergey V. Udaltsov' => 1,
-    'Marek Olšák' => 1,
-    'Emil Velikov' => 1,
-    'ajax at nwnk dot net' => 1,
-    'Jesse Barnes' => 1,
-    'Albert Astals Cid' => 1,
-    'Daniel Stone' => 1,
-    'Eric Anholt' => 1,
-    'Lennart Poettering' => 1,
-    'Ilia Mirkin' => 1,
-    'Behdad Esfahbod' => 1,
-    'Richard Hughes' => 1,
-    'Ben Widawsky' => 1,
-    'Chengwei Yang' => 1,
-    'Dan Nicholson' => 1,
-    'Zbigniew Jedrzejewski-Szmek' => 1,
-    'Tanu Kaskinen' => 1,
-    'Vinson Lee' => 1,
-    'Sylvain BERTRAND' => 1,
-    'lu hua' => 1,
-    'Kenneth Graunke' => 1,
-    'Seif Lotfy' => 1,
-    'Alex Deucher' => 1,
-    'Ian Romanick' => 1,
-    'Tollef Fog Heen' => 1,
-    'Patrick Ohly' => 1,
-    'Peter Hutterer' => 1,
-    'Guillaume Desmottes' => 1,
-    'Bryce Harrington' => 1,
-    'Paolo Zanoni' => 1,
-    'David Faure' => 1,
-    'Rex Dieter' => 1,
-    'Tom Stellard' => 1,
-    'almos' => 1,
-);
-
-# use me for testing XML pretty printing etc.
-my $fast_debug = 0;
+use strict;
+use warnings;
+use Bugzilla;
 
 my @time = localtime;
 $time[5] += 1900;
@@ -60,151 +10,19 @@ $time[4]++;
 
 my $date_value = sprintf "%04d-%02d-%02d", @time[5,4,3];
 
-sub get_url($)
-{
-    my $url = shift;
-    my @lines;
-    my $handle;
-    open ($handle, "curl -k -s '$url' 2>&1 |") || die "can't exec curl: $!";
-    while (<$handle>) {
-	push @lines, $_;
-    }
-    close ($handle);
-    return @lines;
-}
-
-sub get_deps($)
-{
-    my ($url) = @_;
-
-    return 42 if ($fast_debug);
-
-    my @bugs = get_url($url);
-
-    my $bug_count = -1;
-    while (my $line = shift (@bugs)) {
-	if ($line =~ m/does not depend on any open bugs/) {
-	    $bug_count = 0;
-	    last;
-	}
-	elsif ($line =~ m/^\s*depends on\s*$/) {
-	    $line = shift @bugs;
-#	    print STDERR "Have depends on '$line'\n";
-	    if ($line =~ m/^\s*(\d+)\s*$/) {
-		my $num = $1;
-		$line = shift @bugs;
-		$line = shift @bugs;
-		if ($line =~ m/bugs:/) {
-		    $bug_count = $num;
-		    last;
-		}
-	    } elsif ($line =~ m/\s+one\s+/) { # special case for one
-		$bug_count = 1;
-		last;
-	    } else {
-		print STDERR "odd depends on follow-on: '$line'\n";
-	    }
-	}
-    }
-    return $bug_count;
-}
-
-sub get_query($)
-{
-    my ($url) = @_;
-
-    return 6 if ($fast_debug);
-
-    my @bugs = get_url($url);
-
-    my $bug_count = -1;
-    while (my $line = shift (@bugs)) {
-	if ($line =~ m/<span class="bz_result_count">(\d+) bugs found./) {
-	    $bug_count = $1;
-	    last;
-	} elsif ($line =~ m/One bug found./) {
-	    $bug_count = 1;
-	    last;
-	} elsif ($line =~ m/Zarro Boogs found./) {
-	    $bug_count = 0;
-	    last;
-	}
-    }
-    return $bug_count;
-}
-
-sub extract_number($)
-{
-    my $line = shift;
-    chomp ($line);
-    $line =~ s/^.*\"\>//;
-    $line =~ s/<.*$//;
-    return $line;
-}
-
-sub crunch_bugstat_lines(@)
-{
-    my @lines = @_;
-
-    my $region = 'header';
-    my $closer_name;
-    my %closed_stats;
-
-    while ((my $line = shift @lines) && $region ne 'end') {
-#	print STDERR "$region -> $line\n";
-	if ($region eq 'header' && $line =~ /<h2>Top .* modules<\/h2>/) {
-	    $region = 'top-modules';
-
-	} elsif ($region eq 'top-modules' &&
-		 $line =~ /<td>LibreOffice<\/td>/) {
-	    my ($total, $opened, $closed);
-	    $total = extract_number (shift @lines);
-	    $opened = extract_number (shift @lines);
-	    $closed = extract_number (shift @lines);
-	    my $sign = '', $delta = $opened + $closed;
-	    $sign = '+' if ($delta > 0);
-	    print STDERR "    $opened    $closed	($sign$delta overall)\n";
-	    $region = 'seek-end-top-modules';
-
-	} elsif ($region eq 'seek-end-top-modules' &&
-		 $line =~ /<h2>Top .* bug closers<\/h2>/) {
-	    $region = 'top-closers';
-
-	} elsif ($region eq 'top-closers' && $line =~ m/<tr class/) {
-	    undef $closer_name;
-	    $region = 'top-closer-name';
-
-	} elsif ($region eq 'top-closers' && $line =~ m/<\/table>/) {
-	    $region = 'end';
-
-	} elsif ($region eq 'top-closer-name' && $line =~ m/<span class=".*">(.*)<\/span>/) {
-	    $closer_name = $1;
-#	    print "$closer_name\n";
-	    $region = 'top-closer-count';
-
-	} elsif ($region eq 'top-closer-count' && $line =~ m/">([0-9]+)<\/a><\/td>/) {
-	    die "no closer name for '$line'" if (!defined $closer_name);
-	    $closed_stats{$closer_name} = $1;
-	    $region = 'top-closers'
-	}
-    }
-
-    $region eq 'end' || die "Failed to parse weekly bug summary - in region '$region'";
-
-    print STDERR "    many thanks to the top bug squashers:\n";
-    for my $name (sort { $closed_stats{$b} <=> $closed_stats{$a} } keys %closed_stats) {
-	next if (defined $sadly_non_libreoffice{$name});
-	printf STDERR "        %-20s%2s\n", $name, $closed_stats{$name};
-    }
-}
-
 sub build_overall_bugstats()
 {
     print STDERR "Querying overall / top bug stats\n";
+    my $bugserver = $Bugzilla::bugserver;
     my $url = "https://$bugserver/page.cgi?id=weekly-bug-summary.html";
 
     print STDERR "  + $url\n";
-    crunch_bugstat_lines(get_url($url));
+    my $closed_stats = Bugzilla::read_bugstats($url);
+
+    print STDERR "    many thanks to the top bug squashers:\n";
+    for my $name (sort { $closed_stats->{$b} <=> $closed_stats->{$a} } keys %{$closed_stats}) {
+	printf STDERR "        %-20s%2s\n", $name, $closed_stats->{$name};
+    }
 }
 
 my %bug_to_ver = (
@@ -223,10 +41,10 @@ build_overall_bugstats();
 print STDERR "Querying for open MABs:\n";
 for my $ver (reverse sort keys %bug_to_ver) {
     my $bug = $bug_to_ver{$ver};
-    my $base_url = "https://$bugserver/showdependencytree.cgi?id=" . $bug;
-    my $all = get_deps($base_url);
-    my $open = get_deps($base_url . "&hide_resolved=1");
-    $percent = sprintf("%2d", (($open * 100.0) / $all));
+    my $base_url = "https://$Bugzilla::bugserver/showdependencytree.cgi?id=" . $bug;
+    my $all = Bugzilla::get_deps($base_url);
+    my $open = Bugzilla::get_deps($base_url . "&hide_resolved=1");
+    my $percent = sprintf("%2d", (($open * 100.0) / $all));
     print STDERR "$ver: $open/$all - $percent%\n";
     $ver_open{$ver} = $open;
     $ver_total{$ver} = $all;
@@ -235,18 +53,18 @@ for my $ver (reverse sort keys %bug_to_ver) {
 my ($reg_all, $reg_open);
 
 print STDERR "Querying for regressions:\n";
-my $regression_query="https://$bugserver/buglist.cgi?columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&keywords=regression%2C%20&keywords_type=allwords&list_id=267671&product=LibreOffice&query_format=advanced&order=bug_id&limit=0";
-my $regression_open_query="https://$bugserver/buglist.cgi?keywords=regression%2C%20&keywords_type=allwords&list_id=267687&columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&resolution=---&query_based_on=Regressions&query_format=advanced&product=LibreOffice&known_name=Regressions&limit=0";
-$reg_all = get_query($regression_query);
-$reg_open = get_query($regression_open_query);
+my $regression_query="https://$Bugzilla::bugserver/buglist.cgi?columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&keywords=regression%2C%20&keywords_type=allwords&list_id=267671&product=LibreOffice&query_format=advanced&order=bug_id&limit=0";
+my $regression_open_query="https://$Bugzilla::bugserver/buglist.cgi?keywords=regression%2C%20&keywords_type=allwords&list_id=267687&columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&resolution=---&query_based_on=Regressions&query_format=advanced&product=LibreOffice&known_name=Regressions&limit=0";
+$reg_all = Bugzilla::get_query($regression_query);
+$reg_open = Bugzilla::get_query($regression_open_query);
 
 print STDERR "Querying for bibisection:\n";
-my $bibisect_query = "https://$bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267679&o1=substring&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=MOVED&resolution=NOTABUG&resolution=NOTOURBUG&query_based_on=BibisectedAll&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=BibisectedAll&limit=0";
-my $bibisect_open_query = "https://$bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267685&o1=substring&resolution=---&query_based_on=Bibisected&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=Bibisected&limit=0";
+my $bibisect_query = "https://$Bugzilla::bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267679&o1=substring&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=MOVED&resolution=NOTABUG&resolution=NOTOURBUG&query_based_on=BibisectedAll&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=BibisectedAll&limit=0";
+my $bibisect_open_query = "https://$Bugzilla::bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267685&o1=substring&resolution=---&query_based_on=Bibisected&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=Bibisected&limit=0";
 
 my ($all, $open);
-$all = get_query($bibisect_query);
-$open = get_query($bibisect_open_query);
+$all = Bugzilla::get_query($bibisect_query);
+$open = Bugzilla::get_query($bibisect_open_query);
 print STDERR "\n";
 print STDERR "* Bibisected bugs open: whiteboard 'bibsected'\n";
 print STDERR "\t+ $open (of $all) older ?\n";
@@ -260,14 +78,14 @@ print STDERR "\n";
 my %component_count;
 
 # custom pieces
-$component_count{'Migration'} = get_deps("https://$bugserver/showdependencytree.cgi?id=43489&hide_resolved=1");
-$component_count{'Crashes'} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
-$component_count{'Borders'} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
+$component_count{'Migration'} = Bugzilla::get_deps("https://$Bugzilla::bugserver/showdependencytree.cgi?id=43489&hide_resolved=1");
+$component_count{'Crashes'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
+$component_count{'Borders'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
 
 my @reg_toquery = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing', 'Libreoffice', 'Writer', 'BASIC', 'Chart', 'Extensions', 'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export', 'UI', 'filters and storage', 'framework', 'graphics stack', 'sdk' );
 for my $component (@reg_toquery) {
-    $component_uri = uri_escape($component);
-    $component_count{$component} = get_query("https://$bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=$component_uri&product=LibreOffice");
+    my $component_uri = Bugzilla::uri_escape($component);
+    $component_count{$component} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=$component_uri&product=LibreOffice");
 }
 
 print STDERR "\t* ~Component   count net *\n";
