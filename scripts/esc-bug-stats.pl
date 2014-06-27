@@ -47,6 +47,8 @@ my %sadly_non_libreoffice = (
     'Paolo Zanoni' => 1,
     'David Faure' => 1,
     'Rex Dieter' => 1,
+    'Tom Stellard' => 1,
+    'almos' => 1,
 );
 
 # use me for testing XML pretty printing etc.
@@ -408,8 +410,8 @@ print << "EOF"
      <table:table-cell/>
      <table:table-cell/> <!-- 4.0 -->
      <table:table-cell/>
-     <table:table-cell office:value-type="float" office:value="$ver_open{'4.1'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.Q2]-[.H2]" office:value-type="float" calcext:value-type="float"/>
+     <table:table-cell/> <!-- 4.1 -->
+     <table:table-cell/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.2'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.R2]-[.J2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.3'}" calcext:value-type="float"/>
