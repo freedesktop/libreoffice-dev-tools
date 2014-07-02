@@ -230,8 +230,6 @@ if (!$list && !$stats && !$fetch) {
 	exit 1;
     }
 
-    print "$note_text' '$note_hash\n";
-
     validate_check_note($note_text);
     validate_git_hash($note_hash) ||
 	    die "Hash on master '$note_hash' doesn't look like a git hash\n";
