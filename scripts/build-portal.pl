@@ -1,9 +1,16 @@
 #!/usr/bin/perl -w
 
+use FindBin;
+use lib "$FindBin::Bin";
+
 use strict;
 use Bugzilla;
 
 my $git_dir = '/opt/libreoffice/push-tree';
+
+# FIXME: add a re-build-section thing ...
+# German comments: overall stats ... smallest <N> modules ...
+# a bit of text on how to fix that etc.
 
 sub usage()
 {
@@ -49,6 +56,7 @@ LibreOffice Development Portal
     <p>$dialogs{ui_files} UI files</p>
     <p>$dialogs{ui_dialogs} dialogs left</p>
     <p>$dialogs{ui_tabpages} tab-pages left</p>
+    <a href="FIXME: Caolan's write-up">Get Involved</a>
     </div>
 </body>
 </html>
