@@ -1,0 +1,30 @@
+$def with (res_dict, hint)
+
+$:headerhtml
+<div id="corpus">
+<a href="/">Restart</a>
+<p>
+This is what I searched : <b>$hint</b> <br />
+But i need to tell you
+$if not res_dict:
+    <h2>No result found for $hint. Please click Restart and search again.</h2>
+$else:
+    I found this :
+    <table id="results">
+        <tr><th>Text</th><th>Locations</th></tr>
+    $for item in res_dict:
+        <tr><td>$item </td>
+        <td>
+        <ul>
+            $for loc in res_dict[item]:
+            <li>$loc[0] at line 
+            <a href="$url/pick/$hint/$loc[0]/$loc[1]" target="_blank">
+            $loc[1]</a>
+            </li>
+        </ul>
+        </td>
+        </tr>
+    </table>
+</p>
+</div>
+$:footerhtml

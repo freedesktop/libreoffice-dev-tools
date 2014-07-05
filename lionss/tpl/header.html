@@ -1,0 +1,21 @@
+$def with (ver, subtitle)
+
+$code:
+    if subtitle:
+       subtitle = ' // ' + subtitle 
+
+<html>
+<head>
+	<title>LiONSS $ver $subtitle</title>
+	<link rel="stylesheet" type="text/css" href="/static/lionss.css" />
+</head>
+		
+<body>
+<div id="header">
+	<h1>
+		<a href="http://www.libreoffice.org" title="LibreOffice website">
+			<img src="/static/libreoffice-logo.png" alt="LibreOffice" />
+		</a>
+	</h1>
+	<p id="tagline">LiONSS: <em>Li</em>bre<em>O</em>ffice <em>N</em>ormative-<em>S</em>trings <em>S</em>earcher</p>
+</div>

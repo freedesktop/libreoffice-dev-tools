@@ -1,0 +1,19 @@
+$def with (more)
+
+$:headerhtml
+<div id="corpus">
+	<div>
+		<p>Welcome !</p>
+		
+		<p>So you want to search some translatable strings ? Let's go :</p>
+	</div>
+
+	<form method="post" >
+		$:more.render()
+	</form>
+	<p>
+	<small>Message about strictness : 1 = strict, 100 = very loose. If you search 
+	for substrings (&laquo;Update links&raquo; instead of &laquo;Update links 
+	when opening&raquo;), make it very loose.</small></p>
+</div>
+$:footerhtml

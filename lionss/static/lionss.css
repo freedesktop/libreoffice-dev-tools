@@ -1,0 +1,42 @@
+body {
+    font: normal normal 400 14px Sans-Serif;
+}
+
+#header { 
+    width : 935px; 
+    margin : auto;
+    border-bottom: 6px solid #18A303;
+    height: 88px;
+    text-align: center;
+}
+
+#header h1 { display : inline; float : left;}
+#tagline { 
+    vertical-align : center; 
+    padding-top: 44px; /* to align on logo */
+    font-family : Serif; 
+    font-size: 150%
+}
+#tagline em { color: #18A303; font-style:normal }
+#corpus { width : 935px; margin: auto ; min-height: 400px;}
+#index th {  text-align: right ; padding-right: 8px}
+#footer { font-size : smaller ; text-align : center; color: #18A303;}
+
+#results tr { 
+border-bottom: 1px solid #FFFFFF;
+border-top: 1px solid #FFFFFF;
+}
+
+#results tr td { padding : 3px}
+#results th { background-color: #43C330; color: #FFFFFF; }
+#results tr:nth-child(2n) { 
+background-color: #CCF4C6;
+}
+
+#results tr:nth-child(2n+3) { 
+background: #92E285;
+}
+
+.wrong { color: red;}
+
+#corpus a { color: #18A303; }
