@@ -73,7 +73,7 @@ def init_freshers():
     if not os.path.exists(os.path.join(repo_dir,'config')):
         subprocess.call(['git','clone','--bare','git://gerrit.libreoffice.org/core',repo_dir])
     else:
-        subprocess.call(['git','fetch','origin'])
+        subprocess.call(['git','fetch','origin','master:master'])
     return subprocess.check_output(['git','shortlog','-s','master'])
 
 
