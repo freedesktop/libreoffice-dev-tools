@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+# This file is part of the LibreOffice project.
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+
+# For ODF, there is flat ODF, but for other XML-based zipped formats, you have
+# to unpack the archive and compare each file manually.
+#
+# This script tries to automate that: you can diff archive contents as well XML
+# contents as well.
+
+# Allow symlinking to ~/bin while still finding formatxml next to us in the original location.
+mydir=$(dirname $0)
+[ -h $0 ] && mydir=$(dirname $(readlink $0))
+
+unpack()
+{
+    mkdir $1
+    cd $1
+    unzip -q $2
+    if [ -z "$filesOnly" ]; then
+        for i in $(find . -name "*.xml" -o -name "*.rels")
+        do
+            $mydir/formatxml "$i" > "$i-new"
+            mv -f "$i-new" "$i"
+        done
+    fi
+    cd ..
+}
+
+filesOnly=
+if [ "$1" = "-f" ]; then
+    shift
+    filesOnly=t
+fi
+
+if [ -z "$1" -o -z "$2" ]; then
+    echo "usage: zipdiff [-f] onefile otherfile"
+    echo
+    echo "-f    diff only the list of files, not their contents"
+    exit 1
+fi
+
+a=$(realpath $1)
+b=$(realpath $2)
+workdir=$(mktemp -d)
+cd $workdir
+unpack a $a
+unpack b $b
+
+if [ -n "$filesOnly" ]; then
+    find a -mindepth 1 |sed 's|^a/||' |sort > a-list
+    find b -mindepth 1 |sed 's|^b/||' |sort > b-list
+    diff -u a-list b-list
+else
+    diff -Nur a b
+fi
+rm -rf $workdir
+
+# vim:set shiftwidth=4 softtabstop=4 expandtab:
