@@ -24,7 +24,7 @@ def dumpChange(change):
 def filterDomain(changes, domain):
     ret = []
     for i in changes:
-        if re.match(domain, i['owner']['email']):
+        if re.search(domain, i['owner']['email']):
             ret.append(i)
     return ret
 
