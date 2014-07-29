@@ -81,8 +81,10 @@ print STDERR "\n";
 
 my %component_count;
 
+my %obsolete_components = ( 'Migration' => 1 );
+
 # custom pieces
-$component_count{'Migration'} = Bugzilla::get_deps("https://$Bugzilla::bugserver/showdependencytree.cgi?id=43489&hide_resolved=1");
+$component_count{'Migration'} = 0; # aBugzilla::get_deps("https://$Bugzilla::bugserver/showdependencytree.cgi?id=43489&hide_resolved=1"); - kill for now.
 $component_count{'Crashes'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
 $component_count{'Borders'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
 
@@ -94,7 +96,9 @@ for my $component (@reg_toquery) {
 
 print STDERR "\t* ~Component   count net *\n";
 for my $component (sort { $component_count{$b} <=> $component_count{$a} } keys %component_count) {
-    printf STDERR "\t  %12s - %2d (+?)\n", $component, $component_count{$component};
+    if (!defined $obsolete_components{$component}) {
+	printf STDERR "\t  %12s - %2d (+?)\n", $component, $component_count{$component};
+    }
 }
 
 print << "EOF"

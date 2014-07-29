@@ -58,6 +58,7 @@ my %sadly_non_libreoffice = (
     'Tom Stellard' => 1,
     'almos' => 1,
     'Andreas Boll' => 1,
+    'Tapani Pälli' => 1,
 );
 
 sub get_url($)
