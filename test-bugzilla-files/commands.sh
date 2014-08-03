@@ -15,6 +15,7 @@ cd ~/build/
 make
 
 if [ "$?" != "0" ]; then
+    echo "Please inspect the build" | mail -s "Crash test VM build failure" markus.mohrhard@googlemail.com
     exit 1
 fi
 
