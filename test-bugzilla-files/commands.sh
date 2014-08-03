@@ -13,6 +13,11 @@ echo $SHA
 mkdir /srv/crashtestdata/logs/$SHA
 cd ~/build/
 make
+
+if [ "$?" != "0" ]; then
+    exit 1
+fi
+
 cd /srv/crashtestdata/files/
 python3 new-control.py
 cd /srv/crashtestdata/
