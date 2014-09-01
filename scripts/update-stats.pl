@@ -74,11 +74,18 @@ my %versions = (
 
     '1c1366bba2ba2b554cd2ca4d87c06da81c05d24' => '4.1.5_RC3',
 
+    '40ff705089295be5be0aae9b15123f687c05b0a' => '4.1.6_RC2',
+
     '05dceb5d363845f2cf968344d7adab8dcfb2ba71' => '4.2.0_RC4',
 
     'd7dbbd7842e6a58b0f521599204e827654e1fb8b' => '4.2.1_RC1',
 
     '3be8cda0bddd8e430d8cda1ebfd581265cca5a0f' => '4.2.2_RC1',
+
+    '6c3586f855673fa6a1576797f575b31ac6fa0ba3' => '4.2.3_RC3',
+    '882f8a0a489bc99a9e60c7905a60226254cb6ff0' => '4.2.3_RC3', # hotfix1
+
+    '63150712c6d317d27ce2db16eb94c2f3d7b699f8' => '4.2.4_RC2',
 );
 
 my %month_to_num = (
@@ -101,7 +108,6 @@ my $try_geoip = 0;
 my %result_ips;
 my %result_versions;
 my %result_os;
-my %result_hourly;
 my %result_daily;
 my %result_geoip;
 my %result_countries;
@@ -140,11 +146,6 @@ while (<LOG>) {
 		}
 		++$result_daily{$date}{'unique'};
 
-		if ( !defined( $result_hourly{$time}{'unique'} ) ) {
-		    $result_hourly{$time}{'unique'} = 0;
-		}
-		++$result_hourly{$time}{'unique'};
-
 		# geoip counts
 		if ( $try_geoip ) {
 		    my $country = `geoiplookup '$ip'`;
@@ -173,12 +174,6 @@ while (<LOG>) {
 		    $result_daily{$date}{$version} = 0;
 		}
 		++$result_daily{$date}{$version};
-
-		# hourly reports per version
-		if ( !defined( $result_hourly{$time}{$version} ) ) {
-		    $result_hourly{$time}{$version} = 0;
-		}
-		++$result_hourly{$time}{$version};
 	    }
 
 	    # just to keep the list of all osses we have
@@ -219,24 +214,7 @@ foreach my $version ( sort( keys( %result_versions ) ) ) {
     print ",$all$percentage\n";
 }
 
-print "\nNew IP's asking for update per hour:\n\nTime,new unique IP's (never seen before)";
-foreach my $version ( sort( keys( %result_versions ) ) ) {
-    print ",$version";
-}
-print "\n";
 my @print_versions = ( 'unique', sort( keys( %result_versions ) ) );
-foreach my $time ( sort( keys( %result_hourly ) ) ) {
-    print "$time";
-    foreach my $version ( @print_versions ) {
-	my $count = $result_hourly{$time}{$version};
-	if ( !defined( $count ) ) {
-	    print ",";
-	} else {
-	    print ",$count";
-	}
-    }
-    print "\n";
-}
 
 print "\nNew IP's asking for update per day:\n\nTime,new unique IP's (never seen before)";
 foreach my $version ( sort( keys( %result_versions ) ) ) {
