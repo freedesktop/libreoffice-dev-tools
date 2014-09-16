@@ -61,6 +61,9 @@ my %sadly_non_libreoffice = (
     'Tapani Pälli' => 1,
     'Matt Turner' => 1,
     'Michel Dänzer' => 1,
+    'Jani Nikula' => 1,
+    'Guo Jinxian' => 1,
+    'Pekka Paalanen' => 1,
 );
 
 sub get_url($)
@@ -149,13 +152,15 @@ sub read_bugstats($)
 {
     my @lines = get_url(shift);
 
+    my $debug = 0;
+
     my $region = 'header';
     my $closer_name;
     my %closed_stats;
     my $delta = 0;
 
     while ((my $line = shift @lines) && $region ne 'end') {
-#	print STDERR "$region -> $line\n";
+	print STDERR "$region -> $line\n" if ($debug);
 	if ($region eq 'header' && $line =~ /<h2>Top .* modules<\/h2>/) {
 	    $region = 'top-modules';
 
@@ -178,17 +183,19 @@ sub read_bugstats($)
 	    undef $closer_name;
 	    $region = 'top-closer-name';
 
-	} elsif ($region eq 'top-closers' && $line =~ m/<\/table>/) {
+	} elsif (($region eq 'top-closers' || $region eq 'top-closer-name') &&
+		 ($line =~ m/<\/table>/ || $line =~ m/Top .* bug reporters/)) {
 	    $region = 'end';
 
 	} elsif ($region eq 'top-closer-name' && $line =~ m/<span class=".*">(.*)<\/span>/) {
 	    $closer_name = $1;
-#	    print "$closer_name\n";
+	    print STDERR "$closer_name\n" if ($debug);
 	    $region = 'top-closer-count';
 
 	} elsif ($region eq 'top-closer-count' && $line =~ m/">([0-9]+)<\/a><\/td>/) {
 	    die "no closer name for '$line'" if (!defined $closer_name);
 	    $closed_stats{$closer_name} = $1;
+	    print STDERR "\tRecord: $closer_name -> $1\n" if ($debug);
 	    $region = 'top-closers'
 	}
     }
