@@ -9,6 +9,7 @@
 
 import sys
 import re
+import textwrap
 from urllib.request import urlopen, URLError
 from io import BytesIO
 
@@ -59,8 +60,42 @@ def get_target_toucher_counts(target):
                 touch_counts[toucher]=1
     touch_counts_sorted = reversed(sorted((count, name) for (name, count) in touch_counts.items()))
     return touch_counts_sorted
-    
-if __name__ == '__main__':
+
+# Print one line (wrapped to 70 cols) for each set of users who made
+# the same # of bug comments.
+#
+# (We use this format for Release pages on the wiki)
+def print_for_wiki():
+    counts = {}
+    for count, name in get_target_toucher_counts(sys.argv[1]):
+        if name == 'Commit Notification':
+            # Throw out these lines
+            pass
+        elif count in counts:
+            counts[count] += ", " + name
+        else:
+            counts[count] = name
+
+    # Sort dictionary keys from largest # of comments to least and
+    # print them out.
+    pad = 5
+
+    # Text body is indented 1 additional char from comment count.
+    tw = textwrap.TextWrapper(subsequent_indent=" " * (pad + 1))
+    for count, names in sorted(counts.items(), reverse=True):
+        print("{n:{width}} ".format(n=count, width=pad) + tw.fill(names))
+
+# Print one line for each commenter.
+def print_regular():
     for touch_count in get_target_toucher_counts(sys.argv[1]):
         if not touch_count[1] == 'Commit Notification':
             print("%5d %s" % (touch_count[0], touch_count[1]))
+
+if __name__ == '__main__':
+    if(len(sys.argv) > 2 and
+       sys.argv[2] == "wiki"):
+        print_for_wiki()
+    elif(len(sys.argv) > 1):
+        print_regular()
+    else:
+        print('Error: Please provide a LibreOffice version!')
