@@ -43,8 +43,7 @@ def get_digest(query):
         change = json.loads(line)
         if 'url' in change.keys():
             if do_fresh: # we are in new changes
-                fpaths = (set([fileobj['file'] for pset in change['patchSets']
-                                for fileobj in pset['files']]))
+                fpaths = (set([fileobj['file'] for fileobj in change['patchSets'][-1]['files']]))
                 fpaths.remove('/COMMIT_MSG')
                 # we assume gerrit replies with no leading slash
                 # if no subfolder, module is "build"
