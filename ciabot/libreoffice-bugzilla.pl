@@ -203,10 +203,6 @@ my $bz = WWW::Bugzilla->new(
 
 die "cannot connect to bugzilla" unless defined $bz;
 
-my $product = $bz->product;
-
-die "wrong product" . $product unless $product eq 'LibreOffice';
-
 my $whiteboard = $bz->status_whiteboard();
 
 if ( !defined( $whiteboard ) || $whiteboard eq '' )
