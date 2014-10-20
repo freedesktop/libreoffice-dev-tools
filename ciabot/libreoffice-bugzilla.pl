@@ -205,7 +205,7 @@ die "cannot connect to bugzilla" unless defined $bz;
 
 my $product = $bz->product;
 
-die "wrong product" unless $product eq 'LibreOffice';
+die "wrong product" . $product unless $product eq 'LibreOffice';
 
 my $whiteboard = $bz->status_whiteboard();
 
