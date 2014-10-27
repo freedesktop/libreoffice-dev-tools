@@ -61,7 +61,7 @@ class FreedesktopBZ:
             bug.setwhiteboard(new_whiteboard)
 
         cgiturl = "http://cgit.freedesktop.org/libreoffice/%s/commit/?id=%s" %(repo_name, commit.hexsha)
-        if branch is not None:
+        if branch is not None and branch != "master":
             cgiturl = cgiturl + "&h=" + branch
         else:
             branch = "master"
@@ -87,7 +87,7 @@ Affected users are encouraged to test the fix and report feedback.""" %(commit.a
 
 
 def find_target_version(repo, branch):
-    if branch is None:
+    if branch is None or branch == "master":
         return master_target
 
     # check if committed to a release branch
