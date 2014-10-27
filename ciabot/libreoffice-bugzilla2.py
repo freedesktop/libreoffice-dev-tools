@@ -47,7 +47,7 @@ class FreedesktopBZ:
         url = config.get('bugzilla', 'url')
         user = config.get('bugzilla', 'user')
         password = config.get('bugzilla', 'password')
-        self.bz = self.bzclass(url=url)
+        self.bz = self.bzclass(url=url, cookiefile = "/tmp/cookie", tokenfile = "/tmp/token")
         self.bz.login(user=user, password=password)
 
     def update_whiteboard(self, commit, bugnr, new_version, branch, repo_name):
