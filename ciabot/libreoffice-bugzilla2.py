@@ -72,6 +72,7 @@ It has been pushed to "%s":
 %s
 
 %s
+
 It will be available in %s.
 
 The patch should be included in the daily builds available at
