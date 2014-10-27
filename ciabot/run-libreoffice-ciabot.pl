@@ -120,13 +120,13 @@ sub report($$$) {
                                     qx(perl -I $cwd $cwd/sigui-bugzilla.pl $repo $_ $branch_name);
                                 } else {
                                     if ( is_valid_bugzilla_commit( $repo, $branch_name ) ) {
-                                        qx(python libreoffice-bugzilla2.py -r $repo -c $_ -b $branch_name);
+                                        qx(python $cwd/libreoffice-bugzilla2.py -r $repo -c $_ -b $branch_name);
                                     }
                                     qx($ciabot $repo $_ $branch_name $ciaproxy);
                                 }
                             } else {
                                 if ( is_valid_bugzilla_commit( $repo, $branch_name ) ) {
-                                    print "python libreoffice-bugzilla2.py -r '$repo' -c '$_' -b '$branch_name'\n";
+                                    print "python $cwd/libreoffice-bugzilla2.py -r '$repo' -c '$_' -b '$branch_name'\n";
                                 }
                                 print "$ciabot '$repo' '$_' '$branch_name' $ciaproxy\n";
                             }
