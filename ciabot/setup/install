@@ -18,6 +18,7 @@ prefix=/home/ciabot/prod
 
 for i in $origin/../../../irker-cia-proxy/irker-cia-proxy.py \
     $origin/../libreoffice-bugzilla.pl \
+    $origin/../libreoffice-bugzilla2.py \
     $origin/../libreoffice-ciabot.pl \
     $origin/../projmap.json \
     $origin/../run-libreoffice-ciabot.pl \
