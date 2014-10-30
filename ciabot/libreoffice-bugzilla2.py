@@ -55,8 +55,8 @@ class FreedesktopBZ:
         print(bug)
         old_whiteboard = bug.getwhiteboard()
 
-        m = re.search(new_version, old_whiteboard)
-        if m is not None and len(m.groups()) > 0:
+        m = re.findall(new_version, old_whiteboard)
+        if m is None or len(m) == 0:
             new_whiteboard = old_whiteboard + " target:" + new_version
             bug.setwhiteboard(new_whiteboard)
 
@@ -80,7 +80,6 @@ http://dev-builds.libreoffice.org/daily/ in the next 24-48 hours. More
 information about daily builds can be found at:
 http://wiki.documentfoundation.org/Testing_Daily_Builds
 Affected users are encouraged to test the fix and report feedback.""" %(commit.author, branch, cgiturl, commit.summary, new_version)
-        print(comment_msg)
         bug.addcomment(comment_msg)
 
 
