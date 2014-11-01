@@ -21,26 +21,63 @@ import os.path
 import concurrent.futures
 import time
 import subprocess
+import getopt
+import sys
 
-def get_directories():
-    d='.'
-    directories = [o for o in os.listdir(d) if os.path.isdir(os.path.join(d,o))]
-    return directories
+def partition(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i+n]
 
-def execute_task(directory):
-    print("Yeah")
+def get_tasks(directory, files_per_task):
+    flist = [os.path.join(dirpath, f) for dirpath, dirnames, fnames in os.walk(directory) for f in fnames]
+
+    partitioned_list = list(partition(flist, files_per_task))
+    task_files = []
+    i = 0
+    for list_item in partitioned_list:
+        filename = "task" + str(i)
+        task_file = open(filename, "w")
+        for item in list_item:
+            task_file.write("%s\n" % item)
+        task_files.append(filename)
+        i += 1
+    return task_files
+
+def execute_task(task_file):
+    # subprocess.call("./execute.sh " + task_file, shell=True)
+    time.sleep(1)
+
+def usage():
+    message = """usage: {program} [option] dir"
+ - h | --help: print usage information
+ 
+ 'dir' is the path to the directory with the test files"""
+    print(message.format(program = os.path.basename(sys.argv[0])))
+
+if __name__ == "__main__":
+    opts, args = getopt.getopt(sys.argv[1:], "hd:", ["help", "directory="])
+    print(args)
+    print(opts)
+    if "-h" in opts or "--help" in opts:
+        usage()
+        sys.exit()
+
+    for opt, arg in opts:
+        if opt in ("-d", "--directory"):
+            directory = arg
+
     print(directory)
-    subprocess.call("./execute.sh " + directory, shell=True)
-    time.sleep(10)
-    return 
+    if not os.path.isdir(directory):
+        sys.exit(1)
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-    future_to_task = {executor.submit(execute_task, dirs): dirs for dirs in get_directories()}
-    for future in concurrent.futures.as_completed(future_to_task):
-        task = future_to_task[future]
-        try:
-            future.result()
-        except Exception as exc:
-            print('%r generated an exception: %s' % (task, exc))
-        else:
-            print('%r successfully passed' % (task))
+    task_size = 100
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future_to_task = {executor.submit(execute_task, task_file): task_file for task_file in get_tasks(directory, task_size)}
+        for future in concurrent.futures.as_completed(future_to_task):
+            task = future_to_task[future]
+            try:
+                future.result()
+            except Exception as exc:
+                print('%r generated an exception: %s' % (task, exc))
+            else:
+                print('%r successfully passed' % (task))

@@ -69,21 +69,9 @@ def partition(list, pred):
             right.append(e)
     return (left, right)
 
-def filelist(dir, suffix):
-    if len(dir) == 0:
-        raise Exception("filelist: empty directory")
-    if not(dir[-1] == "/"):
-        dir += "/"
-    files = [dir + f for f in os.listdir(dir)]
-#    print(files)
-    return [f for f in files
-                    if os.path.isfile(f) and os.path.splitext(f)[1] == suffix]
-
-def getFiles(dirs, suffix):
-#    print( dirs )
-    files = []
-    for dir in dirs:
-        files += filelist(dir, suffix)
+def getFiles(file_list_name):
+    file_list = open(file_list_name, "r")
+    files = file_list.readlines()
     return files
 
 ### UNO utilities ###
@@ -593,7 +581,7 @@ def parseArgs(argv):
     return (dict(optlist), args)
 
 def usage():
-    message = """usage: {program} [option]... [directory]..."
+    message = """usage: {program} [option]... [task_file]..."
  -h | --help:      print usage information
  --soffice=method:location
                    specify soffice instance to connect to
@@ -601,7 +589,7 @@ def usage():
  --userdir=URL     specify user installation directory for 'path' method
  --valgrind        pass --valgrind to soffice for 'path' method
 
- 'location' is a pathname, not a URL. 'userdir' is a URL. the 'directory' parameters should be
+ 'location' is a pathname, not a URL. 'userdir' is a URL. the 'task_file' parameters should be
   full absolute pathnames, not URLs."""
     print(message.format(program = os.path.basename(sys.argv[0])))
 
