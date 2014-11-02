@@ -233,23 +233,45 @@ class EventListener(XDocumentEventListener,unohelper.Base):
 def mkPropertyValue(name, value):
     return uno.createUnoStruct("com.sun.star.beans.PropertyValue",
             name, 0, value, 0)
+    de
+
+def getComponent(xDoc)
+    if not xDoc:
+        return "None"
+
+    if xDoc.supportsService("com.sun.star.sheet.SpreadsheetDocument"):
+        return "calc"
+    elif xDoc.supportsService("com.sun.star.text.TextDocument"):
+        return "writer"
+    elif xDoc.supportsService("com.sun.star.drawing.DrawingDocument"):
+        return "draw"
+    elif xDoc.supportsService("com.sun.star.presentation.PresentationDocument"):
+        return "impress"
+    elif xDoc.supportsService("com.sun.star.formula.FormularProperties"):
+        return "math"
+    elif xDoc.supportsService("com.sun.star.sdb.OfficeDatabaseDocument"):
+        return "base"
+
+
+    return "other"
 
 ### tests ###
 
-def loadFromURL(xContext, url, t, component):
+def loadFromURL(xContext, url, t):
     xDesktop = xContext.ServiceManager.createInstanceWithContext(
             "com.sun.star.frame.Desktop", xContext)
     props = [("Hidden", True), ("ReadOnly", True)] # FilterName?
     loadProps = tuple([mkPropertyValue(name, value) for (name, value) in props])
-    xListener = None
-    if component == "writer":
-        xListener = EventListener()
-        xGEB = xContext.ServiceManager.createInstanceWithContext(
-            "com.sun.star.frame.GlobalEventBroadcaster", xContext)
-        xGEB.addDocumentEventListener(xListener)
+
+    xListener = EventListener()
+    xGEB = xContext.ServiceManager.createInstanceWithContext(
+        "com.sun.star.frame.GlobalEventBroadcaster", xContext)
+    xGEB.addDocumentEventListener(xListener)
+
     try:
         xDoc = None
         xDoc = xDesktop.loadComponentFromURL(url, "_blank", 0, loadProps)
+        component = getComponent(xDoc)
         if component == "calc":
             try:
                 if xDoc:
@@ -373,7 +395,6 @@ def exportDoc(xDoc, filterName, validationCommand, filename, connection):
 class ExportFileTest:
     def __init__(self, xDoc, component, filename):
         self.xDoc = xDoc
-        self.component = component
         self.filename = filename
     def run(self, connection):
         formats = self.getExportFormats()
@@ -396,9 +417,10 @@ class ExportFileTest:
                 "base" : ["odb"],
                 "math" : ["odf"]
                 }
-        if not self.component in formats:
+        component = getComponent(self.xDoc)
+        if not component in formats:
             return []
-        return formats[self.component]
+        return formats[component]
 
     def getValidationCommand(self, filterName):
         validationCommand = { "calc8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
@@ -435,10 +457,9 @@ class ExportFileTest:
 
 
 class LoadFileTest:
-    def __init__(self, file, state, component):
+    def __init__(self, file, state):
         self.file = file
         self.state = state
-        self.component = component
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
         t = None
@@ -452,11 +473,11 @@ class LoadFileTest:
             args = [connection]
             t = threading.Timer(60, alarm_handler, args)
             t.start()      
-            xDoc = loadFromURL(xContext, url, t, self.component)
+            xDoc = loadFromURL(xContext, url, t)
             print("doc loaded")
             t.cancel()
             if xDoc:
-                exportTest = ExportFileTest(xDoc, self.component, self.file)
+                exportTest = ExportFileTest(xDoc, self.file)
                 exportTest.run(connection)
             self.state.goodFiles.append(self.file)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
@@ -547,28 +568,17 @@ def writeReport(state, startTime):
         timeoutFiles.write("\n")
     timeoutFiles.close()
 
-validCalcFileExtensions = [ ".xlsx", ".xltx", ".xls", ".ods", ".ots", ".sxc", ".stc", ".fods", ".xlsb", ".xlsm", ".xltm", ".csv", ".slk", ".wks", ".sdc", ".sdc5" ]
-validWriterFileExtensions = [ ".docx" , ".rtf", ".odt", ".fodt", ".doc", ".odm", ".ott", ".oth", ".sxw", ".sxg", ".stw", ".dotx", ".lwp", ".wpd", ".wps", ".abw", ".hwp", ".docm", ".dotm", ".sdw", ".sdw5", ".sgl5" ]
-validImpressFileExtensions = [ ".ppt", ".pptx", ".odp", ".fodp", ".otp", ".sxi", ".sti", ".pptm", ".sldm", ".ppsm", ".potm", ".ppotx", ".ppsx", ".sldx", ".key", ".sdd_i", ".sdd5", ".sdp5" ]
-validDrawFileExtensions = [ ".odg", ".fodg", ".otg", ".sxd", ".std", ".vsd", ".vdx", ".pub", ".cdr", ".sda5", ".sdd_d" ]
-validBaseFileExtensions = [ ".odb" ]
-validMathFileExtensions = [ ".odf", ".otf", ".sxm", ".mml", ".smf", ".smf5" ]
-validOtherFileExtensions = [ ".pdf" ]
-validFileExtensions = dict([("calc", validCalcFileExtensions), ("writer", validWriterFileExtensions), ("impress", validImpressFileExtensions), ("draw", validDrawFileExtensions), ("base", validBaseFileExtensions), ("math", validMathFileExtensions), ("other", validOtherFileExtensions) ])
-
-def runLoadFileTests(opts, dirs):
+def runLoadFileTests(opts, file_list_name):
     startTime = datetime.datetime.now()
     connection = PersistentConnection(opts)
     try:
         tests = []
         state = State()
 #        print("before map")
-        for component, validExtension in validFileExtensions.items():
-            files = []
-            for suffix in validExtension:
-                files.extend(getFiles(dirs, suffix))
-            files.sort()
-            tests.extend( (LoadFileTest(file, state, component) for file in files) )
+        files = []
+        files.extend(getFiles(file_list_name))
+        files.sort()
+        tests.extend( (LoadFileTest(file, state) for file in files) )
         runConnectionTests(connection, simpleInvoke, tests)
     finally:
         connection.kill()
