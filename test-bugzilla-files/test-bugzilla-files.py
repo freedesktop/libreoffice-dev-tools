@@ -72,7 +72,7 @@ def partition(list, pred):
 def getFiles(file_list_name):
     file_list = open(file_list_name, "r")
     files = file_list.readlines()
-    return files
+    return [file.rstrip() for file in files]
 
 ### UNO utilities ###
 
@@ -235,7 +235,7 @@ def mkPropertyValue(name, value):
             name, 0, value, 0)
     de
 
-def getComponent(xDoc)
+def getComponent(xDoc):
     if not xDoc:
         return "None"
 
@@ -393,7 +393,7 @@ def exportDoc(xDoc, filterName, validationCommand, filename, connection):
             
 
 class ExportFileTest:
-    def __init__(self, xDoc, component, filename):
+    def __init__(self, xDoc, filename):
         self.xDoc = xDoc
         self.filename = filename
     def run(self, connection):
@@ -576,7 +576,7 @@ def runLoadFileTests(opts, file_list_name):
         state = State()
 #        print("before map")
         files = []
-        files.extend(getFiles(file_list_name))
+        files.extend(getFiles(file_list_name[0]))
         files.sort()
         tests.extend( (LoadFileTest(file, state) for file in files) )
         runConnectionTests(connection, simpleInvoke, tests)

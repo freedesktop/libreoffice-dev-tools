@@ -39,12 +39,13 @@ def get_tasks(directory, files_per_task):
         task_file = open(filename, "w")
         for item in list_item:
             task_file.write("%s\n" % item)
-        task_files.append(filename)
+        task_files.append(os.path.join(os.getcwd(),filename))
         i += 1
+    print("number of tasks: " + str(len(task_files)))
     return task_files
 
 def execute_task(task_file):
-    # subprocess.call("./execute.sh " + task_file, shell=True)
+    subprocess.call("./execute.sh " + task_file, shell=True)
     time.sleep(1)
 
 def usage():
@@ -62,12 +63,15 @@ if __name__ == "__main__":
         usage()
         sys.exit()
 
-    for opt, arg in opts:
-        if opt in ("-d", "--directory"):
-            directory = arg
+    if len(args) == 0:
+        usage()
+        sys.exit(1)
+
+    directory = args[0]
 
     print(directory)
     if not os.path.isdir(directory):
+        print("no valid directory")
         sys.exit(1)
 
     task_size = 100
