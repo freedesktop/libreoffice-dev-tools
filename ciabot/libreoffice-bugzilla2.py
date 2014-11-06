@@ -131,7 +131,8 @@ def find_target_version(repo, branch):
             # normal beta
             return base + ".0.0.beta" + str(max(beta_list) + 1)
         print(micro_list)
-        return base + "." + str(max(micro_list))
+        # the next release from libreoffice-x-y is max existing z-branch + 1
+        return base + "." + str(max(micro_list) + 1)
 
     return None
 
