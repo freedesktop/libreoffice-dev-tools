@@ -53,6 +53,9 @@ class FreedesktopBZ:
     def update_whiteboard(self, commit, bugnr, new_version, branch, repo_name):
         bug = self.bz.getbug(bugnr)
         print(bug)
+        if bug.product != "LibreOffice":
+            print("refusing to update bug with non-LO component")
+            return;
         old_whiteboard = bug.getwhiteboard()
 
         m = re.findall(new_version, old_whiteboard)
