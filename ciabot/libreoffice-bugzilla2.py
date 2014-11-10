@@ -113,7 +113,7 @@ def find_target_version(repo, branch):
         search_string = "libreoffice-"+"-".join(map(str, match.groups())) + "-(\d+)"
         print(search_string)
         micro_list = [m.group(1) for m in [re.search(search_string, branch) for branch in branch_names] if m is not None]
-        if micro_list.count() == 0:
+        if len(micro_list) == 0:
             # first search if we are at an RC already
             search_string = "libreoffice-" + base + ".0." + "(\d+)"
             rc_list = [m.group(1) for m in [re.search(search_string, str(tag)) for tag in tags] if m is not None]
