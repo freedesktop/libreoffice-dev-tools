@@ -454,12 +454,9 @@ class ExportFileTest:
                 }
         return filterNames[format]
 
-
-
 class LoadFileTest:
-    def __init__(self, file, state):
+    def __init__(self, file):
         self.file = file
-        self.state = state
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
         t = None
@@ -479,16 +476,13 @@ class LoadFileTest:
             if xDoc:
                 exportTest = ExportFileTest(xDoc, self.file)
                 exportTest.run(connection)
-            self.state.goodFiles.append(self.file)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
             if not t.is_alive():
                 print("TIMEOUT!")
-                self.state.timeoutFiles.append(self.file)
             else:
                 t.cancel()
                 handleCrash(self.file, 0)
-                self.state.badPropertyFiles.append(self.file)
             connection.tearDown()
             connection.setUp()
             xDoc = None
@@ -496,11 +490,9 @@ class LoadFileTest:
             print("caught DisposedException " + self.file)
             if not t.is_alive():
                 print("TIMEOUT!")
-                self.state.timeoutFiles.append(self.file)
             else:
                 t.cancel()
                 handleCrash(self.file, 1)
-                self.state.badDisposedFiles.append(self.file)
             connection.tearDown()
             connection.setUp()
             xDoc = None
@@ -516,7 +508,6 @@ class LoadFileTest:
                     t.cancel()
             except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
                 print("caught UnknownPropertyException while closing")
-                self.state.badPropertyFiles.append(self.file)
                 connection.tearDown()
                 connection.setUp()
             except pyuno.getClass("com.sun.star.lang.DisposedException"):
@@ -524,65 +515,25 @@ class LoadFileTest:
                 if t.is_alive():
                     t.cancel()
                 else:
-                    self.state.badDisposedFiles.append(self.file)
+                    pass
                 connection.tearDown()
                 connection.setUp()
             print("...done with: " + self.file)
             subprocess.call("rm core*", shell=True)
-
-class State:
-    def __init__(self):
-        self.goodFiles = []
-        self.badDisposedFiles = []
-        self.badPropertyFiles = []
-        self.timeoutFiles = []
-
-            
-def writeReport(state, startTime):
-    goodFiles = open("goodFiles.log", "w")
-    goodFiles.write("Files which loaded perfectly:\n")
-    goodFiles.write("Starttime: " + startTime.isoformat() +"\n")
-    for file in state.goodFiles:
-        goodFiles.write(file)
-        goodFiles.write("\n")
-    goodFiles.close()
-    badDisposedFiles = open("badDisposedFiles.log", "w")
-    badDisposedFiles.write("Files which crashed with DisposedException:\n")
-    badDisposedFiles.write("Starttime: " + startTime.isoformat() + "\n")
-    for file in state.badDisposedFiles:
-        badDisposedFiles.write(file)
-        badDisposedFiles.write("\n")
-    badDisposedFiles.close()
-    badPropertyFiles = open("badPropertyFiles.log", "w")
-    badPropertyFiles.write("Files which crashed with UnknownPropertyException:\n")
-    badPropertyFiles.write("Starttime: " + startTime.isoformat() + "\n")
-    for file in state.badPropertyFiles:
-        badPropertyFiles.write(file)
-        badPropertyFiles.write("\n")
-    badPropertyFiles.close()
-    timeoutFiles = open("timeoutFiles.log", "w")
-    timeoutFiles.write("Files which timed out:\n")
-    timeoutFiles.write("Starttime: " + startTime.isoformat() + "\n")
-    for file in state.timeoutFiles:
-        timeoutFiles.write(file)
-        timeoutFiles.write("\n")
-    timeoutFiles.close()
 
 def runLoadFileTests(opts, file_list_name):
     startTime = datetime.datetime.now()
     connection = PersistentConnection(opts)
     try:
         tests = []
-        state = State()
 #        print("before map")
         files = []
         files.extend(getFiles(file_list_name[0]))
         files.sort()
-        tests.extend( (LoadFileTest(file, state) for file in files) )
+        tests.extend( (LoadFileTest(file) for file in files) )
         runConnectionTests(connection, simpleInvoke, tests)
     finally:
         connection.kill()
-        writeReport(state, startTime)
 
 def parseArgs(argv):
     (optlist,args) = getopt.getopt(argv[1:], "hr",
