@@ -75,7 +75,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     task_size = 100
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         future_to_task = {executor.submit(execute_task, task_file): task_file for task_file in get_tasks(directory, task_size)}
         for future in concurrent.futures.as_completed(future_to_task):
             task = future_to_task[future]
