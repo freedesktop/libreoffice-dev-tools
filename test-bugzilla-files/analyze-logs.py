@@ -20,13 +20,21 @@ import os
 import os.path
 import collections
 import csv
+import re
 
-def analyze_import_crash(directory):
+def analyze_import_crash(directory, crashes):
     crashtest_file = os.path.join(directory, "crashlog.txt")
     if not os.path.exists(crashtest_file):
         return 0
-    num_lines = sum(1 for line in open(crashtest_file))
-    return num_lines
+
+    regex = re.compile("Crash:/srv/crashtestdata/files/(\w*)")
+    for line in open(crashtest_file):
+        r = regex.search(line)
+        format = r.groups()[0]
+        if format not in crashes:
+            crashes[format] = 0
+        crashes[format] = 1 + crashes[format]
+    return crashes
 
 def analyze_export_crash(directory):
     crashtest_file = os.path.join(directory, "exportCrash.txt")
@@ -72,7 +80,7 @@ def export_csv(filename, data, reader):
 def update_import():
     import_crashes = dict()
     for directory in get_directories():
-        import_crashes[directory] = analyze_import_crash(directory)
+        analyze_import_crash(directory, import_crashes)
     reader = import_csv("importCrash.csv")
     export_csv("importCrash.csv", import_crashes, reader)
 
