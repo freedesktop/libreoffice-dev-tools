@@ -22,8 +22,7 @@ import collections
 import csv
 import re
 
-def analyze_import_crash(directory, crashes):
-    crashtest_file = os.path.join(directory, "crashlog.txt")
+def analyze_import_crash(crashtest_file, crashes):
     if not os.path.exists(crashtest_file):
         return 0
 
@@ -79,8 +78,7 @@ def export_csv(filename, data, reader):
 
 def update_import():
     import_crashes = dict()
-    for directory in get_directories():
-        analyze_import_crash(directory, import_crashes)
+    analyze_import_crash("crashlog.txt", import_crashes)
     reader = import_csv("importCrash.csv")
     export_csv("importCrash.csv", import_crashes, reader)
 
