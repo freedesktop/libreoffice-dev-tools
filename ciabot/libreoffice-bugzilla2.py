@@ -115,15 +115,18 @@ def find_target_version(repo, branch):
         micro_list = [m.group(1) for m in [re.search(search_string, branch) for branch in branch_names] if m is not None]
         if len(micro_list) == 0:
             # first search if we are at an RC already
-            search_string = "libreoffice-" + base + ".0." + "(\d+)"
+            search_string = "libreoffice-" + base + ".0." + "(\d+)$"
+            tags = repo.tags
+            print(tags)
             rc_list = [m.group(1) for m in [re.search(search_string, str(tag)) for tag in tags] if m is not None]
             print(rc_list)
             if len(rc_list) > 0:
-                return base + ".0." + str(max(rc_list) + 1)
+                return base + ".0." + str(int(max(rc_list)) + 1)
 
             # we have not yet tagged an RC, check which betas have been tagged
             search_string = "libreoffice-" + base + ".0.0.beta(\d+)" 
             beta_list = [m.group(1) for m in [re.search(search_string, str(tag)) for tag in tags] if m is not None]
+            print(beta_list)
             if len(beta_list) == 0:
                 # no beta yet
                 return base + ".0.0.beta0"
@@ -132,7 +135,7 @@ def find_target_version(repo, branch):
                 return base + ".0.1"
             
             # normal beta
-            return base + ".0.0.beta" + str(max(beta_list) + 1)
+            return base + ".0.0.beta" + str(int(max(beta_list)) + 1)
         print(micro_list)
         # the next release from libreoffice-x-y is max existing z-branch + 1
         return base + "." + str(max(micro_list) + 1)
