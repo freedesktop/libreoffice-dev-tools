@@ -9,7 +9,7 @@ our @EXPORT_OK = qw(bugserver get_url get_deps get_query read_bugstats);
 
 # Please take the time to check that the script still runs
 # before changing this to something else.
-$bugserver = "bugs.freedesktop.org";
+$bugserver = "bugs.documentfoundation.org";
 
 # use me for testing XML pretty printing etc.
 my $fast_debug = 0;
