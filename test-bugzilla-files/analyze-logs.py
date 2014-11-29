@@ -35,15 +35,18 @@ def analyze_import_crash(crashtest_file, crashes):
         crashes[format] = 1 + crashes[format]
     return crashes
 
-def analyze_export_crash(directory):
-    crashtest_file = os.path.join(directory, "exportCrash.txt")
+def analyze_export_crash(crashtest_file, crashes):
     if not os.path.exists(crashtest_file):
-        return collections.Counter()
-    exts = []
+        return 0
+
+    regex = re.compile("/srv/crashtestdata/files/\w+/[a-zA-Z0-9_-]+\.(\w+)")
     for line in open(crashtest_file):
-        ext = os.path.splitext(line)[1]
-        exts.append(ext.replace(".","").replace("\n",""))
-    return collections.Counter(exts)
+        r = regex.search(line)
+        format = r.groups()[0]
+        if format not in crashes:
+            crashes[format] = 0
+        crashes[format] = 1 + crashes[format]
+    return crashes
 
 def analyze_validation_errors(directory):
     exts = []
@@ -83,9 +86,8 @@ def update_import():
     export_csv("importCrash.csv", import_crashes, reader)
 
 def update_export():
-    export_crashes = collections.Counter()
-    for directory in get_directories():
-        export_crashes += analyze_export_crash(directory)
+    export_crashes = dict()
+    analyze_export_crash("exportCrash.txt", export_crashes)
     reader = import_csv("exportCrashes.csv")
     export_csv("exportCrashes.csv", export_crashes, reader)
 
