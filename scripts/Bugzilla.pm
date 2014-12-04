@@ -64,6 +64,13 @@ my %sadly_non_libreoffice = (
     'Jani Nikula' => 1,
     'Guo Jinxian' => 1,
     'Pekka Paalanen' => 1,
+    'Rodrigo Vivi' => 1,
+    'Stef Walter' => 1,
+    'Paulo Zanoni' => 1,
+    'Adrian Johnson' => 1,
+    'Kaveh' => 1,
+    'Marc-Andre Lureau' => 1,
+    'Aleksander Morgado' => 1,
 );
 
 sub get_url($)
