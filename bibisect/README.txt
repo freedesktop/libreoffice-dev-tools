@@ -4,6 +4,78 @@ This directory contains tools relating to the LibreOffice "Bibisect"
 QA Tool, created by Bjoern Michaelsen:
 https://wiki.documentfoundation.org/Bibisect
 
+Building a bibisect repository
+------------------------------
+
+The scripts in this directory are the primary tools for creating
+bibisect repositories. You'll want to read over these files (ignore
+mergeranges for now) to learn more about how the process works.
+
+
+  Stuff you'll need:
+  ------------------
+
+- The dev-tools repository (I assume you have it, as you're reading this)
+
+- The LibreOffice core repository
+
+  I suggest you build LibreOffice once by itself, just to make
+  sure that everything is working properly, before you jump in
+  to building a bibisect repo.
+
+- A suitable build environment
+
+- ccache
+  
+  Should be in 'ccache' package on most distros. Read this page to
+  properly configure ccache for building LibreOffice:
+  https://wiki.documentfoundation.org/Development/BuildingOnLinux#ccache
+
+
+  Getting ready:
+  --------------
+
+- Build LibreOffice
+
+- Edit bibisect.cfg to suit your particular environment:
+
+WARNING: Do not use shell expansion tricks like "~/foo" or "../blah"
+in these variables. Use full path names, please!
+
+  FROM:, TO:   These variables should be set to the start and end
+               of your range, either sha1 sums or tags.
+	       NOTE: This range is INCLUSIVE (?).
+
+               This command should return the complete list of sha1s
+               between the commits without error:
+               git rev-list --reverse <FROM>..<TO>
+
+  INTERVAL:    How many commits will be skipped between builds when
+               generating the bibisect repository, e.g. '64'
+
+  ORDERMODE:   Either 'master' or 'tags', indicating which will be
+               used in the FROM: and TO: fields.
+
+  WORKDIR:     Location of the working directory you've created for
+               building the bibisect repository, e.g. '/run/bibisect'
+
+  SOURCEREPO:  Location of the LibreOffice core repository
+  	       (I'm not sure why the .git subdir is specified, but
+	        that's the format given)
+               e.g. '/root/core/.git'
+
+  BINREPO:     I think this is the path for the actual bibisect
+               repository. This will be deleted/created during
+               the process.  (example: '/root/binrepo')
+
+  BUILDSCRIPT: Path to the buildscript. Don't touch this.
+
+  Kicking off the script
+  ----------------------
+
+It's a simple Makefile. Just run 'make' in the bibisect directory.
+
+
 
 USAGE for 'mergeranges'
 -----------------------
