@@ -1,7 +1,23 @@
 The following steps are needed to use this code:
 
-- have this directory as e.g. ~/prod
+Install some packages:
+- Python
+  * git module (ubuntu: python-git)
+  * bugzilla module (?) (ubuntu: not in standard repos)
+- Perl
+  * WWW:Bugzilla (ubuntu: libwww-bugzilla-perl)
+  * (?) Class::MethodMaker perl module: perl-Class-MethodMaker or libclass-methodmaker-perl package
+
+Configure the software:
+- Copy config-example.cfg -> config.cfg and change the defaults
+- Copy config.pl.sample -> config.pl and change the defaults
+
+
+- Have this directory as e.g. ~/prod
+
+Clone-out extra repositories
 - git clone git://gitorious.org/irker/irker.git ~/git/irker
 - git clone git://github.com/vmiklos/irker-cia-proxy.git ~/git/irker-cia-proxy
+
+Run the install script
 - ~/git/dev-tools/ciabot/setup/install
-- Class::MethodMaker perl module: perl-Class-MethodMaker or libclass-methodmaker-perl package
