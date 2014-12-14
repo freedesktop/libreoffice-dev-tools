@@ -70,6 +70,9 @@ def import_csv(filename):
 
 def export_csv(filename, data, reader):
     fieldnames = set(data.keys())
+    for entry in set(reader.fieldnames).difference(data.iterkeys()):
+        data[entry] = 0
+
     if not reader is None:
         fieldnames |= set(reader.fieldnames)
     writer = csv.DictWriter(open(filename, "w"), fieldnames)
