@@ -29,7 +29,6 @@
 
 include bibisect.cfg
 
-BINREPO:=/root/binrepo
 BUILDDIR:=$(WORKDIR)/build
 ARTIFACTDIR:=$(WORKDIR)/artifact
 ORDERMODE?=master
