@@ -140,6 +140,16 @@ Given:
    that don't contain a build. If there are, cut those out of your
    range -- they'll just be in the way.
 
+     Example:
+       $ git log --oneline
+       0777cd0 source-hash-b800d0b6ad74ce4a9adb23b865dd174d1eefa47b
+       cc9a130 source-hash-12bcfec04fcbe6425e327109ad47cd2b2b80d2bd
+       ...
+       812c4a4 source-hash-dea4a3b9d7182700abeb4dc756a24a9e8dea8474
+       b6c93c8 root
+
+       Use the range: 812c4a4..0777cd0
+
 3) cd into Combined (we'll run mergeranges from there)
 
 4) Add Alice, Bob as remotes
@@ -214,6 +224,10 @@ Given:
 3) git gc
    Starting size: 8.4GB
    After gc:      8.3GB
+
+   (Testing with a smaller merged repo:
+      Starting size: 3.8GB
+      After gc:      3.7GB)
 
 4) Upload/save a copy before aggressively gc'ing the thing
 
