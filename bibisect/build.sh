@@ -47,12 +47,18 @@ cat <<EOF > autogen.lastrun
 --with-external-tar=`readlink -f ${BUILDDIR}/../tarfiles`
 EOF
 
+# This is going to throw an error if we're not root (or don't have
+# root perms)
 export CCACHE_DIR=`readlink -f /root/ccache`
 export CCACHE_BASEDIR=`readlink -f .`
+
 unset DISPLAY
 
+# We may have set the ccache before we start, so consider
+# commenting-out this line.
 ccache -M 8G
 
+# WARNING: Autogen may fail silently. Review the log for details.
 ./autogen.sh > ${ARTIFACTDIR}/autogen.log 2>&1
 git log -1 --pretty=format:"source-hash-%H%n%n" $BUILDCOMMIT > ${ARTIFACTDIR}/commitmsg
 git log -1 --pretty=fuller $BUILDCOMMIT >> ${ARTIFACTDIR}/commitmsg
