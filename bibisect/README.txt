@@ -70,6 +70,23 @@ in these variables. Use full path names, please!
 
   BUILDSCRIPT: Path to the buildscript. Don't touch this.
 
+- Edit build.sh
+
+  Review the settings for the ccache BEFORE you run the bibisect
+  script. Update variables and/or comment-out irrelevant lines.
+
+  Look for:
+  * CCACHE_DIR
+  * CCACHE_BASEDIR
+  * A call to ccache (e.g. 'ccache -M 8G')
+
+- Review autogen.log if you have problems
+
+  It's possible that something failed silently, because stderr is
+  redirected to the logfile.
+
+
+
   Kicking off the script
   ----------------------
 
