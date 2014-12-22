@@ -28,6 +28,18 @@ if ! type -p mvn >/dev/null; then
     exit 1
 fi
 
+if ! type -p ant >/dev/null; then
+    echo "Error: can't find ant in PATH"
+
+    if [ -e /etc/os-release ]; then
+        . /etc/os-release
+        if [ "$NAME" == "openSUSE" ]; then
+            echo "Hint: type 'zypper in ant-junit' to install it."
+        fi
+    fi
+    exit 1
+fi
+
 instdir="$2"
 if [ ! -d "$instdir" ]; then
     echo "Error: please create '$instdir'."
@@ -56,5 +68,23 @@ cat > odfvalidator << EOF
 java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar $workdir/odf/validator/target/odfvalidator-*-incubating-SNAPSHOT-jar-with-dependencies.jar -e "\$@"
 EOF
 chmod +x odfvalidator
+
+# OOXML validation
+
+cd "$workdir"
+if [ ! -d officeotron ]; then
+    svn co http://officeotron.googlecode.com/svn/trunk officeotron
+fi
+cd officeotron
+if [ ! -e dist/officeotron-*.jar ]; then
+    ant
+fi
+
+cd "$instdir"
+cat > officeotron << EOF
+#!/usr/bin/env bash
+java -jar $workdir/officeotron/dist/officeotron-*.jar "\$@"
+EOF
+chmod +x officeotron
 
 # vi:set shiftwidth=4 expandtab:
