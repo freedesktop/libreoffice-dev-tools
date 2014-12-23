@@ -332,7 +332,7 @@ def writeExportCrash(fileName):
     exportCrash.write(fileName + '\n')
     exportCrash.close()
 
-def exportDoc(xDoc, filterName, validationCommand, filename, connection):
+def exportDoc(xDoc, filterName, validationCommand, filename, connection, timer):
     props = [ ("FilterName", filterName) ]
     saveProps = tuple([mkPropertyValue(name, value) for (name, value) in props])
     extensions = { "calc8": ".ods",
@@ -355,7 +355,7 @@ def exportDoc(xDoc, filterName, validationCommand, filename, connection):
     t = None
     try:
         args = [connection]
-        t = threading.Timer(180, alarm_handler, args)
+        t = threading.Timer(timer.getExportTime(), alarm_handler, args)
         t.start()      
         xDoc.storeToURL(fileURL, saveProps)
     except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
@@ -393,9 +393,12 @@ def exportDoc(xDoc, filterName, validationCommand, filename, connection):
             
 
 class ExportFileTest:
-    def __init__(self, xDoc, filename):
+    def __init__(self, xDoc, filename, enable_validation, timer):
         self.xDoc = xDoc
         self.filename = filename
+        self.enable_validation = enable_validation
+        self.timer = timer
+
     def run(self, connection):
         formats = self.getExportFormats()
         print(formats)
@@ -405,7 +408,7 @@ class ExportFileTest:
             print(format)
             print(filterName)
             if filterName:
-                xExportedDoc = exportDoc(self.xDoc, filterName, validation, self.filename, connection)
+                xExportedDoc = exportDoc(self.xDoc, filterName, validation, self.filename, connection, self.timer)
                 if xExportedDoc:
                     xExportedDoc.close(True)
 
@@ -423,6 +426,9 @@ class ExportFileTest:
         return formats[component]
 
     def getValidationCommand(self, filterName):
+        if self.enable_validation == False:
+            return None
+
         validationCommand = { "calc8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
                             "writer8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
                             "impress8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
@@ -455,8 +461,11 @@ class ExportFileTest:
         return filterNames[format]
 
 class LoadFileTest:
-    def __init__(self, file):
+    def __init__(self, file, enable_validation, timer):
         self.file = file
+        self.enable_validation = enable_validation
+        self.timer = timer
+
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
         t = None
@@ -468,13 +477,13 @@ class LoadFileTest:
             file.close()
             xDoc = None
             args = [connection]
-            t = threading.Timer(60, alarm_handler, args)
+            t = threading.Timer(self.timer.getImportTime(), alarm_handler, args)
             t.start()      
             xDoc = loadFromURL(xContext, url, t)
             print("doc loaded")
             t.cancel()
             if xDoc:
-                exportTest = ExportFileTest(xDoc, self.file)
+                exportTest = ExportFileTest(xDoc, self.file, self.enable_validation, self.timer)
                 exportTest.run(connection)
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
@@ -521,6 +530,29 @@ class LoadFileTest:
             print("...done with: " + self.file)
             subprocess.call("rm core*", shell=True)
 
+class NormalTimer:
+    def __init__(self):
+        pass
+
+    def getImportTime(self):
+        return 60
+
+
+    def getExportTime(self):
+        return 180
+
+
+class AsanTimer:
+    def __init__(self):
+        pass
+
+    def getImportTime(self):
+        return 300
+
+    def getExportTime(self):
+        return 900
+
+
 def runLoadFileTests(opts, file_list_name):
     startTime = datetime.datetime.now()
     connection = PersistentConnection(opts)
@@ -530,14 +562,22 @@ def runLoadFileTests(opts, file_list_name):
         files = []
         files.extend(getFiles(file_list_name[0]))
         files.sort()
-        tests.extend( (LoadFileTest(file) for file in files) )
+        asan = "--asan" in opts
+        print(asan)
+        timer = None
+        if asan is True:
+            timer = AsanTimer()
+        else:
+            timer = NormalTimer()
+
+        tests.extend( (LoadFileTest(file, not asan, timer) for file in files) )
         runConnectionTests(connection, simpleInvoke, tests)
     finally:
         connection.kill()
 
 def parseArgs(argv):
     (optlist,args) = getopt.getopt(argv[1:], "hr",
-            ["help", "soffice=", "userdir=", "valgrind"])
+            ["help", "soffice=", "userdir=", "valgrind", "asan"])
 #    print optlist
     return (dict(optlist), args)
 
@@ -549,6 +589,7 @@ def usage():
                    supported methods: 'path', 'connect'
  --userdir=URL     specify user installation directory for 'path' method
  --valgrind        pass --valgrind to soffice for 'path' method
+ --asan            run under asan, don't run export tests
 
  'location' is a pathname, not a URL. 'userdir' is a URL. the 'task_file' parameters should be
   full absolute pathnames, not URLs."""

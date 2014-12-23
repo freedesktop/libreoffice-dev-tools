@@ -44,8 +44,12 @@ def get_tasks(directory, files_per_task):
     print("number of tasks: " + str(len(task_files)))
     return task_files
 
-def execute_task(task_file):
-    subprocess.call("./execute.sh " + task_file, shell=True)
+def execute_task(task_file, asan):
+    print(asan)
+    if asan == 1:
+        subprocess.call("./execute_asan.sh " + task_file + " --asan", shell=True)
+    elif asan == 0:
+        subprocess.call("./execute.sh " + task_file, shell=True)
     time.sleep(1)
 
 def usage():
@@ -56,12 +60,21 @@ def usage():
     print(message.format(program = os.path.basename(sys.argv[0])))
 
 if __name__ == "__main__":
-    opts, args = getopt.getopt(sys.argv[1:], "hd:", ["help", "directory="])
+    opts, args = getopt.getopt(sys.argv[1:], "hd:a", ["help", "directory=", "asan"])
     print(args)
     print(opts)
     if "-h" in opts or "--help" in opts:
         usage()
         sys.exit()
+
+    asan = 0
+    print(opts[0])
+    print("--asan" in opts[0])
+    if "--asan" in opts[0]:
+        print("yeah")
+        asan = 1
+
+    print(asan)
 
     if len(args) == 0:
         usage()
@@ -76,7 +89,7 @@ if __name__ == "__main__":
 
     task_size = 100
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        future_to_task = {executor.submit(execute_task, task_file): task_file for task_file in get_tasks(directory, task_size)}
+        future_to_task = {executor.submit(execute_task, task_file, asan): task_file for task_file in get_tasks(directory, task_size)}
         for future in concurrent.futures.as_completed(future_to_task):
             task = future_to_task[future]
             try:
