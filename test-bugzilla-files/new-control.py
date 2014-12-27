@@ -66,7 +66,7 @@ if __name__ == "__main__":
         sys.exit()
 
     asan = 0
-    if opts.count() > 0 and "--asan" in opts[0]:
+    if count(opts) > 0 and "--asan" in opts[0]:
         print("yeah")
         asan = 1
 
