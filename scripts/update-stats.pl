@@ -93,11 +93,21 @@ my %versions = (
     '185f2ce4dcc34af9bd97dec29e6d42c39557298f' => '4.2.6_RC2',
     '3fd416d4c6db7d3204c17ce57a1d70f6e531ee21' => '4.2.6_RC2', # secfix1
 
+    '933c0aa564ec4f8883ed5732c866db48dca4dac5' => '4.2.7_RC2',
+
+    '48d50dbfc06349262c9d50868e5c1f630a573ebd' => '4.2.8_RC2',
+
     '62ad5818884a2fc2e5780dd45466868d41009ec0' => '4.3.0_RC4',
 
     '958349dc3b25111dbca392fbc281a05559ef6848' => '4.3.1_RC2',
 
     'edfb5295ba211bd31ad47d0bad0118690f76407d' => '4.3.2_RC2',
+
+    '9bb7eadab57b6755b1265afa86e04bf45fbfc644' => '4.3.3_RC2',
+
+    'bc356b2f991740509f321d70e4512a6a54c5f243' => '4.3.4_RC1', # no RC2?
+
+    '3a87456aaa6a95c63eea1c1b3201acedf0751bd5' => '4.3.5_RC2',
 );
 
 my %month_to_num = (
