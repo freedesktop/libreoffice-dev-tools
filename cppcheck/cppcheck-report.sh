@@ -114,6 +114,7 @@ upload_report()
     [ "$DEBUG" ] && set -xv
 
     ssh upload@dev-builds.libreoffice.org rm -rf "${UPLOAD_DIR?}" || die "Failed to remove directory ${UPLOAD_DIR?}"
+    ssh upload@dev-builds.libreoffice.org mkdir -p "${UPLOAD_DIR?}" || die "Failed to create directory ${UPLOAD_DIR?}"
     scp -r "${HTML_DIR?}"/* upload@dev-builds.libreoffice.org:"${UPLOAD_DIR?}"/ || die "Failed to upload report to ${UPLOAD_DIR?}"
 }
 
