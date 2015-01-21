@@ -10,6 +10,13 @@
 
 [ "$DEBUG" ] && set -xv
 
+# save stdout and stderr
+exec 3>&1 4>&2 >/tmp/foo.log 2>&1
+
+# redirect to log file
+exec > /tmp/cppcheck-report.log
+exec 2>&1
+
 #
 # Functions
 #
@@ -18,7 +25,9 @@ die()
 {
     [ "$DEBUG" ] && set -xv
 
-    echo "Error:" "$@" >&2
+    MESSAGE="$@"
+    echo "Error:" "${MESSAGE?}" >&2
+    mail_failure "${MESSAGE?}"
     exit -1;
 }
 
@@ -108,7 +117,6 @@ get_commit_cppcheck()
     popd > /dev/null || die "Failed to change directory out of ${CPPCHECK_DIR?}"
 }
 
-
 upload_report()
 {
     [ "$DEBUG" ] && set -xv
@@ -118,15 +126,56 @@ upload_report()
     scp -r "${HTML_DIR?}"/* upload@dev-builds.libreoffice.org:"${UPLOAD_DIR?}"/ || die "Failed to upload report to ${UPLOAD_DIR?}"
 }
 
+mail_success()
+{
+    [ "$DEBUG" ] && set -xv
 
-#
-# Main
-#
+    which mailx >/dev/null 2>&1
+    if [ "$?" = "0" ] ; then
 
+mailx -s "CppCheck Report update" "${MAILTO?}" <<EOF
+
+A new cppcheck report is available at : http://dev-builds.libreoffice.org/cppcheck_reports/master/
+
+This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME
+
+EOF
+
+    fi
+}
+
+mail_failure()
+{
+    [ "$DEBUG" ] && set -xv
+    MESSAGE="$@"
+
+    if [ -f /tmp/cppcheck-report.log ] ; then
+        cp -f /tmp/cppcheck-report.log ~/cppcheck-report.log
+        rm -f ~/cppcheck-report.log.gz
+        gzip ~/cppcheck-report.log
+    fi
+
+    which mailx >/dev/null 2>&1
+    if [ "$?" = "0" ] ; then
+
+mailx -s "CppCheck Report: Failure" "${MAILTO?}" <<EOF
+`uuencode /home/buildslave/cppcheck-report.log.gz /home/buildslave/cppcheck-report.log.gz`
+
+The cppcheck job failed with message: "${MESSAGE?}"
+
+This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME
+
+EOF
+
+    fi
+}
 
 usage()
 {
     [ "$DEBUG" ] && set -xv
+
+    # restore stdout and stderr
+    exec 1>&3 2>&4
 
     echo >&2 "Usage: lcov-report.sh -s [DIRECTORY] -w [DIRECTORY]
         -s    source code directory
@@ -150,7 +199,9 @@ DATA_DIR=/tmp
 CPPCHECK_GIT_URL="git://github.com/danmar/cppcheck.git"
 LO_GIT_URL="git://anongit.freedesktop.org/libreoffice/core.git"
 UPLOAD_DIR=/srv/www/dev-builds.libreoffice.org/cppcheck_reports/master
-
+MAILTO=libreoffice@lists.freedesktop.org
+MY_NAME=`dirname $0`
+MESSAGE=
 
 while getopts ":s:w:c:" opt ; do
     case "$opt" in
@@ -177,4 +228,4 @@ get_commit_lo
 build_cppcheck
 run_cppcheck
 upload_report
-
+mail_success
