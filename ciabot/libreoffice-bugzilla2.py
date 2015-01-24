@@ -34,7 +34,7 @@ from bugzilla import Bugzilla
 from bugzilla.base import _BugzillaToken
 
 master_target = "4.5.0"
-bug_regex = "fdo#(\d+)"
+bug_regex = "(?:fdo|tdf)#(\d+)"
 
 class FreedesktopBZ:
     bzclass = bugzilla.Bugzilla44
