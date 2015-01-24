@@ -26,7 +26,7 @@ die()
     [ "$DEBUG" ] && set -xv
 
     MESSAGE="$@"
-    echo "Error:" "${MESSAGE?}" >&2
+    echo "Error: ${MESSAGE?}" >&2
     mail_failure "${MESSAGE?}"
     exit -1;
 }
@@ -35,7 +35,7 @@ run_cppcheck()
 {
     [ "$DEBUG" ] && set -xv
 
-    pushd "${SRC_DIR?}" > /dev/null || die "Failed to change directory to ${SRC_DIR?}"
+    pushd "${LO_SRC_DIR?}" > /dev/null || die "Failed to change directory to ${LO_SRC_DIR?}"
 
     echo "unusedFunction" > "${DATA_DIR?}"/cppcheck_supp.txt
 
@@ -45,7 +45,7 @@ run_cppcheck()
     "${CPPCHECK_DIR?}"/htmlreport/cppcheck-htmlreport --file="${DATA_DIR?}"/err.xml --title="LibreOffice ${COMMIT_DATE_LO?} ${COMMIT_TIME_LO?} ${COMMIT_SHA1_LO?}, CppCheck ${COMMIT_DATE_CPPCHECK?} ${COMMIT_TIME_CPPCHECK?} ${COMMIT_SHA1_CPPCHECK?}" --report-dir="${HTML_DIR?}" --source-dir=. \
     || die "Failed to run cppcheck-htmlreport."
 
-    popd > /dev/null || die "Failed to change directory out of ${SRC_DIR?}"
+    popd > /dev/null || die "Failed to change directory out of ${LO_SRC_DIR?}"
 }
 
 get_cppcheck_src()
@@ -69,15 +69,15 @@ get_lo_src()
 {
     [ "$DEBUG" ] && set -xv
 
-    if [ ! -d "${SRC_DIR?}" ]; then
-        git clone "${LO_GIT_URL?}" "${SRC_DIR?}" || die "Failed to git clone ${LO_GIT_URL?} in ${SRC_DIR?}"
+    if [ ! -d "${LO_SRC_DIR?}" ]; then
+        git clone "${LO_GIT_URL?}" "${LO_SRC_DIR?}" || die "Failed to git clone ${LO_GIT_URL?} in ${LO_SRC_DIR?}"
     else
-        if [ ! -d "${SRC_DIR?}"/.git ] ; then
-            die "${SRC_DIR?} is not a git repository"
+        if [ ! -d "${LO_SRC_DIR?}"/.git ] ; then
+            die "${LO_SRC_DIR?} is not a git repository"
         else
-            pushd "${SRC_DIR?}" || die "Failed to change directory to ${SRC_DIR?}"
-            git pull || die "Failed to update git repository ${SRC_DIR?}"
-            popd > /dev/null || die "Failed to change directory out of ${SRC_DIR?}"
+            pushd "${LO_SRC_DIR?}" || die "Failed to change directory to ${LO_SRC_DIR?}"
+            git pull || die "Failed to update git repository ${LO_SRC_DIR?}"
+            popd > /dev/null || die "Failed to change directory out of ${LO_SRC_DIR?}"
         fi
     fi
 }
@@ -95,13 +95,13 @@ get_commit_lo()
 {
     [ "$DEBUG" ] && set -xv
 
-    pushd "${SRC_DIR?}" > /dev/null || die "Failed to change directory to ${SRC_DIR?}"
+    pushd "${LO_SRC_DIR?}" > /dev/null || die "Failed to change directory to ${LO_SRC_DIR?}"
 
     COMMIT_SHA1_LO=$(git log --date=iso | head -3 | awk '/^commit/ {print $2}')
     COMMIT_DATE_LO=$(git log --date=iso | head -3 | awk '/^Date/ {print $2}')
     COMMIT_TIME_LO=$(git log --date=iso | head -3 | awk '/^Date/ {print $3}')
 
-    popd > /dev/null || die "Failed to change directory out of ${SRC_DIR?}"
+    popd > /dev/null || die "Failed to change directory out of ${LO_SRC_DIR?}"
 }
 
 get_commit_cppcheck()
@@ -130,10 +130,7 @@ mail_success()
 {
     [ "$DEBUG" ] && set -xv
 
-    which mailx >/dev/null 2>&1
-    if [ "$?" = "0" ] ; then
-
-mailx -s "CppCheck Report update" "${MAILTO?}" <<EOF
+cat > "$EMAIL_BODY" <<EOF
 
 A new cppcheck report is available at : http://dev-builds.libreoffice.org/cppcheck_reports/master/
 
@@ -141,7 +138,9 @@ This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /e
 
 EOF
 
-    fi
+
+    "$SENDEMAIL" -o message-file="$EMAIL_BODY" -f "$MAILFROM" -t "$MAILTO" -o tls=yes -s smtp.gmail.com:587 -xu cppcheck.libreoffice@gmail.com -xp "$SMTP_PWD" -u "CppCheck Report Update"
+
 }
 
 mail_failure()
@@ -155,11 +154,7 @@ mail_failure()
         gzip ~/cppcheck-report.log
     fi
 
-    which mailx >/dev/null 2>&1
-    if [ "$?" = "0" ] ; then
-
-mailx -s "CppCheck Report: Failure" "${MAILTO?}" <<EOF
-`uuencode /home/buildslave/cppcheck-report.log.gz /home/buildslave/cppcheck-report.log.gz`
+cat > "$EMAIL_BODY" <<EOF
 
 The cppcheck job failed with message: "${MESSAGE?}"
 
@@ -167,7 +162,8 @@ This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /e
 
 EOF
 
-    fi
+    "$SENDEMAIL" -o message-file="$EMAIL_BODY" -f "$MAILFROM" -t "$MAILTO" -o tls=yes -s smtp.gmail.com:587 -xu cppcheck.libreoffice@gmail.com -xp "$SMTP_PWD" -u "CppCheck Report Failure" -a /home/buildslave/cppcheck-report.log.gz
+
 }
 
 usage()
@@ -192,21 +188,36 @@ if [ "$#" = "0" ] ; then
     usage
 fi
 
-SRC_DIR=
-HTML_DIR=
-CPPCHECK_DIR=
-DATA_DIR=/tmp
+# Set some sane defaults here
+LO_SRC_DIR=~/source/libo-core
+HTML_DIR=~/tmp/www
+CPPCHECK_DIR=~/source/libo-core
+DATA_DIR=~/tmp
 CPPCHECK_GIT_URL="git://github.com/danmar/cppcheck.git"
 LO_GIT_URL="git://anongit.freedesktop.org/libreoffice/core.git"
 UPLOAD_DIR=/srv/www/dev-builds.libreoffice.org/cppcheck_reports/master
 MAILTO=libreoffice@lists.freedesktop.org
-MY_NAME=`dirname $0`
+MAILFROM=cppcheck.libreoffice@gmail.com
+MY_NAME=`readlink -f $0`
 MESSAGE=
+SENDEMAIL=~/source/buildbot/bin/sendEmail
+EMAIL_BODY=~/tmp/email_body
+# Dont forget to set SMTP_PWD in your ~/.cppcheckrc !
+SMTP_PWD=
 
+if [ -f ~/.cppcheckrc ]; then
+    # override all default vars with entries in ~/.cppcheckrc
+    source ~/.cppcheckrc
+else
+    die "Failed to locate ~/.cppcheckrc"
+fi
+
+
+# override cppcheckrc and defaults with commandline settings
 while getopts ":s:w:c:" opt ; do
     case "$opt" in
     s)
-        SRC_DIR="${OPTARG?}"
+        LO_SRC_DIR="${OPTARG?}"
         ;;
     w)
         HTML_DIR="${OPTARG?}"
@@ -219,6 +230,12 @@ while getopts ":s:w:c:" opt ; do
         ;;
     esac
 done
+
+
+if [ ! -f "$SENDEMAIL" ] ; then
+    echo "Error: sendEmail command $SENDEMAIL not found." >&2
+    exit -1;
+fi
 
 
 get_lo_src
