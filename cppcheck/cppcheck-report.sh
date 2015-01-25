@@ -97,9 +97,9 @@ get_commit_lo()
 
     pushd "${LO_SRC_DIR?}" > /dev/null || die "Failed to change directory to ${LO_SRC_DIR?}"
 
-    COMMIT_SHA1_LO=$(git log --date=iso | head -3 | awk '/^commit/ {print $2}')
-    COMMIT_DATE_LO=$(git log --date=iso | head -3 | awk '/^Date/ {print $2}')
-    COMMIT_TIME_LO=$(git log --date=iso | head -3 | awk '/^Date/ {print $3}')
+    COMMIT_SHA1_LO=$(git log --date=iso | head -5 | awk '/^commit/ {print $2}')
+    COMMIT_DATE_LO=$(git log --date=iso | head -5 | awk '/^Date/ {print $2}')
+    COMMIT_TIME_LO=$(git log --date=iso | head -5 | awk '/^Date/ {print $3}')
 
     popd > /dev/null || die "Failed to change directory out of ${LO_SRC_DIR?}"
 }
@@ -110,9 +110,9 @@ get_commit_cppcheck()
 
     pushd "${CPPCHECK_DIR?}" > /dev/null || die "Failed to change directory to ${CPPCHECK_DIR?}"
 
-    COMMIT_SHA1_CPPCHECK=$(git log --date=iso | head -3 | awk '/^commit/ {print $2}')
-    COMMIT_DATE_CPPCHECK=$(git log --date=iso | head -3 | awk '/^Date/ {print $2}')
-    COMMIT_TIME_CPPCHECK=$(git log --date=iso | head -3 | awk '/^Date/ {print $3}')
+    COMMIT_SHA1_CPPCHECK=$(git log --date=iso | head -5 | awk '/^commit/ {print $2}')
+    COMMIT_DATE_CPPCHECK=$(git log --date=iso | head -5 | awk '/^Date/ {print $2}')
+    COMMIT_TIME_CPPCHECK=$(git log --date=iso | head -5 | awk '/^Date/ {print $3}')
 
     popd > /dev/null || die "Failed to change directory out of ${CPPCHECK_DIR?}"
 }
@@ -134,7 +134,7 @@ cat > "$EMAIL_BODY" <<EOF
 
 A new cppcheck report is available at : http://dev-builds.libreoffice.org/cppcheck_reports/master/
 
-This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME
+This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
 
 EOF
 
@@ -158,7 +158,7 @@ cat > "$EMAIL_BODY" <<EOF
 
 The cppcheck job failed with message: "${MESSAGE?}"
 
-This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME
+This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
 
 EOF
 
@@ -199,11 +199,13 @@ UPLOAD_DIR=/srv/www/dev-builds.libreoffice.org/cppcheck_reports/master
 MAILTO=libreoffice@lists.freedesktop.org
 MAILFROM=cppcheck.libreoffice@gmail.com
 MY_NAME=`readlink -f $0`
+MY_ARGS=$@
 MESSAGE=
 SENDEMAIL=~/source/buildbot/bin/sendEmail
 EMAIL_BODY=~/tmp/email_body
 # Dont forget to set SMTP_PWD in your ~/.cppcheckrc !
 SMTP_PWD=
+export PYTHONIOENCODING=utf-8
 
 if [ -f ~/.cppcheckrc ]; then
     # override all default vars with entries in ~/.cppcheckrc
