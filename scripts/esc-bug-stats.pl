@@ -24,7 +24,7 @@ sub build_overall_bugstats()
 
     print STDERR "    many thanks to the top bug squashers:\n";
     for my $name (sort { $closed_stats->{$b} <=> $closed_stats->{$a} } keys %{$closed_stats}) {
-	printf STDERR "        %-20s%2s\n", $name, $closed_stats->{$name};
+	printf STDERR "        %-22s%2s\n", $name, $closed_stats->{$name};
     }
 }
 
