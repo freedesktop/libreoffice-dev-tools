@@ -188,10 +188,10 @@ if [ "$#" = "0" ] ; then
     usage
 fi
 
-# Set some sane defaults here
+# Set some defaults here
 LO_SRC_DIR=~/source/libo-core
 HTML_DIR=~/tmp/www
-CPPCHECK_DIR=~/source/libo-core
+CPPCHECK_DIR=~/source/cppcheck
 DATA_DIR=~/tmp
 CPPCHECK_GIT_URL="git://github.com/danmar/cppcheck.git"
 LO_GIT_URL="git://anongit.freedesktop.org/libreoffice/core.git"
