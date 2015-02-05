@@ -79,7 +79,7 @@ sub get_url($)
     my $url = shift;
     my @lines;
     my $handle;
-    open ($handle, "curl -k -s '$url' 2>&1 |") || die "can't exec curl: $!";
+    open ($handle, "curl -A 'Mozilla/4.0' -k -s '$url' 2>&1 |") || die "can't exec curl: $!";
     while (<$handle>) {
 	push @lines, $_;
     }
