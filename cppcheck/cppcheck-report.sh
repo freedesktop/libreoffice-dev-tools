@@ -134,7 +134,13 @@ cat > "$EMAIL_BODY" <<EOF
 
 A new cppcheck report is available at : http://dev-builds.libreoffice.org/cppcheck_reports/master/
 
-This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
+
+Note:
+    The script generating this report was run at :
+        `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
+
+    It be found and improved here:
+        https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=cppcheck/cppcheck-report.sh
 
 EOF
 
@@ -158,7 +164,13 @@ cat > "$EMAIL_BODY" <<EOF
 
 The cppcheck job failed with message: "${MESSAGE?}"
 
-This job was run at `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
+
+Note:
+    The script generating this report was run at :
+        `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
+
+    It be found and improved here:
+        https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=cppcheck/cppcheck-report.sh
 
 EOF
 
