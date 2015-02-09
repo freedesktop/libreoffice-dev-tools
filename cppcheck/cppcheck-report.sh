@@ -139,7 +139,7 @@ Note:
     The script generating this report was run at :
         `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
 
-    It be found and improved here:
+    It can be found and improved here:
         https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=cppcheck/cppcheck-report.sh
 
 EOF
@@ -169,7 +169,7 @@ Note:
     The script generating this report was run at :
         `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
 
-    It be found and improved here:
+    It can be found and improved here:
         https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=cppcheck/cppcheck-report.sh
 
 EOF
