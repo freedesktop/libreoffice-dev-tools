@@ -153,16 +153,29 @@ static TokenType analyzeToken( const QString& token )
     return Text;
     }
 
+static int noFormat = 0;
+
+static bool shouldNoFormat(const QString& rString)
+{
+    // Formatting children of a few elements would change the meaning of the
+    // document, don't do that.
+    return rString == "text:p" || rString == "text:h";
+}
+
 static QString indent( int size )
     {
-    return QString().fill( ' ', size );
+    if (noFormat)
+        return QString();
+    else
+        return QString().fill( ' ', size );
     }
 
 static void ensureNewLine( QTextStream& out, bool* needNewLine )
     {
     if( *needNewLine )
         {
-        out << endl;
+        if (!noFormat)
+            out << endl;
         *needNewLine = false;
         }
     }
@@ -183,11 +196,16 @@ static bool format( QTextStream& in, QTextStream& out )
         switch( analyzeToken( token ))
             {
             case OpeningTag:
+                {
                 ensureNewLine( out, &needNewLine );
                 out << INDENT << token;
+                QString tag = tagName(token);
+                if (shouldNoFormat(tag))
+                    ++noFormat;
                 needNewLine = true;
-                stack.push( tagName( token ));
+                stack.push(tag);
                 break;
+                }
             case ClosingTag:
                 {
                 QString tag = tagName( token );
@@ -207,13 +225,19 @@ static bool format( QTextStream& in, QTextStream& out )
                     }
                 if( !needNewLine ) // not line continuation
                     out << INDENT;
-                out << token << endl;
+                if (shouldNoFormat(tag))
+                    --noFormat;
+                out << token;
+                if (!noFormat)
+                    out << endl;
                 needNewLine = false;
                 break;
                 }
             case StandaloneTag:
                 ensureNewLine( out, &needNewLine );
-                out << INDENT << token << endl;
+                out << INDENT << token;
+                if (!noFormat)
+                    out << endl;
                 break;
             case OtherTag:
                 ensureNewLine( out, &needNewLine );
@@ -261,3 +285,5 @@ int main( int argc, char* argv[] )
     out.setCodec( "UTF-8" );
     return format( in, out ) ? 0 : 1;
     }
+
+/* vim:set shiftwidth=4 softtabstop=4 expandtab: */
