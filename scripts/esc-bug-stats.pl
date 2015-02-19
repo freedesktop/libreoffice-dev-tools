@@ -89,7 +89,7 @@ $component_count{'Migration'} = 0; # aBugzilla::get_deps("https://$Bugzilla::bug
 $component_count{'Crashes'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
 $component_count{'Borders'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
 
-my @reg_toquery = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing', 'LibreOffice', 'Writer', 'BASIC', 'Chart', 'Extensions', 'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export', 'UI', 'filters and storage', 'framework', 'graphics stack', 'sdk' );
+my @reg_toquery = ( 'Calc', 'Impress', 'Base', 'Draw', 'LibreOffice', 'Writer', 'BASIC', 'Chart', 'Extensions', 'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export', 'UI', 'filters and storage', 'framework', 'graphics stack', 'sdk' );
 for my $component (@reg_toquery) {
     my $component_uri = Bugzilla::uri_escape($component);
     $component_count{$component} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=$component_uri&product=LibreOffice");
@@ -286,12 +286,12 @@ print << "EOF"
 EOF
 ;
 
-my @output_order = ( 'Spreadsheet', 'Presentation', 'Database', 'Drawing',
-		     'Libreoffice', 'Borders', 'Crashes', 'BASIC', 'Writer/RTF',
+my @output_order = ( 'Calc', 'Impress', 'Base', 'Draw',
+		     'LibreOffice', 'Borders', 'Crashes', 'BASIC', 'Writer/RTF',
 		     'Writer', 'Migration',
-             'Chart', 'Extensions', 'Formula Editor', 'Impress Remote',
-             'Installation', 'Linguistic', 'Printing and PDF export', 'UI',
-             'filters and storage', 'framework', 'graphics stack', 'sdk' );
+		     'Chart', 'Extensions', 'Formula Editor', 'Impress Remote',
+		     'Installation', 'Linguistic', 'Printing and PDF export', 'UI',
+		     'filters and storage', 'framework', 'graphics stack', 'sdk' );
 
 for my $foo (@output_order) {
     print << "EOF"
