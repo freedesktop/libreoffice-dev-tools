@@ -248,8 +248,8 @@ print << "EOF"
      <table:table-cell/>
      <table:table-cell/> <!-- 4.1 -->
      <table:table-cell/>
-     <table:table-cell office:value-type="float" office:value="$ver_open{'4.2'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.T2]-[.J2]" office:value-type="float"  calcext:value-type="float"/>
+     <table:table-cell/> <!-- 4.2 -->
+     <table:table-cell/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.3'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.U2]-[.L2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.4'}" calcext:value-type="float"/>
