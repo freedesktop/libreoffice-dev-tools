@@ -65,17 +65,17 @@ def get_directories():
 def import_csv(filename):
     if not os.path.exists(filename):
         return None
-    reader = csv.DictReader(open(filename))
+    infile = open(filename,'r')
+    reader = csv.DictReader(infile.readlines())
+    infile.close()
     return reader
 
 def export_csv(filename, data, reader):
     fieldnames = set(data.keys())
-    for entry in set(reader.fieldnames).difference(data.iterkeys()):
-        data[entry] = 0
 
     if not reader is None:
-        fieldnames |= set(reader.fieldnames)
-    writer = csv.DictWriter(open(filename, "w"), fieldnames)
+        fieldnames.update(reader.fieldnames)
+    writer = csv.DictWriter(open(filename, "w"), sorted(fieldnames), restval=0)
     writer.writeheader()
     if not reader is None:
         for row in reader:
