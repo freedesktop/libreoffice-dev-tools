@@ -28,6 +28,10 @@ conv = {
         'emu': 1, # EMU / EMU
     }
 
+# We know that VirtualDevices use a DPI of 96.
+# Could use 'gtk.gdk.screen_get_default().get_resolution()' from pygtk.
+conv['pixel'] = conv['inch'] / 96;
+
 def convert(amount, fro, to):
     # convert to EMU
     emu = amount * conv[re.sub("s$", "", fro)]
