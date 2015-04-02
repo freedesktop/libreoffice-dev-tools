@@ -34,7 +34,7 @@ from bugzilla import Bugzilla
 from bugzilla.base import _BugzillaToken
 
 master_target = "5.0.0"
-bug_regex = "(?:fdo|tdf)#(\d+)"
+bug_regex = "(?:tdf|fdo)#(\d+)"
 
 class FreedesktopBZ:
     bzclass = bugzilla.Bugzilla44
@@ -51,6 +51,7 @@ class FreedesktopBZ:
         self.bz.login(user=user, password=password)
 
     def update_whiteboard(self, commit, bugnr, new_version, branch, repo_name):
+        print(bugnr)
         bug = self.bz.getbug(bugnr)
         print(bug)
         if bug.product != "LibreOffice":
@@ -149,12 +150,13 @@ def get_commit(repo, commit_id):
 def find_bugid(repo, commit_id):
     commit = get_commit(repo, commit_id)
     summary_line = commit.summary
-    m = re.search(bug_regex, summary_line)
-    if m is None or len(m.groups()) == 0:
+    regex = re.compile(bug_regex)
+    m = regex.findall(summary_line)
+    if m is None or len(m) == 0:
         print("no bugid found")
         sys.exit()
     
-    return m.groups()
+    return m
 
 def read_repo(repo_name):
     config = ConfigParser.ConfigParser()
@@ -199,11 +201,15 @@ def main(argv):
     commit = get_commit(repo, commit_id)
 
     if target_version is None:
+        print("missing target version")
+        print(opts)
         sys.exit()
 
     bz = FreedesktopBZ()
     bz.connect()
+    print(bug_ids)
     for bug_id in bug_ids:
+        print(bug_id)
         bz.update_whiteboard(commit, bug_id, target_version, branch, repo_name)
 
 if __name__ == "__main__":
