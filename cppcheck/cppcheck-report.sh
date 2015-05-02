@@ -23,8 +23,6 @@ exec 2>&1
 
 die()
 {
-    [ "$DEBUG" ] && set -xv
-
     MESSAGE="$@"
     echo "Error: ${MESSAGE?}" >&2
     mail_failure "${MESSAGE?}"
@@ -33,8 +31,6 @@ die()
 
 run_cppcheck()
 {
-    [ "$DEBUG" ] && set -xv
-
     pushd "${LO_SRC_DIR?}" > /dev/null || die "Failed to change directory to ${LO_SRC_DIR?}"
 
     echo "unusedFunction" > "${DATA_DIR?}"/cppcheck_supp.txt
@@ -50,8 +46,6 @@ run_cppcheck()
 
 get_cppcheck_src()
 {
-    [ "$DEBUG" ] && set -xv
-
     if [ ! -d "${CPPCHECK_DIR?}" ]; then
         git clone "${CPPCHECK_GIT_URL?}" "${CPPCHECK_DIR?}" || die "Failed to git clone ${CPPCHECK_GIT_URL?} in ${CPPCHECK_DIR?}"
     else
@@ -67,8 +61,6 @@ get_cppcheck_src()
 
 get_lo_src()
 {
-    [ "$DEBUG" ] && set -xv
-
     if [ ! -d "${LO_SRC_DIR?}" ]; then
         git clone "${LO_GIT_URL?}" "${LO_SRC_DIR?}" || die "Failed to git clone ${LO_GIT_URL?} in ${LO_SRC_DIR?}"
     else
@@ -84,8 +76,6 @@ get_lo_src()
 
 build_cppcheck()
 {
-    [ "$DEBUG" ] && set -xv
-
     pushd "${CPPCHECK_DIR?}" > /dev/null || die "Failed to change directory to ${CPPCHECK_DIR?}"
     make all || die "Failed to build cppcheck."
     popd > /dev/null || die "Failed to change directory out of ${CPPCHECK_DIR?}"
@@ -93,8 +83,6 @@ build_cppcheck()
 
 get_commit_lo()
 {
-    [ "$DEBUG" ] && set -xv
-
     pushd "${LO_SRC_DIR?}" > /dev/null || die "Failed to change directory to ${LO_SRC_DIR?}"
 
     COMMIT_SHA1_LO=$(git log --date=iso | head -5 | awk '/^commit/ {print $2}')
@@ -106,8 +94,6 @@ get_commit_lo()
 
 get_commit_cppcheck()
 {
-    [ "$DEBUG" ] && set -xv
-
     pushd "${CPPCHECK_DIR?}" > /dev/null || die "Failed to change directory to ${CPPCHECK_DIR?}"
 
     COMMIT_SHA1_CPPCHECK=$(git log --date=iso | head -5 | awk '/^commit/ {print $2}')
@@ -119,8 +105,6 @@ get_commit_cppcheck()
 
 upload_report()
 {
-    [ "$DEBUG" ] && set -xv
-
     ssh upload@dev-builds.libreoffice.org rm -rf "${UPLOAD_DIR?}" || die "Failed to remove directory ${UPLOAD_DIR?}"
     ssh upload@dev-builds.libreoffice.org mkdir -p "${UPLOAD_DIR?}" || die "Failed to create directory ${UPLOAD_DIR?}"
     scp -r "${HTML_DIR?}"/* upload@dev-builds.libreoffice.org:"${UPLOAD_DIR?}"/ || die "Failed to upload report to ${UPLOAD_DIR?}"
@@ -128,8 +112,6 @@ upload_report()
 
 mail_success()
 {
-    [ "$DEBUG" ] && set -xv
-
 cat > "$EMAIL_BODY" <<EOF
 
 A new cppcheck report is available at : http://dev-builds.libreoffice.org/cppcheck_reports/master/
@@ -151,7 +133,6 @@ EOF
 
 mail_failure()
 {
-    [ "$DEBUG" ] && set -xv
     MESSAGE="$@"
 
     if [ -f /tmp/cppcheck-report.log ] ; then
@@ -180,8 +161,6 @@ EOF
 
 usage()
 {
-    [ "$DEBUG" ] && set -xv
-
     # restore stdout and stderr
     exec 1>&3 2>&4
 
