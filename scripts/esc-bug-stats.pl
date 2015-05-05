@@ -29,7 +29,7 @@ sub build_overall_bugstats()
 }
 
 my %bug_to_ver = (
-    '4.5' => '86696',
+    '5.0' => '86696',
     '4.4' => '79641',
     '4.3' => '75025',
     '4.2' => '65675',
@@ -161,79 +161,89 @@ print << "EOF"
       <office:spreadsheet>
          <table:table table:name="Data">
 
-    <table:table-row>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+    <table:table-row table:style-name="ro2">
+     <table:table-cell table:style-name="ce2" office:value-type="string" calcext:value-type="string">
       <text:p>Date</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Open 3.5</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Closed 3.5</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Open 3.6</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Closed 3.6</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Open 4.0</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Closed 4.0</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Open 4.1</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Closed 4.1</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Open 4.2</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Closed 4.2</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Open 4.3</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Closed 4.3</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Open 4.4</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Closed 4.4</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
+      <text:p>Open 5.0</text:p>
+     </table:table-cell>
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
+      <text:p>Closed 5.0</text:p>
+     </table:table-cell>
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Total 3.5</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Total 3.6</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Total 4.0</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Total 4.1</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Total 4.2</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Total 4.3</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Total 4.4</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
+      <text:p>Total 5.0</text:p>
+     </table:table-cell>
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Total Open</text:p>
      </table:table-cell>
-     <table:table-cell table:style-name="boldheader" office:value-type="string" calcext:value-type="string">
+     <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
       <text:p>Total Closed</text:p>
      </table:table-cell>
+     <table:table-cell table:number-columns-repeated="11"/>
     </table:table-row>
 
     <table:table-row table:style-name="ro1">
@@ -251,9 +261,11 @@ print << "EOF"
      <table:table-cell/> <!-- 4.2 -->
      <table:table-cell/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.3'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.U2]-[.L2]" office:value-type="float"  calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.W2]-[.L2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.4'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.V2]-[.N2]" office:value-type="float"  calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.X2]-[.N2]" office:value-type="float"  calcext:value-type="float"/>
+     <table:table-cell office:value-type="float" office:value="$ver_open{'5.0'}" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.Y2]-[.P2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="221" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'3.6'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.0'}" calcext:value-type="float"/>
@@ -261,8 +273,9 @@ print << "EOF"
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.2'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.3'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.4'}" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.B2]+[.D2]+[.F2]+[.H2]+[.J2]+[.L2]+[.N2]" office:value-type="float"/>
-     <table:table-cell table:formula="of:=SUM([.P2:.V2])-[.W2]" office:value-type="float"/>
+     <table:table-cell office:value-type="float" office:value="$ver_total{'5.0'}" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.B2]+[.D2]+[.F2]+[.H2]+[.J2]+[.L2]+[.N2]+[.P2]" office:value-type="float"/>
+     <table:table-cell table:formula="of:=SUM([.R2:.Y2])-[.Z2]" office:value-type="float"/>
     </table:table-row>
 
     <table:table-row/>
