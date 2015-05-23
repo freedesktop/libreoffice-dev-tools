@@ -33,7 +33,7 @@ import bugzilla
 from bugzilla import Bugzilla
 from bugzilla.base import _BugzillaToken
 
-master_target = "5.0.0"
+master_target = "5.1.0"
 bug_regex = "(?:tdf|fdo)#(\d+)"
 
 class FreedesktopBZ:
