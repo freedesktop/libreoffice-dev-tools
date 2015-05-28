@@ -35,7 +35,7 @@ run_cppcheck()
 
     echo "unusedFunction" > "${DATA_DIR?}"/cppcheck_supp.txt
 
-    "${CPPCHECK_DIR?}"/cppcheck -i external/ -i workdir/ --xml --suppressions-list="${DATA_DIR?}"/cppcheck_supp.txt --enable=all --max-configs=25 ./ 2> "${DATA_DIR?}"/err.xml \
+    "${CPPCHECK_DIR?}"/cppcheck -i external/ -i workdir/ --xml --xml-version=2 --suppressions-list="${DATA_DIR?}"/cppcheck_supp.txt --enable=all --max-configs=25 ./ 2> "${DATA_DIR?}"/err.xml \
     || die "Failed to run cppcheck."
 
     "${CPPCHECK_DIR?}"/htmlreport/cppcheck-htmlreport --file="${DATA_DIR?}"/err.xml --title="LibreOffice ${COMMIT_DATE_LO?} ${COMMIT_TIME_LO?} ${COMMIT_SHA1_LO?}, CppCheck ${COMMIT_DATE_CPPCHECK?} ${COMMIT_TIME_CPPCHECK?} ${COMMIT_SHA1_CPPCHECK?}" --report-dir="${HTML_DIR?}" --source-dir=. \
