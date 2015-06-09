@@ -13,6 +13,8 @@ $time[4]++;
 
 my $date_value = sprintf "%04d-%02d-%02d", @time[5,4,3];
 
+my %obsolete_components = ( 'Migration' => 1 );
+
 sub build_overall_bugstats()
 {
     print STDERR "Querying overall / top bug stats\n";
@@ -26,6 +28,22 @@ sub build_overall_bugstats()
     for my $name (sort { $closed_stats->{$b} <=> $closed_stats->{$a} } keys %{$closed_stats}) {
 	printf STDERR "        %-22s%2s\n", $name, $closed_stats->{$name};
     }
+}
+
+sub print_component_counts($$$)
+{
+    my ($title, $link, $component_count) = @_;
+
+    print STDERR "\t* ~Component   count net * $title\n";
+    for my $component (sort { $component_count->{$b} <=> $component_count->{$a} } keys %{$component_count}) {
+	my $count = $component_count->{$component};
+	die "Error on $component - $count" if ($count < 0);
+	if (!defined $obsolete_components{$component} && $count > 0) {
+	    printf STDERR "\t  %12s - %2d (+?)\n", $component, $count;
+	}
+    }
+    print STDERR "\t\t+ $link\n";
+    printf STDERR "\n";
 }
 
 my %bug_to_ver = (
@@ -55,13 +73,17 @@ for my $ver (reverse sort keys %bug_to_ver) {
     $ver_total{$ver} = $all;
 }
 
-my ($reg_all, $reg_open);
+my ($reg_all, $reg_open, $reg_high);
 
 print STDERR "Querying for regressions:\n";
+my $high_fragment = "bug_severity=blocker&bug_severity=critical";
 my $regression_query="https://$Bugzilla::bugserver/buglist.cgi?columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&keywords=regression%2C%20&keywords_type=allwords&list_id=267671&product=LibreOffice&query_format=advanced&order=bug_id&limit=0";
 my $regression_open_query="https://$Bugzilla::bugserver/buglist.cgi?keywords=regression%2C%20&keywords_type=allwords&list_id=267687&columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&resolution=---&query_based_on=Regressions&query_format=advanced&product=LibreOffice&known_name=Regressions&limit=0";
+my $regression_high_query= "$regression_open_query&$high_fragment&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED";
+
 $reg_all = Bugzilla::get_query($regression_query);
 $reg_open = Bugzilla::get_query($regression_open_query);
+$reg_high = Bugzilla::get_query($regression_high_query);
 
 print STDERR "Querying for bibisection:\n";
 my $bibisect_query = "https://$Bugzilla::bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267679&o1=substring&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=MOVED&resolution=NOTABUG&resolution=NOTOURBUG&query_based_on=BibisectedAll&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=BibisectedAll&limit=0";
@@ -77,12 +99,11 @@ print STDERR "\t\t+ http://bit.ly/VQfF3Q\n";
 print STDERR "\n";
 
 print STDERR "* all bugs tagged with 'regression'\n";
-print STDERR "\t+ $reg_open(+?) bugs open of $reg_all(+?) total\n";
+print STDERR "\t+ $reg_open(+?) bugs open of $reg_all(+?) total $reg_high high prio.\n";
 print STDERR "\n";
 
 my %component_count;
-
-my %obsolete_components = ( 'Migration' => 1 );
+my %high_component_count;
 
 # custom pieces
 $component_count{'Migration'} = 0; # aBugzilla::get_deps("https://$Bugzilla::bugserver/showdependencytree.cgi?id=43489&hide_resolved=1"); - kill for now.
@@ -92,15 +113,13 @@ $component_count{'Borders'} = Bugzilla::get_query("https://$Bugzilla::bugserver/
 my @reg_toquery = ( 'Calc', 'Impress', 'Base', 'Draw', 'LibreOffice', 'Writer', 'BASIC', 'Chart', 'Extensions', 'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export', 'UI', 'filters and storage', 'framework', 'graphics stack', 'sdk' );
 for my $component (@reg_toquery) {
     my $component_uri = Bugzilla::uri_escape($component);
-    $component_count{$component} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=$component_uri&product=LibreOffice");
+    my $query_url = "https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296025&query_format=advanced&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=$component_uri&product=LibreOffice";
+    $component_count{$component} = Bugzilla::get_query("$query_url");
+    $high_component_count{$component} = Bugzilla::get_query("$query_url&$high_fragment");
 }
 
-print STDERR "\t* ~Component   count net *\n";
-for my $component (sort { $component_count{$b} <=> $component_count{$a} } keys %component_count) {
-    if (!defined $obsolete_components{$component}) {
-	printf STDERR "\t  %12s - %2d (+?)\n", $component, $component_count{$component};
-    }
-}
+print_component_counts("high priority regressions", "http://bit.ly/1HWHb3E", \%high_component_count);
+print_component_counts("all regressions", "http://bit.ly/1BUdI8i", \%component_count);
 
 print << "EOF"
 <?xml version="1.0" encoding="UTF-8"?>
