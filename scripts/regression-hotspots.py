@@ -50,9 +50,9 @@ if __name__ == '__main__':
     for bug_id in fixed_regression_ids:
         sys.stderr.write('working on bug %d\n' % bug_id)
         # FIXME: use --numstat instead, which does not abbreviate filenames
-        logstat = sh.git('--no-pager', 'log', '--grep', 'fdo#%d' % bug_id, '--stat')
+        logstat = sh.git('--no-pager', 'log', '--grep', '[fdo|tdf]#%d' % bug_id, '--stat')
         for line in logstat:
-            match = statregex.search(line)
+            match = statregex.search(str(line))
             if match and match.group(1):
                 filename = match.group(1)
                 sys.stderr.write('regression fix touched file: %s\n' % filename)
