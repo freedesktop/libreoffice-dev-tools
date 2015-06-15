@@ -131,8 +131,9 @@ def find_target_version(repo, branch):
             if len(beta_list) == 0:
                 # no beta yet
                 return base + ".0.0.beta0"
-            if max(beta_list) == 3:
-                # we only release three betas, therefore now the next will be a RC
+            if max(beta_list) >= 2:
+                # we only release two betas (except when we release three),
+                # therefore now the next will be a RC
                 return base + ".0.1"
             
             # normal beta
