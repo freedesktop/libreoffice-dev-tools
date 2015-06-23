@@ -118,7 +118,7 @@ for my $component (@reg_toquery) {
     $high_component_count{$component} = Bugzilla::get_query("$query_url&$high_fragment");
 }
 
-print_component_counts("high priority regressions", "http://bit.ly/1HWHb3E", \%high_component_count);
+print_component_counts("high severity regressions", "http://bit.ly/1HWHb3E", \%high_component_count);
 print_component_counts("all regressions", "http://bit.ly/1BUdI8i", \%component_count);
 
 print << "EOF"

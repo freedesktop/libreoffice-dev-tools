@@ -14,66 +14,6 @@ $bugserver = "bugs.documentfoundation.org";
 # use me for testing XML pretty printing etc.
 my $fast_debug = 0;
 
-# config for eliding top bug contributors who are
-# not (yet) libreoffice hackers.
-my %sadly_non_libreoffice = (
-    'Chris Wilson' => 1,
-    'Bastien Nocera' => 1,
-    'Kristian Høgsberg' => 1,
-    'Simon McVittie' => 1,
-    'Søren Sandmann Pedersen' => 1,
-    'Daniel Vetter' => 1,
-    'Sergey V. Udaltsov' => 1,
-    'Marek Olšák' => 1,
-    'Emil Velikov' => 1,
-    'ajax at nwnk dot net' => 1,
-    'Jesse Barnes' => 1,
-    'Albert Astals Cid' => 1,
-    'Daniel Stone' => 1,
-    'Eric Anholt' => 1,
-    'Lennart Poettering' => 1,
-    'Ilia Mirkin' => 1,
-    'Behdad Esfahbod' => 1,
-    'Richard Hughes' => 1,
-    'Ben Widawsky' => 1,
-    'Chengwei Yang' => 1,
-    'Dan Nicholson' => 1,
-    'Zbigniew Jedrzejewski-Szmek' => 1,
-    'Tanu Kaskinen' => 1,
-    'Vinson Lee' => 1,
-    'Sylvain BERTRAND' => 1,
-    'lu hua' => 1,
-    'Kenneth Graunke' => 1,
-    'Seif Lotfy' => 1,
-    'Alex Deucher' => 1,
-    'Ian Romanick' => 1,
-    'Tollef Fog Heen' => 1,
-    'Patrick Ohly' => 1,
-    'Peter Hutterer' => 1,
-    'Guillaume Desmottes' => 1,
-    'Bryce Harrington' => 1,
-    'Paolo Zanoni' => 1,
-    'David Faure' => 1,
-    'Rex Dieter' => 1,
-    'Tom Stellard' => 1,
-    'almos' => 1,
-    'Andreas Boll' => 1,
-    'Tapani Pälli' => 1,
-    'Matt Turner' => 1,
-    'Michel Dänzer' => 1,
-    'Jani Nikula' => 1,
-    'Guo Jinxian' => 1,
-    'Pekka Paalanen' => 1,
-    'Rodrigo Vivi' => 1,
-    'Stef Walter' => 1,
-    'Paulo Zanoni' => 1,
-    'Adrian Johnson' => 1,
-    'Kaveh' => 1,
-    'Marc-Andre Lureau' => 1,
-    'Aleksander Morgado' => 1,
-    'Xavier Bachelot' => 1,
-);
-
 sub get_url($)
 {
     my $url = shift;
@@ -209,10 +149,6 @@ sub read_bugstats($)
     }
 
     $region eq 'end' || die "Failed to parse weekly bug summary - in region '$region'";
-
-    for my $name (keys %closed_stats) {
-	delete $closed_stats{$name} if (defined $sadly_non_libreoffice{$name});
-    }
 
     return \%closed_stats;
 }
