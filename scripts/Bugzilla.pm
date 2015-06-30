@@ -152,3 +152,5 @@ sub read_bugstats($)
 
     return \%closed_stats;
 }
+
+1;
