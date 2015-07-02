@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="Comment" script:language="StarBasic">&apos; *** MODULE COMMENT ***
+&apos; #
+&apos; # This file is part of the LibreOffice project.
+&apos; #
+&apos; # This Source Code Form is subject to the terms of the Mozilla Public
+&apos; # License, v. 2.0. If a copy of the MPL was not distributed with this
+&apos; # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+&apos; #
+&apos; # This file incorporates work covered by the following license notice:
+&apos; #
+&apos; #   Licensed to the Apache Software Foundation (ASF) under one or more
+&apos; #   contributor license agreements. See the NOTICE file distributed
+&apos; #   with this work for additional information regarding copyright
+&apos; #   ownership. The ASF licenses this file to you under the Apache
+&apos; #   License, Version 2.0 (the &quot;License&quot;); you may not use this file
+&apos; #   except in compliance with the License. You may obtain a copy of
+&apos; #   the License at http://www.apache.org/licenses/LICENSE-2.0 .
+&apos; #
+
+Dim oDialog AS Object
+Dim document AS Object
+
+&apos;=======================================================
+&apos; Main
+&apos;-------------------------------------------------------
+&apos; Inserts a comment
+&apos;=======================================================
+Sub Main
+
+    If not IsHelpFile Then
+        msgbox(strErr_NoHelpFile)
+        Exit Sub
+    End If
+
+    document = StarDesktop.CurrentComponent
+
+    BasicLibraries.LoadLibrary(&quot;HelpAuthoring&quot;)
+    oDialog = LoadDialog(&quot;HelpAuthoring&quot;, &quot;dlgComment&quot;)
+    oDialogModel = oDialog.Model
+
+    if not IsHelpFile Then
+        msgbox(strErr_NoHelpFile)
+        Exit Sub
+    End If
+
+    oTxtComment = oDialog.GetControl(&quot;txtComment&quot;)
+
+    If oDialog.Execute() = 1 Then
+        oSel = thiscomponent.getcurrentcontroller.getselection
+        oCur = oSel(0).getText.createTextCursorByRange(oSel(0))
+        oCur.gotoStartOfParagraph(0)
+        oCur.gotoEndOfParagraph(1)
+
+        If oCur.GetString = &quot;&quot; Then
+            SetParaStyle(&quot;hlp_aux_comment&quot;)
+        End If
+
+        If oTxtComment.Text &lt;&gt; &quot;&quot; Then
+            InsertTag(&quot;COMMENT_&quot;,&quot;&lt;COMMENT&gt;&quot;)
+            SetCharStyle(&quot;hlp_aux_comment&quot;)
+            InsertTag(&quot;COMMENT&quot;,oTxtComment.Text)
+            InsertTag(&quot;_COMMENT&quot;,&quot;&lt;/COMMENT&gt;&quot;)
+        End If
+    End If
+
+    oDialog.dispose
+
+End Sub
+
+</script:module>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="Find" script:language="StarBasic">&apos; *** MODULE FIND ***
+&apos; #
+&apos; # This file is part of the LibreOffice project.
+&apos; #
+&apos; # This Source Code Form is subject to the terms of the Mozilla Public
+&apos; # License, v. 2.0. If a copy of the MPL was not distributed with this
+&apos; # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+&apos; #
+&apos; # This file incorporates work covered by the following license notice:
+&apos; #
+&apos; #   Licensed to the Apache Software Foundation (ASF) under one or more
+&apos; #   contributor license agreements. See the NOTICE file distributed
+&apos; #   with this work for additional information regarding copyright
+&apos; #   ownership. The ASF licenses this file to you under the Apache
+&apos; #   License, Version 2.0 (the &quot;License&quot;); you may not use this file
+&apos; #   except in compliance with the License. You may obtain a copy of
+&apos; #   the License at http://www.apache.org/licenses/LICENSE-2.0 .
+&apos; #
+
+Dim oDialog AS Object
+Dim document AS Object
+Dim Found(0) As Object
+Dim nPos As Integer
+
+&apos;=======================================================
+&apos; Main
+&apos;-------------------------------------------------------
+&apos; Calls the Find routine to search in fields
+&apos;=======================================================
+Sub Main
+
+    If not IsHelpFile Then
+        msgbox(strErr_NoHelpFile)
+        Exit Sub
+    End If
+
+    BasicLibraries.LoadLibrary(&quot;HelpAuthoring&quot;)
+    oDialog = LoadDialog(&quot;HelpAuthoring&quot;, &quot;dlgFind&quot;)
+
+    oDoc = StarDesktop.CurrentComponent
+    Enum = oDoc.Text.createEnumeration
+
+    LastSearchTerm = ReadConfig(&quot;SearchTerm&quot;)
+    If LastSearchTerm &lt;&gt; &quot;&quot; Then
+        oTxtFind = oDialog.GetControl(&quot;txtFind&quot;)
+        oTxtFind.Text = LastSearchTerm
+    End If
+
+    If oDialog.execute() = 1 Then
+        oTxtFind = oDialog.GetControl(&quot;txtFind&quot;)
+        sFind = oTxtFind.Text
+        WriteConfig(&quot;SearchTerm&quot;,sFind)
+
+        Do While Enum.hasMoreElements
+            TE = Enum.nextElement
+            If TE.supportsService(&quot;com.sun.star.text.Paragraph&quot;) Then
+                TP = TE.createEnumeration
+                While TP.hasmoreElements
+                    TPE = TP.nextElement
+                    If TPE.supportsService(&quot;com.sun.star.text.TextField&quot;) Then
+                        If Instr(TPE.String, sFind) Then
+                            sDim = ubound(Found())+1
+                            Redim Preserve Found(sDim) As Object
+                            Found(sDim) = TPE.TextField.getAnchor.getText.createTextCursorbyRange(TPE.TextField.getAnchor)
+                        End If
+                    End If
+                Wend
+            ElseIf TE.supportsService(&quot;com.sun.star.text.TextTable&quot;) Then
+                CellName = &quot;A1&quot;
+                Cell = TE.getCellByName(CellName)
+                tmpCellEnum = Cell.createEnumeration
+                tmpCellElement = tmpCellEnum.nextElement
+
+                Rows = TE.getRows
+                Cols = TE.getColumns
+
+                For RowIndex = 1 to Rows.getCount()
+                    For ColIndex = 1 to Cols.getCount()
+                        CellName = Chr(64 + ColIndex) &amp; RowIndex
+                        Cell = TE.getCellByName(CellName)
+                        CellEnum = Cell.createEnumeration
+
+                        Do While CellEnum.hasMoreElements
+
+                            CellElement = CellEnum.nextElement
+
+                            If CellElement.supportsService(&quot;com.sun.star.text.Paragraph&quot;) Then
+                                TP = CellElement.createEnumeration
+                                While TP.hasmoreElements
+                                    TPE = TP.nextElement
+                                    If TPE.supportsService(&quot;com.sun.star.text.TextField&quot;) Then
+                                        If Instr(TPE.String, sFind) Then
+                                            sDim = ubound(Found())+1
+                                            Redim Preserve Found(sDim) As Object
+                                            Found(sDim) = TPE.TextField.getAnchor.getText.createTextCursorbyRange(TPE.TextField.getAnchor)
+                                        End If
+                                    End If
+                                Wend
+                            EndIf
+
+                        Loop
+
+                    Next
+                Next
+
+            EndIf
+        Loop
+
+        If ubound(Found()) &lt; 1     Then
+            msgbox &quot;Nothing found&quot;
+        ElseIf ubound(Found()) &gt; 1     Then
+            nPos = 1
+            thiscomponent.getcurrentcontroller.select(Found(1))
+            oDialog = LoadDialog(&quot;HelpAuthoring&quot;, &quot;dlgRepeatFind&quot;)
+            oPrev = oDialog.GetControl(&quot;butPrev&quot;)
+            oPrev.Enable = FALSE
+            oDialog.Execute()
+        Else
+            thiscomponent.getcurrentcontroller.select(Found(1))
+        End If
+    End If
+End Sub
+
+&apos;=======================================================
+&apos; FindNext
+&apos;-------------------------------------------------------
+&apos; Goes to the next search result position.
+&apos;=======================================================
+Sub FindNext
+    If nPos &lt; ubound(Found()) Then
+        nPos = nPos + 1
+        thiscomponent.getcurrentcontroller.select(Found(nPos))
+        If nPos = ubound(Found()) Then
+            oNext = oDialog.GetControl(&quot;butNext&quot;)
+            oNext.Enable = FALSE
+        End If
+        If nPos &gt; 1 Then
+            oPrev = oDialog.GetControl(&quot;butPrev&quot;)
+            oPrev.Enable = TRUE
+        End If
+    End If
+End Sub
+
+&apos;=======================================================
+&apos; FindPrev
+&apos;-------------------------------------------------------
+&apos; Goes to the previous search result position.
+&apos;=======================================================
+Sub FindPrev
+    If nPos &gt; 1 Then
+        nPos = nPos - 1
+        thiscomponent.getcurrentcontroller.select(Found(nPos))
+        If nPos = 1 Then
+            oPrev = oDialog.GetControl(&quot;butPrev&quot;)
+            oPrev.Enable = FALSE
+        End If
+        If nPos &lt; ubound(Found()) Then
+            oNext = oDialog.GetControl(&quot;butNext&quot;)
+            oNext.Enable = TRUE
+        End If
+    End If
+End Sub
+
+</script:module>
