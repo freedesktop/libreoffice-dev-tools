@@ -21,7 +21,7 @@
 
         <identifier value="org.openoffice.helpauthoring"/>
 
-        <version value="3.0-20150605"/>
+        <version value="3.0-20150703"/>
         <display-name>
             <name lang="en">Help authoring extension tool</name>
         </display-name>
