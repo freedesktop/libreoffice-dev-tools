@@ -187,4 +187,27 @@ End Sub
 Sub DisplayVersion
     msgbox &quot;LibreOffice Help Authoring Framework&quot;+chr(13)+&quot;Version &quot;+Version,256
 End Sub
+
+Sub OpenXHP
+Dim ListAny(0) as Long
+Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
+
+    sLastSaveDir = ReadConfig(&quot;LastSaveDir&quot;)
+    sDocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+    ListAny(0) = com.sun.star.ui.dialogs.TemplateDescription.FILEOPEN_SIMPLE
+    oFileDialog = CreateUnoService(&quot;com.sun.star.ui.dialogs.FilePicker&quot;)
+    oFileDialog.Initialize(ListAny())
+    oFileDialog.DisplayDirectory = sDocRoot
+    oFileDialog.AppendFilter(&quot;Help&quot;, &quot;*.xhp&quot;)
+    oFileDialog.SetTitle(&quot;Open Help File&quot;)
+    iAccept = oFileDialog.Execute()
+    If iAccept = 1 Then
+        sPath = oFileDialog.Files(0)
+        FileProperties(0).Name = &quot;FilterName&quot;
+        FileProperties(0).Value =&quot;XHP_Help&quot;
+        oDoc = StarDesktop.loadComponentFromURL(sPath, &quot;_blank&quot;, 0, FileProperties())
+    End If
+    oFileDialog.Dispose()
+End Sub
+
 </script:module>

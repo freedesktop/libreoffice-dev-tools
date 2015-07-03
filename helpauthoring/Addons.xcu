@@ -29,6 +29,15 @@
                     <value>com.sun.star.text.TextDocument</value>
                 </prop>
                 <node oor:name="Submenu">
+                    <node oor:name="m00" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring._Main.OpenXHP?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Open Help File</value>
+                        </prop>
+                    </node>
                     <node oor:name="m01" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring._Main.CreateFile?language=Basic&amp;location=application</value>
