@@ -59,11 +59,15 @@ Sub SetMetaDataOnSave(Path as String)
         Path = Right(Path,Len(Path)-Len(sDocRoot))
     End If
 
-    document.DocumentInfo.SetUserFieldName(0,&quot;Indexer&quot;)
-    document.DocumentInfo.SetUserFieldName(1,&quot;ID&quot;)
-&apos;    document.DocumentInfo.SetUserFieldName(2,&quot;Comment&quot;)
-    document.DocumentInfo.SetPropertyValue(&quot;Subject&quot;,Path)
+&apos;    document.DocumentInfo.SetUserFieldName(0,&quot;Indexer&quot;)
+&apos;    document.DocumentInfo.SetUserFieldName(1,&quot;ID&quot;)
+&apos;&apos;    document.DocumentInfo.SetUserFieldName(2,&quot;Comment&quot;)
+&apos;    document.DocumentInfo.SetPropertyValue(&quot;Subject&quot;,Path)
 
+    document.DocumentProperties.UserDefinedProperties.Indexer = &quot;&quot; &apos; Present in template properties
+    document.DocumentProperties.UserDefinedProperties.ID = &quot;&quot; &apos; Present in template properties
+&apos;    document.DocumentInfo.SetUserFieldName(2,&quot;Comment&quot;)
+    document.DocumentProperties.Subject = Path
 
 End Sub
 

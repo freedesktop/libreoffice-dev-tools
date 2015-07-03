@@ -505,16 +505,25 @@ End Sub
 &apos;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Sub CheckMetaData(oDoc As Object)
 
-    sTopicID = oDoc.DocumentInfo.GetUserFieldValue(1)
+    &apos;sTopicID = oDoc.DocumentInfo.GetUserFieldValue(1)
+     sTopicID = oDoc.DocumentProperties.UserDefinedProperties.ID
+
+
 
     If sTopicID &lt;&gt; AlphaNum(sTopicID) OR sTopicID=&quot;&quot; Then
         sTopicID = &quot;topic_&quot;+CreateID &apos; create a topic id
     End If
 
-    oDoc.DocumentInfo.SetUserFieldValue(1,sTopicID)
-    sCreated = oDoc.DocumentInfo.GetUserFieldValue(2)
-    sEdited = oDoc.DocumentInfo.GetUserFieldValue(3)
-    sTitle = oDoc.DocumentInfo.Title
+    &apos;oDoc.DocumentInfo.SetUserFieldValue(1,sTopicID)
+    oDoc.DocumentProperties.UserDefinedProperties.ID = sTopicID
+
+
+    &apos;sCreated = oDoc.DocumentInfo.GetUserFieldValue(2) &apos; OH not used...
+    sCreated = oDoc.DocumentProperties.CreationDate
+    &apos;sEdited = oDoc.DocumentInfo.GetUserFieldValue(3) &apos; OH not used
+
+    &apos;sTitle = oDoc.DocumentInfo.Title
+    sTitle = oDoc.DocumentProperties.Title
 
     If sTitle=&quot;&quot; OR sTitle=&quot;&lt;Set Topic Title&gt;&quot; Then
         Enum = document.Text.createEnumeration
@@ -529,14 +538,14 @@ Sub CheckMetaData(oDoc As Object)
                             strg = strg + TextPortion.String
                         End If
                     Wend
-                    document.DocumentInfo.Title = strg
+                    document.DocumentProperties.Title = strg
                     Exit Do
                 End If
             End If
         Loop
     End If
 
-    sIndex = oDoc.DocumentInfo.GetUserFieldValue(0)
+    &apos;sIndex = oDoc.DocumentInfo.GetUserFieldValue(0) &apos;OH not used anywhere
 
 End Sub
 

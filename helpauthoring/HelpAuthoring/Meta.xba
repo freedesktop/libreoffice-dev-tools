@@ -47,7 +47,7 @@ Sub Main
 &apos;    End If
 
     oTxtTitle = oDialog.GetControl(&quot;txtTitle&quot;)
-    oTxtTitle.Text = document.DocumentInfo.Title
+    oTxtTitle.Text = document.DocumentProperties.Title
 
     oOpIndInc = oDialog.GetControl(&quot;opIndexInclude&quot;)
     oOpIndExc = oDialog.GetControl(&quot;opIndexExclude&quot;)
@@ -64,7 +64,10 @@ Sub Main
     &apos;End If
 
 
-    If document.DocumentInfo.GetUserFieldValue(GetUserFieldNumber(&quot;Indexer&quot;)) = &quot;exclude&quot; then
+
+&apos;    If document.DocumentInfo.GetUserFieldValue(GetUserFieldNumber(&quot;Indexer&quot;)) = &quot;exclude&quot; then
+    If document.DocumentProperties.UserDefinedProperties.Indexer = &quot;exclude&quot; then
+
         oOpIndExc.State = True
     Else
         oOpIndInc.State = True
@@ -80,7 +83,7 @@ Sub Main
     &apos;oTxtEdited.Text = document.DocumentInfo.GetUserFieldValue(3)
 
     If oDialog.Execute() = 1 Then &apos; update the meta data
-        document.DocumentInfo.Title = oTxtTitle.Text
+        document.DocumentProperties.Title = oTxtTitle.Text
         &apos;document.DocumentInfo.SetUserFieldValue(1,oTxtTopicID.Text)
         &apos;document.DocumentInfo.SetUserFieldValue(GetUserFieldNumber(&quot;Comment&quot;),oTxtComment.Text)
         &apos;document.DocumentInfo.SetUserFieldValue(3,oTxtEdited.Text)
@@ -92,9 +95,11 @@ Sub Main
         &apos;End If
 
         If oOpIndExc.State = True Then
-            document.DocumentInfo.SetUserFieldValue(GetUserFieldNumber(&quot;Indexer&quot;),&quot;exclude&quot;)
+            &apos;document.DocumentInfo.SetUserFieldValue(GetUserFieldNumber(&quot;Indexer&quot;),&quot;exclude&quot;)
+            document.DocumentProperties.UserDefinedProperties.Indexer = &quot;exclude&quot;
         Else
-            document.DocumentInfo.SetUserFieldValue(GetUserFieldNumber(&quot;Indexer&quot;),&quot;include&quot;)
+&apos;            document.DocumentInfo.SetUserFieldValue(GetUserFieldNumber(&quot;Indexer&quot;),&quot;include&quot;)
+            document.DocumentProperties.UserDefinedProperties.Indexer = &quot;include&quot;
         End If
     End If
     oDialog.dispose
@@ -122,6 +127,7 @@ Sub SetTopicID(txt As String)
     oTxtTopicID = oDialog.GetControl(&quot;txtTopicID&quot;)
     If txt = &quot;&quot; Then
         oTxtTopicID.Text = AlphaNum(document.DocumentInfo.PropertyValues(29).Value)
+&apos;        oTxtTopicID.Text = AlphaNum(document.DocumentProperties.UserDefinedProperties.Comments) &apos; OH need to find what is this...
     Else
         oTxtTopicID.Text = AlphaNum(txt)
     End If
