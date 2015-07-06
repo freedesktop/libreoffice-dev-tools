@@ -73,7 +73,7 @@ chmod +x odfvalidator
 
 cd "$workdir"
 if [ ! -d officeotron ]; then
-    svn co http://officeotron.googlecode.com/svn/trunk officeotron
+    git clone git://gerrit.libreoffice.org/officeotron officeotron
 fi
 cd officeotron
 if [ ! -e dist/officeotron-*.jar ]; then
