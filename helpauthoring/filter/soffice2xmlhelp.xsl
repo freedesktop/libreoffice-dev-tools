@@ -1141,7 +1141,7 @@ text:span, covers EMPH and ITEM
             <xsl:when test="starts-with($masterstyle,'hlp_aux_')">
                 <xsl:apply-templates />
             </xsl:when>
-            <xsl:when test="not(starts-with($masterstyle,'hlp_'))"><emph><xsl:apply-templates/></emph></xsl:when>
+            <xsl:when test="not(starts-with($masterstyle,'hlp_'))"><xsl:apply-templates/></xsl:when>
             <xsl:when test="$masterstyle = 'hlp_emph'"><emph><xsl:apply-templates/></emph></xsl:when>
             <xsl:otherwise>
                 <xsl:variable name="spanstyle"><xsl:value-of select="substring-after($masterstyle,'hlp_')"/></xsl:variable><item type="{$spanstyle}"><xsl:apply-templates /></item></xsl:otherwise>
