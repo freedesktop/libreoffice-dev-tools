@@ -24,7 +24,7 @@
 &apos; #   the License at http://www.apache.org/licenses/LICENSE-2.0 .
 &apos; #
 
-Global Const Version = &quot;v3.20150703&quot;
+Global Const Version = &quot;v3.1.0&quot;
 
 Global Const strErr_NoHelpFile = &quot;Not a Help File&quot;
 
