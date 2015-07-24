@@ -1,0 +1,46 @@
+Help Authoring Extension
+
+This extension adds a new menu to the Writer's menubar, and allows easy
+editing of the LibreOffice Help.  Usage info is here:
+
+  https://wiki.documentfoundation.org/Documentation/Help
+
+== Hacking it ==
+
+If you want to improve the extension itself, get the sources here:
+
+  $ git clone git://anongit.freedesktop.org/libreoffice/contrib/dev-tools dev-tools
+
+and start hacking it.  Most probably you'll want to do improvements to the
+.xhp export filter:
+
+  helpauthoring/filter/soffice2xmlhelp.xsl
+
+To do that the most effectively, choose a reasonably complicated .xhp file,
+like:
+
+  help/source/text/schart/01/type_stock.xhp
+
+convert it to .fodt (Save As... in Writer), and then use:
+
+  xsltproc helpauthoring/filter/soffice2xmlhelp.xsl help/source/text/schart/01/type_stock.fodt > out
+
+When you are happy with the improved output in 'out', commit & push the
+improved soffice2xmlhelp.xsl via gerrit.
+
+== Releasing it ==
+
+Increase the version number both in:
+
+  helpauthoring/HelpAuthoring/_Main.xba
+  helpauthoring/description.xml
+
+and then:
+
+  cd helpauthoring && zip -r ~/HelpAuthoring-3.x.y.oxt .
+
+and upload to:
+
+  http://dev-www.libreoffice.org/helpauthoring/
+
+and announce.
