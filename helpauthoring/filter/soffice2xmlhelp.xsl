@@ -32,7 +32,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" office:version="1.0"
         exclude-result-prefixes="office meta table number dc fo xlink chart math script xsl draw svg dr3d form text style xsi xsd xforms dom oooc ooow ooo">
 
-<xsl:output method="xml" indent="no" omit-xml-declaration="no"  />
+<xsl:output method="xml" indent="no" omit-xml-declaration="no" encoding="UTF-8"/>
 <!--
 <xsl:output doctype-public="-//OpenOffice.org//Help Document//EN" />
 <xsl:output doctype-system="http://documentation.openoffice.org/xmlhelp.dtd" />
@@ -93,38 +93,35 @@ DOCUMENT SKELETON
 <xsl:template match="/">
 
     <helpdocument version="1.0">
-    <xsl:call-template name="lf"/>
+    <xsl:call-template name="newline"/>
     <xsl:call-template name="licheader"/> <!-- inserts the license header -->
-    <xsl:call-template name="lf"/>
+    <xsl:call-template name="newline"/>
     <meta>
-    <xsl:call-template name="lf"/>
-            <topic id="{$topic_id}">
-                <xsl:if test="not($topic_indexer = '')">
-                    <xsl:attribute name="indexer"><xsl:value-of select="$topic_indexer"/></xsl:attribute>
-                </xsl:if>
-                <xsl:if test="not($topic_status = '')">
-                    <xsl:attribute name="status"><xsl:value-of select="$topic_status"/></xsl:attribute>
-                </xsl:if>
-                <xsl:call-template name="lf"/>
-                <title xml-lang="en-US" id="tit"><xsl:value-of select="$title"/></title>
-                <xsl:call-template name="lf"/>
-                <filename><xsl:value-of select="$filename"/></filename>
-            <xsl:call-template name="lf"/>
-            </topic>
-            <!-- REMOVED DUE TO PROBLEMS WITH CVS MERGE CONFLICTS
-            <history>
-                <created date="{$history_created_date}"><xsl:value-of select="$history_created"/></created>
-                <lastedited date="{$history_lastedited_date}"><xsl:value-of select="$history_lastedited"/></lastedited>
-            </history>
-            //-->
-        <xsl:call-template name="lf"/>
-        </meta>
-        <xsl:call-template name="lf"/>
-        <body>
-            <xsl:apply-templates select="/office:document/office:body/office:text" />
-        <xsl:call-template name="lf"/>
-        </body>
-    <xsl:call-template name="lf"/>
+        <xsl:call-template name="newline-indent-1"/>
+        <topic id="{$topic_id}">
+            <xsl:if test="not($topic_indexer = '')">
+                <xsl:attribute name="indexer"><xsl:value-of select="$topic_indexer"/></xsl:attribute>
+            </xsl:if>
+            <xsl:if test="not($topic_status = '')">
+                <xsl:attribute name="status"><xsl:value-of select="$topic_status"/></xsl:attribute>
+            </xsl:if>
+            <xsl:call-template name="newline-indent-2"/>
+            <title xml-lang="en-US" id="tit"><xsl:value-of select="$title"/></title>
+            <xsl:call-template name="newline-indent-2"/>
+            <filename><xsl:value-of select="$filename"/></filename>
+            <xsl:call-template name="newline-indent-1"/>
+        </topic>
+        <xsl:call-template name="newline"/>
+    </meta>
+    <xsl:call-template name="newline"/>
+    <xsl:call-template name="newline"/>
+    <body>
+        <xsl:call-template name="newline"/>
+        <xsl:apply-templates select="/office:document/office:body/office:text" />
+        <xsl:call-template name="newline"/>
+    </body>
+    <xsl:call-template name="newline"/>
+    <xsl:call-template name="newline"/>
     </helpdocument>
 </xsl:template>
 
@@ -228,6 +225,7 @@ BOOKMARK
 <xsl:template match="text:variable-set[@text:name='_BOOKMARK']">
     <xsl:text disable-output-escaping="yes">
 &lt;/bookmark&gt;</xsl:text>
+    <xsl:call-template name="newline"/>
 </xsl:template>
 
 <!--
@@ -236,8 +234,8 @@ BOOKMARK_VALUE
 ######################################################
 -->
 <xsl:template match="text:variable-set[@text:name='BOOKMARKVALUE']">
-    <xsl:call-template name="lf" />
-    <bookmark_value><xsl:apply-templates />    </bookmark_value>
+    <xsl:call-template name="newline-indent-1"/>
+    <bookmark_value><xsl:apply-templates /></bookmark_value>
 </xsl:template>
 
 <!--
@@ -615,8 +613,10 @@ LIST
     <xsl:choose>
     <!-- ORDERED LISTS -->
     <xsl:when test="//text:list-style[@style:name=$stylename]/text:list-level-style-number[@text:level='1']"> <!-- fixed list bug -->
-    <xsl:text>
-</xsl:text>
+
+    <xsl:call-template name="newline"/>
+    <xsl:call-template name="newline"/>
+
     <list type="ordered">
 
         <xsl:variable name="liststyle">
@@ -658,8 +658,9 @@ LIST
         </xsl:if>
 
         <xsl:apply-templates />
-    <xsl:text>
-</xsl:text>
+
+    <xsl:call-template name="newline"/>
+
     </list>
 
     </xsl:when>
@@ -667,7 +668,9 @@ LIST
     <!-- UNORDERED LISTS -->
     <xsl:when test="//text:list-style[@style:name=$stylename]/text:list-level-style-bullet[@text:level='1']"> <!-- fixed list bug -->
 
-    <xsl:call-template name="lf"/>
+    <xsl:call-template name="newline"/>
+    <xsl:call-template name="newline"/>
+
     <list type="unordered">
         <xsl:variable name="masterstyle">
             <xsl:call-template name="getmasterstyle">
@@ -699,12 +702,11 @@ LISTITEM
 ######################################################
 -->
 <xsl:template match="text:list-item">
-    <xsl:text>
-</xsl:text>
+    <xsl:call-template name="newline-indent-1"/>
+
     <listitem>
         <xsl:apply-templates />
-    <xsl:text>
-</xsl:text>
+	<xsl:call-template name="newline-indent-1"/>
     </listitem>
 </xsl:template>
 
@@ -857,8 +859,8 @@ PARAGRAPH
 
     //-->
 
-        <xsl:text>
-</xsl:text>
+        <xsl:call-template name="newline"/>
+
         <paragraph id="{$real_id}" role="{$role}" xml-lang="en-US"><xsl:if test="$localize='FALSE'">
                 <xsl:attribute name="localize"><xsl:value-of select="'false'"/></xsl:attribute>
             </xsl:if>
@@ -895,8 +897,10 @@ SECTION
             <xsl:value-of select="'false'"/>
         </xsl:if>
     </xsl:variable>
-    <xsl:text>
-</xsl:text>
+
+    <xsl:call-template name="newline"/>
+    <xsl:call-template name="newline"/>
+
     <section id="{$id}">
         <xsl:if test="not($localize='')">
             <xsl:attribute name="localize">
@@ -904,8 +908,8 @@ SECTION
             </xsl:attribute>
         </xsl:if>
         <xsl:apply-templates />
-        <xsl:text>
-</xsl:text>
+
+	<xsl:call-template name="newline"/>
     </section>
 
 </xsl:template>
@@ -996,8 +1000,9 @@ TABLE
     <xsl:variable name="id">
         <xsl:value-of select="@table:name"/>
     </xsl:variable>
-    <xsl:text>
-</xsl:text>
+
+    <xsl:call-template name="newline"/>
+    <xsl:call-template name="newline"/>
 
     <table id="{$id}">
 
@@ -1015,12 +1020,10 @@ TABLE
         </xsl:if>
 
         <xsl:apply-templates />
-    <xsl:text>
-</xsl:text>
-    </table>
 
-    <xsl:text>
-</xsl:text>
+    <xsl:call-template name="newline"/>
+    </table>
+    <xsl:call-template name="newline"/>
 </xsl:template>
 
 <!--
@@ -1037,14 +1040,14 @@ TABLECELL
 <xsl:template match="table:table-cell">
     <xsl:variable name="colspan"><xsl:value-of select="@table:number-columns-spanned"/></xsl:variable>
     <xsl:variable name="rowspan"><xsl:value-of select="@table:number-rows-spanned"/></xsl:variable>
-    <xsl:text>
-</xsl:text>
+
+    <xsl:call-template name="newline-indent-2"/>
     <tablecell>
         <xsl:if test="not($colspan='')"><xsl:attribute name="colspan"><xsl:value-of select="$colspan"/></xsl:attribute></xsl:if>
         <xsl:if test="not($rowspan='')"><xsl:attribute name="rowspan"><xsl:value-of select="$rowspan"/></xsl:attribute></xsl:if>
-        <xsl:apply-templates />
-        <xsl:text>
-</xsl:text>
+        <xsl:apply-templates/>
+
+	<xsl:call-template name="newline-indent-2"/>
     </tablecell>
 </xsl:template>
 
@@ -1058,12 +1061,10 @@ TABLEROW
 ######################################################
 -->
 <xsl:template match="table:table-row">
-    <xsl:text>
-</xsl:text>
+    <xsl:call-template name="newline-indent-1"/>
     <tablerow>
         <xsl:apply-templates />
-    <xsl:text>
-</xsl:text>
+	<xsl:call-template name="newline-indent-1"/>
     </tablerow>
 </xsl:template>
 
@@ -1307,9 +1308,22 @@ LICENSE HEADER
 
 </xsl:template>
 
-<xsl:template name="lf">
+<!-- Output a newline -->
+<xsl:template name="newline">
 <xsl:text disable-output-escaping="yes">
 </xsl:text>
+</xsl:template>
+
+<!-- Output a newline, and indent the next element (1st level). -->
+<xsl:template name="newline-indent-1">
+<xsl:text disable-output-escaping="yes">
+  </xsl:text>
+</xsl:template>
+
+<!-- Output a newline, and indent the next element (2nd level) -->
+<xsl:template name="newline-indent-2">
+<xsl:text disable-output-escaping="yes">
+    </xsl:text>
 </xsl:template>
 
 </xsl:stylesheet>
