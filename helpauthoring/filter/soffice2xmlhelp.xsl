@@ -705,7 +705,7 @@ LISTITEM
     <xsl:call-template name="newline-indent-1"/>
 
     <listitem>
-        <xsl:apply-templates />
+        <xsl:apply-templates><xsl:with-param name="paragraph_indent" select="2"/></xsl:apply-templates>
 	<xsl:call-template name="newline-indent-1"/>
     </listitem>
 </xsl:template>
@@ -766,6 +766,7 @@ PARAGRAPH
 -->
 
 <xsl:template match="text:h | text:p">
+    <xsl:param name="paragraph_indent"/>
 
     <xsl:variable name="masterstyle">
         <xsl:call-template name="getmasterstyle">
@@ -803,7 +804,6 @@ PARAGRAPH
     <xsl:choose>
     <xsl:when test="not(starts-with($masterstyle,'hlp_'))"/>
     <xsl:when test="not(starts-with($masterstyle,'hlp_aux_') or ancestor::office:annotation or . = '')">
-
 
         <xsl:variable name="id">
             <xsl:choose>
@@ -859,7 +859,16 @@ PARAGRAPH
 
     //-->
 
-        <xsl:call-template name="newline"/>
+        <!-- Empty line before the headings -->
+        <xsl:if test="$role='heading'"><xsl:call-template name="newline"/></xsl:if>
+
+        <!-- Indent inside table cells or listitems. -->
+        <xsl:choose>
+            <xsl:when test="$paragraph_indent=1"><xsl:call-template name="newline-indent-1"/></xsl:when>
+            <xsl:when test="$paragraph_indent=2"><xsl:call-template name="newline-indent-2"/></xsl:when>
+            <xsl:when test="$paragraph_indent=3"><xsl:call-template name="newline-indent-3"/></xsl:when>
+            <xsl:otherwise><xsl:call-template name="newline"/></xsl:otherwise>
+        </xsl:choose>
 
         <paragraph id="{$real_id}" role="{$role}" xml-lang="en-US"><xsl:if test="$localize='FALSE'">
                 <xsl:attribute name="localize"><xsl:value-of select="'false'"/></xsl:attribute>
@@ -1045,7 +1054,7 @@ TABLECELL
     <tablecell>
         <xsl:if test="not($colspan='')"><xsl:attribute name="colspan"><xsl:value-of select="$colspan"/></xsl:attribute></xsl:if>
         <xsl:if test="not($rowspan='')"><xsl:attribute name="rowspan"><xsl:value-of select="$rowspan"/></xsl:attribute></xsl:if>
-        <xsl:apply-templates/>
+        <xsl:apply-templates><xsl:with-param name="paragraph_indent" select="3"/></xsl:apply-templates>
 
 	<xsl:call-template name="newline-indent-2"/>
     </tablecell>
@@ -1324,6 +1333,12 @@ LICENSE HEADER
 <xsl:template name="newline-indent-2">
 <xsl:text disable-output-escaping="yes">
     </xsl:text>
+</xsl:template>
+
+<!-- Output a newline, and indent the next element (3rd level) -->
+<xsl:template name="newline-indent-3">
+<xsl:text disable-output-escaping="yes">
+      </xsl:text>
 </xsl:template>
 
 </xsl:stylesheet>
