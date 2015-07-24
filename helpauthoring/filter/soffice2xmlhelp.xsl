@@ -33,11 +33,11 @@
         exclude-result-prefixes="office meta table number dc fo xlink chart math script xsl draw svg dr3d form text style xsi xsd xforms dom oooc ooow ooo">
 
 <xsl:output method="xml" indent="no" omit-xml-declaration="no" encoding="UTF-8"/>
-<!--
-<xsl:output doctype-public="-//OpenOffice.org//Help Document//EN" />
-<xsl:output doctype-system="http://documentation.openoffice.org/xmlhelp.dtd" />
-//-->
-<xsl:strip-space elements="*" />
+
+<!-- Strip the whitespace, but not inside paragraphs -->
+<xsl:strip-space elements="*"/>
+<xsl:preserve-space elements="text:h text:p"/>
+
 <xsl:param name="imgroot" select="'default_images/'"/>
 
 <!--
