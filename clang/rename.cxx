@@ -92,6 +92,11 @@ public:
         for (clang::CXXConstructorDecl::init_const_iterator itInit = pDecl->init_begin(); itInit != pDecl->init_end(); ++itInit)
         {
             const clang::CXXCtorInitializer* pInitializer = *itInit;
+
+            // Ignore implicit initializers.
+            if (pInitializer->getSourceOrder() == -1)
+                continue;
+
             if (const clang::FieldDecl* pFieldDecl = pInitializer->getAnyMember())
             {
                 std::string aName = pFieldDecl->getQualifiedNameAsString();
