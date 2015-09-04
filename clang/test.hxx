@@ -1,9 +1,15 @@
+class A
+{
+};
+
 class C
 {
 public:
     int nX, nY, nZ;
     int* pX;
     static const int aS[];
+    // This is intentionally not initialized explicitly in C::C().
+    A aA;
     C();
     ~C();
 
