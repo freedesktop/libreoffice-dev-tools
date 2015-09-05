@@ -207,7 +207,7 @@ Sub CheckParaID(TE As Object)
 
             If posID = 0 Then
                 If bWarnParaNoID Then
-                     Warn(&quot;Paragraph has no id.&quot;,&quot;IDs will be assigned on safe. You can also assign an ID using the Assign Paragraph ID menu item&quot;,TPE)
+                     Warn(&quot;Paragraph has no ID.&quot;,&quot;IDs will be assigned on save. You can also assign an ID using the Assign Paragraph ID menu item&quot;,TPE)
                      bWarnParaNoID = FALSE
                     InsertNewParaData
                  Else
