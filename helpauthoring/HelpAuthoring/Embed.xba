@@ -52,7 +52,7 @@ Sub Main(optional bCR As Boolean)
     oOpVariable = oDialog.GetControl(&quot;opVariable&quot;)
     oOpSection = oDialog.GetControl(&quot;opSection&quot;)
 
-    DocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+    DocRoot = GetDocumentRoot()
     EmbedFolder = ReadConfig(&quot;LastEmbedDir&quot;)
     EmbedFile = ReadConfig(&quot;LastEmbedFile&quot;)
     EmbedID = ReadConfig(&quot;LastEmbedAnchor&quot;)
@@ -125,7 +125,7 @@ Dim ListAny(0) as Long
     oFileDialog = CreateUnoService(&quot;com.sun.star.ui.dialogs.FilePicker&quot;)
     oFileDialog.Initialize(ListAny())
 
-    DocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+    DocRoot = GetDocumentRoot()
     sLastEmbedDir = ReadConfig(&quot;LastEmbedDir&quot;)
     sLastEmbedFile = ReadConfig(&quot;LastEmbedFile&quot;)
 

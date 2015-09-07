@@ -1039,11 +1039,21 @@ Function WriteConfig(Parm As String, Value As String)
 End Function
 
 Function GetRelPath(sPath As String)
-    sHelpPrefix = ReadConfig(&quot;HelpPrefix&quot;)
+    sHelpPrefix = GetDocumentRoot()
     If sHelpPrefix = &quot;&quot; Then
         sHelpPrefix = SetDocumentRoot
     End If
     GetRelPath = Right(sPath, Len(sPath)-(InStr(sPath,sHelpPrefix) + Len(sHelpPrefix)-1))
+End Function
+
+Function GetDocumentRoot
+    sHelpPrefix = ReadConfig(&quot;HelpPrefix&quot;)
+    If sHelpPrefix = &quot;&quot; Then
+        msgbox(&quot;The Document Root is not set.&quot;+chr(13)+chr(13)+&quot;You will be asked to set it in the following dialog.  It is the directory &apos;source/&apos; in the LibreOffice &apos;help&apos; git repository.&quot;+chr(13)+chr(13)+&quot;You need to set it only once, then it is remembered in the configuration. You can change it later using Help Authoring -> Set Document Root...&quot;,0,&quot;Warning&quot;)
+        sHelpPrefix = SetDocumentRoot
+        msgbox(&quot;The Document Root has been set to: &quot;+sHelpPrefix)
+    End If
+    GetDocumentRoot = sHelpPrefix
 End Function
 
 Function SetDocumentRoot
@@ -1065,10 +1075,7 @@ End Function
 
 Function MakeAbsPath(sPath As String)
 
-    sHelpPrefix = ReadConfig(&quot;HelpPrefix&quot;)
-    If sHelpPrefix = &quot;&quot; Then
-        sHelpPrefix = SetDocumentRoot
-    End If
+    sHelpPrefix = GetDocumentRoot()
 
     If Right(sPath,4) &lt;&gt; &quot;.xhp&quot; Then
         sPath=sPath+&quot;.xhp&quot;

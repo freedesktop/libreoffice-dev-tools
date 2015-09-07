@@ -35,7 +35,7 @@ Sub Main
     GlobalScope.BasicLibraries.loadLibrary(&quot;Tools&quot;)
     Dim ListAny(0) as Long
 
-    DocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+    DocRoot = GetDocumentRoot()
     sLastLinkDir = ReadConfig(&quot;LastLinkDir&quot;)
     sLastLinkFile = ReadConfig(&quot;LastLinkFile&quot;)
 

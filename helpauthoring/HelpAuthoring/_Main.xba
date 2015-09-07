@@ -47,7 +47,7 @@ End Sub
 Sub SetMetaDataOnSave(Path as String)
 
     document = StarDesktop.CurrentComponent
-    sDocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+    sDocRoot = GetDocumentRoot()
 
     If Path = &quot;&quot; Then
         Path = document.URL
@@ -135,7 +135,7 @@ Dim oStoreProperties(0) as New com.sun.star.beans.PropertyValue
     On Local Error Goto ERRHANDLE:
 
     sLastSaveDir = ReadConfig(&quot;LastSaveDir&quot;)
-    sDocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+    sDocRoot = GetDocumentRoot()
 
     ListAny(0) = com.sun.star.ui.dialogs.TemplateDescription.FILESAVE_AUTOEXTENSION_PASSWORD
     oFileDialog = CreateUnoService(&quot;com.sun.star.ui.dialogs.FilePicker&quot;)
@@ -175,7 +175,7 @@ End Sub
 
 Sub CheckOnLoad
 &apos;    oDoc = StarDesktop.CurrentComponent
-&apos;    sDocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+&apos;    sDocRoot = GetDocumentRoot()
 &apos;    If sDocRoot=&quot;&quot; Then
 &apos;        msgbox(&quot;No document root set. Please set the root folder for your documents.&quot;)
 &apos;        sDocRoot = SetDocumentRoot
@@ -197,7 +197,7 @@ Dim ListAny(0) as Long
 Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
 
     sLastSaveDir = ReadConfig(&quot;LastSaveDir&quot;)
-    sDocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+    sDocRoot = GetDocumentRoot()
     ListAny(0) = com.sun.star.ui.dialogs.TemplateDescription.FILEOPEN_SIMPLE
     oFileDialog = CreateUnoService(&quot;com.sun.star.ui.dialogs.FilePicker&quot;)
     oFileDialog.Initialize(ListAny())

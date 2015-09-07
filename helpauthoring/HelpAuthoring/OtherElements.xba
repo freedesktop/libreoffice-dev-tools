@@ -74,7 +74,7 @@ Sub InsertGraphic
     GlobalScope.BasicLibraries.loadLibrary(&quot;Tools&quot;)
     sFName = OpenGraphics
     If sFName &lt;&gt; &quot;&quot; Then
-        DocRoot = ReadConfig(&quot;HelpPrefix&quot;)
+        DocRoot = GetDocumentRoot()
 &apos;        msgbox(&quot;DocRoot &quot;+DocRoot+chr(13)+&quot;FName &quot;+sFName)
 
         If not(IsSubDir(sFName,DocRoot)) Then
