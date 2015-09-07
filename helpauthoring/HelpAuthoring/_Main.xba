@@ -56,7 +56,11 @@ Sub SetMetaDataOnSave(Path as String)
     If not(IsSubDir(Path,sDocRoot)) Then &apos; doesn&apos;tr work when resaving the file since it contains the OLD url (before resave)
         msgbox(&quot;The File&quot;+chr(13)+Path+chr(13)+&quot;is outside of your Document Root&quot;+chr(13)+sDocRoot+chr(13)+chr(13)+&quot;You may want to adjust your document root settings and re-save the file.&quot;,48,&quot;Warning&quot;)
     Else
-        Path = Right(Path,Len(Path)-Len(sDocRoot))
+        nSlash = 0
+        If Right(sDocRoot,1) = &quot;/&quot; Then
+            nSlash = 1
+        End If
+        Path = Right(Path,Len(Path)-Len(sDocRoot)+nSlash)
     End If
 
 &apos;    document.DocumentInfo.SetUserFieldName(0,&quot;Indexer&quot;)
