@@ -19,7 +19,7 @@
 
 <meta>
 <topic id="topic_0624201011181951" indexer="exclude" status="PUBLISH">
-<title xml-lang="en-US" id="tit">Open Office Help Authoring</title>
+<title xml-lang="en-US" id="tit">LibreOffice Help Authoring</title>
 <filename>org.openoffice.helpauthoring/helpauthoring.xhp</filename>
 </topic>
 </meta>
@@ -27,9 +27,9 @@
 <bookmark xml-lang="en-US" branch="hid/vnd.sun.star.script:HelpAuthoring._Main.DisplayVersion?language=Basic&amp;location=application" id="bm_id0713201003430567" localize="false"/>
 <paragraph id="par_id0713201005170786" role="paragraph" xml-lang="en-US"><ahelp hid="" visibility="hidden">Displays the extension version</ahelp></paragraph>
 <bookmark xml-lang="en-US" branch="index" id="bm_id0625201012139898">
-<bookmark_value>OpenOffice Help Authoring</bookmark_value>
+<bookmark_value>LibreOffice Help Authoring</bookmark_value>
 <bookmark_value>Help;authoring</bookmark_value>
 </bookmark>
-<paragraph id="hd_id062420105457654" role="heading" xml-lang="en-US" level="1"><variable id="topictitle"><link href="org.openoffice.helpauthoring/helpauthoring.xhp">Open Office Help Authoring Framework</link></variable></paragraph>
+<paragraph id="hd_id062420105457654" role="heading" xml-lang="en-US" level="1"><variable id="topictitle"><link href="org.openoffice.helpauthoring/helpauthoring.xhp">LibreOffice Help Authoring Framework</link></variable></paragraph>
 </body>
 </helpdocument>

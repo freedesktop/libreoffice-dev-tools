@@ -103,7 +103,7 @@ FILTER FOR OPENOFFICE.ORG 2+
 
         <office:document>
             <office:meta>
-                <meta:generator>OpenOffice.org Import Filter</meta:generator>
+                <meta:generator>LibreOffice Import Filter</meta:generator>
 
                 <dc:title>
                     <xsl:value-of select="/helpdocument/meta/topic/title"/>

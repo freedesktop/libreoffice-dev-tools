@@ -16,19 +16,29 @@
  *   except in compliance with the License. You may obtain a copy of
  *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
 -->
-<description xmlns="http://openoffice.org/extensions/description/2006" xmlns:d="http://openoffice.org/extensions/description/2006"
+<description xmlns="http://openoffice.org/extensions/description/2006"
+             xmlns:d="http://openoffice.org/extensions/description/2006"
+             xmlns:l="http://libreoffice.org/extensions/description/2011"
              xmlns:xlink="http://www.w3.org/1999/xlink">
 
     <identifier value="org.openoffice.helpauthoring"/>
 
-    <version value="3.1.0"/>
+    <version value="3.1.1"/>
     <display-name>
-        <name lang="en">Help authoring extension tool</name>
+        <name lang="en">Help authoring extension</name>
     </display-name>
 
     <dependencies>
-        <OpenOffice.org-minimal-version value="3.0" d:name="OpenOffice.org 3.0"/>
+        <l:LibreOffice-minimal-version value="4.4" d:name="LibreOffice 4.4"/>
     </dependencies>
+
+    <publisher>
+        <name lang="en-US" xlink:href="https://wiki.documentfoundation.org/Documentation/Help">HelpAuthoring How-to</name>
+    </publisher>
+
+    <extension-description>
+        <src lang="en-US" xlink:href="description-en-US.txt"/>
+    </extension-description>
 
     <update-information>
     </update-information>
