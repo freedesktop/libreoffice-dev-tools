@@ -395,6 +395,7 @@ EMBED
     <xsl:variable name="role"><xsl:value-of select="substring-before(substring-after(.,'role=&quot;'),'&quot;')"/></xsl:variable>
     <xsl:variable name="level"><xsl:value-of select="substring-before(substring-after(.,'level=&quot;'),'&quot;')"/></xsl:variable>
 
+    <xsl:call-template name="newline"/>
     <embed href="{$href}">
         <xsl:if test="not($role = '')"><xsl:attribute name="role"><xsl:value-of select="$role"/></xsl:attribute></xsl:if>
         <xsl:if test="not($level = '')"><xsl:attribute name="level"><xsl:value-of select="$level"/></xsl:attribute></xsl:if>
