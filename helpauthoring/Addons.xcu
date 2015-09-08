@@ -31,45 +31,23 @@
                 <node oor:name="Submenu">
                     <node oor:name="m00" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetDocumentRoot?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Set Document Root...</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m01" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>private:separator</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m02" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring._Main.CreateFile?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Create Help File...</value>
+                            <value xml:lang="en-US">New Help File</value>
                         </prop>
                     </node>
-                    <node oor:name="m03" oor:op="replace">
+                    <node oor:name="m01" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring._Main.OpenXHP?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Open Help File...</value>
+                            <value xml:lang="en-US">Open Help File</value>
                         </prop>
                     </node>
-                    <node oor:name="m04" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.Validate.Validate?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Validate this Help File</value>
-                        </prop>
-                    </node>
+
                     <node oor:name="m05" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>private:separator</value>
@@ -77,40 +55,90 @@
                     </node>
                     <node oor:name="m06" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.Helpers.InsertNewParaData?language=Basic&amp;location=application</value>
+                            <value>com.sun.star.text.TextDocument</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Assign ID</value>
+                            <value xml:lang="en-US">Paragraph Styles</value>
                         </prop>
+                        <node oor:name="Submenu">
+                            <node oor:name="m00" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_head1&amp;FamilyName:string=ParagraphStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Page Title (hlp_head1)</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m01" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_head2&amp;FamilyName:string=ParagraphStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Heading 2 (hlp_head2)</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m02" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_head3&amp;FamilyName:string=ParagraphStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Heading 3 (hlp_head3)</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m03" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_paragraph&amp;FamilyName:string=ParagraphStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Default (hlp_paragraph)</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m04" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_warning&amp;FamilyName:string=ParagraphStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Warning (hlp_warning)</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m05" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_note&amp;FamilyName:string=ParagraphStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Note (hlp_note)</value>
+                                </prop>
+                            </node>
+                        </node>
                     </node>
                     <node oor:name="m07" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.Meta.Main?language=Basic&amp;location=application</value>
+                            <value>com.sun.star.text.TextDocument</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Edit Meta Data</value>
+                            <value xml:lang="en-US">Character Styles</value>
                         </prop>
+                        <node oor:name="Submenu">
+                            <node oor:name="m00" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_emph&amp;FamilyName:string=CharacterStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Bold (hlp_emph)</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m01" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_menuitem&amp;FamilyName:string=CharacterStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Menu Item Path (hlp_menuitem)</value>
+                                </prop>
+                            </node>
+                        </node>
                     </node>
-                    <node oor:name="m08" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.ToggleParaL10NStatus?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Toggle L10N</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m09" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.Embed.Main?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Transclude (Embed)</value>
-                        </prop>
-                    </node>
+
+                    <!-- Functions that embed and link to content -->
                     <node oor:name="m10" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>private:separator</value>
@@ -118,109 +146,187 @@
                     </node>
                     <node oor:name="m11" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.Comment.Main?language=Basic&amp;location=application</value>
+                            <value>vnd.sun.star.script:HelpAuthoring.Embed.Main?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Comment</value>
+                            <value xml:lang="en-US">Transclude (&lt;embed&gt;) </value>
                         </prop>
                     </node>
                     <node oor:name="m12" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.Table.Main?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Insert Table</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m13" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring.Link.Main?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Link</value>
+                            <value xml:lang="en-US">Insert Link (&lt;link&gt;) </value>
                         </prop>
                     </node>
-                    <node oor:name="m14" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.HID.Main?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Insert Help ID</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m15" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.IND.Main?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Insert Index Entry</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m16" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertExtendedTip?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Insert Extended Tip</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m17" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertHowToGet?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">&quot;How to Get&quot; Section</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m18" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertGraphic?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Insert Image</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m19" oor:op="replace">
+                    <node oor:name="m13" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertSection?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Section</value>
+                            <value xml:lang="en-US">Insert Section (&lt;section&gt;) </value>
                         </prop>
                     </node>
-                    <node oor:name="m20" oor:op="replace">
+                    <node oor:name="m14" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertVariable?language=Basic&amp;location=application</value>
+                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertHowToGet?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Variable</value>
+                            <value xml:lang="en-US">Insert &quot;How to Get&quot; Section </value>
                         </prop>
                     </node>
-                    <node oor:name="m21" oor:op="replace">
+                    <node oor:name="m15" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertRelatedTopics?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">&quot;Related Topics&quot; Section</value>
+                            <value xml:lang="en-US">Insert &quot;Related Topics&quot; Section </value>
                         </prop>
                     </node>
-                    <node oor:name="m22" oor:op="replace">
+                    <node oor:name="m16" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertVariable?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Insert Variable (&lt;variable&gt;) </value>
+                        </prop>
+                    </node>
+
+                    <!-- Insert invisible tags -->
+                    <node oor:name="m20" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>private:separator</value>
                         </prop>
                     </node>
+                    <node oor:name="m21" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.HID.Main?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Insert Help ID </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m22" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertExtendedTip?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Insert Extended Tip (&lt;avis/ahis&gt;) </value>
+                        </prop>
+                    </node>
                     <node oor:name="m23" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.Comment.Main?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Insert Comment </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m24" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.IND.Main?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Insert Index Entry </value>
+                        </prop>
+                    </node>
+                    <!-- Switch entry should go here -->
+
+                    <!-- Insert visible objects -->
+                    <node oor:name="m50" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>private:separator</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m51" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.Table.Main?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Insert Table </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m52" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertGraphic?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Insert Image </value>
+                        </prop>
+                    </node>
+
+                    <!-- Functions that are automatically run when saving a file, so they arent that needed -->
+                    <node oor:name="m80" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>private:separator</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m81" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.Meta.Main?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Edit Meta Data </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m82" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.Helpers.InsertNewParaData?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Assign Paragraph ID </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m83" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.ToggleParaL10NStatus?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Toggle L10N </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m84" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.Validate.Validate?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Validate this Help File </value>
+                        </prop>
+                    </node>
+
+                    <!-- Functions that could easily be removed -->
+                    <node oor:name="m90" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>private:separator</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m91" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetDocumentRoot?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Set Document Root</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m92" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring._Main.DisplayVersion?language=Basic&amp;location=application</value>
                         </prop>
