@@ -106,7 +106,7 @@ DOCUMENT SKELETON
                 <xsl:attribute name="status"><xsl:value-of select="$topic_status"/></xsl:attribute>
             </xsl:if>
             <xsl:call-template name="newline-indent-2"/>
-            <title xml-lang="en-US" id="tit"><xsl:value-of select="$title"/></title>
+            <title id="tit" xml-lang="en-US"><xsl:value-of select="$title"/></title>
             <xsl:call-template name="newline-indent-2"/>
             <filename><xsl:value-of select="$filename"/></filename>
             <xsl:call-template name="newline-indent-1"/>
