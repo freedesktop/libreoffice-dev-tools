@@ -871,10 +871,10 @@ PARAGRAPH
             <xsl:otherwise><xsl:call-template name="newline"/></xsl:otherwise>
         </xsl:choose>
 
-        <paragraph id="{$real_id}" role="{$role}" xml-lang="en-US"><xsl:if test="$localize='FALSE'">
-                <xsl:attribute name="localize"><xsl:value-of select="'false'"/></xsl:attribute>
-            </xsl:if>
-            <xsl:if test="not($level = '')"><xsl:attribute name="level"><xsl:value-of select="$level" /></xsl:attribute></xsl:if><xsl:apply-templates /></paragraph>
+        <paragraph id="{$real_id}" role="{$role}">
+            <xsl:if test="not($level = '')"><xsl:attribute name="level"><xsl:value-of select="$level" /></xsl:attribute></xsl:if>
+            <xsl:if test="$localize='FALSE'"><xsl:attribute name="localize"><xsl:value-of select="'false'"/></xsl:attribute></xsl:if>
+            <xsl:attribute name="xml-lang"><xsl:value-of select="'en-US'" /></xsl:attribute><xsl:apply-templates /></paragraph>
     </xsl:when>
     <xsl:when test="$masterstyle='hlp_aux_tablecaption'"/>
     <xsl:otherwise>
