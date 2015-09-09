@@ -209,18 +209,16 @@ Sub CheckParaID(TE As Object)
                 If bWarnParaNoID Then
                      Warn(&quot;Paragraph has no ID.&quot;,&quot;IDs will be assigned on save. You can also assign an ID using the Assign Paragraph ID menu item&quot;,TPE)
                      bWarnParaNoID = FALSE
-                    InsertNewParaData
-                 Else
-                     oCur = TE.getText.createTextCursorByRange(TE)
-                    thiscomponent.getcurrentcontroller.select(oCur)
-                    InsertNewParaData
                  End If
+
+                 oCur = TE.getText.createTextCursorByRange(TE)
+                 thiscomponent.getcurrentcontroller.select(oCur)
+                 InsertNewParaData
             ElseIf posID &gt; 1 Then
                 Terminate(&quot;Paragraph ID not at the start of the paragraph. The paragraph ID must be the first element of a paragraph. Move the ID to the beginning of the paragraph&quot;,TPE)
             End If
 
         End If
-
     End If
 End Sub
 
