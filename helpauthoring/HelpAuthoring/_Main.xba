@@ -73,6 +73,68 @@ Sub SetMetaDataOnSave(Path as String)
 &apos;    document.DocumentInfo.SetUserFieldName(2,&quot;Comment&quot;)
     document.DocumentProperties.Subject = Path
 
+	If document.DocumentProperties.Title = &quot;&quot; Then
+		Ret = msgbox( &quot;Automatically generate a basic help file?&quot;, 1+32, &quot;Basic Help File&quot; )
+		If Ret = 0 Then
+			Exit Sub
+		End if
+	
+		document.DocumentProperties.UserDefinedProperties.ID = Replace( AlphaNum(Path), &quot;xhp&quot;, &quot;xml&quot; )
+		document.DocumentProperties.UserDefinedProperties.Indexer = &quot;include&quot;
+
+		title = inputbox(&quot;The help title is a few word description of the help file topic.&quot;,&quot;Enter Help Title&quot;)
+		If title = "" Then
+			title = "Help Title"
+		End If
+		document.DocumentProperties.Title = title
+
+		InsertText( title )
+        InsertTag(&quot;_LINK&quot;,&quot;&lt;/LINK&gt;&quot;)
+		InsertNewParaData()
+		InsertTag(&quot;LINK_&quot;,&quot;&lt;LINK href=&quot;&quot;&quot; + Right( Path, Len(Path) - 1 ) + &quot;&quot;&quot;&gt;&quot;)
+		CR()
+
+		SetParaStyle(&quot;hlp_paragraph&quot;)
+		SetCharStyle(&quot;Default Style&quot;)
+		desc = inputbox(&quot;The help description is a sentence of text to further describe the help title.&quot;+chr(10)+&quot;example: This menu contains commands for editing the contents of the current document.&quot;,&quot;Enter Help Description&quot;)
+		If desc = "" Then
+			desc = "Help description"
+		End If
+		InsertText( desc )
+		InsertNewParaData()
+		CR()
+
+		SetParaStyle(&quot;hlp_paragraph&quot;)
+		SetCharStyle(&quot;Default Style&quot;)
+		startTyping = &quot;Start Typing Here...&quot;
+		InsertText( startTyping )
+
+		goKey( &quot;.uno:GoToStartOfLine&quot; )
+		goLeft(1)
+		
+		goKey( &quot;.uno:StartOfParaSel&quot;, 1, 1 )
+		goUp( 1, 1 )
+
+		InsertSection( lcase( AlphaNum(title) ) )
+
+		sHID = inputbox(&quot;A help ID (hID) is a unique reference key to context-sensitive help when a user uses the F1 key or the Help button. There are two types: UNO commands and Symbolic names.&quot;+chr(10)+&quot;examples: .uno:InsertCtrl, SID_FM_CONVERTTO_IMAGECONTROL&quot;,&quot;Enter Help ID (hID)&quot;,&quot;.uno:&quot; )
+		if sHID &lt;&gt; &quot;&quot; and sHID &lt;&gt; &quot;.uno:&quot; then
+			goKey( &quot;.uno:GoToPrevPara&quot; )
+			goKey( &quot;.uno:GoToPrevPara&quot; )
+			CR_before()
+			goUp(1)
+			SetParaStyle(&quot;hlp_aux_bookmark&quot;)
+			SetCharStyle(&quot;hlp_aux_tag&quot;)
+			InsertTag(&quot;BOOKMARK&quot;,&quot;&lt;BOOKMARK branch=&quot;&quot;hid/&quot; + sHID + &quot;&quot;&quot; id=&quot;&quot;bm_id&quot; + CreateID + &quot;&quot;&quot; localize=&quot;&quot;false&quot;&quot;/&gt;&quot;)
+		else
+			goKey( &quot;.uno:GoToPrevPara&quot; )
+		end if
+
+		goKey( &quot;.uno:GoToEndOfDoc&quot; ) &apos; will stop at end of section instead of end of doc
+		goRight( 1 )
+		goRight( len(startTyping), 1 )
+	end if
+
 End Sub
 
 &apos;=======================================================

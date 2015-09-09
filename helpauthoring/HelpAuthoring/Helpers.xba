@@ -229,11 +229,11 @@ Sub InsertField(Field as String, Content as String)
 End Sub
 
 &apos;=======================================================
-&apos; GoUp
+&apos; GoKey
 &apos;-------------------------------------------------------
-&apos; Simulates the CursorUp key
+&apos; Executes any uno command but targetting to keyboard keystrokes
 &apos;=======================================================
-Sub goUp(Count As Integer, Optional bSelect As Boolean)
+Sub goKey(Command as String, Optional Count As Integer, Optional bSelect As Boolean)
     dim document   as object
     dim dispatcher as object
 
@@ -250,7 +250,20 @@ Sub goUp(Count As Integer, Optional bSelect As Boolean)
         args(1).Value = bSelect
     End If
 
-    dispatcher.executeDispatch(document, &quot;.uno:GoUp&quot;, &quot;&quot;, 0, args())
+    dispatcher.executeDispatch(document, Command, &quot;&quot;, 0, args())
+End Sub
+
+&apos;=======================================================
+&apos; GoUp
+&apos;-------------------------------------------------------
+&apos; Simulates the CursorUp key
+&apos;=======================================================
+Sub goUp(Count As Integer, Optional bSelect As Boolean)
+    If IsMissing(bSelect) Then
+		goKey( &quot;.uno:GoUp&quot;, Count )
+	Else
+		goKey( &quot;.uno:GoUp&quot;, Count, bSelect )
+	End if
 End Sub
 
 &apos;=======================================================
@@ -259,23 +272,11 @@ End Sub
 &apos; Simulates the CursorDown key
 &apos;=======================================================
 Sub goDown(Count As Integer, Optional bSelect As Boolean)
-    dim document   as object
-    dim dispatcher as object
-
-    document   = ThisComponent.CurrentController.Frame
-    dispatcher = createUnoService(&quot;com.sun.star.frame.DispatchHelper&quot;)
-
-    dim args(1) as new com.sun.star.beans.PropertyValue
-    args(0).Name = &quot;Count&quot;
-    args(0).Value = Count
-    args(1).Name = &quot;Select&quot;
     If IsMissing(bSelect) Then
-        args(1).Value = false
-    Else
-        args(1).Value = bSelect
-    End If
-
-    dispatcher.executeDispatch(document, &quot;.uno:GoDown&quot;, &quot;&quot;, 0, args())
+		goKey( &quot;.uno:GoDown&quot;, Count )
+	Else
+		goKey( &quot;.uno:GoDown&quot;, Count, bSelect )
+	End if
 End Sub
 
 
@@ -285,23 +286,11 @@ End Sub
 &apos; Simulates the CursorRight key
 &apos;=======================================================
 Sub goRight(Count As Integer, Optional bSelect As Boolean)
-    dim document   as object
-    dim dispatcher as object
-
-    document   = ThisComponent.CurrentController.Frame
-    dispatcher = createUnoService(&quot;com.sun.star.frame.DispatchHelper&quot;)
-
-    dim args(1) as new com.sun.star.beans.PropertyValue
-    args(0).Name = &quot;Count&quot;
-    args(0).Value = Count
-    args(1).Name = &quot;Select&quot;
     If IsMissing(bSelect) Then
-        args(1).Value = false
-    Else
-        args(1).Value = bSelect
-    End If
-
-    dispatcher.executeDispatch(document, &quot;.uno:GoRight&quot;, &quot;&quot;, 0, args())
+		goKey( &quot;.uno:GoRight&quot;, Count )
+	Else
+		goKey( &quot;.uno:GoRight&quot;, Count, bSelect )
+	End if
 End Sub
 
 &apos;=======================================================
@@ -310,23 +299,11 @@ End Sub
 &apos; Simulates the CursorLeft key
 &apos;=======================================================
 Sub goLeft(Count As Integer, optional bSelect As boolean)
-    dim document   as object
-    dim dispatcher as object
-
-    document   = ThisComponent.CurrentController.Frame
-    dispatcher = createUnoService(&quot;com.sun.star.frame.DispatchHelper&quot;)
-
-    dim args(1) as new com.sun.star.beans.PropertyValue
-    args(0).Name = &quot;Count&quot;
-    args(0).Value = Count
-    args(1).Name = &quot;Select&quot;
     If IsMissing(bSelect) Then
-        args(1).Value = false
-    Else
-        args(1).Value = bSelect
-    End If
-
-    dispatcher.executeDispatch(document, &quot;.uno:GoLeft&quot;, &quot;&quot;, 0, args())
+		goKey( &quot;.uno:GoLeft&quot;, Count )
+	Else
+		goKey( &quot;.uno:GoLeft&quot;, Count, bSelect )
+	End if
 End Sub
 
 &apos;=======================================================
