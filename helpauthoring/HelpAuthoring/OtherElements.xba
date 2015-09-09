@@ -49,6 +49,18 @@ Sub InsertVariable
     InsertTag(&quot;_VAR&quot;,&quot;&lt;/VAR&gt;&quot;)
 End Sub
 
+Sub InsertProductName
+	InsertText( &quot;%PRODUCTNAME&quot; )
+End Sub
+
+Sub InsertProductVersion
+	InsertText( &quot;%PRODUCTVERSION&quot; )
+End Sub
+
+Sub InsertOfficeName
+	InsertText( &quot;$[officename]&quot; )
+End Sub
+
 Sub InsertInlineGraphic
     If not IsHelpFile Then
         msgbox(strErr_NoHelpFile)

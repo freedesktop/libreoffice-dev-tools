@@ -199,6 +199,38 @@
                         </prop>
                     </node>
 
+                    <node oor:name="m18" oor:op="replace">
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value xml:lang="en-US">Insert Product Variables</value>
+                        </prop>
+                        <node oor:name="Submenu">
+                            <node oor:name="m00" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertProductName?language=Basic&amp;location=application</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Insert %PRODUCTNAME</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m01" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertProductVersion?language=Basic&amp;location=application</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Insert %PRODUCTVERSION</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m02" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertOfficeName?language=Basic&amp;location=application</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Insert $[officename]</value>
+                                </prop>
+                            </node>
+                        </node>
+                    </node>
+
                     <!-- Insert invisible tags -->
                     <node oor:name="m20" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
