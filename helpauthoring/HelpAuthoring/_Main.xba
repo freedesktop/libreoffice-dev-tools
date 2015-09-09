@@ -214,4 +214,19 @@ Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
     oFileDialog.Dispose()
 End Sub
 
+Sub ReloadXHP
+    If not IsHelpFile Then
+        msgbox( strErr_NoHelpFile )
+        Exit Sub
+    End If
+
+	document = StarDesktop.CurrentComponent
+	Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
+	FileProperties(0).Name = &quot;FilterName&quot;
+	FileProperties(0).Value =&quot;XHP_Help&quot;
+
+	path = document.URL
+	document.close(-1)
+	oDoc = StarDesktop.loadComponentFromURL(path, path, 0, FileProperties())
+End Sub
 </script:module>

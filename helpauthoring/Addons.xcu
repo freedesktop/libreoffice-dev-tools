@@ -47,6 +47,15 @@
                             <value xml:lang="en-US">Open Help File</value>
                         </prop>
                     </node>
+                    <node oor:name="m02" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring._Main.ReloadXHP?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Reload File</value>
+                        </prop>
+                    </node>
 
                     <node oor:name="m05" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
@@ -54,9 +63,6 @@
                         </prop>
                     </node>
                     <node oor:name="m06" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>com.sun.star.text.TextDocument</value>
-                        </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value xml:lang="en-US">Paragraph Styles</value>
                         </prop>
@@ -112,9 +118,6 @@
                         </node>
                     </node>
                     <node oor:name="m07" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>com.sun.star.text.TextDocument</value>
-                        </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value xml:lang="en-US">Character Styles</value>
                         </prop>
