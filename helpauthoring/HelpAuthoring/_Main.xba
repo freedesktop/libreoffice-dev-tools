@@ -68,8 +68,8 @@ Sub SetMetaDataOnSave(Path as String)
 &apos;&apos;    document.DocumentInfo.SetUserFieldName(2,&quot;Comment&quot;)
 &apos;    document.DocumentInfo.SetPropertyValue(&quot;Subject&quot;,Path)
 
-    document.DocumentProperties.UserDefinedProperties.Indexer = &quot;&quot; &apos; Present in template properties
-    document.DocumentProperties.UserDefinedProperties.ID = &quot;&quot; &apos; Present in template properties
+    &apos;document.DocumentProperties.UserDefinedProperties.Indexer = &quot;&quot; &apos; Present in template properties
+    &apos;document.DocumentProperties.UserDefinedProperties.ID = &quot;&quot; &apos; Present in template properties
 &apos;    document.DocumentInfo.SetUserFieldName(2,&quot;Comment&quot;)
     document.DocumentProperties.Subject = Path
 
