@@ -80,7 +80,6 @@ Sub SetMetaDataOnSave(Path as String)
 		End if
 	
 		document.DocumentProperties.UserDefinedProperties.ID = Replace( AlphaNum(Path), &quot;xhp&quot;, &quot;xml&quot; )
-		document.DocumentProperties.UserDefinedProperties.Indexer = &quot;include&quot;
 
 		title = inputbox(&quot;The help title is a few word description of the help file topic.&quot;,&quot;Enter Help Title&quot;)
 		If title = "" Then
