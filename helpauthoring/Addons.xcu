@@ -25,9 +25,6 @@
                     <value/>
                     <value xml:lang="en-US">Help Authoring</value>
                 </prop>
-                <prop oor:name="Context" oor:type="xs:string">
-                    <value>com.sun.star.text.TextDocument</value>
-                </prop>
                 <node oor:name="Submenu">
                     <node oor:name="m00" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
@@ -138,6 +135,14 @@
                                     <value xml:lang="en-US">Menu Item Path (hlp_menuitem)</value>
                                 </prop>
                             </node>
+                            <node oor:name="m02" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=Default&amp;FamilyName:string=CharacterStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Default</value>
+                                </prop>
+                            </node>
                         </node>
                     </node>
 
@@ -246,7 +251,7 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Help ID </value>
+                            <value xml:lang="en-US">Insert Help ID (&lt;bookmark branch=&quot;hid/...&quot;&gt;) </value>
                         </prop>
                     </node>
                     <node oor:name="m22" oor:op="replace">
@@ -255,7 +260,7 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Extended Tip (&lt;avis/ahis&gt;) </value>
+                            <value xml:lang="en-US">Insert Extended Tip (&lt;avis&gt;/&lt;ahis&gt;) </value>
                         </prop>
                     </node>
                     <node oor:name="m23" oor:op="replace">
@@ -264,7 +269,7 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Comment </value>
+                            <value xml:lang="en-US">Insert Comment (&lt;comment&gt;) </value>
                         </prop>
                     </node>
                     <node oor:name="m24" oor:op="replace">
@@ -333,7 +338,7 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Toggle L10N </value>
+                            <value xml:lang="en-US">Toggle L10N (localize=&quot;...&quot;) </value>
                         </prop>
                     </node>
                     <node oor:name="m84" oor:op="replace">
@@ -342,7 +347,7 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Validate this Help File </value>
+                            <value xml:lang="en-US">Validate Help File </value>
                         </prop>
                     </node>
 
