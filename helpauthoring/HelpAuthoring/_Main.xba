@@ -275,6 +275,48 @@ Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
     oFileDialog.Dispose()
 End Sub
 
+Sub OpenLink
+    If not IsHelpFile Then
+        msgbox( strErr_NoHelpFile )
+        Exit Sub
+    End If
+
+	oVC = ThisComponent.CurrentController.getViewCursor
+	If oVC.isCollapsed Then
+	 	Print &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 Else
+	 	link_start = instr(oVC.String,&quot;&lt;LINK&quot;)
+	 	embed_start = instr(oVC.String,&quot;&lt;EMBED&quot;)
+	 	If link_start Or embed_start Then
+	 		If link_start Then
+	 			href_start = instr( link_start, oVC.String, &quot;href=&quot;&quot;&quot; )
+	 		Else
+	 			href_start = instr( embed_start, oVC.String, &quot;href=&quot;&quot;&quot; )
+	 		End If 
+ 			href_end = instr( href_start + 6, oVC.String, &quot;&quot;&quot;&quot; )
+			href = mid( oVC.String, href_start + 6, href_end - href_start - 6 )
+			section_start = instr( href, &quot;#&quot; )
+			If section_start Then
+				section = mid( href, section_start + 1, len(href) - section_start )
+				href = mid( href, 1, section_start - 1 )
+			End If
+
+			sPath = ReadConfig(&quot;HelpPrefix&quot;) + href
+			if StarDesktop.CurrentComponent.URL = sPath then
+				print &quot;Cant open currently open help file&quot;
+			else
+				Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
+				FileProperties(0).Name = &quot;FilterName&quot;
+		        FileProperties(0).Value =&quot;XHP_Help&quot;
+		        oDoc = StarDesktop.loadComponentFromURL(sPath, &quot;_blank&quot;, 0, FileProperties())
+		        &apos; would be good to add code here to jump to the link&apos;s section/variable reference location in the file
+		     end if
+	 	Else
+	 		Print &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 	End If 
+	EndIf
+End Sub
+
 Sub ReloadXHP
     If not IsHelpFile Then
         msgbox( strErr_NoHelpFile )
