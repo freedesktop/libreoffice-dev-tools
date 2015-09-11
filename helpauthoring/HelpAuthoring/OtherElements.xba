@@ -61,6 +61,125 @@ Sub InsertOfficeName
 	InsertText( &quot;$[officename]&quot; )
 End Sub
 
+Sub InsertSwitchOSParagraph
+	CR_before
+	GoUp(1)
+	SetParaStyle(&quot;hlp_aux_switch&quot;)
+	InsertTag(&quot;SWITCH_&quot;,&quot;&lt;SWITCH select=&quot;&quot;sys&quot;&quot;&gt;&quot;,&quot;hlp_aux_switch&quot;)
+	CR
+
+	InsertCaseNow(&quot;WIN&quot;)
+	InsertCaseNow(&quot;UNIX&quot;)
+	InsertCaseNow(&quot;MAC&quot;)
+
+    SetParaStyle(&quot;hlp_aux_switch&quot;)
+    InsertTag(&quot;DEFAULT_&quot;,&quot;&lt;DEFAULT&gt;&quot;,&quot;hlp_aux_switch&quot;)
+	CR
+	SetParaStyle(&quot;hlp_paragraph&quot;)
+	SetCharStyle(&quot;Default Style&quot;)
+    InsertText( &quot;Default&quot; )
+    InsertNewParaData
+    CR
+    SetParaStyle(&quot;hlp_aux_switch&quot;)
+    InsertTag(&quot;_DEFAULT&quot;,&quot;&lt;/DEFAULT&gt;&quot;,&quot;hlp_aux_switch&quot;)
+    CR
+
+    SetParaStyle(&quot;hlp_aux_switch&quot;)
+    InsertTag(&quot;_SWITCH&quot;,&quot;&lt;/SWITCH&gt;&quot;,&quot;hlp_aux_switch&quot;)
+    GoDown(1)
+End Sub
+
+Sub InsertSwitchOSInline
+	InsertTag(&quot;SWITCHINLINE_&quot;,&quot;&lt;SWITCHINLINE select=&quot;&quot;sys&quot;&quot;&gt;&quot;,&quot;hlp_aux_switch&quot;)
+
+	InsertCaseInlineNow(&quot;WIN&quot;)
+	InsertCaseInlineNow(&quot;UNIX&quot;)
+	InsertCaseInlineNow(&quot;MAC&quot;)
+
+    InsertTag(&quot;DEFAULTINLINE_&quot;,&quot;&lt;DEFAULTINLINE&gt;&quot;)
+    SetCharStyle(&quot;Default Style&quot;)
+    InsertText( &quot;Default&quot; )
+    InsertTag(&quot;_DEFAULTINLINE&quot;,&quot;&lt;/DEFAULTINLINE&gt;&quot;)
+
+    InsertTag(&quot;_SWITCHINLINE&quot;,&quot;&lt;/SWITCHINLINE&gt;&quot;)
+    SetCharStyle(&quot;Default Style&quot;)
+    InsertText( &quot; &quot; )
+End Sub
+
+Sub InsertSwitchAppParagraph
+	CR_before
+	GoUp(1)
+	SetParaStyle(&quot;hlp_aux_switch&quot;)
+	InsertTag(&quot;SWITCH_&quot;,&quot;&lt;SWITCH select=&quot;&quot;appl&quot;&quot;&gt;&quot;,&quot;hlp_aux_switch&quot;)
+	CR
+
+	InsertCaseNow(&quot;WRITER&quot;)
+	InsertCaseNow(&quot;CALC&quot;)
+	InsertCaseNow(&quot;IMPRESS&quot;)
+	InsertCaseNow(&quot;DRAW&quot;)
+	&apos;InsertCaseNow(&quot;MATH&quot;)
+	&apos;InsertCaseNow(&quot;BASIC&quot;)
+	&apos;InsertCaseNow(&quot;CHART&quot;)
+
+    SetParaStyle(&quot;hlp_aux_switch&quot;)
+    InsertTag(&quot;DEFAULT_&quot;,&quot;&lt;DEFAULT&gt;&quot;,&quot;hlp_aux_switch&quot;)
+	CR
+	SetParaStyle(&quot;hlp_paragraph&quot;)
+	SetCharStyle(&quot;Default Style&quot;)
+    InsertText( &quot;Default&quot; )
+    InsertNewParaData
+    CR
+    SetParaStyle(&quot;hlp_aux_switch&quot;)
+    InsertTag(&quot;_DEFAULT&quot;,&quot;&lt;/DEFAULT&gt;&quot;,&quot;hlp_aux_switch&quot;)
+    CR
+
+    SetParaStyle(&quot;hlp_aux_switch&quot;)
+    InsertTag(&quot;_SWITCH&quot;,&quot;&lt;/SWITCH&gt;&quot;,&quot;hlp_aux_switch&quot;)
+    GoDown(1)
+End Sub
+
+Sub InsertSwitchAppInline
+	InsertTag(&quot;SWITCHINLINE_&quot;,&quot;&lt;SWITCHINLINE select=&quot;&quot;appl&quot;&quot;&gt;&quot;,&quot;hlp_aux_switch&quot;)
+
+	InsertCaseInlineNow(&quot;WRITER&quot;)
+	InsertCaseInlineNow(&quot;CALC&quot;)
+	InsertCaseInlineNow(&quot;IMPRESS&quot;)
+	InsertCaseInlineNow(&quot;DRAW&quot;)
+	&apos;InsertCaseInlineNow(&quot;MATH&quot;)
+	&apos;InsertCaseInlineNow(&quot;BASIC&quot;)
+	&apos;InsertCaseInlineNow(&quot;CHART&quot;)
+
+    InsertTag(&quot;DEFAULTINLINE_&quot;,&quot;&lt;DEFAULTINLINE&gt;&quot;)
+    SetCharStyle(&quot;Default Style&quot;)
+    InsertText( &quot;Default&quot; )
+    InsertTag(&quot;_DEFAULTINLINE&quot;,&quot;&lt;/DEFAULTINLINE&gt;&quot;)
+
+    InsertTag(&quot;_SWITCHINLINE&quot;,&quot;&lt;/SWITCHINLINE&gt;&quot;)
+    SetCharStyle(&quot;Default Style&quot;)
+    InsertText( &quot; &quot; )
+End Sub
+
+Sub InsertCaseNow(sType As String)
+	SetParaStyle(&quot;hlp_aux_switch&quot;)
+	InsertTag(&quot;CASE_&quot;,&quot;&lt;CASE select=&quot;&quot;&quot; + sType + &quot;&quot;&quot;&gt;&quot;,&quot;hlp_aux_switch&quot;)
+	CR
+	SetParaStyle(&quot;hlp_paragraph&quot;)
+	SetCharStyle(&quot;Default Style&quot;)
+    InsertText( sType )
+    InsertNewParaData
+    CR
+	SetParaStyle(&quot;hlp_aux_switch&quot;)
+    InsertTag(&quot;_CASE&quot;,&quot;&lt;/CASE&gt;&quot;,&quot;hlp_aux_switch&quot;)
+	CR
+End Sub
+
+Sub InsertCaseInlineNow(sSelect As String)
+	InsertTag(&quot;CASEINLINE_&quot;,&quot;&lt;CASEINLINE select=&quot;&quot;&quot;+sSelect+&quot;&quot;&quot;&gt;&quot;)
+	SetCharStyle(&quot;Default Style&quot;)
+	InsertText( sSelect )
+    InsertTag(&quot;_CASEINLINE&quot;,&quot;&lt;/CASEINLINE&gt;&quot;)
+End Sub
+
 Sub InsertInlineGraphic
     If not IsHelpFile Then
         msgbox(strErr_NoHelpFile)

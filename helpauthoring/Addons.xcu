@@ -264,7 +264,45 @@
                             <value xml:lang="en-US">Insert Index Entry (&lt;bookmark branch=&quot;index&quot;&gt;) </value>
                         </prop>
                     </node>
-                    <!-- Switch entry should go here -->
+                    <node oor:name="m35" oor:op="replace">
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value xml:lang="en-US">Insert Switch (&lt;switch&gt;/&lt;switchline&gt;)</value>
+                        </prop>
+                        <node oor:name="Submenu">
+                            <node oor:name="m00" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertSwitchOSParagraph?language=Basic&amp;location=application</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Insert Switch OS Paragraph</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m01" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertSwitchOSInline?language=Basic&amp;location=application</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Insert Switch OS Inline</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m02" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertSwitchAppParagraph?language=Basic&amp;location=application</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Insert Switch App Paragraph</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m03" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertSwitchAppInline?language=Basic&amp;location=application</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml:lang="en-US">Insert Switch App Inline</value>
+                                </prop>
+                            </node>
+                        </node>
+                    </node>
 
                     <!-- Insert visible objects/elements -->
                     <node oor:name="m50" oor:op="replace">
