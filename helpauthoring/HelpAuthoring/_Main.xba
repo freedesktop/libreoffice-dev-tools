@@ -99,7 +99,10 @@ Sub SetMetaDataOnSave(Path as String)
 		If desc = "" Then
 			desc = "Help description"
 		End If
+		InsertTag(&quot;AVIS_&quot;,&quot;&lt;AVIS hid=&quot;&quot;.&quot;&quot;&gt;&quot;)
+		SetCharStyle(&quot;Default Style&quot;)
 		InsertText( desc )
+		InsertTag(&quot;_AVIS&quot;,&quot;&lt;/AVIS&gt;&quot;)
 		InsertNewParaData()
 		CR()
 
@@ -107,6 +110,7 @@ Sub SetMetaDataOnSave(Path as String)
 		SetCharStyle(&quot;Default Style&quot;)
 		startTyping = &quot;Start Typing Here...&quot;
 		InsertText( startTyping )
+		InsertNewParaData()
 
 		goKey( &quot;.uno:GoToStartOfLine&quot; )
 		goLeft(1)
@@ -130,7 +134,7 @@ Sub SetMetaDataOnSave(Path as String)
 		end if
 
 		goKey( &quot;.uno:GoToEndOfDoc&quot; ) &apos; will stop at end of section instead of end of doc
-		goRight( 1 )
+		goRight( 2 )
 		goRight( len(startTyping), 1 )
 	end if
 
@@ -275,6 +279,27 @@ Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
     oFileDialog.Dispose()
 End Sub
 
+Sub OpenXHPText( optional doc_url as string )
+    If not IsHelpFile Then
+        msgbox( strErr_NoHelpFile )
+        Exit Sub
+    End If
+
+	if ismissing(doc_url) or doc_url = 0 then
+		document = StarDesktop.CurrentComponent
+		doc_url = convertfromurl( document.URL )
+	end if
+
+	Dim oSvc as Object
+	oSvc = createUnoService(&quot;com.sun.star.system.SystemShellExecute&quot;)
+
+	Select Case getOS()
+		Case &quot;WIN&quot; : oSvc.execute( &quot;explorer&quot;, doc_url, 0)
+		Case &quot;OSX&quot; : oSvc.execute( &quot;open&quot;, doc_url, 0) &apos; this hasnt been tested yet
+		Case &quot;UNIX&quot; : oSvc.execute( &quot;xdg-open&quot;, doc_url, 0)
+	End Select
+End Sub
+
 Sub OpenLink
     If not IsHelpFile Then
         msgbox( strErr_NoHelpFile )
@@ -283,7 +308,7 @@ Sub OpenLink
 
 	oVC = ThisComponent.CurrentController.getViewCursor
 	If oVC.isCollapsed Then
-	 	Print &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 	msgbox &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
 	 Else
 	 	link_start = instr(oVC.String,&quot;&lt;LINK&quot;)
 	 	embed_start = instr(oVC.String,&quot;&lt;EMBED&quot;)
@@ -296,6 +321,7 @@ Sub OpenLink
  			href_end = instr( href_start + 6, oVC.String, &quot;&quot;&quot;&quot; )
 			href = mid( oVC.String, href_start + 6, href_end - href_start - 6 )
 			section_start = instr( href, &quot;#&quot; )
+			section = &quot;&quot;
 			If section_start Then
 				section = mid( href, section_start + 1, len(href) - section_start )
 				href = mid( href, 1, section_start - 1 )
@@ -303,16 +329,57 @@ Sub OpenLink
 
 			sPath = ReadConfig(&quot;HelpPrefix&quot;) + href
 			if StarDesktop.CurrentComponent.URL = sPath then
-				print &quot;Cant open currently open help file&quot;
+				msgbox &quot;Cant open currently open help file&quot;
 			else
 				Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
 				FileProperties(0).Name = &quot;FilterName&quot;
 		        FileProperties(0).Value =&quot;XHP_Help&quot;
 		        oDoc = StarDesktop.loadComponentFromURL(sPath, &quot;_blank&quot;, 0, FileProperties())
-		        &apos; would be good to add code here to jump to the link&apos;s section/variable reference location in the file
+		        if section &lt;&gt; &quot;&quot; then
+		        	FindLink( oDoc, section )
+		        end if
 		     end if
 	 	Else
-	 		Print &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 		msgbox &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 	End If 
+	EndIf
+End Sub
+
+Sub OpenLinkSource
+    If not IsHelpFile Then
+        msgbox( strErr_NoHelpFile )
+        Exit Sub
+    End If
+
+	oVC = ThisComponent.CurrentController.getViewCursor
+	If oVC.isCollapsed Then
+	 	msgbox &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 Else
+	 	link_start = instr(oVC.String,&quot;&lt;LINK&quot;)
+	 	embed_start = instr(oVC.String,&quot;&lt;EMBED&quot;)
+	 	If link_start Or embed_start Then
+	 		If link_start Then
+	 			href_start = instr( link_start, oVC.String, &quot;href=&quot;&quot;&quot; )
+	 		Else
+	 			href_start = instr( embed_start, oVC.String, &quot;href=&quot;&quot;&quot; )
+	 		End If 
+ 			href_end = instr( href_start + 6, oVC.String, &quot;&quot;&quot;&quot; )
+			href = mid( oVC.String, href_start + 6, href_end - href_start - 6 )
+			section_start = instr( href, &quot;#&quot; )
+			section = &quot;&quot;
+			If section_start Then
+				section = mid( href, section_start + 1, len(href) - section_start )
+				href = mid( href, 1, section_start - 1 )
+			End If
+
+			sPath = ReadConfig(&quot;HelpPrefix&quot;) + href
+			if StarDesktop.CurrentComponent.URL = sPath then
+				msgbox &quot;Cant open currently open help file&quot;
+			else
+				OpenXHPText( sPath )
+		    end if
+	 	Else
+	 		msgbox &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
 	 	End If 
 	EndIf
 End Sub
@@ -331,5 +398,56 @@ Sub ReloadXHP
 	path = document.URL
 	document.close(-1)
 	oDoc = StarDesktop.loadComponentFromURL(path, path, 0, FileProperties())
+End Sub
+
+Sub UnhideParaIDs
+    oDoc = StarDesktop.CurrentComponent
+    Enum = oDoc.Text.createEnumeration
+
+    Do While Enum.hasMoreElements
+        TE = Enum.nextElement
+
+        If TE.supportsService(&quot;com.sun.star.text.Paragraph&quot;) Then
+		    If Left(TE.ParaStyleName,4) = &quot;hlp_&quot; AND Not(Left(TE.ParaStyleName,8) = &quot;hlp_aux_&quot;) Then
+		        sText = TE.GetString
+		
+		        If sText &lt;&gt; &quot;&quot; Then
+		            TP = TE.createEnumeration
+		            Ct = 0
+		            posID = 0
+		
+		            While TP.hasmoreElements
+		                Ct = Ct+1
+		                TPE = TP.nextElement
+		                If TPE.TextPortionType=&quot;TextField&quot; Then
+		                    If TPE.TextField.TextFieldMaster.Name=&quot;ID&quot; Then
+		                        TPE.TextField.IsVisible = TRUE
+		                    End If
+		                End If
+		                If TPE.String = &quot;&quot; Then
+		                    Ct = Ct-1
+		                End If
+		            Wend
+		        End If
+		    End If
+        End If
+    Loop
+End Sub
+
+Sub FindLink( oDoc, section )
+    oDoc = StarDesktop.CurrentComponent
+    Enum = oDoc.Text.createEnumeration
+
+    Do While Enum.hasMoreElements
+        TE = Enum.nextElement
+
+		If TE.supportsService(&quot;com.sun.star.text.Paragraph&quot;) Then
+			if instr( lcase(TE.GetString), &quot;id=&quot;&quot;&quot; + section + &quot;&quot;&quot;&quot; ) then
+		        oCur = TE.getText.createTextCursorByRange(TE)
+	    	    thiscomponent.getcurrentcontroller.select(oCur)
+	    	    exit sub
+	    	end if
+	    end if
+   Loop
 End Sub
 </script:module>

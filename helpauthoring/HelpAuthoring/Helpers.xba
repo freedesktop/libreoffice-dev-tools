@@ -1085,4 +1085,23 @@ Function GetUserFieldNumber(fn as String)
     Next a
     GetUserFieldNumber = fnum
 End Function
+
+&apos;==========================================
+&apos;determine Operating System
+&apos;==========================================
+Function getOS()as String     
+  Select Case getGUIType
+  Case 1: 
+    getOS=&quot;WIN&quot;
+  Case 3: 
+    getOS=&quot;MAC&quot;
+  Case 4: 
+    If fileExists( &quot;/usr/bin/xdg-open&quot; ) Then
+		getOS=&quot;UNIX&quot;
+	Else
+		getOS=&quot;OSX&quot;
+	End If
+  End Select
+End Function
+
 </script:module>

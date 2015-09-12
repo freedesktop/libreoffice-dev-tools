@@ -166,7 +166,16 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Open &lt;Embed&gt; or &lt;Link&gt; Help File </value>
+                            <value xml:lang="en-US">Open &lt;Embed&gt; or &lt;Link&gt; File </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m14" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring._Main.OpenLinkSource?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">View &lt;Embed&gt; or &lt;Link&gt; File Source</value>
                         </prop>
                     </node>
 
@@ -218,7 +227,7 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Variable (&lt;variable&gt;) </value>
+                            <value xml:lang="en-US">Insert Variable (&lt;variable&gt;/&lt;var&gt;) </value>
                         </prop>
                     </node>
 
@@ -243,7 +252,7 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Extended Tip (&lt;avis&gt;/&lt;ahis&gt;) </value>
+                            <value xml:lang="en-US">Insert Extended Tip (&lt;ahelp&gt;/&lt;avis&gt;/&lt;ahid&gt;) </value>
                         </prop>
                     </node>
                     <node oor:name="m33" oor:op="replace">
@@ -360,6 +369,39 @@
                         </node>
                     </node>
 
+                    <node oor:name="m70" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>private:separator</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m71" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.ToggleParaL10NStatus?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Toggle Paragraph L10N Status (localize=&quot;...&quot;) </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m72" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring.Helpers.InsertNewParaData?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Assign Paragraph ID </value>
+                        </prop>
+                    </node>
+                    <node oor:name="m73" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring._Main.UnhideParaIDs?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Unhide Paragraph IDs </value>
+                        </prop>
+                    </node>
+
                     <!-- Functions that are least used -->
                     <node oor:name="m80" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
@@ -377,24 +419,6 @@
                     </node>
                     <node oor:name="m82" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.Helpers.InsertNewParaData?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Assign Paragraph ID </value>
-                        </prop>
-                    </node>
-                    <node oor:name="m83" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:HelpAuthoring.OtherElements.ToggleParaL10NStatus?language=Basic&amp;location=application</value>
-                        </prop>
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value/>
-                            <value xml:lang="en-US">Toggle L10N (localize=&quot;...&quot;) </value>
-                        </prop>
-                    </node>
-                    <node oor:name="m84" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring.Validate.Validate?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
@@ -402,13 +426,22 @@
                             <value xml:lang="en-US">Validate Help File </value>
                         </prop>
                     </node>
-                    <node oor:name="m86" oor:op="replace">
+                    <node oor:name="m83" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:HelpAuthoring._Main.ReloadXHP?language=Basic&amp;location=application</value>
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
                             <value xml:lang="en-US">Reload File</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m84" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring._Main.OpenXHPText?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">View File Source</value>
                         </prop>
                     </node>
 
