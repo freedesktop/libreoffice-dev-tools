@@ -287,6 +287,9 @@ Sub InsertExtendedTip
         Exit Sub
     End If
 
+    ID = &quot;.&quot;
+    ID = inputbox(&quot;A help ID (hID) is a unique reference key to context-sensitive help when a user uses the F1 key or the Help button. There are two types: UNO commands and Symbolic names.&quot;+chr(10)+&quot;examples: .uno:InsertCtrl, SID_FM_CONVERTTO_IMAGECONTROL&quot;,&quot;Enter Help ID (hID)&quot;,&quot;.uno:&quot; )
+
     thiscomponent.getcurrentcontroller.select(oCurStart)
     If Ret=6 Then
         InsertTag(&quot;AHID_&quot;,&quot;&lt;AHID hid=&quot;&quot;&quot;+ID+&quot;&quot;&quot;&gt;&quot;)
@@ -318,10 +321,8 @@ Sub CloseSort
     GoDown(1)
 End Sub
 
-sub InsertSection
-
-
-    If not IsHelpFile Then
+sub InsertSection( optional sSecName as string )
+    If not IsHelpFile and IsMissing(sSecName) Then
         msgbox(strErr_NoHelpFile)
         Exit Sub
     End If
@@ -336,11 +337,11 @@ sub InsertSection
     oEnd = oCur.getEnd
     oCurEnd = oEnd.getText.createTextCursorByRange(oEnd)
 
-    sSectionName = AlphaNum(inputbox(&quot;Please specify a section name/identifier:&quot;))
-
-    If sSectionName = &quot;&quot; Then
-        Exit Sub
-    End If
+    if IsMissing(sSecName) or sSecName = 0 then
+        sSectionName = AlphaNum(inputbox(&quot;Please specify a section name/identifier:&quot;))
+    else
+        sSectionName = sSecName
+    end if
 
     If sSectionName = &quot;&quot; Then
         msgbox &quot;No (valid) identifier -- no section.&quot;+chr(13)+&quot;Hint: Use only A-Z,a-z,0-9 and _&quot;,48,&quot;D&apos;oh!&quot;
@@ -372,8 +373,8 @@ sub InsertSection
         thiscomponent.getcurrentcontroller.select(oCurStart)
         CR_before
         GoUp(1)
-        InsertTag(&quot;SECTION_&quot;,&quot;&lt;SECTION id=&quot;&quot;&quot;+sSectionName+&quot;&quot;&quot;&gt;&quot;)
         SetParaStyle(&quot;hlp_aux_section&quot;)
+        InsertTag(&quot;SECTION_&quot;,&quot;&lt;SECTION id=&quot;&quot;&quot;+sSectionName+&quot;&quot;&quot;&gt;&quot;)
 
         thiscomponent.getcurrentcontroller.select(oCurEnd)
         CR
