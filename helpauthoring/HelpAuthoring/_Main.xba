@@ -266,11 +266,16 @@ Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
     ListAny(0) = com.sun.star.ui.dialogs.TemplateDescription.FILEOPEN_SIMPLE
     oFileDialog = CreateUnoService(&quot;com.sun.star.ui.dialogs.FilePicker&quot;)
     oFileDialog.Initialize(ListAny())
-    oFileDialog.DisplayDirectory = sDocRoot
+    If sLastSaveDir &lt;&gt; &quot;&quot; AND IsSubDir(sLastSaveDir,sDocRoot) Then
+        oFileDialog.setDisplayDirectory(sLastSaveDir)
+    Else
+	    oFileDialog.DisplayDirectory = sDocRoot
+    End If
     oFileDialog.AppendFilter(&quot;Help&quot;, &quot;*.xhp&quot;)
     oFileDialog.SetTitle(&quot;Open Help File&quot;)
     iAccept = oFileDialog.Execute()
     If iAccept = 1 Then
+        WriteConfig(&quot;LastSaveDir&quot;,oFileDialog.getDisplayDirectory+&quot;/&quot;)
         sPath = oFileDialog.Files(0)
         FileProperties(0).Name = &quot;FilterName&quot;
         FileProperties(0).Value =&quot;XHP_Help&quot;
