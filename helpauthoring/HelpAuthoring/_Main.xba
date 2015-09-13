@@ -75,7 +75,7 @@ Sub SetMetaDataOnSave(Path as String)
 
 	If document.DocumentProperties.Title = &quot;&quot; Then
 		Ret = msgbox( &quot;Automatically generate a basic help file?&quot;, 1+32, &quot;Basic Help File&quot; )
-		If Ret = 0 Then
+		If Ret = 2 Then
 			Exit Sub
 		End if
 	
