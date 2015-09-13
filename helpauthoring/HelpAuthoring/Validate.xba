@@ -43,10 +43,10 @@ Dim bWarnParaNoID As Boolean
 
 
 Sub ValidateXHP
-    Validate
+    Validate( &quot;save&quot; )
 End Sub
 
-Sub Validate
+Sub Validate( optional sOrigin as string )
 
     If not IsHelpFile Then
         msgbox(strErr_NoHelpFile)
@@ -102,7 +102,9 @@ Sub Validate
         Terminate(&quot;Element &quot;+aTagsOpen(ubound(aTagsOpen()))+&quot; not closed&quot;,TextElement)
     End If
 
-    msgbox(&quot;Validation finished.&quot;)
+    if IsMissing(sOrigin) then
+        msgbox(&quot;Validation finished.&quot;)
+    end if
 
 End Sub
 
@@ -207,7 +209,7 @@ Sub CheckParaID(TE As Object)
 
             If posID = 0 Then
                 If bWarnParaNoID Then
-                     Warn(&quot;Paragraph has no ID.&quot;,&quot;IDs will be assigned on save. You can also assign an ID using the Assign Paragraph ID menu item&quot;,TPE)
+                     &apos;Warn(&quot;Paragraph has no ID.&quot;,&quot;IDs will be assigned on save. You can also assign an ID using the Assign Paragraph ID menu item&quot;,TPE)
                      bWarnParaNoID = FALSE
                  End If
 

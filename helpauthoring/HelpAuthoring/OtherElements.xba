@@ -416,7 +416,7 @@ Sub ToggleParaL10NStatus
 
 
     If (sID = &quot;&quot;) Then
-        msgbox &quot;Paragraph has no ID. Assigning ID.&quot;,48,&quot;Info&quot;
+        &apos;msgbox &quot;Paragraph has no ID. Assigning ID.&quot;,48,&quot;Info&quot;
         InsertNewParaData
         thiscomponent.getcurrentcontroller.select(oSel(0))
         arParaData = GetParaData
