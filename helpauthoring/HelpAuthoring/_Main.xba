@@ -28,6 +28,10 @@ Global Const Version = &quot;v3.1.1&quot;
 
 Global Const strErr_NoHelpFile = &quot;Not a Help File&quot;
 
+Global Const GitClient = &quot;git-gui&quot;
+
+Global Const WebView = &quot;false&quot;
+
 &apos;=======================================================
 &apos; Main
 &apos;-------------------------------------------------------
@@ -74,6 +78,10 @@ Sub SetMetaDataOnSave(Path as String)
     document.DocumentProperties.Subject = Path
 
 	If document.DocumentProperties.Title = &quot;&quot; Then
+        if WebView = &quot;true&quot; then
+        	goKey( &quot;.uno:BrowseView&quot; )
+        end if
+
 		Ret = msgbox( &quot;Automatically generate a basic help file?&quot;, 1+32, &quot;Basic Help File&quot; )
 		If Ret = 2 Then
 			Exit Sub
@@ -82,8 +90,8 @@ Sub SetMetaDataOnSave(Path as String)
 		document.DocumentProperties.UserDefinedProperties.ID = Replace( AlphaNum(Path), &quot;xhp&quot;, &quot;xml&quot; )
 
 		title = inputbox(&quot;The help title is a few word description of the help file topic.&quot;,&quot;Enter Help Title&quot;)
-		If title = "" Then
-			title = "Help Title"
+		If title = &quot;&quot; Then
+			title = &quot;Help Title&quot;
 		End If
 		document.DocumentProperties.Title = title
 
@@ -96,8 +104,8 @@ Sub SetMetaDataOnSave(Path as String)
 		SetParaStyle(&quot;hlp_paragraph&quot;)
 		SetCharStyle(&quot;Default Style&quot;)
 		desc = inputbox(&quot;The help description is a sentence of text to further describe the help title.&quot;+chr(10)+&quot;example: This menu contains commands for editing the contents of the current document.&quot;,&quot;Enter Help Description&quot;)
-		If desc = "" Then
-			desc = "Help description"
+		If desc = &quot;&quot; Then
+			desc = &quot;Help description&quot;
 		End If
 		InsertTag(&quot;AVIS_&quot;,&quot;&lt;AVIS hid=&quot;&quot;.&quot;&quot;&gt;&quot;)
 		SetCharStyle(&quot;Default Style&quot;)
@@ -118,7 +126,7 @@ Sub SetMetaDataOnSave(Path as String)
 		goKey( &quot;.uno:StartOfParaSel&quot;, 1, 1 )
 		goUp( 1, 1 )
 
-		InsertSection( lcase( AlphaNum(title) ) )
+		InsertSection( lcase( AlphaNum( Replace( title, &quot; &quot;, &quot;_&quot; ) ) ) )
 
 		sHID = inputbox(&quot;A help ID (hID) is a unique reference key to context-sensitive help when a user uses the F1 key or the Help button. There are two types: UNO commands and Symbolic names.&quot;+chr(10)+&quot;examples: .uno:InsertCtrl, SID_FM_CONVERTTO_IMAGECONTROL&quot;,&quot;Enter Help ID (hID)&quot;,&quot;.uno:&quot; )
 		if sHID &lt;&gt; &quot;&quot; and sHID &lt;&gt; &quot;.uno:&quot; then
@@ -280,6 +288,9 @@ Dim FileProperties(1) As New com.sun.star.beans.PropertyValue
         FileProperties(0).Name = &quot;FilterName&quot;
         FileProperties(0).Value =&quot;XHP_Help&quot;
         oDoc = StarDesktop.loadComponentFromURL(sPath, &quot;_blank&quot;, 0, FileProperties())
+        if WebView = &quot;true&quot; then
+        	goKey( &quot;.uno:BrowseView&quot; )
+        end if
     End If
     oFileDialog.Dispose()
 End Sub
@@ -305,6 +316,43 @@ Sub OpenXHPText( optional doc_url as string )
 	End Select
 End Sub
 
+Sub OpenGitCompare
+	Dim oSvc as Object
+	document = StarDesktop.CurrentComponent
+	oSvc = createUnoService(&quot;com.sun.star.system.SystemShellExecute&quot;)
+
+	systemOS = getOS()
+
+	if systemOS = &quot;UNIX&quot; then
+		sDocRoot = convertfromurl( ReadConfig(&quot;HelpPrefix&quot;) )
+
+		if FileExists(&quot;/usr/bin/xfce4-terminal&quot;) then
+			Terminal = &quot;xfce4-terminal&quot;
+		elseif FileExists(&quot;/usr/bin/mate-terminal&quot;) then
+			Terminal = &quot;mate-terminal&quot;
+		end if
+
+		if FileExists(&quot;/usr/bin/git-cola&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;git-cola&quot; ) then
+			shell( Terminal + &quot; --working-directory=&quot; + sDocRoot + &quot; -e git-cola&quot;, 0 )
+
+		elseif FileExists(&quot;/usr/bin/git&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;git-gui&quot; ) then
+			shell( &quot;git -C &quot; + sDocRoot + &quot; gui&quot;, 0 )
+
+		elseif FileExists(&quot;/usr/bin/gitk&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;gitk&quot; ) then
+			shell( Terminal + &quot; --working-directory=&quot; +  sDocRoot + &quot; -e gitk&quot;, 0 )
+
+		elseif FileExists(&quot;/usr/bin/gitg&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;gitg&quot; ) then
+			shell( &quot;gitg &quot; + sDocRoot, 0 )
+
+		elseif FileExists(&quot;/usr/bin/giggle&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;giggle&quot; ) then
+			shell( &quot;giggle -d &quot; + sDocRoot, 0 )
+
+		end if
+	else
+		msgbox &quot;This feature is only available on Unix systems&quot;
+	end if
+End Sub
+
 Sub OpenLink
     If not IsHelpFile Then
         msgbox( strErr_NoHelpFile )
@@ -313,7 +361,7 @@ Sub OpenLink
 
 	oVC = ThisComponent.CurrentController.getViewCursor
 	If oVC.isCollapsed Then
-	 	msgbox &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 	msgbox &quot;Please select a &lt;embed&gt;, &lt;embedvar&gt; or &lt;link&gt; tag.&quot;
 	 Else
 	 	link_start = instr(oVC.String,&quot;&lt;LINK&quot;)
 	 	embed_start = instr(oVC.String,&quot;&lt;EMBED&quot;)
@@ -340,12 +388,15 @@ Sub OpenLink
 				FileProperties(0).Name = &quot;FilterName&quot;
 		        FileProperties(0).Value =&quot;XHP_Help&quot;
 		        oDoc = StarDesktop.loadComponentFromURL(sPath, &quot;_blank&quot;, 0, FileProperties())
+		        if WebView = &quot;true&quot; then
+		        	goKey( &quot;.uno:BrowseView&quot; )
+		        end if
 		        if section &lt;&gt; &quot;&quot; then
 		        	FindLink( oDoc, section )
 		        end if
 		     end if
 	 	Else
-	 		msgbox &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 		msgbox &quot;Please select a &lt;embed&gt;, &lt;embedvar&gt; or &lt;link&gt; tag.&quot;
 	 	End If 
 	EndIf
 End Sub
@@ -358,7 +409,7 @@ Sub OpenLinkSource
 
 	oVC = ThisComponent.CurrentController.getViewCursor
 	If oVC.isCollapsed Then
-	 	msgbox &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 	msgbox &quot;Please select a &lt;embed&gt;, &lt;embedvar&gt; or &lt;link&gt; tag.&quot;
 	 Else
 	 	link_start = instr(oVC.String,&quot;&lt;LINK&quot;)
 	 	embed_start = instr(oVC.String,&quot;&lt;EMBED&quot;)
@@ -384,7 +435,7 @@ Sub OpenLinkSource
 				OpenXHPText( sPath )
 		    end if
 	 	Else
-	 		msgbox &quot;Please select a &lt;embed&gt; or &lt;link&gt; tag.&quot;
+	 		msgbox &quot;Please select a &lt;embed&gt;, &lt;embedvar&gt; or &lt;link&gt; tag.&quot;
 	 	End If 
 	EndIf
 End Sub

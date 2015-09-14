@@ -25,6 +25,9 @@
                     <value/>
                     <value xml:lang="en-US">Help Authoring</value>
                 </prop>
+                <prop oor:name="ontext" oor:type="xs:string">
+                    <value>com.sun.star.text.TextDocument,com.sun.star.sdb.OfficeDatabaseDocument,com.sun.star.script.BasicIDE</value>
+                </prop>
                 <node oor:name="Submenu">
                     <node oor:name="m00" oor:op="replace">
                         <prop oor:name="URL" oor:type="xs:string">
@@ -252,7 +255,7 @@
                         </prop>
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
-                            <value xml:lang="en-US">Insert Extended Tip (&lt;ahelp&gt;/&lt;avis&gt;/&lt;ahid&gt;) </value>
+                            <value xml:lang="en-US">Insert Extended Tooltip (&lt;ahelp&gt;/&lt;avis&gt;/&lt;ahid&gt;) </value>
                         </prop>
                     </node>
                     <node oor:name="m33" oor:op="replace">
@@ -442,6 +445,15 @@
                         <prop oor:name="Title" oor:type="xs:string">
                             <value/>
                             <value xml:lang="en-US">View File Source</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m85" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:HelpAuthoring._Main.OpenGitCompare?language=Basic&amp;location=application</value>
+                        </prop>
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value/>
+                            <value xml:lang="en-US">Compare Changes [GIT]</value>
                         </prop>
                     </node>
 
