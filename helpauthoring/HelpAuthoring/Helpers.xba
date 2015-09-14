@@ -360,6 +360,46 @@ sub LF
     dispatcher.executeDispatch(document, &quot;.uno:InsertLinebreak&quot;, &quot;&quot;, 0, Array())
 end sub
 
+Sub SetParaH1
+	SetParaStyle( &quot;hlp_head1&quot; )
+End Sub
+
+Sub SetParaH2
+	SetParaStyle( &quot;hlp_head2&quot; )
+End Sub
+
+Sub SetParaH3
+	SetParaStyle( &quot;hlp_head3&quot; )
+End Sub
+
+Sub SetParaWarning
+	SetParaStyle( &quot;hlp_warning&quot; )
+End Sub
+
+Sub SetParaNote
+	SetParaStyle( &quot;hlp_note&quot; )
+End Sub
+
+Sub SetParaTip
+	SetParaStyle( &quot;hlp_tip&quot; )
+End Sub
+
+Sub SetParaDefault
+	SetParaStyle( &quot;hlp_paragraph&quot; )
+End Sub
+
+Sub SetCharDefault
+	SetCharStyle( &quot;Default&quot; )
+End Sub
+
+Sub SetCharBold
+	SetCharStyle( &quot;hlp_emph&quot; )
+End Sub
+
+Sub SetCharMenuItem
+	SetCharStyle( &quot;hlp_menuitem&quot; )
+End Sub
+
 &apos;=======================================================
 &apos; SetParaStyle
 &apos;-------------------------------------------------------
@@ -392,6 +432,10 @@ Sub SetCharStyle(StyleName As String)
 
     document   = ThisComponent.CurrentController.Frame
     dispatcher = createUnoService(&quot;com.sun.star.frame.DispatchHelper&quot;)
+
+	if StyleName = &quot;Default&quot; then
+		StyleName = &quot;Default Style&quot;
+	end if
 
     dim args(1) as new com.sun.star.beans.PropertyValue
     args(0).Name = &quot;Template&quot;

@@ -486,12 +486,336 @@
         </node>
         <node oor:name="OfficeToolBar">
             <node oor:name="org.openoffice.helpauthoringtoolbar" oor:op="replace">
-                  <node oor:name="m1" oor:op="replace">
+                  <node oor:name="m01" oor:op="replace">
                       <prop oor:name="URL" oor:type="xs:string">
                           <value>vnd.sun.star.script:HelpAuthoring._Main.CreateFile?language=Basic&amp;location=application</value>
                       </prop>
                       <prop oor:name="Title" oor:type="xs:string">
                           <value xml:lang="en-US">New</value>
+                          <value xml:lang="en-US">New Help File</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m02" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring._Main.OpenXHP?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Open</value>
+                          <value xml:lang="en-US">Open Help File</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m03" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>.uno:Save</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Save</value>
+                          <value xml:lang="en-US">Save Help File</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m06" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>private:separator</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m07" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring._Main.ReloadXHP?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Reload</value>
+                          <value xml:lang="en-US">Reload File</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m08" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring._Main.OpenXHPText?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">View Source</value>
+                          <value xml:lang="en-US">View File Source</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m10" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>private:separator</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m11" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Embed.Main?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Embed</value>
+                          <value xml:lang="en-US">Insert Embed</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m12" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Link.Main?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Link</value>
+                          <value xml:lang="en-US">Insert Link</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m13" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring._Main.OpenLink?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Open Embed/Link</value>
+                          <value xml:lang="en-US">Open Embed/Link File</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m14" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring._Main.OpenLinkSource?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">View Embed/Link Source</value>
+                          <value xml:lang="en-US">View Embed/Link File Source</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m30" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>private:separator</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m31" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertSection?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Section</value>
+                          <value xml:lang="en-US">Insert Section</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m32" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertHowToGet?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">How To Get</value>
+                          <value xml:lang="en-US">Insert &quot;How To Get&quot; Section</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m33" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertRelatedTopics?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Related Topics</value>
+                          <value xml:lang="en-US">Insert &quot;Related Topics&quot; Section</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m34" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertVariable?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Variable</value>
+                          <value xml:lang="en-US">Insert Variable</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m40" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>private:separator</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m41" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.HID.Main?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Help ID</value>
+                          <value xml:lang="en-US">Insert Help ID</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m42" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertExtendedTip?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Extended Tooltip</value>
+                          <value xml:lang="en-US">Insert Extended Tooltip</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m43" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Comment.Main?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Comment</value>
+                          <value xml:lang="en-US">Insert Comment</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m44" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.IND.Main?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Index Entry</value>
+                          <value xml:lang="en-US">Insert Index Entry</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m50" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>private:separator</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m51" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Table.Main?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Table</value>
+                          <value xml:lang="en-US">Insert Table</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m52" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertGraphic?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Image</value>
+                          <value xml:lang="en-US">Insert Image</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m60" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>private:separator</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m61" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetParaDefault?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Default</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m62" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetParaH1?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">H1</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m63" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetParaH2?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">H2</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m64" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetParaH3?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">H3</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m65" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetParaWarning?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Warning</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m66" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetParaNote?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Note</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m67" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetParaTip?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Tip</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m70" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>private:separator</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m71" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetCharDefault?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Default</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m72" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetCharBold?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Bold</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m73" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetCharMenuItem?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Menu</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m90" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>private:separator</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m91" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.OtherElements.ToggleParaL10NStatus?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">L10N</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m92" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring._Main.UnhideParaIDs?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Show IDs</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m93" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Meta.Main?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Meta</value>
+                      </prop>
+                  </node>
+
+                  <node oor:name="m95" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring._Main.OpenGitCompare?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">GIT</value>
                       </prop>
                       <prop oor:name="Target" oor:type="xs:string">
                           <value>_self</value>
@@ -501,6 +825,198 @@
                       </prop>
                   </node>
               </node>
+        </node>
+        <node oor:name="Images">
+            <node oor:name="org.openoffice.helpauthoringtoolbar.newfile" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring._Main.CreateFile?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_adddirect.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.openfile" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring._Main.OpenXHP?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_open.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.comment" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.Comment.Main?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_insertannotation.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.image" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertGraphic?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_insertgraphic.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.link" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.Link.Main?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_inserthyperlink.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.index" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.IND.Main?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_insertindexesentry.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.section" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertSection?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_insertsection.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.table" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.Table.Main?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_inserttable.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.reload" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring._Main.ReloadXHP?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_reload.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.source" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring._Main.OpenXHPText?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_sourceview.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.openlink" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring._Main.OpenLink?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_webhtml.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.embed" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.Embed.Main?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_insertplugin.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.openlinksource" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring._Main.OpenLinkSource?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_sourceview-link.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.hid" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.HID.Main?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_helpindex.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.tip" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertExtendedTip?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_extendedhelp.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.variable" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertVariable?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_autosum.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.how" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertHowToGet?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_insertsection-how.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.related" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.OtherElements.InsertRelatedTopics?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_insertsection-related.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.save" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>.uno:Save</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_save.png</value>
+                    </prop>
+                </node>
+            </node>
         </node>
     </node>
 </oor:component-data>
