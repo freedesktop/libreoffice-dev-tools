@@ -90,6 +90,8 @@ Sub InsertSwitchOSParagraph
 End Sub
 
 Sub InsertSwitchOSInline
+    InsertText( &quot; &quot; )
+    GoLeft( 1 )
 	InsertTag(&quot;SWITCHINLINE_&quot;,&quot;&lt;SWITCHINLINE select=&quot;&quot;sys&quot;&quot;&gt;&quot;,&quot;hlp_aux_switch&quot;)
 
 	InsertCaseInlineNow(&quot;WIN&quot;)
@@ -103,7 +105,6 @@ Sub InsertSwitchOSInline
 
     InsertTag(&quot;_SWITCHINLINE&quot;,&quot;&lt;/SWITCHINLINE&gt;&quot;)
     SetCharStyle(&quot;Default Style&quot;)
-    InsertText( &quot; &quot; )
 End Sub
 
 Sub InsertSwitchAppParagraph
@@ -139,6 +140,8 @@ Sub InsertSwitchAppParagraph
 End Sub
 
 Sub InsertSwitchAppInline
+    InsertText( &quot; &quot; )
+    GoLeft( 1 )
 	InsertTag(&quot;SWITCHINLINE_&quot;,&quot;&lt;SWITCHINLINE select=&quot;&quot;appl&quot;&quot;&gt;&quot;,&quot;hlp_aux_switch&quot;)
 
 	InsertCaseInlineNow(&quot;WRITER&quot;)
@@ -156,7 +159,6 @@ Sub InsertSwitchAppInline
 
     InsertTag(&quot;_SWITCHINLINE&quot;,&quot;&lt;/SWITCHINLINE&gt;&quot;)
     SetCharStyle(&quot;Default Style&quot;)
-    InsertText( &quot; &quot; )
 End Sub
 
 Sub InsertCaseNow(sType As String)

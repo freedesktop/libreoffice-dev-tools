@@ -409,10 +409,10 @@ end Sub
 &apos;=======================================================
 Sub InsertNewParaData
 
-        If not IsHelpFile Then
-        msgbox(strErr_NoHelpFile)
-        Exit Sub
-    End If
+    &apos;If not IsHelpFile Then
+    &apos;    msgbox(strErr_NoHelpFile)
+    &apos;    Exit Sub
+    &apos;End If
 
     oSel = thiscomponent.getcurrentcontroller.getselection
     oCur = oSel(0).getText.createTextCursorByRange(oSel(0))

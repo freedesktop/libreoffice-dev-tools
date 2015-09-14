@@ -61,6 +61,9 @@ Sub Main
             InsertTag(&quot;COMMENT_&quot;,&quot;&lt;COMMENT&gt;&quot;)
             SetCharStyle(&quot;hlp_aux_comment&quot;)
             InsertTag(&quot;COMMENT&quot;,oTxtComment.Text)
+            goLeft( 1, 1 )
+            SetCharStyle(&quot;hlp_aux_comment&quot;)
+            goRight( 1 )
             InsertTag(&quot;_COMMENT&quot;,&quot;&lt;/COMMENT&gt;&quot;)
         End If
     End If

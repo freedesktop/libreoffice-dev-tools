@@ -182,6 +182,11 @@ Sub UpdateFileName
             oTxtHidFName.Text = ShortFName
         End If
 
+		DocRoot = GetDocumentRoot()
+		if FileExists( DocRoot + oTxtHidFName.Text ) then
+			oTxtHidFName.Text = DocRoot + oTxtHidFName.Text
+		end if
+
         oButBrowseIDs = oDialog.GetControl(&quot;butBrowseIDs&quot;)
         If not(FileExists(oTxtHidFName.Text)) Then
             msgbox oTxtHidFName.Text+&quot; cannot be found.&quot;,48,&quot;D&apos;oh!&quot;
@@ -242,11 +247,13 @@ Sub BrowseEmbed
                 arTmp(n) = Right(arTmp(n),Len(arTmp(n))-Instr(arTmp(n),&quot;id=&quot;)-3)
                 sId = Left(arTmp(n),Instr(arTmp(n),&quot;&quot;&quot;&quot;)-1)
                 arTmp(n) = Right(arTmp(n),Len(arTmp(n))-Instr(arTmp(n),&quot;&gt;&quot;))
-                If Instr(arTmp(n),&quot;&lt;/section&gt;&quot;)&gt;0 Then
+                If Instr(arTmp(n),&quot;&lt;/section&gt;&quot;) &gt; 0 Then
                     arTmp(n) = Left(arTmp(n),Instr(arTmp(n),&quot;&lt;/section&gt;&quot;)-1)
-                End If
-                If Len(arTmp(n) &gt; 100) Then
-                    arTmp(n) = Left(arTmp(n),100)+&quot;...&quot;
+	                If Len(arTmp(n) &gt; 100) Then
+	                    arTmp(n) = Left(arTmp(n),100)+&quot;...&quot;
+	                End If
+	            else
+	                arTmp(n) = &quot;[[Unable to get related text]]&quot;
                 End If
                 sDim = ubound(arSecs())
                 arSecs(sDim) = sId+&quot;: &quot;+arTmp(n)
@@ -261,10 +268,14 @@ Sub BrowseEmbed
                 arTmp(n) = Right(arTmp(n),Len(arTmp(n))-Instr(arTmp(n),&quot;id=&quot;)-3)
                 sId = Left(arTmp(n),Instr(arTmp(n),&quot;&quot;&quot;&quot;)-1)
                 arTmp(n) = Right(arTmp(n),Len(arTmp(n))-Instr(arTmp(n),&quot;&gt;&quot;))
-                arTmp(n) = Left(arTmp(n),Instr(arTmp(n),&quot;&lt;/variable&gt;&quot;)-1)
-                If Len(arTmp(n) &gt; 100) Then
-                    arTmp(n) = Left(arTmp(n),100)+&quot;...&quot;
-                End If
+                if Instr(arTmp(n),&quot;&lt;/variable&gt;&quot;) &gt; 0 then
+	                arTmp(n) = Left(arTmp(n),Instr(arTmp(n),&quot;&lt;/variable&gt;&quot;)-1)
+	                If Len(arTmp(n) &gt; 100) Then
+	                    arTmp(n) = Left(arTmp(n),100)+&quot;...&quot;
+	                End If
+	            else
+	                arTmp(n) = &quot;[[Unable to get related text]]&quot;
+	            end if
                 sDim = ubound(arVars())
                 arVars(sDim) = sId+&quot;: &quot;+arTmp(n)
                 sDim = ubound(arVars())+1
