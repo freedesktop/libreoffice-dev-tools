@@ -46,31 +46,30 @@ sub print_component_counts($$$)
     printf STDERR "\n";
 }
 
-my %bug_to_ver = (
-    '5.0' => '86696',
-    '4.4' => '79641',
-    '4.3' => '75025',
-    '4.2' => '65675',
-    '4.1' => '60270',
-    '4.0' => '54157',
-    '3.6' => '44446',
-);
-
 my %ver_open;
 my %ver_total;
 
 build_overall_bugstats();
 
-print STDERR "Querying for open MABs:\n";
-for my $ver (reverse sort keys %bug_to_ver) {
-    my $bug = $bug_to_ver{$ver};
-    my $base_url = "https://$Bugzilla::bugserver/showdependencytree.cgi?id=" . $bug;
-    my $all = Bugzilla::get_deps($base_url);
-    my $open = Bugzilla::get_deps($base_url . "&hide_resolved=1");
+my @rseries = ('5.0', '4.5',
+               '4.4', '4.3', '4.2', '4.1', '4.0',
+               '3.6', '3.5', '3.4', '3.3',
+               'Inherited from OOo',
+               'PreBibisect',
+               'unspecified',
+);
+
+print STDERR "Querying for open, highest-Priority bugs (aka \"MABs\"):\n";
+for my $rs (@rseries) {
+    my $highest = "https://$Bugzilla::bugserver/buglist.cgi?f1=version&o1=regexp&priority=highest&product=LibreOffice&v1=^" . $rs . ".*";
+
+    my $all = Bugzilla::get_query($highest);
+    my $open = Bugzilla::get_query($highest . "&resolution=---");
+
     my $percent = sprintf("%2d", (($open * 100.0) / $all));
-    print STDERR "$ver: $open/$all - $percent%\n";
-    $ver_open{$ver} = $open;
-    $ver_total{$ver} = $all;
+    print STDERR "$rs: $open/$all - $percent%\n";
+    $ver_open{$rs} = $open;
+    $ver_total{$rs} = $all;
 }
 
 my ($reg_all, $reg_open, $reg_high);
