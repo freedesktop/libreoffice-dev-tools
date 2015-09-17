@@ -741,6 +741,15 @@
                           <value xml:lang="en-US">Insert Index Entry</value>
                       </prop>
                   </node>
+                  <node oor:name="m45" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Switch.InsertSwitchByDialog?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml:lang="en-US">Switch</value>
+                          <value xml:lang="en-US">Insert Switch</value>
+                      </prop>
+                  </node>
 
                   <node oor:name="m50" oor:op="replace">
                       <prop oor:name="URL" oor:type="xs:string">
@@ -808,7 +817,7 @@
                           <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetParaWarning?language=Basic&amp;location=application</value>
                       </prop>
                       <prop oor:name="Title" oor:type="xs:string">
-                          <value xml:lang="en-US">Warning</value>
+                          <value xml:lang="en-US">Warn</value>
                       </prop>
                   </node>
                   <node oor:name="m66" oor:op="replace">
@@ -1092,6 +1101,16 @@
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageBigURL">
                         <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/lc_save.png</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="org.openoffice.helpauthoringtoolbar.switch" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>vnd.sun.star.script:HelpAuthoring.Switch.InsertSwitchByDialog?language=Basic&amp;location=application</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageBigURL">
+                        <value>vnd.sun.star.extension://org.openoffice.helpauthoring/images/tango/switch.png</value>
                     </prop>
                 </node>
             </node>

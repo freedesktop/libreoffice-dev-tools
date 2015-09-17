@@ -508,8 +508,6 @@ Sub CheckMetaData(oDoc As Object)
     &apos;sTopicID = oDoc.DocumentInfo.GetUserFieldValue(1)
      sTopicID = oDoc.DocumentProperties.UserDefinedProperties.ID
 
-
-
     If sTopicID &lt;&gt; AlphaNum(sTopicID) OR sTopicID=&quot;&quot; Then
         sTopicID = &quot;topic_&quot;+CreateID &apos; create a topic id
     End If

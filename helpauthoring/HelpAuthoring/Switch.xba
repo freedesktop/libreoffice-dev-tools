@@ -25,6 +25,46 @@ Dim document AS Object
 Sub Main
 End Sub
 
+Sub InsertSwitchByDialog
+
+	Reply = msgbox( &quot;Would you like to insert a OS paragraph switch?&quot;, 3 )
+
+	if Reply = 6 then
+		InsertSwitchOSParagraph()
+		exit sub
+	elseif Reply = 2 then
+		exit sub
+	end if
+
+	Reply = msgbox( &quot;Would you like to insert a OS inline switch?&quot;, 3 )
+
+	if Reply = 6 then
+		InsertSwitchOSInline()
+		exit sub
+	elseif Reply = 2 then
+		exit sub
+	end if
+
+	Reply = msgbox( &quot;Would you like to insert a App paragraph switch?&quot;, 3 )
+
+	if Reply = 6 then
+		InsertSwitchAppParagraph()
+		exit sub
+	elseif Reply = 2 then
+		exit sub
+	end if
+
+	Reply = msgbox( &quot;Would you like to insert a App inline switch?&quot;, 3 )
+
+	if Reply = 6 then
+		InsertSwitchAppInline()
+		exit sub
+	elseif Reply = 2 then
+		exit sub
+	end if
+
+End Sub
+
 Sub InsertSwitch
     InsertSwitchTag(FALSE)
 End Sub
