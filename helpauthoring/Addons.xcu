@@ -25,7 +25,7 @@
                     <value/>
                     <value xml:lang="en-US">Help Authoring</value>
                 </prop>
-                <prop oor:name="ontext" oor:type="xs:string">
+                <prop oor:name="Context" oor:type="xs:string">
                     <value>com.sun.star.text.TextDocument,com.sun.star.sdb.OfficeDatabaseDocument,com.sun.star.script.BasicIDE</value>
                 </prop>
                 <node oor:name="Submenu">
