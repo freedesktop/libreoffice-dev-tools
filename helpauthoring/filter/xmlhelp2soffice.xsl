@@ -195,11 +195,11 @@ FILTER FOR OPENOFFICE.ORG 2+
             </office:master-styles>
 
             <office:body>
-
+                <office:text>
                 <xsl:call-template name="createvariablesets"/>
                 <xsl:apply-templates select="helpdocument/body" />
 
-
+                </office:text>
             </office:body>
 
         </office:document>
@@ -273,9 +273,7 @@ BODY, SEE HEADER
 ######################################################
 -->
 <xsl:template match="body">
-    <office:text>
         <xsl:apply-templates />
-    </office:text>
 </xsl:template>
 
 <!--
