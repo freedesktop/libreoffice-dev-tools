@@ -34,18 +34,23 @@ public:
 class Visitor : public clang::RecursiveASTVisitor<Visitor>
 {
     const Context m_rContext;
-    bool m_bFound;
+    std::vector<std::string> m_aResults;
+    std::set<std::string> m_aFunctions;
 
 public:
     Visitor(const Context& rContext)
-        : m_rContext(rContext),
-          m_bFound(false)
+        : m_rContext(rContext)
     {
     }
 
-    bool getFound()
+    const std::vector<std::string>& getResults()
     {
-        return m_bFound;
+        return m_aResults;
+    }
+
+    const std::set<std::string>& getFunctions()
+    {
+        return m_aFunctions;
     }
 
     /*
@@ -65,8 +70,9 @@ public:
             if (aName.find("m") != 0)
             {
                 aName.insert(0, "m_");
-                std::cout << pRecord->getQualifiedNameAsString() << "::" << pDecl->getNameAsString() << "," << aName << std::endl;
-                m_bFound = true;
+                std::stringstream ss;
+                ss << pRecord->getQualifiedNameAsString() << "::" << pDecl->getNameAsString() << "," << aName;
+                m_aResults.push_back(ss.str());
             }
         }
 
@@ -93,11 +99,33 @@ public:
             if (aName.find("m") != 0)
             {
                 aName.insert(0, "m_");
-                std::cout << pRecord->getQualifiedNameAsString() << "::" << pDecl->getNameAsString() << "," << aName << std::endl;
-                m_bFound = true;
+                std::stringstream ss;
+                ss << pRecord->getQualifiedNameAsString() << "::" << pDecl->getNameAsString() << "," << aName;
+                m_aResults.push_back(ss.str());
             }
         }
 
+        return true;
+    }
+
+    bool VisitCXXConstructorDecl(clang::CXXConstructorDecl* pDecl)
+    {
+        clang::CXXRecordDecl* pRecord = pDecl->getParent();
+        m_aFunctions.insert(pRecord->getQualifiedNameAsString());
+        return true;
+    }
+
+    bool VisitCXXDestructorDecl(clang::CXXDestructorDecl* pDecl)
+    {
+        clang::CXXRecordDecl* pRecord = pDecl->getParent();
+        m_aFunctions.insert(pRecord->getQualifiedNameAsString());
+        return true;
+    }
+
+    bool VisitCXXMethodDecl(clang::CXXMethodDecl* pDecl)
+    {
+        clang::CXXRecordDecl* pRecord = pDecl->getParent();
+        m_aFunctions.insert(pRecord->getQualifiedNameAsString());
         return true;
     }
 };
@@ -119,7 +147,21 @@ public:
 
         Visitor aVisitor(m_rContext);
         aVisitor.TraverseDecl(rContext.getTranslationUnitDecl());
-        if (aVisitor.getFound())
+        const std::set<std::string>& rFunctions = aVisitor.getFunctions();
+        const std::vector<std::string>& rResults = aVisitor.getResults();
+        bool bFound = false;
+        for (const std::string& rFunction : rFunctions)
+        {
+            for (const std::string& rResult : rResults)
+            {
+                if (rResult.find(rFunction) == 0)
+                {
+                    std::cerr << rResult << std::endl;
+                    bFound = true;
+                }
+            }
+        }
+        if (bFound)
             exit(1);
     }
 };
