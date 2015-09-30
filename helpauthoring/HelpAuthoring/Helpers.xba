@@ -125,7 +125,7 @@ Function CreateID
     sDate = ReplaceAll(Date,&quot;/:. \&quot;,&quot;&quot;)
     sTime = ReplaceAll(Time,&quot;/:. \AMP&quot;,&quot;&quot;)
     Randomize
-    CreateID = sDate + sTime + Int(Rnd * 100)
+    CreateID = sDate + sTime + Int(Rnd * 10000)
 End Function
 
 &apos;=======================================================
