@@ -32,6 +32,8 @@ Global Const GitClient = &quot;git-gui&quot;
 
 Global Const WebView = &quot;false&quot;
 
+Global Const ConsoleTerminal = &quot;true&quot;
+
 &apos;=======================================================
 &apos; Main
 &apos;-------------------------------------------------------
@@ -326,20 +328,30 @@ Sub OpenGitCompare
 	if systemOS = &quot;UNIX&quot; then
 		sDocRoot = convertfromurl( ReadConfig(&quot;HelpPrefix&quot;) )
 
-		if FileExists(&quot;/usr/bin/xfce4-terminal&quot;) then
+		Terminal = ConsoleTerminal
+        WorkDirArg = &quot; --working-directory=&quot;
+		HoldArg = &quot; -H&quot;
+
+		if FileExists(&quot;/usr/bin/xfce4-terminal&quot;) and Terminal = &quot;&quot; then
 			Terminal = &quot;xfce4-terminal&quot;
-		elseif FileExists(&quot;/usr/bin/mate-terminal&quot;) then
+		elseif FileExists(&quot;/usr/bin/mate-terminal&quot;) and Terminal = &quot;&quot; then
 			Terminal = &quot;mate-terminal&quot;
+		elseif FileExists(&quot;/usr/bin/gnome-terminal&quot;) and Terminal = &quot;&quot; then
+			Terminal = &quot;gnome-terminal&quot;
+		elseif FileExists(&quot;/usr/bin/konsole&quot;) and ( Terminal = &quot;&quot; or Terminal = &quot;konsole&quot; ) then
+			Terminal = &quot;konsole&quot;
+			WorkDirArg = &quot; --workdir &quot;
+			HoldArg = &quot; --hold&quot;
 		end if
 
 		if FileExists(&quot;/usr/bin/git-cola&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;git-cola&quot; ) then
-			shell( Terminal + &quot; --working-directory=&quot; + sDocRoot + &quot; -e git-cola&quot;, 0 )
+			shell( Terminal + HoldArg + WorkDirArg + sDocRoot + &quot; -e git-cola&quot;, 0 )
 
 		elseif FileExists(&quot;/usr/bin/git&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;git-gui&quot; ) then
 			shell( &quot;git -C &quot; + sDocRoot + &quot; gui&quot;, 0 )
 
 		elseif FileExists(&quot;/usr/bin/gitk&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;gitk&quot; ) then
-			shell( Terminal + &quot; --working-directory=&quot; +  sDocRoot + &quot; -e gitk&quot;, 0 )
+			shell( Terminal + WorkDirArg + sDocRoot + &quot; -e gitk&quot;, 0 )
 
 		elseif FileExists(&quot;/usr/bin/gitg&quot;) and ( GitClient = &quot;&quot; or GitClient = &quot;gitg&quot; ) then
 			shell( &quot;gitg &quot; + sDocRoot, 0 )
