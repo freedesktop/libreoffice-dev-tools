@@ -940,7 +940,7 @@ PARAGRAPH
 
 
                     <text:span text:style-name="{$tagstyle}">
-                        <text:variable-set text:name="ID" text:value-type="string" text:display="none">
+                        <text:variable-set text:name="ID" text:value-type="string" text:display="value">
                             <xsl:choose>
                                 <xsl:when test="@xml-lang">
                                     <xsl:value-of select="@id"/>
@@ -982,7 +982,7 @@ PARAGRAPH
                     </xsl:variable>
 
                     <text:span text:style-name="{$tagstyle}">
-                        <text:variable-set text:name="ID" text:value-type="string" text:display="none">
+                        <text:variable-set text:name="ID" text:value-type="string" text:display="value">
                         <xsl:choose>
                                 <xsl:when test="@xml-lang">
                                     <xsl:value-of select="@id"/>
