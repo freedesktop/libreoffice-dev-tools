@@ -938,15 +938,25 @@ PARAGRAPH
                         </xsl:choose>
                     </xsl:variable>
 
+                    <xsl:variable name="idhdvalue">
+                    <xsl:choose>
+                        <xsl:when test="@id and not(@id='')">
+                            <xsl:value-of select="@id"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="concat('hd_',generate-id())"/> <!-- there exists files with paragraphs without id -->
+                        </xsl:otherwise>
+                    </xsl:choose>
+                    </xsl:variable>
 
                     <text:span text:style-name="{$tagstyle}">
                         <text:variable-set text:name="ID" text:value-type="string" text:display="value">
                             <xsl:choose>
-                                <xsl:when test="@xml-lang">
-                                    <xsl:value-of select="@id"/>
+                                <xsl:when test="@localize='false'">
+                                    <xsl:value-of select="concat($idhdvalue,'_NOL10N')"/>
                                 </xsl:when>
                                 <xsl:otherwise>
-                                    <xsl:value-of select="concat(@id,'_NOL10N')"/>
+                                    <xsl:value-of select="$idhdvalue"/>
                                 </xsl:otherwise>
                             </xsl:choose>
                             <!--
@@ -981,14 +991,25 @@ PARAGRAPH
                         </xsl:choose>
                     </xsl:variable>
 
+                    <xsl:variable name="idparvalue">
+                        <xsl:choose>
+                            <xsl:when test="@id and not(@id='')">
+                                <xsl:value-of select="@id"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="concat('par_',generate-id())"/> <!-- there exists files with paragraphs without id -->
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
+
                     <text:span text:style-name="{$tagstyle}">
                         <text:variable-set text:name="ID" text:value-type="string" text:display="value">
                         <xsl:choose>
-                                <xsl:when test="@xml-lang">
-                                    <xsl:value-of select="@id"/>
+                                <xsl:when test="@localize='false'">
+                                    <xsl:value-of select="concat($idparvalue,'_NOL10N')"/>
                                 </xsl:when>
                                 <xsl:otherwise>
-                                    <xsl:value-of select="concat(@id,'_NOL10N')"/>
+                                    <xsl:value-of select="$idparvalue"/>
                                 </xsl:otherwise>
                             </xsl:choose>
                         <!--
