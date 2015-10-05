@@ -180,6 +180,8 @@ print timestamp() . " Checking for changes in the libreoffice repo & sending rep
     "dictionaries",
     "help",
     "si-gui",
+    "online",
+    "contrib/dev-tools",
 );
 
 $test = 0;
