@@ -127,6 +127,7 @@ Sub SetMetaDataOnSave(Path as String)
 		
 		goKey( &quot;.uno:StartOfParaSel&quot;, 1, 1 )
 		goUp( 1, 1 )
+		goKey( &quot;.uno:StartOfParaSel&quot;, 1, 1 )
 
 		InsertSection( lcase( AlphaNum( Replace( title, &quot; &quot;, &quot;_&quot; ) ) ) )
 
