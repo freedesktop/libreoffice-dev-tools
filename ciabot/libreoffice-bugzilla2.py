@@ -49,23 +49,24 @@ class FreedesktopBZ:
         user = config.get('bugzilla', 'user')
         password = config.get('bugzilla', 'password')
         self.bz = self.bzclass(url=url, cookiefile = "/tmp/cookie", tokenfile = "/tmp/token")
-        self.bz.login(user=user, password=password)
+        if not dry_run:
+            self.bz.login(user=user, password=password)
 
     def update_whiteboard(self, commit, bugnr, new_version, branch, repo_name):
         print(bugnr)
-        bug = self.bz.getbug(bugnr)
-        print(bug)
-        if bug.product != "LibreOffice":
-            print("refusing to update bug with non-LO component")
-            return;
-        old_whiteboard = bug.getwhiteboard()
+        if dry_run:
+            print("DRY RUN, we would set the whiteboard to: target:\n%s" % new_version)
+        else:
+            bug = self.bz.getbug(bugnr)
+            print(bug)
+            if bug.product != "LibreOffice":
+                print("refusing to update bug with non-LO component")
+                return;
+            old_whiteboard = bug.getwhiteboard()
 
-        m = re.findall(new_version, old_whiteboard)
-        if m is None or len(m) == 0:
-            new_whiteboard = old_whiteboard + " target:" + new_version
-            if dry_run:
-                print("DRY RUN, we would set the whiteboard to:\n%s" %(new_whiteboard))
-            else:
+            m = re.findall(new_version, old_whiteboard)
+            if m is None or len(m) == 0:
+                new_whiteboard = old_whiteboard + " target:" + new_version
                 bug.setwhiteboard(new_whiteboard)
 
         cgiturl = "http://cgit.freedesktop.org/libreoffice/%s/commit/?id=%s" %(repo_name, commit.hexsha)
@@ -94,7 +95,7 @@ http://wiki.documentfoundation.org/Testing_Daily_Builds
 Affected users are encouraged to test the fix and report feedback.""" %(new_version)
 
         if dry_run:
-            print("DRY RUN, we would add the following comment:\n%s" %(new_whiteboard))
+            print("DRY RUN, we would add the following comment:\n%s" % comment_msg)
         else:
             bug.addcomment(comment_msg)
 
@@ -179,6 +180,7 @@ def read_repo(repo_name):
     return repo
 
 def main(argv):
+    global dry_run
     print(argv)
     help_text = 'libreoffice-bugzilla2.py -c commitid [-b branchname] [-r repo] [--dry-run]'
     try:
@@ -230,3 +232,5 @@ def main(argv):
 
 if __name__ == "__main__":
    main(sys.argv[1:])
+
+# vim:set shiftwidth=4 softtabstop=4 expandtab:
