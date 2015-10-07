@@ -1244,7 +1244,14 @@ VARIABLE
     <xsl:template match="variable">
         <text:span text:style-name="hlp_aux_tag">
             <text:variable-set text:name="VAR_" text:value-type="string">
-                <xsl:value-of select="concat('&lt;VAR ID=&quot;',@id,'&quot; VISIBILITY=&quot;',@visibility,'&quot;&gt;')"/>
+                <xsl:choose>
+                    <xsl:when test="@visibility='hidden'">
+                        <xsl:value-of select="concat('&lt;VAR ID=&quot;',@id,'&quot; VISIBILITY=&quot;hidden&quot;&gt;')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="concat('&lt;VAR ID=&quot;',@id,'&quot;&gt;')"/>
+                    </xsl:otherwise>
+                </xsl:choose>
             </text:variable-set>
         </text:span>
         <xsl:apply-templates />
