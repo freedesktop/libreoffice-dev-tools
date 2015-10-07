@@ -1086,14 +1086,13 @@ SORT
 ######################################################
 SWITCH
   + select (sys | appl | distrib ) #REQUIRED
-  + localize CDATA #IMPLIED
 ######################################################
 -->
     <xsl:template match="switch">
         <text:p text:style-name="hlp_aux_switch">
             <text:span text:style-name="hlp_aux_tag">
                 <text:variable-set text:name="SWITCH_" text:value-type="string">
-                    <xsl:value-of select="concat('&lt;SWITCH select=&quot;',@select,'&quot; localize=&quot;',@localize,'&quot;&gt;')"/>
+                    <xsl:value-of select="concat('&lt;SWITCH select=&quot;',@select,'&quot;&gt;')"/>
                 </text:variable-set>
             </text:span>
             <xsl:text></xsl:text>
