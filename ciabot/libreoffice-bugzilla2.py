@@ -79,7 +79,10 @@ It has been pushed to "%s":
 
 %s
 
-%s
+%s""" %(commit.author, branch, cgiturl, commit.summary)
+
+        if (repo_name == "core"):
+            comment_msg += """
 
 It will be available in %s.
 
@@ -87,7 +90,8 @@ The patch should be included in the daily builds available at
 http://dev-builds.libreoffice.org/daily/ in the next 24-48 hours. More
 information about daily builds can be found at:
 http://wiki.documentfoundation.org/Testing_Daily_Builds
-Affected users are encouraged to test the fix and report feedback.""" %(commit.author, branch, cgiturl, commit.summary, new_version)
+
+Affected users are encouraged to test the fix and report feedback.""" %(new_version)
 
         if dry_run:
             print("DRY RUN, we would add the following comment:\n%s" %(new_whiteboard))
