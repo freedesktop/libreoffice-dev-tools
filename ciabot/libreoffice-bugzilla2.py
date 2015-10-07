@@ -35,6 +35,7 @@ from bugzilla.base import _BugzillaToken
 
 master_target = "5.1.0"
 bug_regex = "(?:tdf|fdo)#(\d+)"
+dry_run = False
 
 class FreedesktopBZ:
     bzclass = bugzilla.Bugzilla44
@@ -62,7 +63,10 @@ class FreedesktopBZ:
         m = re.findall(new_version, old_whiteboard)
         if m is None or len(m) == 0:
             new_whiteboard = old_whiteboard + " target:" + new_version
-            bug.setwhiteboard(new_whiteboard)
+            if dry_run:
+                print("DRY RUN, we would set the whiteboard to:\n%s" %(new_whiteboard))
+            else:
+                bug.setwhiteboard(new_whiteboard)
 
         cgiturl = "http://cgit.freedesktop.org/libreoffice/%s/commit/?id=%s" %(repo_name, commit.hexsha)
         if branch is not None and branch != "master":
@@ -84,7 +88,11 @@ http://dev-builds.libreoffice.org/daily/ in the next 24-48 hours. More
 information about daily builds can be found at:
 http://wiki.documentfoundation.org/Testing_Daily_Builds
 Affected users are encouraged to test the fix and report feedback.""" %(commit.author, branch, cgiturl, commit.summary, new_version)
-        bug.addcomment(comment_msg)
+
+        if dry_run:
+            print("DRY RUN, we would add the following comment:\n%s" %(new_whiteboard))
+        else:
+            bug.addcomment(comment_msg)
 
 
 
@@ -168,10 +176,11 @@ def read_repo(repo_name):
 
 def main(argv):
     print(argv)
+    help_text = 'libreoffice-bugzilla2.py -c commitid [-b branchname] [-r repo] [--dry-run]'
     try:
-        opts, args = getopt.getopt(argv,"hc:b:r:",["commit=","branch=","repo=","help"])
+        opts, args = getopt.getopt(argv,"dhc:b:r:",["dry-run","help","commit=","branch=","repo="])
     except getopt.GetoptError:
-        print('test.py -c commitid -r repo [-b branchname]')
+        print(help_text)
         sys.exit(2)
 
     commit_id = None
@@ -180,9 +189,11 @@ def main(argv):
 
     for opt, arg in opts:
         if opt == '-h':
-            print('test.py -c commitid [-b branchname] [-r repo]')
+            print(help_text)
             sys.exit()
-        elif opt in ("-c", "--commit_id"):
+        elif opt in ("-d", "--dry-run"):
+            dry_run = True
+        elif opt in ("-c", "--commit"):
             commit_id = arg
         elif opt in ("-b", "--branch"):
             branch = arg
