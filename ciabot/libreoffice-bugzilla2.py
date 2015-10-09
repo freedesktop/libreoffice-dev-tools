@@ -59,7 +59,7 @@ class FreedesktopBZ:
         else:
             bug = self.bz.getbug(bugnr)
             print(bug)
-            if bug.product != "LibreOffice":
+            if not bug.product in ("LibreOffice", "LibreOffice Online"):
                 print("refusing to update bug with non-LO component")
                 return;
             old_whiteboard = bug.getwhiteboard()
