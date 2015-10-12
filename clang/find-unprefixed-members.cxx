@@ -34,7 +34,9 @@ public:
 class Visitor : public clang::RecursiveASTVisitor<Visitor>
 {
     const Context m_rContext;
-    std::vector<std::string> m_aResults;
+    /// List of qualified class name -- member name pairs.
+    std::vector<std::pair<std::string, std::string>> m_aResults;
+    /// List of qualified class names which have ctors/dtors/member functions.
     std::set<std::string> m_aFunctions;
 
 public:
@@ -43,7 +45,7 @@ public:
     {
     }
 
-    const std::vector<std::string>& getResults()
+    const std::vector<std::pair<std::string, std::string>>& getResults()
     {
         return m_aResults;
     }
@@ -71,8 +73,8 @@ public:
             {
                 aName.insert(0, "m_");
                 std::stringstream ss;
-                ss << pRecord->getQualifiedNameAsString() << "::" << pDecl->getNameAsString() << "," << aName;
-                m_aResults.push_back(ss.str());
+                ss << pDecl->getNameAsString() << "," << aName;
+                m_aResults.push_back(std::make_pair(pRecord->getQualifiedNameAsString(), ss.str()));
             }
         }
 
@@ -100,8 +102,8 @@ public:
             {
                 aName.insert(0, "m_");
                 std::stringstream ss;
-                ss << pRecord->getQualifiedNameAsString() << "::" << pDecl->getNameAsString() << "," << aName;
-                m_aResults.push_back(ss.str());
+                ss << pDecl->getNameAsString() << "," << aName;
+                m_aResults.push_back(std::make_pair(pRecord->getQualifiedNameAsString(), ss.str()));
             }
         }
 
@@ -148,15 +150,16 @@ public:
         Visitor aVisitor(m_rContext);
         aVisitor.TraverseDecl(rContext.getTranslationUnitDecl());
         const std::set<std::string>& rFunctions = aVisitor.getFunctions();
-        const std::vector<std::string>& rResults = aVisitor.getResults();
+        const std::vector<std::pair<std::string, std::string>>& rResults = aVisitor.getResults();
+        // Ignore missing prefixes in structs without ctors/dtors/member functions.
         bool bFound = false;
         for (const std::string& rFunction : rFunctions)
         {
-            for (const std::string& rResult : rResults)
+            for (const std::pair<std::string, std::string>& rResult : rResults)
             {
-                if (rResult.find(rFunction) == 0)
+                if (rResult.first == rFunction)
                 {
-                    std::cerr << rResult << std::endl;
+                    std::cerr << rResult.first << "::" << rResult.second << std::endl;
                     bFound = true;
                 }
             }

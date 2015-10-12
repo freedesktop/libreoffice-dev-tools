@@ -10,6 +10,10 @@ public:
     static const int aS[];
     // This is intentionally not initialized explicitly in C::C().
     A aA;
+    union {
+        int nFoo;
+        int nBar;
+    } aUnion;
     C();
     ~C();
 
