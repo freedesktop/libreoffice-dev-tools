@@ -51,25 +51,40 @@ my %ver_total;
 
 build_overall_bugstats();
 
-my @rseries = ('5.0', '4.5',
-               '4.4', '4.3', '4.2', '4.1', '4.0',
-               '3.6', '3.5', '3.4', '3.3',
-               'Inherited from OOo',
-               'PreBibisect',
-               'unspecified',
+my %rseries =
+    ( '5.0' => '5.0',
+      '4.5' => '5.0', # urgh
+      '4.4' => '4.4',
+      '4.3' => '4.3',
+      '4.2' => '4.2',
+      '4.1' => '4.1',
+      '4.0' => '4.0',
+      '3.6' => 'old',
+      '3.5' => 'old',
+      '3.4' => 'old',
+      '3.3' => 'old',
+      'Inherited from OOo' => 'old',
+      'PreBibisect' => 'old',
+      'unspecified' => 'old'
 );
 
 print STDERR "Querying for open, highest-Priority bugs (aka \"MABs\"):\n";
-for my $rs (@rseries) {
+for my $rs (keys %rseries) {
     my $highest = "https://$Bugzilla::bugserver/buglist.cgi?f1=version&o1=regexp&priority=highest&product=LibreOffice&v1=^" . $rs . ".*";
 
     my $all = Bugzilla::get_query($highest);
     my $open = Bugzilla::get_query($highest . "&resolution=---");
 
+    my $bucket = $rseries{$rs};
+    $ver_open{$bucket} += $open;
+    $ver_total{$bucket} += $all;
+}
+
+for my $bucket (sort { $b cmp $a } keys %ver_open) {
+    my $open = $ver_open{$bucket};
+    my $all = $ver_total{$bucket};
     my $percent = sprintf("%2d", (($open * 100.0) / $all));
-    print STDERR "$rs: $open/$all - $percent%\n";
-    $ver_open{$rs} = $open;
-    $ver_total{$rs} = $all;
+    print STDERR "        $bucket: $open/$all - $percent%\n";
 }
 
 my ($reg_all, $reg_open, $reg_high);
@@ -184,16 +199,16 @@ print << "EOF"
       <text:p>Date</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
-      <text:p>Open 3.5</text:p>
+      <text:p>dummy</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
-      <text:p>Closed 3.5</text:p>
+      <text:p>dummy</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
-      <text:p>Open 3.6</text:p>
+      <text:p>Open Old</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce8" office:value-type="string" calcext:value-type="string">
-      <text:p>Closed 3.6</text:p>
+      <text:p>Closed Old</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Open 4.0</text:p>
@@ -232,10 +247,10 @@ print << "EOF"
       <text:p>Closed 5.0</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
-      <text:p>Total 3.5</text:p>
+      <text:p>dummy</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
-      <text:p>Total 3.6</text:p>
+      <text:p>Total Old</text:p>
      </table:table-cell>
      <table:table-cell table:style-name="ce4" office:value-type="string" calcext:value-type="string">
       <text:p>Total 4.0</text:p>
@@ -270,22 +285,24 @@ print << "EOF"
      </table:table-cell>
      <table:table-cell/> <!-- 3.5 -->
      <table:table-cell/>
-     <table:table-cell/> <!-- 3.6 -->
-     <table:table-cell/>
-     <table:table-cell/> <!-- 4.0 -->
-     <table:table-cell/>
-     <table:table-cell/> <!-- 4.1 -->
-     <table:table-cell/>
-     <table:table-cell/> <!-- 4.2 -->
-     <table:table-cell/>
+
+     <table:table-cell office:value-type="float" office:value="$ver_open{'old'}" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.T2]-[.F2]" office:value-type="float"  calcext:value-type="float"/>
+
+     <table:table-cell office:value-type="float" office:value="$ver_open{'4.0'}" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.T2]-[.F2]" office:value-type="float"  calcext:value-type="float"/>
+     <table:table-cell office:value-type="float" office:value="$ver_open{'4.1'}" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.U2]-[.H2]" office:value-type="float"  calcext:value-type="float"/>
+     <table:table-cell office:value-type="float" office:value="$ver_open{'4.2'}" calcext:value-type="float"/>
+     <table:table-cell table:formula="of:=[.V2]-[.J2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.3'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.W2]-[.L2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'4.4'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.X2]-[.N2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'5.0'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.Y2]-[.P2]" office:value-type="float"  calcext:value-type="float"/>
-     <table:table-cell office:value-type="float" office:value="221" calcext:value-type="float"/>
-     <table:table-cell office:value-type="float" office:value="$ver_total{'3.6'}" calcext:value-type="float"/>
+     <table:table-cell/>
+     <table:table-cell office:value-type="float" office:value="$ver_total{'old'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.0'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.1'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.2'}" calcext:value-type="float"/>
