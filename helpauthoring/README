@@ -19,11 +19,11 @@ and start hacking it.  Most probably you'll want to do improvements to the
 To do that the most effectively, choose a reasonably complicated .xhp file,
 like:
 
-  help/source/text/schart/01/type_stock.xhp
+  helpcontent2/source/text/schart/01/type_stock.xhp
 
 convert it to .fodt (Save As... in Writer), and then use:
 
-  xsltproc helpauthoring/filter/soffice2xmlhelp.xsl help/source/text/schart/01/type_stock.fodt > out
+  xsltproc helpauthoring/filter/soffice2xmlhelp.xsl helpcontent2/source/text/schart/01/type_stock.fodt > out
 
 When you are happy with the improved output in 'out', commit & push the
 improved soffice2xmlhelp.xsl via gerrit.
