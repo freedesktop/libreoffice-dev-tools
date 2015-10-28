@@ -30,11 +30,19 @@ public:
     C() { }
 };
 /// This has no member functions, so members are OK to be not prefixed.
-struct S
+class S1
 {
     int nX, mnY, m_nZ;
-    S() { }
-    ~S() { }
+    S1() { }
+    ~S1() { }
+};
+/// This has member functions, but is a struct, so members are still OK to be not prefixed.
+struct S2
+{
+    int nX, mnY, m_nZ;
+    S2() { }
+    void foo() { }
+    ~S2() { }
 };
 }
 

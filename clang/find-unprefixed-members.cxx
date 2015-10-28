@@ -116,6 +116,9 @@ public:
             return true;
 
         clang::CXXRecordDecl* pRecord = pDecl->getParent();
+        if (pRecord->getKindName().str() == "struct")
+            return true;
+
         m_aFunctions.insert(pRecord->getQualifiedNameAsString());
         return true;
     }
