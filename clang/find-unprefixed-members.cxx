@@ -36,7 +36,7 @@ class Visitor : public clang::RecursiveASTVisitor<Visitor>
     const Context m_rContext;
     /// List of qualified class name -- member name pairs.
     std::vector<std::pair<std::string, std::string>> m_aResults;
-    /// List of qualified class names which have ctors/dtors/member functions.
+    /// List of qualified class names which have member functions.
     std::set<std::string> m_aFunctions;
 
 public:
@@ -110,22 +110,11 @@ public:
         return true;
     }
 
-    bool VisitCXXConstructorDecl(clang::CXXConstructorDecl* pDecl)
-    {
-        clang::CXXRecordDecl* pRecord = pDecl->getParent();
-        m_aFunctions.insert(pRecord->getQualifiedNameAsString());
-        return true;
-    }
-
-    bool VisitCXXDestructorDecl(clang::CXXDestructorDecl* pDecl)
-    {
-        clang::CXXRecordDecl* pRecord = pDecl->getParent();
-        m_aFunctions.insert(pRecord->getQualifiedNameAsString());
-        return true;
-    }
-
     bool VisitCXXMethodDecl(clang::CXXMethodDecl* pDecl)
     {
+        if (clang::isa<clang::CXXConstructorDecl>(pDecl) || clang::isa<clang::CXXDestructorDecl>(pDecl))
+            return true;
+
         clang::CXXRecordDecl* pRecord = pDecl->getParent();
         m_aFunctions.insert(pRecord->getQualifiedNameAsString());
         return true;
@@ -151,7 +140,7 @@ public:
         aVisitor.TraverseDecl(rContext.getTranslationUnitDecl());
         const std::set<std::string>& rFunctions = aVisitor.getFunctions();
         const std::vector<std::pair<std::string, std::string>>& rResults = aVisitor.getResults();
-        // Ignore missing prefixes in structs without ctors/dtors/member functions.
+        // Ignore missing prefixes in structs without member functions.
         bool bFound = false;
         for (const std::string& rFunction : rFunctions)
         {

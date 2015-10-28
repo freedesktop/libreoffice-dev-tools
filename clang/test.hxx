@@ -29,10 +29,12 @@ public:
 
     C() { }
 };
-/// This has no ctor/dtor/member functions, so members are OK to be not prefixed.
+/// This has no member functions, so members are OK to be not prefixed.
 struct S
 {
     int nX, mnY, m_nZ;
+    S() { }
+    ~S() { }
 };
 }
 
