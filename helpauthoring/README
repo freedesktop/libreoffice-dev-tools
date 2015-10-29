@@ -19,11 +19,19 @@ and start hacking it.  Most probably you'll want to do improvements to the
 To do that the most effectively, choose a reasonably complicated .xhp file,
 like:
 
+  help/source/text/schart/01/type_stock.xhp
+
+if you did an independent
+git clone git://gerrit.libreoffice.org/help
+as suggested in https://wiki.documentfoundation.org/Documentation/Help
+
+or if you are in the developers' work tree with submodules
+
   helpcontent2/source/text/schart/01/type_stock.xhp
 
 convert it to .fodt (Save As... in Writer), and then use:
 
-  xsltproc helpauthoring/filter/soffice2xmlhelp.xsl helpcontent2/source/text/schart/01/type_stock.fodt > out
+  xsltproc helpauthoring/filter/soffice2xmlhelp.xsl help/source/text/schart/01/type_stock.fodt > out
 
 When you are happy with the improved output in 'out', commit & push the
 improved soffice2xmlhelp.xsl via gerrit.
