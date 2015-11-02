@@ -494,12 +494,10 @@ IMAGE
 
 
     <xsl:text disable-output-escaping="yes">&lt;image id=&quot;</xsl:text><xsl:value-of select="$id"/><xsl:text disable-output-escaping="yes">&quot; src=&quot;</xsl:text><xsl:value-of select="$src"/>
-    <!--
     <xsl:text disable-output-escaping="yes">&quot; width=&quot;</xsl:text>
     <xsl:value-of select="$width"/>
     <xsl:text disable-output-escaping="yes">&quot; height=&quot;</xsl:text>
     <xsl:value-of select="$height"/>
-    //-->
     <xsl:if test="$localize != ''">
         <xsl:text disable-output-escaping="yes">&quot; localize=&quot;</xsl:text><xsl:value-of select="$localize"/>
     </xsl:if>
