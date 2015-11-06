@@ -24,6 +24,9 @@ print_SUSE_errormsg()
 if [ -z "$1" -o -z "$2" ]; then
     echo "Usage: $0 <workdir> <instdir>"
     echo
+    echo "<workdir>     where to download validator sources (absolute path)"
+    echo "<instdir>     where to install validator wrappers (absolute path)"
+    echo
     echo "Example: $0 $HOME/scm/svn /opt/lo/bin"
     exit 1
 fi
