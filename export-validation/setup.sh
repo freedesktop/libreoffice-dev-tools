@@ -9,6 +9,18 @@
 
 # Run this script to download, build and install the validators.
 
+print_SUSE_errormsg()
+{
+    package=$1
+
+    if [ -e /etc/os-release ]; then
+        . /etc/os-release
+        if [ "$NAME" == "openSUSE" ]; then
+            echo "Hint: type 'zypper in $1' to install it."
+        fi
+    fi
+}
+
 if [ -z "$1" -o -z "$2" ]; then
     echo "Usage: $0 <workdir> <instdir>"
     echo
@@ -30,13 +42,13 @@ fi
 
 if ! type -p ant >/dev/null; then
     echo "Error: can't find ant in PATH"
+    print_SUSE_errormsg 'ant'
+    exit 1
+fi
 
-    if [ -e /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$NAME" == "openSUSE" ]; then
-            echo "Hint: type 'zypper in ant-junit' to install it."
-        fi
-    fi
+if ! type -p svn >/dev/null; then
+    echo "Error: can't find svn in PATH"
+    print_SUSE_errormsg 'subversion'
     exit 1
 fi
 
