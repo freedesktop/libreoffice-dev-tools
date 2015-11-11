@@ -211,9 +211,15 @@ public:
                 if (!pEntry)
                     continue;
                 std::string aNewName = getNewName(*pEntry);
+#if (__clang_major__ == 3 && __clang_minor__ >= 6) || __clang_major__ > 3
+                std::error_code aError;
+                std::unique_ptr<llvm::raw_fd_ostream> pStream(new llvm::raw_fd_ostream(aNewName, aError, llvm::sys::fs::F_None));
+                if (!aError)
+#else
                 std::string aError;
                 std::unique_ptr<llvm::raw_fd_ostream> pStream(new llvm::raw_fd_ostream(aNewName.c_str(), aError, llvm::sys::fs::F_None));
                 if (aError.empty())
+#endif
                     it->second.write(*pStream);
             }
         }
@@ -230,10 +236,17 @@ public:
     {
     }
 
+#if (__clang_major__ == 3 && __clang_minor__ >= 6) || __clang_major__ > 3
+    std::unique_ptr<clang::ASTConsumer> newASTConsumer()
+    {
+        return llvm::make_unique<RenameASTConsumer>(mrRewriter);
+    }
+#else
     clang::ASTConsumer* newASTConsumer()
     {
         return new RenameASTConsumer(mrRewriter);
     }
+#endif
 };
 
 /// Parses rCsv and puts the first two column of it into rNameMap.

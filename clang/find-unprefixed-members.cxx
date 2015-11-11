@@ -171,10 +171,17 @@ public:
     {
     }
 
+#if (__clang_major__ == 3 && __clang_minor__ >= 6) || __clang_major__ > 3
+    std::unique_ptr<clang::ASTConsumer> newASTConsumer()
+    {
+        return llvm::make_unique<ASTConsumer>(m_rContext);
+    }
+#else
     clang::ASTConsumer* newASTConsumer()
     {
         return new ASTConsumer(m_rContext);
     }
+#endif
 };
 
 int main(int argc, const char** argv)

@@ -15,7 +15,7 @@ Pros:
 Cons:
 
 - handles only rename of class members so far
-- only tested with clang-3.5.0
+- only tested with clang 3.5/3.7
 
 == Hello world
 
