@@ -81,8 +81,6 @@ META DATA
 <!-- REMOVED DUE TO PROBLEMS WITH CVS MERGE CONFLICTS
 <xsl:variable name="history_created" select="/office:document/office:meta/meta:user-defined[@meta:name='Created']"/>
 <xsl:variable name="history_created_date" select="/office:document/office:meta/meta:creation-date"/>
-<xsl:variable name="history_lastedited" select="/office:document/office:meta/meta:user-defined[@meta:name='Lastedited']"/>
-<xsl:variable name="history_lastedited_date" select="/office:document/office:meta/dc:date"/>
 //-->
 
 <!--

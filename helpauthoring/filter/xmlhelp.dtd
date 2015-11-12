@@ -97,7 +97,7 @@ Version 03-Feb-2006
   version CDATA #REQUIRED
 >
 
-<!ELEMENT history (created, lastedited)>
+<!ELEMENT history (created)>
 
 <!ELEMENT image (caption* | alt+)?>
 <!ATTLIST image
@@ -111,11 +111,6 @@ Version 03-Feb-2006
 <!ELEMENT item (#PCDATA)>
 <!ATTLIST item
   type CDATA #REQUIRED
->
-
-<!ELEMENT lastedited (#PCDATA)>
-<!ATTLIST lastedited
-  date CDATA #REQUIRED
 >
 
 <!ELEMENT link (#PCDATA | embedvar | emph | item | variable | switchinline)*>

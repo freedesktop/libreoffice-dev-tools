@@ -120,9 +120,6 @@ FILTER FOR OPENOFFICE.ORG 2+
                 </meta:creation-date>
                 <meta:creator>XHP Import Filter</meta:creator>
                 <dc:date>
-                <!-- REMOVED DUE TO PROBLEMS WITH CVS MERGE CONFLICTS
-                    <xsl:value-of select="/helpdocument/meta/history/lastedited/@date"/>
-                //-->
                 </dc:date>
 
                 <dc:language>
@@ -763,14 +760,6 @@ ITEM
             <xsl:apply-templates />
         </text:span>
     </xsl:template>
-
-<!--
-######################################################
-LASTEDITED,  SEE HEADER
-  + date CDATA #REQUIRED
-######################################################
--->
-    <xsl:template match="lastedited" />
 
 <!--
 ######################################################
