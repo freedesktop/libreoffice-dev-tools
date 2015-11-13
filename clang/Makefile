@@ -3,11 +3,16 @@ CLANGWARNS=-Werror -Wall -Wno-missing-braces -Wnon-virtual-dtor -Wendif-labels -
 CLANGFLAGS = $(CLANGDEFS) $(CLANGWARNS) -g -std=c++11
 CLANGLIBS = -lLLVMSupport -lclangAST -lclangBasic -lclangFrontend -lclangRewrite -lclangTooling
 
+all: bin/rename bin/find-unprefixed-members bin/find-unprefixed-members-wrapper
+
 bin/rename: rename.cxx Makefile
 	clang++ $(CLANGFLAGS) $(CLANGLIBS) -o $@ $<
 
 bin/find-unprefixed-members: find-unprefixed-members.cxx Makefile
 	clang++ $(CLANGFLAGS) $(CLANGLIBS) -o $@ $<
+
+bin/find-unprefixed-members-wrapper: bin/rename-wrapper Makefile
+	sed 's/rename/find-unprefixed-members/' $< > $@
 
 test: test.cxx test.hxx Makefile
 	clang++ -o test test.cxx
