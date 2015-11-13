@@ -31,6 +31,14 @@ If you get missing includes:
 ln -s /usr/lib64
 ----
 
+== Searching for the members to rename
+
+Use the find-unprefixed-members to create the CSV:
+
+----
+bin/find-unprefixed-members -class-name=C test.cxx --
+----
+
 == Build system integration
 
 LibreOffice integration example with csv handling, provided that:
