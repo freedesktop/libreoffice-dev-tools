@@ -33,11 +33,20 @@ ln -s /usr/lib64
 
 == Searching for the members to rename
 
-Use the find-unprefixed-members to create the CSV:
+Build the LibreOffice build with some additional parameters, like:
 
-----
-bin/find-unprefixed-members -class-name=C test.cxx --
-----
+-----
+make <build-param> COMPILER_EXTERNAL_TOOL=1 CXX='<full-path>/bin/find-unprefixed-members-wrapper /usr/bin/clang++' RENAME_ARGS="-class-name=<class-name>"
+-----
+
+- <build-param> is what you'd normally provide to make, like sw.build or
+  build-nocheck.
+- <class-name> is the class name you are interested in calling the 'find
+  uprefixed' machinery to operate on.
+
+The build will start, and at the first successful find of the class that has
+the members to rename, it will output them, and stop the build.  They are also
+stored in /tmp/rename.csv.
 
 == Build system integration
 

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+RENAME_CSV=/tmp/rename.csv
+
+mydir=$(dirname $0)
+if [ -h $0 ]; then
+    mydir=$(dirname $(readlink -f $0))
+fi
+
+c=
+for i in "$@"
+do
+    if [ "$i" = "-c" ]; then
+        c=1
+    elif [ -n "$c" ]; then
+        file=$i
+        break
+    fi
+done
+
+if [ -n "$c" ] && ! $mydir/find-unprefixed-members $RENAME_ARGS $file -- "$@" 2> "$RENAME_CSV" ; then
+    echo "Found the members to rename, please see $RENAME_CSV:"
+    echo
+    cat "$RENAME_CSV"
+    echo
+    exit 1
+fi
+
+# run the compiler if we did not find what we wanted (yet)
+exec -- "$@"
+
+# vi:set shiftwidth=4 expandtab:
