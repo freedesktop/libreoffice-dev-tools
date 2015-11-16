@@ -13,6 +13,7 @@ bin/find-unprefixed-members: find-unprefixed-members.cxx Makefile
 
 bin/find-unprefixed-members-wrapper: bin/rename-wrapper Makefile
 	sed 's/rename/find-unprefixed-members/' $< > $@
+	chmod a+x $@
 
 test: test.cxx test.hxx Makefile
 	clang++ -o test test.cxx
