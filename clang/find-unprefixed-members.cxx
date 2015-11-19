@@ -98,9 +98,9 @@ public:
         if (m_rContext.match(pRecord->getQualifiedNameAsString()))
         {
             std::string aName = pDecl->getNameAsString();
-            if (aName.find("m") != 0)
+            if (aName.find("s") != 0)
             {
-                aName.insert(0, "m_");
+                aName.insert(0, "s_");
                 std::stringstream ss;
                 ss << pDecl->getNameAsString() << "," << aName;
                 m_aResults.push_back(std::make_pair(pRecord->getQualifiedNameAsString(), ss.str()));
