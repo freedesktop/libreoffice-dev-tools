@@ -19,7 +19,7 @@ $0 -a [-d downloaddir] [-t targetdir] SUBMODULES
                  in this directory before downloading them
                  (directory must exist)
     -t <path>    target directory, defaults to »$target_dir« (directory must
-		 not yet exist unless used with -a, then an existing directory
+                 not yet exist unless used with -a, then an existing directory
                  must be specified)
     -a           add submodules to an existing checkout without
                  submodules (be careful with that one)
@@ -64,11 +64,21 @@ help=false
 translations=false
 add_to_existing=false
 superrepo="libo"
+downloadtool="wget"
 
 function download {
     if ${!1}; then
+        bundle="libreoffice-$1.tar.bz2"
         cd "$download_dir"
-        wget -nc "$bundleurl/libreoffice-$1.tar.bz2"
+        if [ -e "$bundle" ]; then
+            echo "$bundle already exists - skipping download"
+        else
+            if [ $downloadtool = "wget" ]; then
+                wget "$bundleurl/$bundle"
+            else
+                curl -O "$bundleurl/$bundle"
+            fi
+        fi
         cd "$workdir"
     fi
 }
@@ -94,7 +104,7 @@ function submodulesetup {
         mv $reponame/.git $superrepo/.git/modules/$directory
         mv $reponame $superrepo/$directory
         echo "gitdir: ../.git/modules/$directory" > $superrepo/$directory/.git
-        sed -e "/logallrefupdates/a\\\tworktree = ../../../$directory" -e 's#anongit\.freedesktop\.org/libreoffice/#gerrit.libreoffice.org/#' -i $superrepo/.git/modules/$directory/config
+        perl -ni -e 's#anongit\.freedesktop\.org/libreoffice/#gerrit.libreoffice.org/# ; print ; print "\tworkdir = ../../../'$directory'\n" if /logallrefupdates/;' $superrepo/.git/modules/$directory/config
         cat <<EOF >> $superrepo/.git/config
 [submodule "$directory"]
 	url = git://gerrit.libreoffice.org/$reponame
@@ -119,6 +129,13 @@ while [ "${1:-}" != "" ] ; do
     esac
     shift
 done
+
+command -v wget >/dev/null 2>&1 || {
+    downloadtool="curl";
+    command -v curl >/dev/null 2>&1 || { echo >&2 "This script requires wget or curl - Aborting."; exit 1; }
+}
+command -v git  >/dev/null 2>&1 || { echo >&2 "This script requires git - Aborting."; exit 1; }
+command -v perl >/dev/null 2>&1 || { echo >&2 "This script requires perl - Aborting."; exit 1; }
 
 currentdir=$(pwd)
 if $add_to_existing ; then
@@ -176,4 +193,4 @@ git submodule status
 
 cd $currentdir
 echo "everything done - your clone is in »$target_dir«"
-echo "do »git pull« (and »git submodule update«) to get the latest changes"
+echo "do »./g pull -r« from within $target_dir to get the latest changes"
