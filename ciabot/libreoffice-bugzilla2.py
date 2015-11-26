@@ -33,7 +33,7 @@ import bugzilla
 from bugzilla import Bugzilla
 from bugzilla.base import _BugzillaToken
 
-master_target = "5.1.0"
+master_target = "5.2.0"
 bug_regex = "(?:tdf|fdo)#(\d+)"
 dry_run = False
 
