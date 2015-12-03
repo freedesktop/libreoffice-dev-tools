@@ -52,7 +52,8 @@ my %ver_total;
 build_overall_bugstats();
 
 my %rseries =
-    ( '5.1' => '5.1',
+    ( '5.2' => '5.2',
+      '5.1' => '5.1',
       '5.0' => '5.0',
       '4.5' => '5.0', # urgh
       '4.4' => '4.4',
@@ -84,7 +85,7 @@ for my $rs (keys %rseries) {
 for my $bucket (sort { $b cmp $a } keys %ver_open) {
     my $open = $ver_open{$bucket};
     my $all = $ver_total{$bucket};
-    my $percent = sprintf("%2d", (($open * 100.0) / $all));
+    my $percent = sprintf("%2d", $all ? (($open * 100.0) / $all) : 0);
     print STDERR "        $bucket: $open/$all - $percent%\n";
 }
 
