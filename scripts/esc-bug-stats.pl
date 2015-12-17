@@ -102,14 +102,14 @@ $reg_open = Bugzilla::get_query($regression_open_query);
 $reg_high = Bugzilla::get_query($regression_high_query);
 
 print STDERR "Querying for bibisection:\n";
-my $bibisect_query = "https://$Bugzilla::bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267679&o1=substring&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=MOVED&resolution=NOTABUG&resolution=NOTOURBUG&query_based_on=BibisectedAll&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=BibisectedAll&limit=0";
-my $bibisect_open_query = "https://$Bugzilla::bugserver/buglist.cgi?n2=1&f1=status_whiteboard&list_id=267685&o1=substring&resolution=---&query_based_on=Bibisected&o2=substring&query_format=advanced&f2=status_whiteboard&v1=bibisected&v2=bibisected35older&product=LibreOffice&known_name=Bibisected&limit=0";
+my $bibisect_query = "https://$Bugzilla::bugserver/buglist.cgi?f1=keywords&f2=status_whiteboard&known_name=BibisectedAll&list_id=578080&n2=1&o1=substring&o2=substring&product=LibreOffice&query_based_on=BibisectedAll&query_format=advanced&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=MOVED&resolution=NOTABUG&resolution=NOTOURBUG&v1=bibisected&v2=bibisected35older";
+my $bibisect_open_query = "https://$Bugzilla::bugserver/buglist.cgi?f1=keywords&f2=status_whiteboard&known_name=Bibisected&list_id=578082&n2=1&o1=substring&o2=substring&product=LibreOffice&query_based_on=Bibisected&query_format=advanced&resolution=---&v1=bibisected&v2=bibisected35older";
 
 my ($all, $open);
 $all = Bugzilla::get_query($bibisect_query);
 $open = Bugzilla::get_query($bibisect_open_query);
 print STDERR "\n";
-print STDERR "* Bibisected bugs open: whiteboard 'bibsected'\n";
+print STDERR "* Bibisected bugs open: keyword 'bibisected'\n";
 print STDERR "\t+ $open (of $all) older ?\n";
 print STDERR "\t\t+ http://bit.ly/VQfF3Q\n";
 print STDERR "\n";
