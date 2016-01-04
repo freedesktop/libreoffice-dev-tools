@@ -95,7 +95,7 @@ public:
 
         clang::RecordDecl* pRecord = pDecl->getQualifier()->getAsType()->getAsCXXRecordDecl();
 
-        if (m_rContext.match(pRecord->getQualifiedNameAsString()))
+        if (pRecord && m_rContext.match(pRecord->getQualifiedNameAsString()))
         {
             std::string aName = pDecl->getNameAsString();
             if (aName.find("s") != 0)
