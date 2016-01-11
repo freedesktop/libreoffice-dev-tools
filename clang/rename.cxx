@@ -48,6 +48,8 @@ public:
     {
     }
 
+    // Data member names.
+
     /*
      * class C
      * {
@@ -168,6 +170,39 @@ public:
                     mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
                     maHandledLocations.insert(aLocation);
                 }
+            }
+        }
+        return true;
+    }
+
+    // Member function names.
+
+    /*
+     * class C
+     * {
+     * public:
+     *     foo(); <- Handles this.
+     * };
+     *
+     * C::foo() <- And this.
+     * {
+     * }
+     *
+     * ...
+     *
+     * aC.foo(); <- And this.
+     */
+    bool VisitCXXMethodDecl(const clang::CXXMethodDecl* pDecl)
+    {
+        std::string aName = pDecl->getQualifiedNameAsString();
+        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
+        if (it != mrRewriter.getNameMap().end())
+        {
+            clang::SourceLocation aLocation = pDecl->getLocation();
+            if (maHandledLocations.find(aLocation) == maHandledLocations.end())
+            {
+                mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
+                maHandledLocations.insert(aLocation);
             }
         }
         return true;
