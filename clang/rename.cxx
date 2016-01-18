@@ -19,7 +19,7 @@ class RenameRewriter : public clang::Rewriter
 public:
     RenameRewriter(const std::map<std::string, std::string>& rNameMap, bool bDump)
         : maNameMap(rNameMap),
-        mbDump(bDump)
+          mbDump(bDump)
     {
     }
 

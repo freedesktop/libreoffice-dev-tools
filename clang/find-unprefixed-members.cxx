@@ -14,20 +14,77 @@ class Context
 {
     std::string m_aClassName;
     std::string m_aClassPrefix;
+    std::set<std::string> m_aClassExcludedPrefixes;
+    bool m_bPoco;
 
 public:
-    Context(const std::string& rClassName, const std::string& rClassPrefix)
+    Context(const std::string& rClassName, const std::string& rClassPrefix, const std::string& rClassExcludedPrefix, bool bPoco)
         : m_aClassName(rClassName),
-          m_aClassPrefix(rClassPrefix)
+          m_aClassPrefix(rClassPrefix),
+          m_bPoco(bPoco)
     {
+        std::stringstream aStream(rClassExcludedPrefix);
+        std::string aExclude;
+        while (std::getline(aStream, aExclude, ','))
+            m_aClassExcludedPrefixes.insert(aExclude);
     }
 
     bool match(const std::string& rName) const
     {
         if (m_aClassName == "")
-            return rName.find(m_aClassPrefix) == 0;
+        {
+            bool bRet = rName.find(m_aClassPrefix) == 0;
+            if (bRet)
+            {
+                for (const std::string& rPrefix : m_aClassExcludedPrefixes)
+                    if (rName.find(rPrefix) == 0)
+                        return false;
+                return true;
+            }
+            else
+                return false;
+        }
         else
             return rName == m_aClassName;
+    }
+
+    /// Checks if a non-static member has an expected name
+    bool checkNonStatic(const std::string& rName) const
+    {
+        if (m_bPoco)
+            return rName.find("_") == 0;
+        else
+            return rName.find("m") == 0;
+    }
+
+    /// Checks if a static member has an expected name
+    bool checkStatic(const std::string& rName) const
+    {
+        if (m_bPoco)
+            return !rName.empty() && rName[0] >= 'A' && rName[0] <= 'Z';
+        else
+            return rName.find("s") == 0;
+    }
+
+    /// Suggest a better name, provided that checkNonStatic() returned false.
+    void suggestNonStatic(std::string& rName) const
+    {
+        if (m_bPoco)
+            rName.insert(0, "_");
+        else
+            rName.insert(0, "m_");
+    }
+
+    /// Suggest a better name, provided that checkStatic() returned false.
+    void suggestStatic(std::string& rName) const
+    {
+        if (m_bPoco)
+        {
+            if (!rName.empty())
+                rName[0] = toupper(rName[0]);
+        }
+        else
+            rName.insert(0, "s_");
     }
 };
 
@@ -69,9 +126,9 @@ public:
         if (m_rContext.match(pRecord->getQualifiedNameAsString()))
         {
             std::string aName = pDecl->getNameAsString();
-            if (aName.find("m") != 0)
+            if (!m_rContext.checkNonStatic(aName))
             {
-                aName.insert(0, "m_");
+                m_rContext.suggestNonStatic(aName);
                 std::stringstream ss;
                 ss << pDecl->getNameAsString() << "," << aName;
                 m_aResults.push_back(std::make_pair(pRecord->getQualifiedNameAsString(), ss.str()));
@@ -98,9 +155,9 @@ public:
         if (pRecord && m_rContext.match(pRecord->getQualifiedNameAsString()))
         {
             std::string aName = pDecl->getNameAsString();
-            if (aName.find("s") != 0)
+            if (!m_rContext.checkStatic(aName))
             {
-                aName.insert(0, "s_");
+                m_rContext.suggestStatic(aName);
                 std::stringstream ss;
                 ss << pDecl->getNameAsString() << "," << aName;
                 m_aResults.push_back(std::make_pair(pRecord->getQualifiedNameAsString(), ss.str()));
@@ -193,17 +250,17 @@ int main(int argc, const char** argv)
     llvm::cl::opt<std::string> aClassPrefix("class-prefix",
                                             llvm::cl::desc("Qualified name prefix (e.g. namespace::Cl)."),
                                             llvm::cl::cat(aCategory));
+    llvm::cl::opt<std::string> aClassExcludedPrefix("class-excluded-prefix",
+            llvm::cl::desc("Qualified name prefix to exclude (e.g. std::), has priority over the -class-prefix include."),
+            llvm::cl::cat(aCategory));
+    llvm::cl::opt<bool> bPoco("poco",
+                              llvm::cl::desc("Expect Poco-style '_' instead of LibreOffice-style 'm_' as prefix."),
+                              llvm::cl::cat(aCategory));
     clang::tooling::CommonOptionsParser aParser(argc, argv, aCategory);
-
-    if (aClassName.empty() && aClassPrefix.empty())
-    {
-        std::cerr << "-class-name or -class-prefix is required." << std::endl;
-        return 1;
-    }
 
     clang::tooling::ClangTool aTool(aParser.getCompilations(), aParser.getSourcePathList());
 
-    Context aContext(aClassName, aClassPrefix);
+    Context aContext(aClassName, aClassPrefix, aClassExcludedPrefix, bPoco);
     FrontendAction aAction(aContext);
     std::unique_ptr<clang::tooling::FrontendActionFactory> pFactory = clang::tooling::newFrontendActionFactory(&aAction);
     return aTool.run(pFactory.get());
