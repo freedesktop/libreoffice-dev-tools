@@ -4,7 +4,7 @@
 
 This tool is similar to clang-rename, though there are a number of differences.
 
-Pros:
+Pros wrt. data members:
 
 - old name can be a simple qualified name, no need to manually specify a byte
   offset
@@ -12,10 +12,15 @@ Pros:
 - handles macros, even nested ones
 - comes with a wrapper to do fully automatic rewriting
 
-Cons:
+Details:
 
-- handles only rename of data members and member functions so far
-- only tested with clang 3.5/3.7
+- handles rename of:
+  - data members
+  - member functions
+  - classes
+- tested with clang
+  - 3.5
+  - 3.7
 
 == Hello world
 

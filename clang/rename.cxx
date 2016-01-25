@@ -76,10 +76,33 @@ public:
      */
     bool VisitVarDecl(clang::VarDecl* pDecl)
     {
-        std::string aName = pDecl->getQualifiedNameAsString();
-        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-        if (it != mrRewriter.getNameMap().end())
-            mrRewriter.ReplaceText(pDecl->getLocation(), pDecl->getNameAsString().length(), it->second);
+        {
+            std::string aName = pDecl->getQualifiedNameAsString();
+            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
+            if (it != mrRewriter.getNameMap().end())
+                mrRewriter.ReplaceText(pDecl->getLocation(), pDecl->getNameAsString().length(), it->second);
+        }
+
+        /*
+         * C* pC = 0;
+         * ^ Handles this.
+         */
+        clang::QualType pType = pDecl->getType();
+        const clang::RecordDecl* pRecordDecl = pType->getPointeeCXXRecordDecl();
+        if (pRecordDecl)
+        {
+            std::string aName = pRecordDecl->getNameAsString();
+            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
+            if (it != mrRewriter.getNameMap().end())
+            {
+                clang::SourceLocation aLocation = pDecl->getTypeSpecStartLoc();
+                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
+                {
+                    mrRewriter.ReplaceText(aLocation, pRecordDecl->getNameAsString().length(), it->second);
+                    maHandledLocations.insert(aLocation);
+                }
+            }
+        }
         return true;
     }
 
@@ -107,6 +130,38 @@ public:
                     mrRewriter.ReplaceText(pInitializer->getSourceLocation(), pFieldDecl->getNameAsString().length(), it->second);
             }
         }
+
+        std::string aName = pDecl->getNameAsString();
+        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
+        if (it != mrRewriter.getNameMap().end())
+        {
+            /*
+             * Foo::Foo(...) {}
+             * ^~~ Handles this.
+             */
+            {
+                clang::SourceLocation aLocation = pDecl->getLocStart();
+                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
+                {
+                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
+                    maHandledLocations.insert(aLocation);
+                }
+            }
+
+            /*
+             * Foo::Foo(...) {}
+             *      ^~~ Handles this.
+             */
+            {
+                clang::SourceLocation aLocation = pDecl->getLocation();
+                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
+                {
+                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
+                    maHandledLocations.insert(aLocation);
+                }
+            }
+        }
+
         return true;
     }
 
@@ -203,6 +258,81 @@ public:
             {
                 mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
                 maHandledLocations.insert(aLocation);
+            }
+        }
+        return true;
+    }
+
+    // Class names.
+
+    /*
+     * class C <- Handles this.
+     * {
+     * };
+     */
+    bool VisitCXXRecordDecl(const clang::CXXRecordDecl* pDecl)
+    {
+        std::string aName = pDecl->getQualifiedNameAsString();
+        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
+        if (it != mrRewriter.getNameMap().end())
+        {
+            clang::SourceLocation aLocation = pDecl->getLocation();
+            if (maHandledLocations.find(aLocation) == maHandledLocations.end())
+            {
+                mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
+                maHandledLocations.insert(aLocation);
+            }
+        }
+        return true;
+    }
+
+    /*
+     * ... new C(...); <- Handles this.
+     */
+    bool VisitCXXConstructExpr(const clang::CXXConstructExpr* pExpr)
+    {
+        if (const clang::CXXConstructorDecl* pDecl = pExpr->getConstructor())
+        {
+            std::string aName = pDecl->getNameAsString();
+            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
+            if (it != mrRewriter.getNameMap().end())
+            {
+                clang::SourceLocation aLocation = pExpr->getLocation();
+                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
+                {
+                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
+                    maHandledLocations.insert(aLocation);
+                }
+            }
+        }
+        return true;
+    }
+
+    /*
+     * ... static_cast<const C*>(...) ...;
+     *                       ^ Handles this...
+     *
+     * ... static_cast<const C&>(...) ...;
+     *                       ^ ... and this.
+     */
+    bool VisitCXXStaticCastExpr(clang::CXXStaticCastExpr* pExpr)
+    {
+        clang::QualType pType = pExpr->getType();
+        const clang::RecordDecl* pDecl = pType->getPointeeCXXRecordDecl();
+        if (!pDecl)
+            pDecl = pType->getAsCXXRecordDecl();
+        if (pDecl)
+        {
+            std::string aName = pDecl->getNameAsString();
+            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
+            if (it != mrRewriter.getNameMap().end())
+            {
+                clang::SourceLocation aLocation = pExpr->getTypeInfoAsWritten()->getTypeLoc().getBeginLoc();
+                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
+                {
+                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
+                    maHandledLocations.insert(aLocation);
+                }
             }
         }
         return true;
