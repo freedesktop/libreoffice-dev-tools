@@ -344,6 +344,22 @@ COMMENT
 
 <!--
 ######################################################
+BASCODE
+######################################################
+-->
+
+<xsl:template match="text:variable-set[@text:name='BASCODE_']">
+<xsl:text disable-output-escaping="yes">
+&lt;bascode&gt;</xsl:text>
+</xsl:template>
+
+<xsl:template match="text:variable-set[@text:name='_BASCODE']">
+<xsl:text disable-output-escaping="yes">
+&lt;/bascode&gt;</xsl:text>
+</xsl:template>
+
+<!--
+######################################################
 CREATED,  SEE HEADER
 ######################################################
 -->

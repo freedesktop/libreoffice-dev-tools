@@ -477,6 +477,29 @@ COMMENT
 
 <!--
 ######################################################
+BASCODE
+######################################################
+-->
+    <xsl:template match="bascode">
+        <text:p text:style-name="hlp_aux_comment">
+            <text:span text:style-name="hlp_aux_tag">
+                <text:variable-set text:name="BASCODE_" text:value-type="string">
+                    <xsl:value-of select="'&lt;BASCODE&gt;'"/>
+                </text:variable-set>
+            </text:span>
+        </text:p>
+        <xsl:apply-templates />
+        <text:p text:style-name="hlp_aux_comment">
+            <text:span text:style-name="hlp_aux_tag">
+                <text:variable-set text:name="_BASCODE" text:value-type="string">
+                    <xsl:value-of select="'&lt;/BASCODE&gt;'"/>
+                </text:variable-set>
+            </text:span>
+        </text:p>
+    </xsl:template>
+
+<!--
+######################################################
 CREATED,  SEE HEADER
   + date CDATA #REQUIRED
 ######################################################
@@ -1280,6 +1303,8 @@ VARIABLE
             <text:variable-decl text:value-type="string" text:name="AVIS_"/>
             <text:variable-decl text:value-type="string" text:name="_AVIS"/>
             <text:variable-decl text:value-type="string" text:name="AHID_"/>
+            <text:variable-decl text:value-type="string" text:name="BASCODE_"/>
+            <text:variable-decl text:value-type="string" text:name="_BASCODE"/>
             <text:variable-decl text:value-type="string" text:name="BOOKMARK"/>
             <text:variable-decl text:value-type="string" text:name="BOOKMARK_"/>
             <text:variable-decl text:value-type="string" text:name="_BOOKMARK"/>
