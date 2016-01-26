@@ -347,7 +347,7 @@ class RenameASTConsumer : public clang::ASTConsumer
     {
         std::stringstream ss;
         ss << rEntry.getName();
-        ss << ".new-prefix";
+        ss << ".new-rename";
         return ss.str();
     }
 
