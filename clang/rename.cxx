@@ -429,15 +429,17 @@ static void parseCsv(const std::string& rCsv, std::map<std::string, std::string>
     {
         std::stringstream ss(aLine);
         std::string aOldName;
-        if (!std::getline(ss, aOldName, ','))
+        std::getline(ss, aOldName, ',');
+        if (aOldName.empty())
         {
-            std::cerr << "parseCsv: first std::getline() failed for line '" << aLine << "'" << std::endl;
+            std::cerr << "parseCsv: first column is empty for line '" << aLine << "'" << std::endl;
             return;
         }
         std::string aNewName;
-        if (!std::getline(ss, aNewName, ','))
+        std::getline(ss, aNewName, ',');
+        if (aNewName.empty())
         {
-            std::cerr << "parseCsv: second std::getline() failed for line '" << aLine << "'" << std::endl;
+            std::cerr << "parseCsv: second column is empty for line '" << aLine << "'" << std::endl;
             return;
         }
         rNameMap[aOldName] = aNewName;
