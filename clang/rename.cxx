@@ -415,13 +415,13 @@ public:
 };
 
 /// Parses rCsv and puts the first two column of it into rNameMap.
-static void parseCsv(const std::string& rCsv, std::map<std::string, std::string>& rNameMap)
+static bool parseCsv(const std::string& rCsv, std::map<std::string, std::string>& rNameMap)
 {
     std::ifstream aStream(rCsv);
     if (!aStream.is_open())
     {
         std::cerr << "parseCsv: failed to open " << rCsv << std::endl;
-        return;
+        return false;
     }
 
     std::string aLine;
@@ -433,19 +433,20 @@ static void parseCsv(const std::string& rCsv, std::map<std::string, std::string>
         if (aOldName.empty())
         {
             std::cerr << "parseCsv: first column is empty for line '" << aLine << "'" << std::endl;
-            return;
+            return false;
         }
         std::string aNewName;
         std::getline(ss, aNewName, ',');
         if (aNewName.empty())
         {
             std::cerr << "parseCsv: second column is empty for line '" << aLine << "'" << std::endl;
-            return;
+            return false;
         }
         rNameMap[aOldName] = aNewName;
     }
 
     aStream.close();
+    return true;
 }
 
 int main(int argc, const char** argv)
@@ -469,7 +470,10 @@ int main(int argc, const char** argv)
     if (!aOldName.empty() && !aNewName.empty())
         aNameMap[aOldName] = aNewName;
     else if (!aCsv.empty())
-        parseCsv(aCsv, aNameMap);
+    {
+        if (!parseCsv(aCsv, aNameMap))
+            return 1;
+    }
     else
     {
         std::cerr << "either -old-name + -new-name or -csv is required." << std::endl;
