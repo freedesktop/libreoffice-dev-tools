@@ -1,3 +1,5 @@
+.PHONY : coverage
+
 CLANGDEFS=-D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -fno-rtti
 CLANGWARNS=-Werror -Wall -Wno-missing-braces -Wnon-virtual-dtor -Wendif-labels -Wextra -Wundef -Wunused-macros -Wshadow -Woverloaded-virtual
 CLANGFLAGS = $(CLANGDEFS) $(CLANGWARNS) -g -std=c++11
@@ -16,5 +18,16 @@ bin/find-unprefixed-members: find-unprefixed-members.cxx Makefile
 
 test: test.cxx test.hxx Makefile
 	clang++ -o test test.cxx
+
+check:
+	qa/test-rename.sh
+
+coverage:
+	rm -f bin/rename rename.cxx.gc{da,no}
+	$(MAKE) GCOV=y bin/rename
+	$(MAKE) check
+	lcov --directory $(PWD) --gcov-tool $(PWD)/qa/llvm-gcov.sh --capture --output-file clang.info
+	genhtml -o coverage clang.info
+	@echo "Now open <file://$(PWD)/coverage$(PWD)/rename.cxx.gcov.html>"
 
 # vim: set noet sw=4 ts=4:
