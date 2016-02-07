@@ -66,7 +66,7 @@ def get_data(url):
         sys.exit(1)
     else:
         with gzip.GzipFile(fileobj=BytesIO(resp.read())) as f:
-            return f.read().decode('us-ascii')
+            return f.read().decode('utf-8')
 
 def get_entity_values(data, pattern, num):
     """Returns the first @num matches of a @pattern in the @data string. If
