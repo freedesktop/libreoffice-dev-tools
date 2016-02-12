@@ -11,9 +11,12 @@ import sys
 import csv
 import io
 import datetime
-from urllib.request import urlopen, URLError
+import json
+from   urllib.request import urlopen, URLError
 
-def get_easyHacks():
+
+
+def get_easyHacks() :
     url = 'https://bugs.documentfoundation.org/buglist.cgi?' \
           'bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=VERIFIED&bug_status=NEEDINFO' \
           '&columnlist=Cbug_id%2Cassigned_to%2Cbug_status%2Cshort_desc%2Cchangeddate%2Creporter%2Clongdescs.count%2Copendate' \
@@ -47,12 +50,37 @@ def get_easyHacks():
                      }
     return rawList
 
+
+
+def get_gerrit(doNonCom) :
+    url = 'https://gerrit.libreoffice.org/changes/?' \
+          'q=status:open'
+    if (doNonCom) :
+      url = url + '+-ownerin:committer'
+
+    # Add needed fields
+    url = url + '&o=DETAILED_LABELS&o=MESSAGES'
+    #url = url + '&o=code_review&o=reviewers&pp=0'
+
+    try:
+        resp = urlopen(url)
+    except URLError:
+        sys.stderr.write('Error fetching {}'.format(url))
+        sys.exit(1)
+
+    data = resp.read().decode('utf8')[5:]
+    rawList = json.loads(data)
+    return rawList
+
+
+
+
 def formatEasy(easyHack) :
     return 'https://bugs.documentfoundation.org/show_bug.cgi?id={} {}'.format(easyHack['id'], easyHack['desc'])
 
 
 
-def ESC_easyHacks(easyHacks) :
+def ESC_report(easyHacks) :
 
     # prepare to count easyHacks, and list special status, new hacks (7 days)
     xTot    = len(easyHacks)
@@ -92,7 +120,9 @@ def ESC_easyHacks(easyHacks) :
 
 
 if __name__ == '__main__':
-    easyHacks = get_easyHacks()
+    easyHacks          = get_easyHacks()
+    gerritOpen         = get_gerrit(False)
+    gerritNonCommiter  = get_gerrit(True)
 
-    ESC_easyHacks(easyHacks)
+    ESC_report(easyHacks)
 
