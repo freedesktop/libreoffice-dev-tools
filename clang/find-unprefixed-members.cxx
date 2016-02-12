@@ -16,12 +16,16 @@ class Context
     std::string m_aClassPrefix;
     std::set<std::string> m_aClassExcludedPrefixes;
     bool m_bPoco;
+    std::string m_aPathPrefix;
+    clang::ASTContext* m_pContext;
 
 public:
-    Context(const std::string& rClassName, const std::string& rClassPrefix, const std::string& rClassExcludedPrefix, bool bPoco)
+    Context(const std::string& rClassName, const std::string& rClassPrefix, const std::string& rClassExcludedPrefix, bool bPoco, const std::string& rPathPrefix)
         : m_aClassName(rClassName),
           m_aClassPrefix(rClassPrefix),
-          m_bPoco(bPoco)
+          m_bPoco(bPoco),
+          m_aPathPrefix(rPathPrefix),
+          m_pContext(nullptr)
     {
         std::stringstream aStream(rClassExcludedPrefix);
         std::string aExclude;
@@ -86,20 +90,46 @@ public:
         else
             rName.insert(0, "s_");
     }
+
+    void setASTContext(clang::ASTContext& rContext)
+    {
+        m_pContext = &rContext;
+    }
+
+    bool ignoreLocation(const clang::SourceLocation& rLocation)
+    {
+        bool bRet = false;
+
+        clang::SourceLocation aLocation = m_pContext->getSourceManager().getExpansionLoc(rLocation);
+        if (m_pContext->getSourceManager().isInSystemHeader(aLocation))
+            bRet = true;
+        else if (m_aPathPrefix.empty())
+        {
+            bRet = false;
+        }
+        else
+        {
+            const char* pName = m_pContext->getSourceManager().getPresumedLoc(aLocation).getFilename();
+            bRet = std::string(pName).find(m_aPathPrefix) != 0;
+        }
+
+        return bRet;
+    }
 };
 
 class Visitor : public clang::RecursiveASTVisitor<Visitor>
 {
-    const Context m_rContext;
+    Context m_rContext;
     /// List of qualified class name -- member name pairs.
     std::vector<std::pair<std::string, std::string>> m_aResults;
     /// List of qualified class names which have member functions.
     std::set<std::string> m_aFunctions;
 
 public:
-    Visitor(const Context& rContext)
+    Visitor(Context& rContext, clang::ASTContext& rASTContext)
         : m_rContext(rContext)
     {
+        m_rContext.setASTContext(rASTContext);
     }
 
     const std::vector<std::pair<std::string, std::string>>& getResults()
@@ -121,6 +151,9 @@ public:
      */
     bool VisitFieldDecl(clang::FieldDecl* pDecl)
     {
+        if (m_rContext.ignoreLocation(pDecl->getLocation()))
+            return true;
+
         clang::RecordDecl* pRecord = pDecl->getParent();
 
         if (m_rContext.match(pRecord->getQualifiedNameAsString()))
@@ -147,6 +180,9 @@ public:
      */
     bool VisitVarDecl(clang::VarDecl* pDecl)
     {
+        if (m_rContext.ignoreLocation(pDecl->getLocation()))
+            return true;
+
         if (!pDecl->getQualifier())
             return true;
 
@@ -169,6 +205,9 @@ public:
 
     bool VisitCXXMethodDecl(clang::CXXMethodDecl* pDecl)
     {
+        if (m_rContext.ignoreLocation(pDecl->getLocation()))
+            return true;
+
         if (clang::isa<clang::CXXConstructorDecl>(pDecl) || clang::isa<clang::CXXDestructorDecl>(pDecl))
             return true;
 
@@ -183,10 +222,10 @@ public:
 
 class ASTConsumer : public clang::ASTConsumer
 {
-    const Context& m_rContext;
+    Context& m_rContext;
 
 public:
-    ASTConsumer(const Context& rContext)
+    ASTConsumer(Context& rContext)
         : m_rContext(rContext)
     {
     }
@@ -196,7 +235,7 @@ public:
         if (rContext.getDiagnostics().hasErrorOccurred())
             return;
 
-        Visitor aVisitor(m_rContext);
+        Visitor aVisitor(m_rContext, rContext);
         aVisitor.TraverseDecl(rContext.getTranslationUnitDecl());
         const std::set<std::string>& rFunctions = aVisitor.getFunctions();
         const std::vector<std::pair<std::string, std::string>>& rResults = aVisitor.getResults();
@@ -220,10 +259,10 @@ public:
 
 class FrontendAction
 {
-    const Context& m_rContext;
+    Context& m_rContext;
 
 public:
-    FrontendAction(const Context& rContext)
+    FrontendAction(Context& rContext)
         : m_rContext(rContext)
     {
     }
@@ -256,11 +295,14 @@ int main(int argc, const char** argv)
     llvm::cl::opt<bool> bPoco("poco",
                               llvm::cl::desc("Expect Poco-style '_' instead of LibreOffice-style 'm_' as prefix."),
                               llvm::cl::cat(aCategory));
+    llvm::cl::opt<std::string> aPathPrefix("path-prefix",
+                                            llvm::cl::desc("If not empty, ignore all source code paths not matching this prefix."),
+                                            llvm::cl::cat(aCategory));
     clang::tooling::CommonOptionsParser aParser(argc, argv, aCategory);
 
     clang::tooling::ClangTool aTool(aParser.getCompilations(), aParser.getSourcePathList());
 
-    Context aContext(aClassName, aClassPrefix, aClassExcludedPrefix, bPoco);
+    Context aContext(aClassName, aClassPrefix, aClassExcludedPrefix, bPoco, aPathPrefix);
     FrontendAction aAction(aContext);
     std::unique_ptr<clang::tooling::FrontendActionFactory> pFactory = clang::tooling::newFrontendActionFactory(&aAction);
     return aTool.run(pFactory.get());
