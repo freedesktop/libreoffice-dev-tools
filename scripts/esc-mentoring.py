@@ -8,15 +8,15 @@
 #
 
 import sys
-#import re
-#import sh
+import csv
+import io
+import datetime
 from urllib.request import urlopen, URLError
-from io import BytesIO
 
 def get_easyHacks():
     url = 'https://bugs.documentfoundation.org/buglist.cgi?' \
           'bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=VERIFIED&bug_status=NEEDINFO' \
-          '&columnlist=assigned_to%2Cbug_status%2Cshort_desc%2Cchangeddate%2Creporter%2Cbug_id%2Clongdescs.count%2Copendate' \
+          '&columnlist=Cbug_id%2Cassigned_to%2Cbug_status%2Cshort_desc%2Cchangeddate%2Creporter%2Clongdescs.count%2Copendate' \
           '&keywords=easyHack%2C%20' \
           '&keywords_type=allwords' \
           '&query_format=advanced' \
@@ -28,12 +28,24 @@ def get_easyHacks():
     except URLError:
         sys.stderr.write('Error fetching {}'.format(url))
         sys.exit(1)
-    bug_ids=[]
-    for line in [raw.decode('utf-8').strip('\n') for raw in BytesIO(resp.read())][1:]:
-        bug_ids.append(line)
-    return bug_ids
-
-
+    xCSV = list(csv.reader(io.TextIOWrapper(resp)))
+    rawList = {}
+    for row in xCSV[1:]:
+       id = int(row[0])
+       if row[1] == 'libreoffice-bugs' :
+         assign = ''
+       else :
+         assign = row[1]
+       rawList[id] = {'id'       : id,
+                      'assign'   : assign,
+                      'status'   : row[2],
+                      'desc'     : row[3],
+                      'change'   : datetime.datetime.strptime(row[4].split(' ')[0], '%Y-%m-%d').date(),
+                      'reporter' : row[5],
+                      'comments' : int(row[6]),
+                      'created'  : datetime.datetime.strptime(row[7].split(' ')[0], '%Y-%m-%d').date()
+                     }
+    return rawList
 def print_counts(counts):
     printorder = reversed(sorted((count, name) for (name, count) in counts.items()))
     for count in printorder:
