@@ -47,52 +47,52 @@ def get_easyHacks():
                      }
     return rawList
 
-def ESC_easyHacks(easyHacks):
+def formatEasy(easyHack) :
+    return 'https://bugs.documentfoundation.org/show_bug.cgi?id={} {}'.format(easyHack['id'], easyHack['desc'])
+
+
+
+def ESC_easyHacks(easyHacks) :
+
+    # prepare to count easyHacks, and list special status, new hacks (7 days)
     xTot    = len(easyHacks)
     xAssign = 0
     xOpen   = 0
     xInfo   = 0
-    xSpec   = 0
+    pNew    = []
+    pInfo   = []
+    cDate   = datetime.date.today() - datetime.timedelta(days=8)
+
     for key, row in easyHacks.items():
+      # Calculate type of status
       status = row['status']
       if status == 'ASSIGNED' :
         xAssign += 1
       elif status == 'NEEDINFO' :
         xInfo += 1
+        pInfo.append(row)
       elif status == 'NEW' or status == 'REOPENED' :
         xOpen += 1
-      else :
-        xSpec += 1
+
+      if row['created'] >= cDate :
+        pNew.append(row)
+
+    print('    easyHacks {}: {} ready to be worked on, {} being worked on, {} need info'.format(xTot, xOpen, xAssign, xInfo))
+    print('        new since last:')
+    for row in pNew :
+      print('            ', end='')
+      print(formatEasy(row))
+    if xInfo > 0 :
+      print('        need info, please help:')
+      for row in pInfo :
+        print('            ', end='')
+        print(formatEasy(row))
 
 
-    print('EasyHacks {}: {} ready to be worked on, {} being worked on, {} need info, {} special'.format(xTot, xOpen, xAssign, xInfo, xSpec))
+
 
 if __name__ == '__main__':
     easyHacks = get_easyHacks()
 
     ESC_easyHacks(easyHacks)
 
-    sys.stderr.write('found %d fixed regressions: %s\n' % (len(fixed_regression_ids), fixed_regression_ids))
-#    for bug_id in fixed_regression_ids:
-#        sys.stderr.write('working on bug %d\n' % bug_id)
-#        # FIXME: use --numstat instead, which does not abbreviate filenames
-#        logstat = sh.git('--no-pager', 'log', '--grep', '[fdo|tdf]#%d' % bug_id, '--stat')
-#        for line in logstat:
-#            match = statregex.search(str(line))
-#            if match and match.group(1):
-#                filename = match.group(1)
-#                sys.stderr.write('regression fix touched file: %s\n' % filename)
-#                if filename in file_counts:
-#                    file_counts[filename]+=1
-#                else:
-#                    file_counts[filename]=1
-#    print('top level dirs:')
-#    print_counts(get_dir_counts(file_counts, 1))
-#    print('\nsecond level dirs:')
-#    print_counts(get_dir_counts(file_counts, 2))
-#    print('\nthird level dirs:')
-#    print_counts(get_dir_counts(file_counts, 3))
-#    print('\nfourth level dirs:')
-#    print_counts(get_dir_counts(file_counts, 4))
-#    print('\nfiles:')
-#    print_counts(file_counts)
