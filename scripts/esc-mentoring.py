@@ -46,13 +46,32 @@ def get_easyHacks():
                       'created'  : datetime.datetime.strptime(row[7].split(' ')[0], '%Y-%m-%d').date()
                      }
     return rawList
-def print_counts(counts):
-    printorder = reversed(sorted((count, name) for (name, count) in counts.items()))
-    for count in printorder:
-        print('%5d %s' % (count[0], count[1]))
+
+def ESC_easyHacks(easyHacks):
+    xTot    = len(easyHacks)
+    xAssign = 0
+    xOpen   = 0
+    xInfo   = 0
+    xSpec   = 0
+    for key, row in easyHacks.items():
+      status = row['status']
+      if status == 'ASSIGNED' :
+        xAssign += 1
+      elif status == 'NEEDINFO' :
+        xInfo += 1
+      elif status == 'NEW' or status == 'REOPENED' :
+        xOpen += 1
+      else :
+        xSpec += 1
+
+
+    print('EasyHacks {}: {} ready to be worked on, {} being worked on, {} need info, {} special'.format(xTot, xOpen, xAssign, xInfo, xSpec))
 
 if __name__ == '__main__':
-    fixed_regression_ids = get_easyHacks()
+    easyHacks = get_easyHacks()
+
+    ESC_easyHacks(easyHacks)
+
     sys.stderr.write('found %d fixed regressions: %s\n' % (len(fixed_regression_ids), fixed_regression_ids))
 #    for bug_id in fixed_regression_ids:
 #        sys.stderr.write('working on bug %d\n' % bug_id)
