@@ -39,9 +39,12 @@ def get_easyHacks() :
          assign = ''
        else :
          assign = row[1]
+       status = row[2]
+       if status == 'REOPENED' :
+         status = 'NEW'
        rawList[id] = {'id'         : id,
                       'assign'     : assign,
-                      'status'     : row[2],
+                      'status'     : status,
                       'desc'       : row[3],
                       'change'     : datetime.datetime.strptime(row[4].split(' ')[0], '%Y-%m-%d').date(),
                       'reporter'   : row[5],
@@ -101,9 +104,9 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor) :
       elif status == 'NEEDINFO' :
         xInfo += 1
         pInfo.append(row)
-      elif status == 'NEW' or status == 'REOPENED' :
+      elif status == 'NEW' :
         xOpen += 1
-      if row['comments'] > 5 :
+      if row['comments'] >= 5 :
         xComm += 1
       if row['change'] <= mDate or row['whiteboard'] == 'ToBeReviewed':
         xRevi += 1
@@ -112,13 +115,13 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor) :
         pNew.append(row)
 
     print('    easyHacks: total {}: {} waiting for contributor, {} Assigned to contriburs, {} need info'.format(xTot, xOpen, xAssign, xInfo))
-    print('               cleanup: {} has more than 5 comments, {} needs to be reviewed'.format(xComm, xRevi))
+    print('               cleanup: {} has more than 4 comments, {} needs to be reviewed'.format(xComm, xRevi))
     print('        new last 8 days:')
     for row in pNew :
       print('            ', end='')
       print(formatEasy(row))
     if xInfo > 0 :
-      print('        need info, please help:')
+      print('        need info (mentor or code pointer), please help:')
       for row in pInfo :
         print('            ', end='')
         print(formatEasy(row))
@@ -126,9 +129,12 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor) :
 
 
 
-def DAY_report(easyHacks, gerritOpen, gerritContributor) :
+def DAY_report(isWeekend, easyHacks, gerritOpen, gerritContributor) :
     # Day report looks 2 days back
-    cDate   = datetime.date.today() - datetime.timedelta(days=2)
+    if isWeekend :
+      cDate   = datetime.date.today() - datetime.timedelta(days=4)
+    else :
+      cDate   = datetime.date.today() - datetime.timedelta(days=2)
 
     print('*** day report ***')
     print('new easyHacks:')
@@ -157,7 +163,7 @@ def MONTH_report(easyHacks, gerritOpen, gerritContributor) :
         print(formatEasy(row))
     print('easyHacks with more than 5 comments:')
     for key, row in easyHacks.items():
-      if row['comments'] > 5 :
+      if row['comments'] >= 5 :
         print('    ', end='')
         print(formatEasy(row))
     print('easyHacks needing review:')
@@ -177,6 +183,7 @@ if __name__ == '__main__':
     # check command line options
     doESC   = False
     doDay   = False
+    doWeek  = False
     doMonth = False
     if len(sys.argv) <= 1 :
       doESC = True
@@ -186,6 +193,8 @@ if __name__ == '__main__':
           doESC = True
         elif row.lower() == 'day' :
           doDay = True
+        elif row.lower() == 'week' :
+          doWeek = True
         elif row.lower() == 'month' :
           doMonth = True
         else :
@@ -199,9 +208,9 @@ if __name__ == '__main__':
 
     if doESC :
       ESC_report(easyHacks, gerritOpen, gerritContributor)
-    if doDay :
+    if doDay or doWeek:
       print("\n\n\n")
-      DAY_report(easyHacks, gerritOpen, gerritContributor)
+      DAY_report(doWeek, easyHacks, gerritOpen, gerritContributor)
     if doMonth :
       print("\n\n\n")
       MONTH_report(easyHacks, gerritOpen, gerritContributor)
