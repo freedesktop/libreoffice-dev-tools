@@ -74,6 +74,8 @@ def get_gerrit(doNonCom) :
 
     data = resp.read().decode('utf8')[5:]
     rawList = json.loads(data)
+    for row in rawList :
+      row['updated'] = datetime.datetime.strptime(row['updated'].split(' ')[0], '%Y-%m-%d').date()
     return rawList
 
 
@@ -81,6 +83,55 @@ def get_gerrit(doNonCom) :
 
 def formatEasy(easyHack) :
     return 'https://bugs.documentfoundation.org/show_bug.cgi?id={} mentor:{} -> "{}"'.format(easyHack['id'], easyHack['reporter'], easyHack['desc'])
+
+
+
+def formatGerrit(patch) :
+    return 'https://gerrit.libreoffice.org/#/c/{}/ author:{} -> "{}"'.format(patch['_number'], patch['owner']['name'], patch['subject'])
+
+
+
+def checkGerrit(checkType, patch, cDate=0, eDate=0) :
+    if checkType == 1 or checkType == 3:
+      # True, if there are no -1 and patch is mergeable
+      # 3 also checks on start/end date
+      # Optional Check no open comments
+
+      # date check (3 days old)
+      if checkType == 3 and (patch['updated'] < cDate or patch['updated'] > eDate) :
+        return False
+
+      # not mergeable
+      if not patch['mergeable'] :
+        return False
+
+      # review or verify -1
+      if 'labels' in patch and 'Code-Review' in patch['labels']  and 'all' in patch['labels']['Code-Review'] :
+        for chk in patch['labels']['Code-Review']['all'] :
+          if 'value' in chk and chk['value'] < 0 :
+            return False
+      if 'labels' in patch and 'Verified' in patch['labels']  and 'all' in patch['labels']['Verified'] :
+        for chk in patch['labels']['Verified']['all'] :
+          if 'value' in chk and chk['value'] < 0 :
+            return False
+      return True
+    elif checkType == 2 :
+      # True if there are reviewer
+      if 'labels' in patch and 'Code-Review' in patch['labels']  and 'all' in patch['labels']['Code-Review'] :
+        for chk in patch['labels']['Code-Review']['all'] :
+          name = chk['value']
+          if not name == 'Jenkins' and not name == patch['owner'] :
+            return True
+      return False
+    elif checkType == 4 :
+      # True if merge conflict and no jani comment
+      return False
+    elif checkType == 5 :
+      # true if last change is older than startDate
+      if patch['updated'] <= cDate :
+        return True
+      return False
+    return False
 
 
 
@@ -114,7 +165,7 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor) :
       if row['created'] >= cDate :
         pNew.append(row)
 
-    print('    easyHacks: total {}: {} waiting for contributor, {} Assigned to contriburs, {} need info'.format(xTot, xOpen, xAssign, xInfo))
+    print('    easyHacks: total {}: {} waiting for contributor, {} Assigned to contributors, {} need info'.format(xTot, xOpen, xAssign, xInfo))
     print('               cleanup: {} has more than 4 comments, {} needs to be reviewed'.format(xComm, xRevi))
     print('        new last 8 days:')
     for row in pNew :
@@ -125,16 +176,30 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor) :
       for row in pInfo :
         print('            ', end='')
         print(formatEasy(row))
-    print('     gerrit: open patches {} from non-committers {} non-mergeable {} not reviewd {}'.format(0,0,0,0))
+
+    xTot  = len(gerritOpen)
+    xRevi = 0
+    for row in gerritOpen:
+      # can be merged (depending comments)
+      if checkGerrit(1, row) :
+        xRevi += 1
+    print('     gerrit: open patches {} of which {} can be merged if no open comments'.format(xTot, xRevi))
+    xTot  = len(gerritContributor)
+    xRevi = 0
+    for row in gerritContributor:
+      # can be merged (depending comments)
+      if checkGerrit(1, row) :
+        xRevi += 1
+    print('             {} from contributors of which {} can be merged if no open comments'.format(xTot, xRevi))
 
 
 
 def DAY_report(isWeekend, easyHacks, gerritOpen, gerritContributor) :
     # Day report looks 2 days back
     if isWeekend :
-      cDate   = datetime.date.today() - datetime.timedelta(days=4)
+      cDate = datetime.date.today() - datetime.timedelta(days=3)
     else :
-      cDate   = datetime.date.today() - datetime.timedelta(days=2)
+      cDate = datetime.date.today() - datetime.timedelta(days=1)
 
     print('*** day report ***')
     print('new easyHacks:')
@@ -148,6 +213,22 @@ def DAY_report(isWeekend, easyHacks, gerritOpen, gerritContributor) :
         print('    ', end='')
         print(formatEasy(row))
 
+    print('Gerrit mangler reviewer:')
+    for row in gerritContributor:
+      if not checkGerrit(2, row) :
+        print('    ', end='')
+        print(formatGerrit(row))
+
+    eDate = datetime.date.today() - datetime.timedelta(days=3)
+    if isWeekend :
+      cDate = datetime.date.today() - datetime.timedelta(days=5)
+    else :
+      cDate = datetime.date.today() - datetime.timedelta(days=3)
+    print('Gerrit check for merge:')
+    for row in gerritContributor:
+      if checkGerrit(3, row, cDate=cDate, eDate=eDate) :
+        print('    ', end='')
+        print(formatGerrit(row))
 
 
 def MONTH_report(easyHacks, gerritOpen, gerritContributor) :
@@ -176,6 +257,13 @@ def MONTH_report(easyHacks, gerritOpen, gerritContributor) :
       if row['whiteboard'] == 'ToBeReviewed' :
         print('    ', end='')
         print(formatEasy(row))
+
+    print('Gerrit check Abandon:')
+    for row in gerritOpen:
+      if checkGerrit(5, row, cDate=cDate) :
+        print('    ', end='')
+        print(formatGerrit(row))
+
 
 
 
