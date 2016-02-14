@@ -6,4 +6,4 @@ odfvalidator and should have a form similar to the ones of the two scripts in th
 Use the 'setup.sh' script in this directory if you want to set them up automatically.
 
 [1] http://incubator.apache.org/odftoolkit/conformance/ODFValidator.html
-[2] https://code.google.com/p/officeotron/
+[2] https://gerrit.libreoffice.org/gitweb?p=officeotron.git;a=summary
