@@ -66,7 +66,9 @@ class FreedesktopBZ:
 
             m = re.findall(new_version, old_whiteboard)
             if m is None or len(m) == 0:
-                new_whiteboard = old_whiteboard + " target:" + new_version
+                if not old_whiteboard == "":
+                    old_whiteboard = old_whiteboard + " "
+                new_whiteboard = old_whiteboard + "target:" + new_version
                 bug.setwhiteboard(new_whiteboard)
 
         cgiturl = "http://cgit.freedesktop.org/libreoffice/%s/commit/?id=%s" %(repo_name, commit.hexsha)
