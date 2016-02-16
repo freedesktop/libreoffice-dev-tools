@@ -119,7 +119,7 @@ def checkGerrit(checkType, patch, cDate=0, eDate=0) :
       # True if there are reviewer
       if 'labels' in patch and 'Code-Review' in patch['labels']  and 'all' in patch['labels']['Code-Review'] :
         for chk in patch['labels']['Code-Review']['all'] :
-          name = chk['value']
+          name = chk['name']
           if not name == 'Jenkins' and not name == patch['owner'] :
             return True
       return False
@@ -201,19 +201,19 @@ def DAY_report(isWeekend, easyHacks, gerritOpen, gerritContributor) :
     else :
       cDate = datetime.date.today() - datetime.timedelta(days=1)
 
-    print('*** day report ***')
-    print('new easyHacks:')
+    print("\n\n*** day report ***")
+    print("\n\n*** new easyHacks:")
     for key, row in easyHacks.items():
       if row['created'] >= cDate :
         print('    ', end='')
         print(formatEasy(row))
-    print('changed easyHacks:')
+    print("\n\n*** changed easyHacks:")
     for key, row in easyHacks.items():
       if row['change'] >= cDate :
         print('    ', end='')
         print(formatEasy(row))
 
-    print('Gerrit mangler reviewer:')
+    print("\n\n*** Gerrit mangler reviewer:")
     for row in gerritContributor:
       if not checkGerrit(2, row) :
         print('    ', end='')
@@ -224,7 +224,7 @@ def DAY_report(isWeekend, easyHacks, gerritOpen, gerritContributor) :
       cDate = datetime.date.today() - datetime.timedelta(days=5)
     else :
       cDate = datetime.date.today() - datetime.timedelta(days=3)
-    print('Gerrit check for merge:')
+    print("\n\n*** Gerrit check for merge:")
     for row in gerritContributor:
       if checkGerrit(3, row, cDate=cDate, eDate=eDate) :
         print('    ', end='')
@@ -236,29 +236,29 @@ def MONTH_report(easyHacks, gerritOpen, gerritContributor) :
     cDate   = datetime.date.today() - datetime.timedelta(days=30)
     mDate   = datetime.date(2016, month=2, day=11)
 
-    print('*** month report ***')
+    print("\n\n*** month report ***")
     print('assigned easyHacks, no movement')
     for key, row in easyHacks.items():
       if row['change'] <= cDate and row['status'] == 'ASSIGNED':
         print('    ', end='')
         print(formatEasy(row))
-    print('easyHacks with more than 5 comments:')
+    print("\n\n*** easyHacks with more than 5 comments:")
     for key, row in easyHacks.items():
       if row['comments'] >= 5 :
         print('    ', end='')
         print(formatEasy(row))
-    print('easyHacks needing review:')
+    print("\n\n*** easyHacks needing review:")
     for key, row in easyHacks.items():
       if row['change'] <= mDate :
         print('    ', end='')
         print(formatEasy(row))
-    print('easyHacks needing review due to whiteboard:')
+    print("\n\ne*** asyHacks needing review due to whiteboard:")
     for key, row in easyHacks.items():
       if row['whiteboard'] == 'ToBeReviewed' :
         print('    ', end='')
         print(formatEasy(row))
 
-    print('Gerrit check Abandon:')
+    print("\n\n*** Gerrit check Abandon:")
     for row in gerritOpen:
       if checkGerrit(5, row, cDate=cDate) :
         print('    ', end='')
