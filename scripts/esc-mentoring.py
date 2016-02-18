@@ -183,7 +183,7 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor) :
       # can be merged (depending comments)
       if checkGerrit(1, row) :
         xRevi += 1
-    print('     gerrit: open patches {} of which {} can be merged if no open comments'.format(xTot, xRevi))
+    print('     gerrit: {} open patches of which {} can be merged if no open comments'.format(xTot, xRevi))
     xTot  = len(gerritContributor)
     xRevi = 0
     for row in gerritContributor:
