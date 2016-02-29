@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
+ok=0
+
 test_assert_fail()
 {
     if "$@" 2>/dev/null; then
         echo "Error: assertion failure in ${test_name}."
         exit 1
     fi
+    ok=$(($ok+1))
 }
 
 test_assert_equal()
@@ -14,6 +17,7 @@ test_assert_equal()
         echo "Error: assertion failure in ${test_name}."
         exit 1
     fi
+    ok=$(($ok+1))
 }
 
 declare_rename_test()
@@ -90,5 +94,7 @@ test_assert_equal $test_expected $test_output
 declare_rename_test "testCXXStaticCastExpr" "rename-cxx-static-cast-expr.cxx"
 bin/rename -old-name=C -new-name=D $test_input --
 test_assert_equal $test_expected $test_output
+
+echo "OK ($ok)"
 
 # vi:set shiftwidth=4 expandtab:

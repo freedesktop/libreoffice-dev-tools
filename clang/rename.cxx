@@ -42,6 +42,26 @@ class RenameVisitor : public clang::RecursiveASTVisitor<RenameVisitor>
     // Otherwise an A -> BA replacement would be done twice.
     std::set<clang::SourceLocation> maHandledLocations;
 
+    void RewriteText(clang::SourceLocation aStart, unsigned nLength, const std::string& rOldName)
+    {
+        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(rOldName);
+        if (it != mrRewriter.getNameMap().end())
+        {
+            if (aStart.isMacroID())
+                /*
+                 * int foo(int x);
+                 * #define FOO(a) foo(a)
+                 * FOO(aC.nX); <- Handles this.
+                 */
+                aStart = mrRewriter.getSourceMgr().getSpellingLoc(aStart);
+            if (maHandledLocations.find(aStart) == maHandledLocations.end())
+            {
+                mrRewriter.ReplaceText(aStart, nLength, it->second);
+                maHandledLocations.insert(aStart);
+            }
+        }
+    }
+
 public:
     explicit RenameVisitor(RenameRewriter& rRewriter)
         : mrRewriter(rRewriter)
@@ -61,9 +81,7 @@ public:
     {
         // Qualified name includes "C::" as a prefix, normal name does not.
         std::string aName = pDecl->getQualifiedNameAsString();
-        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-        if (it != mrRewriter.getNameMap().end())
-            mrRewriter.ReplaceText(pDecl->getLocation(), pDecl->getNameAsString().length(), it->second);
+        RewriteText(pDecl->getLocation(), pDecl->getNameAsString().length(), aName);
         return true;
     }
 
@@ -76,12 +94,8 @@ public:
      */
     bool VisitVarDecl(clang::VarDecl* pDecl)
     {
-        {
-            std::string aName = pDecl->getQualifiedNameAsString();
-            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-            if (it != mrRewriter.getNameMap().end())
-                mrRewriter.ReplaceText(pDecl->getLocation(), pDecl->getNameAsString().length(), it->second);
-        }
+        std::string aName = pDecl->getQualifiedNameAsString();
+        RewriteText(pDecl->getLocation(), pDecl->getNameAsString().length(), aName);
 
         /*
          * C* pC = 0;
@@ -91,17 +105,8 @@ public:
         const clang::RecordDecl* pRecordDecl = pType->getPointeeCXXRecordDecl();
         if (pRecordDecl)
         {
-            std::string aName = pRecordDecl->getNameAsString();
-            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-            if (it != mrRewriter.getNameMap().end())
-            {
-                clang::SourceLocation aLocation = pDecl->getTypeSpecStartLoc();
-                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-                {
-                    mrRewriter.ReplaceText(aLocation, pRecordDecl->getNameAsString().length(), it->second);
-                    maHandledLocations.insert(aLocation);
-                }
-            }
+            aName = pRecordDecl->getNameAsString();
+            RewriteText(pDecl->getTypeSpecStartLoc(), pRecordDecl->getNameAsString().length(), aName);
         }
         return true;
     }
@@ -125,42 +130,22 @@ public:
             if (const clang::FieldDecl* pFieldDecl = pInitializer->getAnyMember())
             {
                 std::string aName = pFieldDecl->getQualifiedNameAsString();
-                const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-                if (it != mrRewriter.getNameMap().end())
-                    mrRewriter.ReplaceText(pInitializer->getSourceLocation(), pFieldDecl->getNameAsString().length(), it->second);
+                RewriteText(pInitializer->getSourceLocation(), pFieldDecl->getNameAsString().length(), aName);
             }
         }
 
         std::string aName = pDecl->getNameAsString();
-        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-        if (it != mrRewriter.getNameMap().end())
-        {
-            /*
-             * Foo::Foo(...) {}
-             * ^~~ Handles this.
-             */
-            {
-                clang::SourceLocation aLocation = pDecl->getLocStart();
-                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-                {
-                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
-                    maHandledLocations.insert(aLocation);
-                }
-            }
+        /*
+         * Foo::Foo(...) {}
+         * ^~~ Handles this.
+         */
+        RewriteText(pDecl->getLocStart(), pDecl->getNameAsString().length(), aName);
 
-            /*
-             * Foo::Foo(...) {}
-             *      ^~~ Handles this.
-             */
-            {
-                clang::SourceLocation aLocation = pDecl->getLocation();
-                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-                {
-                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
-                    maHandledLocations.insert(aLocation);
-                }
-            }
-        }
+        /*
+         * Foo::Foo(...) {}
+         *      ^~~ Handles this.
+         */
+        RewriteText(pDecl->getLocation(), pDecl->getNameAsString().length(), aName);
 
         return true;
     }
@@ -175,23 +160,7 @@ public:
         if (clang::ValueDecl* pDecl = pExpr->getMemberDecl())
         {
             std::string aName = pDecl->getQualifiedNameAsString();
-            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-            if (it != mrRewriter.getNameMap().end())
-            {
-                clang::SourceLocation aLocation = pExpr->getMemberLoc();
-                if (pExpr->getMemberLoc().isMacroID())
-                    /*
-                     * int foo(int x);
-                     * #define FOO(a) foo(a)
-                     * FOO(aC.nX); <- Handles this.
-                     */
-                    aLocation = mrRewriter.getSourceMgr().getSpellingLoc(aLocation);
-                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-                {
-                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
-                    maHandledLocations.insert(aLocation);
-                }
-            }
+            RewriteText(pExpr->getMemberLoc(), pDecl->getNameAsString().length(), aName);
         }
         return true;
     }
@@ -209,23 +178,7 @@ public:
         if (clang::ValueDecl* pDecl = pExpr->getDecl())
         {
             std::string aName = pDecl->getQualifiedNameAsString();
-            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-            if (it != mrRewriter.getNameMap().end())
-            {
-                clang::SourceLocation aLocation = pExpr->getLocation();
-                if (aLocation.isMacroID())
-                    /*
-                     * int foo(int x);
-                     * #define FOO(a) foo(a)
-                     * FOO(aC.nX); <- Handles this.
-                     */
-                    aLocation = mrRewriter.getSourceMgr().getSpellingLoc(aLocation);
-                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-                {
-                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
-                    maHandledLocations.insert(aLocation);
-                }
-            }
+            RewriteText(pExpr->getLocation(), pDecl->getNameAsString().length(), aName);
         }
         return true;
     }
@@ -250,16 +203,7 @@ public:
     bool VisitCXXMethodDecl(const clang::CXXMethodDecl* pDecl)
     {
         std::string aName = pDecl->getQualifiedNameAsString();
-        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-        if (it != mrRewriter.getNameMap().end())
-        {
-            clang::SourceLocation aLocation = pDecl->getLocation();
-            if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-            {
-                mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
-                maHandledLocations.insert(aLocation);
-            }
-        }
+        RewriteText(pDecl->getLocation(), pDecl->getNameAsString().length(), aName);
         return true;
     }
 
@@ -273,16 +217,7 @@ public:
     bool VisitCXXRecordDecl(const clang::CXXRecordDecl* pDecl)
     {
         std::string aName = pDecl->getQualifiedNameAsString();
-        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-        if (it != mrRewriter.getNameMap().end())
-        {
-            clang::SourceLocation aLocation = pDecl->getLocation();
-            if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-            {
-                mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
-                maHandledLocations.insert(aLocation);
-            }
-        }
+        RewriteText(pDecl->getLocation(), pDecl->getNameAsString().length(), aName);
         return true;
     }
 
@@ -294,16 +229,7 @@ public:
         if (const clang::CXXConstructorDecl* pDecl = pExpr->getConstructor())
         {
             std::string aName = pDecl->getNameAsString();
-            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-            if (it != mrRewriter.getNameMap().end())
-            {
-                clang::SourceLocation aLocation = pExpr->getLocation();
-                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-                {
-                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
-                    maHandledLocations.insert(aLocation);
-                }
-            }
+            RewriteText(pExpr->getLocation(), pDecl->getNameAsString().length(), aName);
         }
         return true;
     }
@@ -324,16 +250,8 @@ public:
         if (pDecl)
         {
             std::string aName = pDecl->getNameAsString();
-            const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aName);
-            if (it != mrRewriter.getNameMap().end())
-            {
-                clang::SourceLocation aLocation = pExpr->getTypeInfoAsWritten()->getTypeLoc().getBeginLoc();
-                if (maHandledLocations.find(aLocation) == maHandledLocations.end())
-                {
-                    mrRewriter.ReplaceText(aLocation, pDecl->getNameAsString().length(), it->second);
-                    maHandledLocations.insert(aLocation);
-                }
-            }
+            clang::SourceLocation aLocation = pExpr->getTypeInfoAsWritten()->getTypeLoc().getBeginLoc();
+            RewriteText(aLocation, pDecl->getNameAsString().length(), aName);
         }
         return true;
     }

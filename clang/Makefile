@@ -19,7 +19,7 @@ bin/find-unprefixed-members: find-unprefixed-members.cxx Makefile
 test: test.cxx test.hxx Makefile
 	clang++ -o test test.cxx
 
-check:
+check: bin/rename
 	qa/test-rename.sh
 
 coverage:
