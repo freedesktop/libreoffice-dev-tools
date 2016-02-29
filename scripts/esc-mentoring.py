@@ -16,6 +16,26 @@ from   urllib.request import urlopen, URLError
 
 
 
+def get_count_needsDevEval() :
+    url = 'https://bugs.documentfoundation.org/buglist.cgi?' \
+          'bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=VERIFIED&bug_status=NEEDINFO' \
+          '&columnlist=Cbug_id%2Cassigned_to%2Cbug_status%2Cshort_desc%2Cchangeddate%2Creporter%2Clongdescs.count%2Copendate%2Cstatus_whiteboard' \
+          '&keywords=needsDevEval%2C%20' \
+          '&keywords_type=allwords' \
+          '&query_format=advanced' \
+          '&resolution=---' \
+          '&ctype=csv' \
+          '&human=0'
+    try:
+        resp = urlopen(url)
+    except URLError:
+        sys.stderr.write('Error fetching {}'.format(url))
+        sys.exit(1)
+    xCSV = list(csv.reader(io.TextIOWrapper(resp)))
+    return len(xCSV) -1
+
+
+
 def get_easyHacks() :
     url = 'https://bugs.documentfoundation.org/buglist.cgi?' \
           'bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=VERIFIED&bug_status=NEEDINFO' \
@@ -135,7 +155,7 @@ def checkGerrit(checkType, patch, cDate=0, eDate=0) :
 
 
 
-def ESC_report(easyHacks, gerritOpen, gerritContributor) :
+def ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval) :
     # prepare to count easyHacks, and list special status, new hacks (7 days)
     xTot    = len(easyHacks)
     xAssign = 0
@@ -166,6 +186,7 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor) :
         pNew.append(row)
 
     print('    easyHacks: total {}: {} waiting for contributor, {} Assigned to contributors, {} need info'.format(xTot, xOpen, xAssign, xInfo))
+    print('               needsDevEval {} needs to be evaluated'.format(needsDevEval))
     print('               cleanup: {} has more than 4 comments, {} needs to be reviewed'.format(xComm, xRevi))
     print('        new last 8 days:')
     for row in pNew :
@@ -291,11 +312,13 @@ if __name__ == '__main__':
 
     # get data from bugzilla and gerrit
     easyHacks          = get_easyHacks()
+    needsDevEval       = get_count_needsDevEval()
     gerritOpen         = get_gerrit(False)
     gerritContributor  = get_gerrit(True)
+    
 
     if doESC :
-      ESC_report(easyHacks, gerritOpen, gerritContributor)
+      ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval)
     if doDay or doWeek:
       print("\n\n\n")
       DAY_report(doWeek, easyHacks, gerritOpen, gerritContributor)
