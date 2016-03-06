@@ -192,11 +192,11 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval) :
     for row in pNew :
       print('            ', end='')
       print(formatEasy(row))
-    if xInfo > 0 :
-      print('        need info (mentor or code pointer), please help:')
-      for row in pInfo :
-        print('            ', end='')
-        print(formatEasy(row))
+#    if xInfo > 0 :
+#      print('        need info (mentor or code pointer), please help:')
+#      for row in pInfo :
+#        print('            ', end='')
+#        print(formatEasy(row))
 
     xTot  = len(gerritOpen)
     xRevi = 0
