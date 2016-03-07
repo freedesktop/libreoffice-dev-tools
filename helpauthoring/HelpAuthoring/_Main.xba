@@ -30,7 +30,7 @@ Global Const strErr_NoHelpFile = &quot;Not a Help File&quot;
 
 Global Const GitClient = &quot;git-gui&quot;
 
-Global Const WebView = &quot;false&quot;
+Global Const WebView = &quot;true&quot;
 
 Global Const ConsoleTerminal = &quot;true&quot;
 
@@ -467,6 +467,9 @@ Sub ReloadXHP
 	path = document.URL
 	document.close(-1)
 	oDoc = StarDesktop.loadComponentFromURL(path, path, 0, FileProperties())
+   if WebView = &quot;true&quot; then
+      goKey( &quot;.uno:BrowseView&quot; )
+   end if
 End Sub
 
 Sub UnhideParaIDs
