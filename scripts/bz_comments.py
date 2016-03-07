@@ -12,6 +12,8 @@ import csv
 import io
 import datetime
 import json
+import xmltodict
+from xml.etree.ElementTree import XML
 from   urllib.request import urlopen, URLError
 
 
@@ -47,18 +49,64 @@ def get_bug(id) :
     except URLError:
         sys.stderr.write('Error fetching {}'.format(url))
         sys.exit(1)
-    xText = resp.read().decode("utf8")
+    bug = xmltodict.parse(resp.read())
     resp.close()
-    return xText
+    return bug
+
+
+
+def optimize_bug(bug_org) :
+    bug = bug_org['bugzilla']['bug']
+    del bug['bug_file_loc']
+    del bug['cclist_accessible']
+    del bug['classification']
+    del bug['classification_id']
+    del bug['comment_sort_order']
+    del bug['creation_ts']
+    del bug['delta_ts']
+    del bug['reporter_accessible']
+    del bug['resolution']
+
+    # collect info for new comments:
+    if 'reporter' not in bug :
+        newText = 'org_reporter: MISSING'
+    else :
+        if type(bug['reporter']) is str:
+            newText = 'org_reporter: ' + bug['reporter'] + '\n'
+        else :
+            newText = 'org_reporter: ' + bug['reporter']['@name'] + '/' + bug['reporter']['#text'] + '\n'
+        del bug['reporter']
+
+    for line in bug['long_desc'] :
+       if 'who' not in line or type(line) is str:
+         newText += 'who: UNKNOWN' + '\n' + line
+       else :
+         newText += 'who: ' + line['who']['@name'] + '/' + line['who']['#text']
+    for i in range(len(bug['long_desc'])-1, -1, -1) :
+       del bug['long_desc'][i]
+    bug['long_desc'].append({'thetext' : newText})
+    addAlso = 'https://issues.apache.org/ooo/show_bug.cgi?id='+bug['bug_id']
+    if 'see_also' not in bug :
+      bug['see_also'] = addAlso
+    elif not type(bug['see_also']) is list :
+        x = bug['see_also']
+        bug['see_also']  = [x, addAlso]
+    else :
+      bug['see_also'].append(addAlso)
+    del bug['bug_id']
+    return bug
+
 
 
 
 if __name__ == '__main__':
     # get data from bugzilla and gerrit
     easyHacks = get_list_easyHacks()
-    for id in easyHacks :
-      bug = get_bug(id)
-      print(bug)
+    easyHacks.sort()
+    bugs = []
 
-    print('end of report')
+    for id in easyHacks :
+      bugs.append(optimize_bug(get_bug(id)))
+
+    print(json.dumps(bugs))
 
