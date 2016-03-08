@@ -83,7 +83,7 @@ def get_gerrit(doNonCom) :
       url = url + '+-ownerin:committer'
 
     # Add needed fields
-    url = url + '&o=DETAILED_LABELS&o=MESSAGES'
+    url = url + '&o=DETAILED_LABELS&o=MESSAGES&o=DETAILED_ACCOUNTS'
     #url = url + '&o=code_review&o=reviewers&pp=0'
 
     try:
