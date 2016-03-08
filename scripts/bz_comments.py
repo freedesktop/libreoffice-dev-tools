@@ -82,8 +82,7 @@ def optimize_bug(bug_org) :
          newText += 'who: UNKNOWN' + '\n' + line
        else :
          newText += 'who: ' + line['who']['@name'] + '/' + line['who']['#text']
-    for i in range(len(bug['long_desc'])-1, -1, -1) :
-       del bug['long_desc'][i]
+    bug['long_desc'] = []
     bug['long_desc'].append({'thetext' : newText})
     addAlso = 'https://issues.apache.org/ooo/show_bug.cgi?id='+bug['bug_id']
     if 'see_also' not in bug :
@@ -93,7 +92,6 @@ def optimize_bug(bug_org) :
         bug['see_also']  = [x, addAlso]
     else :
       bug['see_also'].append(addAlso)
-    del bug['bug_id']
     return bug
 
 
