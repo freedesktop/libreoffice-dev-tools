@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/online_transform.xsl"?>
+<helpdocument version="1.0">
+<!--
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * This file incorporates work covered by the following license notice:
+ *
+ *   Licensed to the Apache Software Foundation (ASF) under one or more
+ *   contributor license agreements. See the NOTICE file distributed
+ *   with this work for additional information regarding copyright
+ *   ownership. The ASF licenses this file to you under the Apache
+ *   License, Version 2.0 (the "License"); you may not use this file
+ *   except in compliance with the License. You may obtain a copy of
+ *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
+-->
+
+<meta>
+  <topic id="topic_2407201519172133" status="PUBLISH">
+    <title xml-lang="en-US" id="tit">File Services</title>
+    <filename>text/shared/guide/cmis_doc_open_save.xhp</filename>
+  </topic>
+</meta>
+
+<body>
+
+<bookmark xml-lang="en-US" branch="index" id="bm_id2007201515273286">
+  <bookmark_value>CMIS</bookmark_value>
+  <bookmark_value>CMIS;check-in file</bookmark_value>
+  <bookmark_value>CMIS;check-out file</bookmark_value>
+  <bookmark_value>CMIS;save file</bookmark_value>
+  <bookmark_value>CMIS;open file</bookmark_value>
+</bookmark>
+
+
+<paragraph id="hd_id130008" role="heading" xml-lang="en-US" level="1"><variable id=""><link href="">File Services</link></variable></paragraph>
+
+<section id="howtoget">
+<paragraph id="par_id200720151945021" role="paragraph" xml-lang="en-US">To access this function...</paragraph>
+</section>
+<paragraph id="par_id5821710" role="paragraph" xml-lang="en-US">In %PRODUCTNAME you can use Content Management Interoperability System to access files I file servers.</paragraph><embed href="text/shared/need_help.xhp#needhelp"/>
+</body>
+
+</helpdocument>
