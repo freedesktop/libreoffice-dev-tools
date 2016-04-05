@@ -312,7 +312,6 @@ print << "EOF"
      <table:table-cell table:formula="of:=[.AA2]-[.P2]" office:value-type="float"  calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_open{'5.2'}" calcext:value-type="float"/>
      <table:table-cell table:formula="of:=[.AB2]-[.R2]" office:value-type="float"  calcext:value-type="float"/>
-     <table:table-cell/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'old'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.0'}" calcext:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$ver_total{'4.1'}" calcext:value-type="float"/>
