@@ -12,6 +12,8 @@ import csv
 import io
 import datetime
 import json
+import xmltodict
+from xml.etree.ElementTree import XML
 from   urllib.request import urlopen, URLError
 
 
@@ -51,9 +53,11 @@ def get_easyHacks() :
     except URLError:
         sys.stderr.write('Error fetching {}'.format(url))
         sys.exit(1)
-    xCSV = list(csv.reader(io.TextIOWrapper(resp)))
+    xCSV = list(csv.reader(io.TextIOWrapper(resp)))[1:]
+    resp.close()
+    xCSV.sort()
     rawList = {}
-    for row in xCSV[1:]:
+    for row in xCSV:
        id = int(row[0])
        if row[1] == 'libreoffice-bugs' :
          assign = ''
@@ -94,10 +98,64 @@ def get_gerrit(doNonCom) :
 
     data = resp.read().decode('utf8')[5:]
     rawList = json.loads(data)
+    resp.close()
     for row in rawList :
       row['updated'] = datetime.datetime.strptime(row['updated'].split(' ')[0], '%Y-%m-%d').date()
     return rawList
 
+
+
+def get_bug(id) :
+    url = 'https://bugs.documentfoundation.org/show_bug.cgi?ctype=xml&id=' + str(id)
+    try:
+        resp = urlopen(url)
+    except URLError:
+        sys.stderr.write('Error fetching {}'.format(url))
+        sys.exit(1)
+    bug = xmltodict.parse(resp.read())
+    resp.close()
+    return bug
+
+
+
+def optimize_bug(bug_org) :
+    bug = bug_org['bugzilla']['bug']
+    del bug['bug_file_loc']
+    del bug['cclist_accessible']
+    del bug['classification']
+    del bug['classification_id']
+    del bug['comment_sort_order']
+    del bug['creation_ts']
+    del bug['delta_ts']
+    del bug['reporter_accessible']
+    del bug['resolution']
+
+    # collect info for new comments:
+    if 'reporter' not in bug :
+        newText = 'org_reporter: MISSING'
+    else :
+        if type(bug['reporter']) is str:
+            newText = 'org_reporter: ' + bug['reporter'] + '\n'
+        else :
+            newText = 'org_reporter: ' + bug['reporter']['@name'] + '/' + bug['reporter']['#text'] + '\n'
+        del bug['reporter']
+
+    for line in bug['long_desc'] :
+       if 'who' not in line or type(line) is str:
+         newText += 'who: UNKNOWN' + '\n' + line
+       else :
+         newText += 'who: ' + line['who']['@name'] + '/' + line['who']['#text']
+    bug['long_desc'] = []
+    bug['long_desc'].append({'thetext' : newText})
+    addAlso = 'https://issues.apache.org/ooo/show_bug.cgi?id='+bug['bug_id']
+    if 'see_also' not in bug :
+      bug['see_also'] = addAlso
+    elif not type(bug['see_also']) is list :
+        x = bug['see_also']
+        bug['see_also']  = [x, addAlso]
+    else :
+      bug['see_also'].append(addAlso)
+    return bug
 
 
 
@@ -166,7 +224,6 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval) :
     pNew    = []
     pInfo   = []
     cDate   = datetime.date.today() - datetime.timedelta(days=8)
-    mDate   = datetime.date(2016, month=2, day=11)
     for key, row in easyHacks.items():
       # Calculate type of status
       status = row['status']
@@ -179,24 +236,19 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval) :
         xOpen += 1
       if row['comments'] >= 5 :
         xComm += 1
-      if row['change'] <= mDate or row['whiteboard'] == 'ToBeReviewed':
+      if row['whiteboard'] == 'ToBeReviewed':
         xRevi += 1
 
       if row['created'] >= cDate :
         pNew.append(row)
-
-    print('    easyHacks: total {}: {} waiting for contributor, {} Assigned to contributors, {} need info'.format(xTot, xOpen, xAssign, xInfo))
-    print('               needsDevEval {} needs to be evaluated'.format(needsDevEval))
-    print('               cleanup: {} has more than 4 comments, {} needs to be reviewed'.format(xComm, xRevi))
-    print('        new last 8 days:')
+    print('* Easy Hacks (JanI)')
+    print('    + total {}: {} not assigned, {} Assigned to contributors, {} need info'.format(xTot, xOpen, xAssign, xInfo))
+    print('    + needsDevEval {} needs to be evaluated'.format(needsDevEval))
+    print('    + cleanup: {} has more than 4 comments, {} needs to be reviewed'.format(xComm, xRevi))
+    print('    + new last 8 days:')
     for row in pNew :
       print('            ', end='')
       print(formatEasy(row))
-#    if xInfo > 0 :
-#      print('        need info (mentor or code pointer), please help:')
-#      for row in pInfo :
-#        print('            ', end='')
-#        print(formatEasy(row))
 
     xTot  = len(gerritOpen)
     xRevi = 0
@@ -204,33 +256,26 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval) :
       # can be merged (depending comments)
       if checkGerrit(1, row) :
         xRevi += 1
-    print('     gerrit: {} open patches of which {} can be merged if no open comments'.format(xTot, xRevi))
+    print ('* Mentoring Update (JanI)')
+    print ('    + total: {} open gerrit patches of which {} can be merged if no open comments'.format(xTot, xRevi))
     xTot  = len(gerritContributor)
     xRevi = 0
     for row in gerritContributor:
       # can be merged (depending comments)
       if checkGerrit(1, row) :
         xRevi += 1
-    print('             {} from contributors of which {} can be merged if no open comments'.format(xTot, xRevi))
+    print ('    + contributors: {} open gerrit patches of which {} can be merged if no open comments'.format(xTot, xRevi))
+    print ('    + <text>')
 
 
 
-def DAY_report(isWeekend, easyHacks, gerritOpen, gerritContributor) :
-    # Day report looks 2 days back
-    if isWeekend :
-      cDate = datetime.date.today() - datetime.timedelta(days=3)
-    else :
-      cDate = datetime.date.today() - datetime.timedelta(days=1)
+def DAY_report(runMsg, easyHacks, gerritOpen, gerritContributor) :
+    # Day report looks 8 days back
+    cDate = datetime.date.today() - datetime.timedelta(days=8)
 
-    print("\n\n*** day report ***")
-    print("\n\n*** new easyHacks:")
+    print("*** new easyHacks (verify who created it:")
     for key, row in easyHacks.items():
       if row['created'] >= cDate :
-        print('    ', end='')
-        print(formatEasy(row))
-    print("\n\n*** changed easyHacks:")
-    for key, row in easyHacks.items():
-      if row['change'] >= cDate :
         print('    ', end='')
         print(formatEasy(row))
 
@@ -240,90 +285,58 @@ def DAY_report(isWeekend, easyHacks, gerritOpen, gerritContributor) :
         print('    ', end='')
         print(formatGerrit(row))
 
-    eDate = datetime.date.today() - datetime.timedelta(days=3)
-    if isWeekend :
-      cDate = datetime.date.today() - datetime.timedelta(days=5)
-    else :
-      cDate = datetime.date.today() - datetime.timedelta(days=3)
-    print("\n\n*** Gerrit check for merge:")
+    # Month report looks 30 days back
+    cDate   = datetime.date.today() - datetime.timedelta(days=30)
+
+    print("\n\n*** Gerrit to abandon:")
     for row in gerritContributor:
-      if checkGerrit(3, row, cDate=cDate, eDate=eDate) :
+      # can be merged (depending comments)
+      if checkGerrit(5, row, cDate=cDate) :
         print('    ', end='')
         print(formatGerrit(row))
 
-
-def MONTH_report(easyHacks, gerritOpen, gerritContributor) :
-    # Month report looks 30 days back
-    cDate   = datetime.date.today() - datetime.timedelta(days=30)
-    mDate   = datetime.date(2016, month=2, day=11)
-
-    print("\n\n*** month report ***")
-    print('assigned easyHacks, no movement')
+    print('\n\n*** assigned easyHacks, no movement')
     for key, row in easyHacks.items():
       if row['change'] <= cDate and row['status'] == 'ASSIGNED':
         print('    ', end='')
         print(formatEasy(row))
-    print("\n\n*** easyHacks with more than 5 comments:")
-    for key, row in easyHacks.items():
-      if row['comments'] >= 5 :
-        print('    ', end='')
-        print(formatEasy(row))
-    print("\n\n*** easyHacks needing review:")
-    for key, row in easyHacks.items():
-      if row['change'] <= mDate :
-        print('    ', end='')
-        print(formatEasy(row))
+
     print("\n\ne*** asyHacks needing review due to whiteboard:")
+    bugs = []
     for key, row in easyHacks.items():
-      if row['whiteboard'] == 'ToBeReviewed' :
+      if row['comments'] < 5 and 'ToBeReviewed' in row['whiteboard']  :
         print('    ', end='')
         print(formatEasy(row))
 
-    print("\n\n*** Gerrit check Abandon:")
-    for row in gerritOpen:
-      if checkGerrit(5, row, cDate=cDate) :
-        print('    ', end='')
-        print(formatGerrit(row))
+    if runMsg == "dump" :
+        print("\n\n*** easyHacks with more than 5 comments:")
+        bugs = []
+        for key, row in easyHacks.items():
+        if row['comments'] >= 5 :
+            bugs.append(optimize_bug(get_bug(key)))
+        with open('bz_comments.json', 'w') as f:
+            json.dump(bugs, f, ensure_ascii=False)
+        xTot = len(bugs)
+        print('    wrote {} entries to bz_comments.json'.format(xTot))
 
 
 
 
 if __name__ == '__main__':
     # check command line options
-    doESC   = False
-    doDay   = False
-    doWeek  = False
-    doMonth = False
-    if len(sys.argv) <= 1 :
-      doESC = True
-    else :
-      for row in sys.argv[1:] :
-        if row.lower() == 'esc' :
-          doESC = True
-        elif row.lower() == 'day' :
-          doDay = True
-        elif row.lower() == 'week' :
-          doWeek = True
-        elif row.lower() == 'month' :
-          doMonth = True
-        else :
-          print('Illegal use {}, syntax: esc_mentoring.py esc day month'.format(row))
-          exit(-1)
+    doESC   = True
+    if len(sys.argv) > 1 :
+      doESC = False
 
     # get data from bugzilla and gerrit
-    easyHacks          = get_easyHacks()
-    needsDevEval       = get_count_needsDevEval()
-    gerritOpen         = get_gerrit(False)
-    gerritContributor  = get_gerrit(True)
-    
+    easyHacks         = get_easyHacks()
+    needsDevEval      = get_count_needsDevEval()
+    gerritOpen        = get_gerrit(False)
+    gerritContributor = get_gerrit(True)
 
     if doESC :
       ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval)
-    if doDay or doWeek:
-      print("\n\n\n")
-      DAY_report(doWeek, easyHacks, gerritOpen, gerritContributor)
-    if doMonth :
-      print("\n\n\n")
-      MONTH_report(easyHacks, gerritOpen, gerritContributor)
+    else :
+      DAY_report(easyHacks, gerritOpen, gerritContributor)
     print('end of report')
 
