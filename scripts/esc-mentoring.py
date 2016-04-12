@@ -249,6 +249,8 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval) :
     for row in pNew :
       print('            ', end='')
       print(formatEasy(row))
+    print ('    + <text>')
+    print('\n\n')
 
     xTot  = len(gerritOpen)
     xRevi = 0
@@ -257,14 +259,14 @@ def ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval) :
       if checkGerrit(1, row) :
         xRevi += 1
     print ('* Mentoring Update (JanI)')
-    print ('    + total: {} open gerrit patches of which {} can be merged if no open comments'.format(xTot, xRevi))
+    print ('    + total: {} open gerrit patches of which {} are mergeable'.format(xTot, xRevi))
     xTot  = len(gerritContributor)
     xRevi = 0
     for row in gerritContributor:
       # can be merged (depending comments)
       if checkGerrit(1, row) :
         xRevi += 1
-    print ('    + contributors: {} open gerrit patches of which {} can be merged if no open comments'.format(xTot, xRevi))
+    print ('    + contributors: {} open gerrit patches of which {} are mergeable'.format(xTot, xRevi))
     print ('    + <text>')
 
 
@@ -312,8 +314,8 @@ def DAY_report(runMsg, easyHacks, gerritOpen, gerritContributor) :
         print("\n\n*** easyHacks with more than 5 comments:")
         bugs = []
         for key, row in easyHacks.items():
-        if row['comments'] >= 5 :
-            bugs.append(optimize_bug(get_bug(key)))
+            if row['comments'] >= 5 :
+                bugs.append(optimize_bug(get_bug(key)))
         with open('bz_comments.json', 'w') as f:
             json.dump(bugs, f, ensure_ascii=False)
         xTot = len(bugs)
@@ -326,7 +328,8 @@ if __name__ == '__main__':
     # check command line options
     doESC   = True
     if len(sys.argv) > 1 :
-      doESC = False
+      if sys.argv[1] != 'esc' :
+        doESC = False
 
     # get data from bugzilla and gerrit
     easyHacks         = get_easyHacks()
@@ -337,6 +340,6 @@ if __name__ == '__main__':
     if doESC :
       ESC_report(easyHacks, gerritOpen, gerritContributor, needsDevEval)
     else :
-      DAY_report(easyHacks, gerritOpen, gerritContributor)
-    print('end of report')
+      DAY_report(sys.argv[1],easyHacks, gerritOpen, gerritContributor)
+    print('\n\nend of report')
 
