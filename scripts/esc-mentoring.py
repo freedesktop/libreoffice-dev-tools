@@ -275,7 +275,7 @@ def DAY_report(runMsg, easyHacks, gerritOpen, gerritContributor) :
     # Day report looks 8 days back
     cDate = datetime.date.today() - datetime.timedelta(days=8)
 
-    print("*** new easyHacks (verify who created it:")
+    print("*** new easyHacks (verify who created it):")
     for key, row in easyHacks.items():
       if row['created'] >= cDate :
         print('    ', end='')
@@ -317,7 +317,7 @@ def DAY_report(runMsg, easyHacks, gerritOpen, gerritContributor) :
             if row['comments'] >= 5 :
                 bugs.append(optimize_bug(get_bug(key)))
         with open('bz_comments.json', 'w') as f:
-            json.dump(bugs, f, ensure_ascii=False)
+            json.dump(bugs, f, ensure_ascii=False, indent=4, sort_keys=True)
         xTot = len(bugs)
         print('    wrote {} entries to bz_comments.json'.format(xTot))
 
