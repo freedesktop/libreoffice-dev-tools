@@ -371,9 +371,9 @@ print << "EOF"
       <text:p>$date_value</text:p>
      </table:table-cell>
      <table:table-cell office:value-type="float" office:value="$reg_open" calcext:value-type="float"/>
-     <table:table-cell table:formula="of:=[.D6]-[.B6]" office:value-type="float"/>
+     <table:table-cell table:formula="of:=[.D5]-[.B5]" office:value-type="float"/>
      <table:table-cell office:value-type="float" office:value="$reg_all" calcext:value-type="float"/>
-     <table:table-cell table:style-name="isodate" table:formula="of:=[.A6]" office:value-type="date" />
+     <table:table-cell table:style-name="isodate" table:formula="of:=[.A5]" office:value-type="date" />
 EOF
 ;
 
