@@ -11,13 +11,13 @@
 # where the script does all its work (which must not yet exist), followed by the
 # requested git branch/tag (i.e., the --branch argument to "git clone").
 #
-# The script expects an installation of flatpak (nee xdg-app). and availability
-# of the org.gnome.Platform 3.20 runtime (and SDK) from
-# <http://sdk.gnome.org/repo/>.  To obtain the latter, do something like:
+# The script expects an installation of flatpak and availability of the
+# org.gnome.Platform 3.20 runtime (and SDK) from <http://sdk.gnome.org/repo/>.
+# To obtain the latter, do something like:
 #
-#  $ xdg-app --user remote-add gnome-sdk http://sdk.gnome.org/repo/
-#  $ xdg-app --user install gnome-sdk org.gnome.Platform 3.20
-#  $ xdg-app --user install gnome-sdk org.gnome.Sdk 3.20
+#  $ fedpkg --user remote-add gnome-sdk http://sdk.gnome.org/repo/
+#  $ fedpkg --user install gnome-sdk org.gnome.Platform 3.20
+#  $ fedpkg --user install gnome-sdk org.gnome.Sdk 3.20
 #
 # TODO:
 #
@@ -27,9 +27,6 @@
 # * GPG signing.
 #
 # * Explicitly specify the --arch to build?
-#
-# * The script still calls the old "xdg-app" tool throughout.  All these calls
-# shall be rewritten to "flatpak" in environments that use the new name.
 
 
 set -e
@@ -65,10 +62,10 @@ mkdir "${my_dir?}"/fetch
 
 # 4  Build LibreOffice:
 
-xdg-app build-init "${my_dir?}"/app org.libreoffice.LibreOffice org.gnome.Sdk \
+flatpak build-init "${my_dir?}"/app org.libreoffice.LibreOffice org.gnome.Sdk \
  org.gnome.Platform 3.20
 mkdir "${my_dir?}"/build
-xdg-app build --build-dir="${my_dir?}"/build \
+flatpak build --build-dir="${my_dir?}"/build \
  --env=PERLLIB="${my_dir?}"/perl/Archive-Zip-1.56/lib "${my_dir?}"/app bash -c \
  '"${1?}"/lo/autogen.sh --prefix="${1?}"/inst --with-distro=LibreOfficeFlatpak \
   --with-external-tar="${1?}"/tar && make && make distro-pack-install' \
@@ -95,30 +92,31 @@ for i in "${my_dir?}"/inst/share/icons/hicolor/*/apps/libreoffice-*; do
  cp -a "$i" \
   "$(dirname "${my_dir?}"/app/files/share/icons/hicolor/"${i#"${my_dir?}"/inst/share/icons/hicolor/}")"/org.libreoffice.LibreOffice-"${i##*/apps/libreoffice-}"
 done
-## see git://anongit.freedesktop.org/xdg-app/xdg-app
-## app/flatpak-builtins-build-finish.c for further places where build-finish
-## would look for data:
+## see <https://github.com/flatpak/flatpak/blob/master/app/
+## flatpak-builtins-build-finish.c> for further places where build-finish would
+## look for data:
 ## cp ... "${my_dir?}"/app/files/share/dbus-1/services/
 ## cp ... "${my_dir?}"/app/files/share/gnome-shell/search-providers/
 ##
-## see git://anongit.freedesktop.org/xdg-app/xdg-app builder/builder-manifest.c
+## see
+## <https://github.com/flatpak/flatpak/blob/master/builder/builder-manifest.c>
 ## for the appstream-compose command line:
 mkdir "${my_dir?}"/app/files/share/appdata
 for i in "${my_dir?}"/inst/share/appdata/libreoffice-*.appdata.xml; do
  sed -e 's/<id>libreoffice-/<id>org.libreoffice.LibreOffice-/' "$i" \
   > "${my_dir?}"/app/files/share/appdata/org.libreoffice.LibreOffice-"${i##*/libreoffice-}"
 done
-xdg-app build --nofilesystem=host "${my_dir?}"/app appstream-compose \
+flatpak build --nofilesystem=host "${my_dir?}"/app appstream-compose \
  --prefix=/app --origin=flatpak --basename=org.libreoffice.LibreOffice \
  org.libreoffice.LibreOffice-{base,calc,draw,impress,writer}
 
 
 # 6  Generate bundle:
 
-xdg-app build-finish --command=/app/libreoffice/program/soffice \
+flatpak build-finish --command=/app/libreoffice/program/soffice \
  --share=network --share=ipc --socket=x11 --socket=wayland --socket=pulseaudio \
  --socket=system-bus --socket=session-bus --filesystem=host \
  --env=LIBO_FLATPAK=1 "${my_dir?}"/app
-xdg-app build-export "${my_dir?}"/repo "${my_dir?}"/app
-xdg-app build-bundle --repo-url=http://libreoffice.org/TODO "${my_dir?}"/repo \
+flatpak build-export "${my_dir?}"/repo "${my_dir?}"/app
+flatpak build-bundle --repo-url=http://libreoffice.org/TODO "${my_dir?}"/repo \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice
