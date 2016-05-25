@@ -129,5 +129,7 @@ flatpak build-finish --command=/app/libreoffice/program/soffice \
  --socket=system-bus --socket=session-bus --filesystem=host \
  --env=LIBO_FLATPAK=1 "${my_dir?}"/app
 flatpak build-export "${my_dir?}"/repo "${my_dir?}"/app
+flatpak build-update-repo --title='The Document Foundation LibreOffice Fresh' \
+ --generate-static-deltas --prune "${my_dir?}"/repo
 flatpak build-bundle --repo-url=http://libreoffice.org/TODO "${my_dir?}"/repo \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice
