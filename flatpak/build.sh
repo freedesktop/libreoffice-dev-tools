@@ -8,8 +8,8 @@
 # branch/tag.
 #
 # It expects two command line arguments, an absolute pathname for a directory
-# where the script does all its work (which must not yet exist), followed by the
-# requested git branch/tag (i.e., the --branch argument to "git clone").
+# where the script does all its work, followed by the requested git branch/tag
+# (i.e., the --branch argument to "git clone").
 #
 # The script expects an installation of flatpak and availability of the
 # org.gnome.Platform 3.20 runtime (and SDK) from <http://sdk.gnome.org/repo/>.
@@ -34,25 +34,35 @@ set -e
 my_dir="${1?}"
 my_branch="${2?}"
 
-mkdir "${my_dir?}"
+mkdir -p "${my_dir?}"
 
 
 # 1  Install Perl:Archive-Zip not available in org.gnome.Sdk:
 
-wget http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/Archive-Zip-1.56.tar.gz \
- -O "${my_dir?}"/Archive-Zip-1.56.tar.gz
-mkdir "${my_dir?}"/perl
-(cd "${my_dir?}"/perl && tar xf "${my_dir?}"/Archive-Zip-1.56.tar.gz)
+if [ ! -e "${my_dir?}"/perl ]; then
+ wget \
+  http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/Archive-Zip-1.56.tar.gz \
+  -O "${my_dir?}"/Archive-Zip-1.56.tar.gz
+ mkdir "${my_dir?}"/perl
+ (cd "${my_dir?}"/perl && tar xf "${my_dir?}"/Archive-Zip-1.56.tar.gz)
+fi
 
 
 # 2  Clone the LibreOffice git repo:
 
-git clone --branch "${my_branch?}" --recursive \
- git://gerrit.libreoffice.org/core "${my_dir?}"/lo
+if [ -e "${my_dir?}"/lo ]; then
+ git -C "${my_dir?}"/lo pull
+ git -C "${my_dir?}"/lo submodule update
+ git -C "${my_dir?}"/lo checkout "${my_branch?}"
+else
+ git clone --branch "${my_branch?}" --recursive \
+  git://gerrit.libreoffice.org/core "${my_dir?}"/lo
+fi
 
 
 # 3  Fetch external dependencies of LibreOffice:
 
+rm -fr "${my_dir?}"/fetch
 mkdir "${my_dir?}"/fetch
 (cd "${my_dir?}"/fetch \
  && "${my_dir?}"/lo/autogen.sh --prefix="${my_dir?}"/inst \
@@ -62,6 +72,7 @@ mkdir "${my_dir?}"/fetch
 
 # 4  Build LibreOffice:
 
+rm -fr "${my_dir?}"/app "${my_dir?}"/build "${my_dir?}"/inst
 flatpak build-init "${my_dir?}"/app org.libreoffice.LibreOffice org.gnome.Sdk \
  org.gnome.Platform 3.20
 mkdir "${my_dir?}"/build
