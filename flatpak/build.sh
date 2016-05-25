@@ -7,9 +7,12 @@
 # This shell script creates a LibreOffice.flatpak bundle from a given git
 # branch/tag.
 #
-# It expects two command line arguments, an absolute pathname for a directory
-# where the script does all its work, followed by the requested git branch/tag
-# (i.e., the --branch argument to "git clone").
+# It expects four command line arguments, in the following order:
+# * An absolute pathname for a directory where the script does all its work.
+# * The requested git branch/tag (i.e., the --branch argument to "git clone").
+# * The absolute pathname of the GPG home directory (i.e., the --homedir=
+#   argument to gpg)
+# * The GPG key ID for signing.
 #
 # The script expects an installation of flatpak and availability of the
 # org.gnome.Platform 3.20 runtime (and SDK) from <http://sdk.gnome.org/repo/>.
@@ -24,8 +27,6 @@
 # * Fix the --repo-url=http://libreoffice.org/TODO URL in the build-bundle
 # step.
 #
-# * GPG signing.
-#
 # * Explicitly specify the --arch to build?
 
 
@@ -33,6 +34,8 @@ set -e
 
 my_dir="${1?}"
 my_branch="${2?}"
+my_gpghomedir="${3?}"
+my_gpgkeyid="${4?}"
 
 mkdir -p "${my_dir?}"
 
@@ -128,8 +131,13 @@ flatpak build-finish --command=/app/libreoffice/program/soffice \
  --share=network --share=ipc --socket=x11 --socket=wayland --socket=pulseaudio \
  --socket=system-bus --socket=session-bus --filesystem=host \
  --env=LIBO_FLATPAK=1 "${my_dir?}"/app
-flatpak build-export "${my_dir?}"/repo "${my_dir?}"/app
+flatpak build-export --gpg-homedir="${my_gpghomedir?}" \
+ --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repo "${my_dir?}"/app
 flatpak build-update-repo --title='The Document Foundation LibreOffice Fresh' \
- --generate-static-deltas --prune "${my_dir?}"/repo
-flatpak build-bundle --repo-url=http://libreoffice.org/TODO "${my_dir?}"/repo \
+ --generate-static-deltas --prune --gpg-homedir="${my_gpghomedir?}" \
+ --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repo
+gpg --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
+ "${my_gpgkeyid?}"
+flatpak build-bundle --repo-url=http://libreoffice.org/TODO \
+ --gpg-keys="${my_dir?}"/key "${my_dir?}"/repo \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice
