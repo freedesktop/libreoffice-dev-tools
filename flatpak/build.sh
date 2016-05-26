@@ -24,9 +24,6 @@
 #
 # TODO:
 #
-# * Fix the --repo-url=http://libreoffice.org/TODO URL in the build-bundle
-# step.
-#
 # * Explicitly specify the --arch to build?
 
 
@@ -138,6 +135,7 @@ flatpak build-update-repo --title='The Document Foundation LibreOffice Fresh' \
  --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repo
 gpg --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
  "${my_gpgkeyid?}"
-flatpak build-bundle --repo-url=http://libreoffice.org/TODO \
+flatpak build-bundle \
+ --repo-url=http://download.documentfoundation.org/libreoffice/flatpack/repository \
  --gpg-keys="${my_dir?}"/key "${my_dir?}"/repo \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice
