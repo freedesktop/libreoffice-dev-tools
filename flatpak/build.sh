@@ -54,8 +54,8 @@ fi
 # 2  Clone the LibreOffice git repo:
 
 if [ -e "${my_dir?}"/lo ]; then
- git -C "${my_dir?}"/lo pull
- git -C "${my_dir?}"/lo submodule update
+ git -C "${my_dir?}"/lo fetch --tags
+ git -C "${my_dir?}"/lo submodule foreach git fetch --tags
  git -C "${my_dir?}"/lo checkout "${my_branch?}"
 else
  git clone --branch "${my_branch?}" --recursive \
