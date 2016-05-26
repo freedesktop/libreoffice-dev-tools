@@ -129,13 +129,15 @@ flatpak build-finish --command=/app/libreoffice/program/soffice \
  --socket=system-bus --socket=session-bus --filesystem=host \
  --env=LIBO_FLATPAK=1 "${my_dir?}"/app
 flatpak build-export --gpg-homedir="${my_gpghomedir?}" \
- --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repo "${my_dir?}"/app
+ --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository "${my_dir?}"/app
 flatpak build-update-repo --title='The Document Foundation LibreOffice Fresh' \
  --generate-static-deltas --prune --gpg-homedir="${my_gpghomedir?}" \
- --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repo
+ --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository
+tar --create --file "${my_dir?}"/repository.tgz --gzip \
+ --directory="${my_dir?}" repository
 gpg --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
  "${my_gpgkeyid?}"
 flatpak build-bundle \
  --repo-url=http://download.documentfoundation.org/libreoffice/flatpack/repository \
- --gpg-keys="${my_dir?}"/key "${my_dir?}"/repo \
+ --gpg-keys="${my_dir?}"/key "${my_dir?}"/repository \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice
