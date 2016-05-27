@@ -138,6 +138,6 @@ tar --create --file "${my_dir?}"/repository.tgz --gzip \
 gpg2 --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
  "${my_gpgkeyid?}"
 flatpak build-bundle \
- --repo-url=http://download.documentfoundation.org/libreoffice/flatpack/repository \
+ --repo-url=http://download.documentfoundation.org/libreoffice/flatpak/repository \
  --gpg-keys="${my_dir?}"/key "${my_dir?}"/repository \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice
