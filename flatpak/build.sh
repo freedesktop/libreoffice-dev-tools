@@ -135,7 +135,7 @@ flatpak build-update-repo --title='The Document Foundation LibreOffice Fresh' \
  --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository
 tar --create --file "${my_dir?}"/repository.tgz --gzip \
  --directory="${my_dir?}" repository
-gpg --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
+gpg2 --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
  "${my_gpgkeyid?}"
 flatpak build-bundle \
  --repo-url=http://download.documentfoundation.org/libreoffice/flatpack/repository \
