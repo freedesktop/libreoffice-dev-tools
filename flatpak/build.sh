@@ -135,7 +135,7 @@ flatpak build-finish --command=/app/libreoffice/program/soffice \
 flatpak build-export --gpg-homedir="${my_gpghomedir?}" \
  --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository "${my_dir?}"/app \
  "${my_flatpakbranch?}"
-flatpak build-update-repo --title='The Document Foundation LibreOffice Fresh' \
+flatpak build-update-repo --title='The Document Foundation LibreOffice' \
  --generate-static-deltas --prune --gpg-homedir="${my_gpghomedir?}" \
  --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository
 tar --create --file "${my_dir?}"/repository.tgz --gzip \
