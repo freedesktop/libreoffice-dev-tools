@@ -7,9 +7,10 @@
 # This shell script creates a LibreOffice.flatpak bundle from a given git
 # branch/tag.
 #
-# It expects four command line arguments, in the following order:
+# It expects five command line arguments, in the following order:
 # * An absolute pathname for a directory where the script does all its work.
 # * The requested git branch/tag (i.e., the --branch argument to "git clone").
+# * The flatpak branch name.
 # * The absolute pathname of the GPG home directory (i.e., the --homedir=
 #   argument to gpg)
 # * The GPG key ID for signing.
@@ -32,9 +33,10 @@
 set -e
 
 my_dir="${1?}"
-my_branch="${2?}"
-my_gpghomedir="${3?}"
-my_gpgkeyid="${4?}"
+my_gitbranch="${2?}"
+my_flatpakbranch="${3?}"
+my_gpghomedir="${4?}"
+my_gpgkeyid="${5?}"
 
 mkdir -p "${my_dir?}"
 
@@ -55,9 +57,9 @@ fi
 if [ -e "${my_dir?}"/lo ]; then
  git -C "${my_dir?}"/lo fetch --tags
  git -C "${my_dir?}"/lo submodule foreach git fetch --tags
- git -C "${my_dir?}"/lo checkout "${my_branch?}"
+ git -C "${my_dir?}"/lo checkout "${my_gitbranch?}"
 else
- git clone --branch "${my_branch?}" --recursive \
+ git clone --branch "${my_gitbranch?}" --recursive \
   git://gerrit.libreoffice.org/core "${my_dir?}"/lo
 fi
 
@@ -131,7 +133,8 @@ flatpak build-finish --command=/app/libreoffice/program/soffice \
  --socket=system-bus --socket=session-bus --filesystem=host \
  --env=LIBO_FLATPAK=1 "${my_dir?}"/app
 flatpak build-export --gpg-homedir="${my_gpghomedir?}" \
- --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository "${my_dir?}"/app
+ --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository "${my_dir?}"/app \
+ "${my_flatpakbranch?}"
 flatpak build-update-repo --title='The Document Foundation LibreOffice Fresh' \
  --generate-static-deltas --prune --gpg-homedir="${my_gpghomedir?}" \
  --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository
@@ -143,4 +146,5 @@ gpg2 --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
 flatpak build-bundle \
  --repo-url=http://download.documentfoundation.org/libreoffice/flatpak/repository \
  --gpg-keys="${my_dir?}"/key "${my_dir?}"/repository \
- "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice
+ "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice \
+ "${my_flatpakbranch?}"
