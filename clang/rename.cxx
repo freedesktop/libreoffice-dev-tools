@@ -42,9 +42,13 @@ class RenameVisitor : public clang::RecursiveASTVisitor<RenameVisitor>
     // Otherwise an A -> BA replacement would be done twice.
     std::set<clang::SourceLocation> maHandledLocations;
 
-    void RewriteText(clang::SourceLocation aStart, unsigned nLength, const std::string& rOldName)
+    void RewriteText(clang::SourceLocation aStart, unsigned nLength, const std::string& rOldName, const std::string& rPrefix = std::string())
     {
-        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(rOldName);
+        std::string aOldName = rOldName;
+        if (!rPrefix.empty())
+            // E.g. rOldName is '~C' and rPrefix is '~', then check if 'C' is to be renamed.
+            aOldName = aOldName.substr(rPrefix.size());
+        const std::map<std::string, std::string>::const_iterator it = mrRewriter.getNameMap().find(aOldName);
         if (it != mrRewriter.getNameMap().end())
         {
             if (aStart.isMacroID())
@@ -56,7 +60,11 @@ class RenameVisitor : public clang::RecursiveASTVisitor<RenameVisitor>
                 aStart = mrRewriter.getSourceMgr().getSpellingLoc(aStart);
             if (maHandledLocations.find(aStart) == maHandledLocations.end())
             {
-                mrRewriter.ReplaceText(aStart, nLength, it->second);
+                std::string aNewName = it->second;
+                if (!rPrefix.empty())
+                    // E.g. aNewName is 'D' and rPrefix is '~', then rename to '~D'.
+                    aNewName = rPrefix + aNewName;
+                mrRewriter.ReplaceText(aStart, nLength, aNewName);
                 maHandledLocations.insert(aStart);
             }
         }
@@ -146,6 +154,26 @@ public:
          *      ^~~ Handles this.
          */
         RewriteText(pDecl->getLocation(), pDecl->getNameAsString().length(), aName);
+
+        return true;
+    }
+
+    bool VisitCXXDestructorDecl(clang::CXXDestructorDecl* pDecl)
+    {
+        std::string aName = pDecl->getNameAsString();
+        std::string aPrefix("~");
+        if (pDecl->isThisDeclarationADefinition())
+            /*
+             * Foo::~Foo(...) {}
+             * ^~~ Handles this.
+             */
+            RewriteText(pDecl->getLocStart(), pDecl->getNameAsString().length() - aPrefix.size(), aName.substr(aPrefix.size()));
+
+        /*
+         * Foo::~Foo(...) {}
+         *      ^~~ Handles this.
+         */
+        RewriteText(pDecl->getLocation(), pDecl->getNameAsString().length(), aName, aPrefix);
 
         return true;
     }
