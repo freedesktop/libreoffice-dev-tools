@@ -268,8 +268,10 @@ public:
      *
      * ... static_cast<const C&>(...) ...;
      *                       ^ ... and this.
+     *
+     * ... and the same for dynamic_cast<>().
      */
-    bool VisitCXXStaticCastExpr(clang::CXXStaticCastExpr* pExpr)
+    bool handleCXXNamedCastExpr(clang::CXXNamedCastExpr* pExpr)
     {
         clang::QualType pType = pExpr->getType();
         const clang::RecordDecl* pDecl = pType->getPointeeCXXRecordDecl();
@@ -282,6 +284,16 @@ public:
             RewriteText(aLocation, pDecl->getNameAsString().length(), aName);
         }
         return true;
+    }
+
+    bool VisitCXXStaticCastExpr(clang::CXXStaticCastExpr* pExpr)
+    {
+        return handleCXXNamedCastExpr(pExpr);
+    }
+
+    bool VisitCXXDynamicCastExpr(clang::CXXDynamicCastExpr* pExpr)
+    {
+        return handleCXXNamedCastExpr(pExpr);
     }
 };
 

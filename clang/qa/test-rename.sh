@@ -95,6 +95,10 @@ declare_rename_test "testCXXStaticCastExpr" "rename-cxx-static-cast-expr.cxx"
 bin/rename -old-name=C -new-name=D $test_input --
 test_assert_equal $test_expected $test_output
 
+declare_rename_test "testCXXDynamicCastExpr" "rename-cxx-dynamic-cast-expr.cxx"
+bin/rename -old-name=C -new-name=D $test_input --
+test_assert_equal $test_expected $test_output
+
 declare_rename_test "testCXXDestructorDecl" "rename-cxx-destructor-decl.cxx"
 bin/rename -old-name=C -new-name=D $test_input --
 test_assert_equal $test_expected $test_output
