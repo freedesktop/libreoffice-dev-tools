@@ -126,7 +126,7 @@ flatpak build --nofilesystem=host "${my_dir?}"/app appstream-compose \
  org.libreoffice.LibreOffice-{base,calc,draw,impress,writer}
 
 
-# 6  Generate bundle:
+# 6  Generate bundle
 
 flatpak build-finish --command=/app/libreoffice/program/soffice \
  --share=network --share=ipc --socket=x11 --socket=wayland --socket=pulseaudio \
@@ -135,9 +135,16 @@ flatpak build-finish --command=/app/libreoffice/program/soffice \
 flatpak build-export --gpg-homedir="${my_gpghomedir?}" \
  --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository "${my_dir?}"/app \
  "${my_flatpakbranch?}"
+## --prune-depth=1 leaves the one most recent older revision available; that
+## keeps the repo from growing without bounds, but for one allows users to roll
+## back at least one rev (if there's decent support for that; there's currently
+## "flatpak update --commit="), and for another makes --generate-static-deltas
+## provide fast deltas at least from that prev rev (in addition to fast deltas
+## "from nothing"):
 flatpak build-update-repo --title='The Document Foundation LibreOffice' \
- --generate-static-deltas --prune --gpg-homedir="${my_gpghomedir?}" \
- --gpg-sign="${my_gpgkeyid?}" "${my_dir?}"/repository
+ --generate-static-deltas --prune --prune-depth=1 \
+ --gpg-homedir="${my_gpghomedir?}" --gpg-sign="${my_gpgkeyid?}" \
+ "${my_dir?}"/repository
 tar --create --file "${my_dir?}"/repository.tgz --gzip \
  --directory="${my_dir?}" repository
 rm -f "${my_dir?}"/key
