@@ -295,6 +295,16 @@ public:
     {
         return handleCXXNamedCastExpr(pExpr);
     }
+
+    bool VisitCXXReinterpretCastExpr(clang::CXXReinterpretCastExpr* pExpr)
+    {
+        return handleCXXNamedCastExpr(pExpr);
+    }
+
+    bool VisitCXXConstCastExpr(clang::CXXConstCastExpr* pExpr)
+    {
+        return handleCXXNamedCastExpr(pExpr);
+    }
 };
 
 class RenameASTConsumer : public clang::ASTConsumer
