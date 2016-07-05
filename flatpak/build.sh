@@ -90,6 +90,13 @@ flatpak build --build-dir="${my_dir?}"/build \
 # 5  Assemble the app files and metadata:
 
 cp -r "${my_dir?}"/inst/lib/libreoffice "${my_dir?}"/app/files/
+mkdir "${my_dir?}"/app/files/bin
+cat <<\EOF > "${my_dir?}"/app/files/bin/xdg-open
+gdbus call --session --dest org.freedesktop.portal.Desktop \
+ --object-path /org/freedesktop/portal/desktop \
+ --method org.freedesktop.portal.OpenURI.OpenURI '' "$1" {}
+EOF
+chmod +x "${my_dir?}"/app/files/bin/xdg-open
 mkdir "${my_dir?}"/app/files/share
 mkdir "${my_dir?}"/app/files/share/applications
 ## libreoffice-*.desktop -> org.libreoffice.LibreOffice-*.desktop:
