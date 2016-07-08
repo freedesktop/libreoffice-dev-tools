@@ -91,6 +91,22 @@ flatpak build --build-dir="${my_dir?}"/build \
 
 cp -r "${my_dir?}"/inst/lib/libreoffice "${my_dir?}"/app/files/
 mkdir "${my_dir?}"/app/files/bin
+## Per "man gdbus" and <https://developer.gnome.org/glib/stable/
+## gvariant-text.html#gvariant-text-strings> (cf.
+## <https://bugzilla.gnome.org/show_bug.cgi?id=768555#c1>, comment 1 to "'man
+## gdbus': unclear what 'serialized GVariant' means for args to 'gdbus call'"),
+## the argument to the below xdg-open must be UTF-8 encoded, must not have "..."
+## or '...' as its outermost characters (as those should be interpreted by gdbus
+## as---unnecessary---quoting), and must not contain backslashes (as those would
+## need to be quoted as "\\"); for the first requirement, LO's
+## ShellExec::execute (shell/source/unix/exec/shellexec.cxx) encodes the
+## argument with osl_getThreadTextEncoding(), which these days hopefully is
+## always UTF-8 on Linux (and, hoping that the argument is a valid URI, it
+## should not contain any non-ASCII characters); for the latter two
+## requirements, hope that the argument is a valid absolute URI, and so should
+## not contain any double quotes or backslashes, nor should it contain single
+## quotes as its first and last character (where the first character needs to be
+## part of the URI scheme):
 cat <<\EOF > "${my_dir?}"/app/files/bin/xdg-open
 gdbus call --session --dest org.freedesktop.portal.Desktop \
  --object-path /org/freedesktop/portal/desktop \
