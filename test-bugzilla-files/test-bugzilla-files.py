@@ -27,6 +27,7 @@
 
 import getopt
 import os
+import glob
 import subprocess
 import sys
 import time
@@ -528,7 +529,9 @@ class LoadFileTest:
                 connection.tearDown()
                 connection.setUp()
             print("...done with: " + self.file)
-            subprocess.call("rm core*", shell=True)
+            cores = glob.glob("core*")
+            for core in cores:
+                os.remove(core)
 
 class NormalTimer:
     def __init__(self):
