@@ -248,7 +248,7 @@ def getComponent(xDoc):
         return "draw"
     elif xDoc.supportsService("com.sun.star.presentation.PresentationDocument"):
         return "impress"
-    elif xDoc.supportsService("com.sun.star.formula.FormularProperties"):
+    elif xDoc.supportsService("com.sun.star.formula.FormulaProperties"):
         return "math"
     elif xDoc.supportsService("com.sun.star.sdb.OfficeDatabaseDocument"):
         return "base"
