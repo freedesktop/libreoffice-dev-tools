@@ -110,7 +110,7 @@ mkdir "${my_dir?}"/app/files/bin
 cat <<\EOF > "${my_dir?}"/app/files/bin/xdg-open
 gdbus call --session --dest org.freedesktop.portal.Desktop \
  --object-path /org/freedesktop/portal/desktop \
- --method org.freedesktop.portal.OpenURI.OpenURI '' "$1" {}
+ --method org.freedesktop.portal.OpenURI.OpenURI -- '' "$1" {}
 EOF
 chmod +x "${my_dir?}"/app/files/bin/xdg-open
 mkdir "${my_dir?}"/app/files/share
