@@ -28,6 +28,8 @@ try:
 
         if event['type'] != "comment-added":
             continue
+        if 'username' not in event['change']['owner'].keys():
+            continue
         if event['change']['owner']['username'] != os.environ['USER']:
             continue
         if event['change']['project'] != project:
