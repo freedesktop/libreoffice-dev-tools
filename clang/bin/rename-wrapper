@@ -1,6 +1,7 @@
 #!/bin/bash
 
 mydir=$(dirname $0)
+myname=rename
 if [ -h $0 ]; then
     mydir=$(dirname $(readlink -f $0))
 fi
@@ -24,7 +25,11 @@ done
 
 ret=0
 if [ -n "$file" ]; then
-    $mydir/rename $RENAME_ARGS $file -- "$@"
+    if [ "$myname" == "clang-rename" ]; then
+        mkdir -p /tmp/rename
+        RENAME_ARGS="$RENAME_ARGS -export-fixes=$(mktemp -p /tmp/rename XXXXXXXXXX.yaml)"
+    fi
+    $mydir/$myname $RENAME_ARGS $file -- "$@"
     ret=$?
 fi
 

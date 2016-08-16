@@ -77,4 +77,36 @@ Once the rewriting is done, you can overwrite the original files with the .new-r
 for i in $(find . -name "*.new-rename"); do mv -f $i ${i%%.new-rename}; done
 ----
 
+== Using find-unprefixed-members with clang-rename
+
+With new enough clang-rename (clang-tools-extra r278201 towards 4.0 or newer)
+it's possible to avoid using the simple rename tool included in this repo. One
+advantage of doing so is correct handling of overriden member functions.  Here
+is an example:
+
+Detect unprefixed members for a class:
+
+----
+make -sr -j8 COMPILER_EXTERNAL_TOOL=1 CCACHE_PREFIX=find-unprefixed-members-wrapper2 RENAME_ARGS="-class-name=SwPagePreview -yaml"
+----
+
+(`find-unprefixed-members-wrapper2` is the same as `rename-wrapper`, just `s/=rename/=find-unprefixed-members/`.)
+
+and save the output to `$HOME/rename.yaml`.
+
+Rename them:
+
+----
+make -sr -j8 COMPILER_EXTERNAL_TOOL=1 CCACHE_PREFIX=clang-rename-wrapper RENAME_ARGS="rename-all -input=$HOME/rename.yaml"
+----
+
+(`clang-rename-wrapper` is the same as `rename-wrapper`, just `s/=rename/=clang-rename/`.)
+
+Put output into git:
+
+----
+clang-apply-replacements /tmp/rename
+rm -rf /tmp/rename
+----
+
 // vim: ft=asciidoc

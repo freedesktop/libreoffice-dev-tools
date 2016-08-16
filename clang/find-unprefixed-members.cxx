@@ -10,20 +10,37 @@
 #include <clang/Tooling/CommonOptionsParser.h>
 #include <clang/Tooling/Tooling.h>
 
+class RenameResult
+{
+public:
+    std::string m_aScope;
+    std::string m_aOldName;
+    std::string m_aNewName;
+
+    RenameResult(const std::string& rScope, const std::string& rOldName, const std::string& rNewName)
+        : m_aScope(rScope),
+          m_aOldName(rOldName),
+          m_aNewName(rNewName)
+    {
+    }
+};
+
 class Context
 {
     std::string m_aClassName;
     std::string m_aClassPrefix;
     std::set<std::string> m_aClassExcludedPrefixes;
     bool m_bPoco;
+    bool m_bYaml;
     std::string m_aPathPrefix;
     clang::ASTContext* m_pContext;
 
 public:
-    Context(const std::string& rClassName, const std::string& rClassPrefix, const std::string& rClassExcludedPrefix, bool bPoco, const std::string& rPathPrefix)
+    Context(const std::string& rClassName, const std::string& rClassPrefix, const std::string& rClassExcludedPrefix, bool bPoco, bool bYaml, const std::string& rPathPrefix)
         : m_aClassName(rClassName),
           m_aClassPrefix(rClassPrefix),
           m_bPoco(bPoco),
+          m_bYaml(bYaml),
           m_aPathPrefix(rPathPrefix),
           m_pContext(nullptr)
     {
@@ -115,13 +132,18 @@ public:
 
         return bRet;
     }
+
+    bool getYaml() const
+    {
+        return m_bYaml;
+    }
 };
 
 class Visitor : public clang::RecursiveASTVisitor<Visitor>
 {
     Context m_rContext;
     /// List of qualified class name -- member name pairs.
-    std::vector<std::pair<std::string, std::string>> m_aResults;
+    std::vector<RenameResult> m_aResults;
     /// List of qualified class names which have member functions.
     std::set<std::string> m_aFunctions;
 
@@ -132,7 +154,7 @@ public:
         m_rContext.setASTContext(rASTContext);
     }
 
-    const std::vector<std::pair<std::string, std::string>>& getResults()
+    const std::vector<RenameResult>& getResults()
     {
         return m_aResults;
     }
@@ -162,9 +184,7 @@ public:
             if (!m_rContext.checkNonStatic(aName))
             {
                 m_rContext.suggestNonStatic(aName);
-                std::stringstream ss;
-                ss << pDecl->getNameAsString() << "," << aName;
-                m_aResults.push_back(std::make_pair(pRecord->getQualifiedNameAsString(), ss.str()));
+                m_aResults.push_back(RenameResult(pRecord->getQualifiedNameAsString(), pDecl->getNameAsString(), aName));
             }
         }
 
@@ -194,9 +214,7 @@ public:
             if (!m_rContext.checkStatic(aName))
             {
                 m_rContext.suggestStatic(aName);
-                std::stringstream ss;
-                ss << pDecl->getNameAsString() << "," << aName;
-                m_aResults.push_back(std::make_pair(pRecord->getQualifiedNameAsString(), ss.str()));
+                m_aResults.push_back(RenameResult(pRecord->getQualifiedNameAsString(), pDecl->getNameAsString(), aName));
             }
         }
 
@@ -238,20 +256,30 @@ public:
         Visitor aVisitor(m_rContext, rContext);
         aVisitor.TraverseDecl(rContext.getTranslationUnitDecl());
         const std::set<std::string>& rFunctions = aVisitor.getFunctions();
-        const std::vector<std::pair<std::string, std::string>>& rResults = aVisitor.getResults();
+        const std::vector<RenameResult>& rResults = aVisitor.getResults();
         // Ignore missing prefixes in structs without member functions.
         bool bFound = false;
+        if (m_rContext.getYaml())
+            std::cerr << "---" << std::endl;
         for (const std::string& rFunction : rFunctions)
         {
-            for (const std::pair<std::string, std::string>& rResult : rResults)
+            for (const RenameResult& rResult : rResults)
             {
-                if (rResult.first == rFunction)
+                if (rResult.m_aScope == rFunction)
                 {
-                    std::cerr << rResult.first << "::" << rResult.second << std::endl;
+                    if (m_rContext.getYaml())
+                    {
+                        std::cerr << "- OldName:        " << rResult.m_aScope << "::" << rResult.m_aOldName << std::endl;
+                        std::cerr << "  NewName:        " << rResult.m_aNewName << std::endl;
+                    }
+                    else
+                        std::cerr << rResult.m_aScope << "::" << rResult.m_aOldName << "," << rResult.m_aNewName << std::endl;
                     bFound = true;
                 }
             }
         }
+        if (m_rContext.getYaml())
+            std::cerr << "..." << std::endl;
         if (bFound)
             exit(1);
     }
@@ -295,6 +323,9 @@ int main(int argc, const char** argv)
     llvm::cl::opt<bool> bPoco("poco",
                               llvm::cl::desc("Expect Poco-style '_' instead of LibreOffice-style 'm_' as prefix."),
                               llvm::cl::cat(aCategory));
+    llvm::cl::opt<bool> bYaml("yaml",
+                              llvm::cl::desc("Output YAML instead of CSV, for clang-rename."),
+                              llvm::cl::cat(aCategory));
     llvm::cl::opt<std::string> aPathPrefix("path-prefix",
                                             llvm::cl::desc("If not empty, ignore all source code paths not matching this prefix."),
                                             llvm::cl::cat(aCategory));
@@ -302,7 +333,7 @@ int main(int argc, const char** argv)
 
     clang::tooling::ClangTool aTool(aParser.getCompilations(), aParser.getSourcePathList());
 
-    Context aContext(aClassName, aClassPrefix, aClassExcludedPrefix, bPoco, aPathPrefix);
+    Context aContext(aClassName, aClassPrefix, aClassExcludedPrefix, bPoco, bYaml, aPathPrefix);
     FrontendAction aAction(aContext);
     std::unique_ptr<clang::tooling::FrontendActionFactory> pFactory = clang::tooling::newFrontendActionFactory(&aAction);
     return aTool.run(pFactory.get());

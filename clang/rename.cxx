@@ -420,9 +420,10 @@ static bool parseCsv(const std::string& rCsv, std::map<std::string, std::string>
 int main(int argc, const char** argv)
 {
     llvm::cl::OptionCategory aCategory("rename options");
+    llvm::cl::OptionCategory aCategory2("rename options");
     llvm::cl::opt<std::string> aOldName("old-name",
                                         llvm::cl::desc("Old, qualified name (Class::member)."),
-                                        llvm::cl::cat(aCategory));
+                                        llvm::cl::cat(aCategory), llvm::cl::cat(aCategory2));
     llvm::cl::opt<std::string> aNewName("new-name",
                                         llvm::cl::desc("New, non-qualified name (without Class::)."),
                                         llvm::cl::cat(aCategory));
