@@ -39,7 +39,7 @@ sub print_component_counts($$$)
 	my $count = $component_count->{$component};
 	die "Error on $component - $count" if ($count < 0);
 	if (!defined $obsolete_components{$component} && $count > 0) {
-	    printf STDERR "\t  %12s - %2d (+?)\n", $component, $count;
+	    printf STDERR "\t  %23s - %2d (+?)\n", $component, $count;
 	}
     }
     print STDERR "\t\t+ $link\n";
@@ -125,6 +125,12 @@ my %high_component_count;
 $component_count{'Migration'} = 0; # aBugzilla::get_deps("https://$Bugzilla::bugserver/showdependencytree.cgi?id=43489&hide_resolved=1"); - kill for now.
 $component_count{'Crashes'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296015&short_desc=crash&query_based_on=CrashRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=CrashRegressions");
 $component_count{'Borders'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?keywords=regression&keywords_type=allwords&list_id=296016&short_desc=border&query_based_on=BorderRegressions&query_format=advanced&bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=NEEDINFO&short_desc_type=allwordssubstr&product=LibreOffice&known_name=BorderRegressions");
+$component_count{'Writer: docx filter'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=Writer&keywords=regression%2C filter%3Adocx%2C &keywords_type=allwords&product=LibreOffice&query_format=advanced");
+$component_count{'Writer: doc filter'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=Writer&keywords=regression%2C filter%3Adoc%2C &keywords_type=allwords&product=LibreOffice&query_format=advanced");
+$component_count{'Writer: other filter'} = Bugzilla::get_query("https://$Bugzilla::bugserver//buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=Writer&f1=keywords&f2=keywords&keywords=regression%2C&keywords_type=allwords&o1=nowords&o2=substring&product=LibreOffice&query_format=advanced&v1=filter%3Adocx%2C filter%3Adoc&v2=filter%3A");
+$component_count{'Writer: perf'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=Writer&keywords=regression%2C perf%2C &keywords_type=allwords&product=LibreOffice&query_format=advanced");
+$component_count{'Writer: other'} = Bugzilla::get_query("https://$Bugzilla::bugserver/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&bug_status=PLEASETEST&component=Writer&f1=keywords&keywords=regression%2C&keywords_type=allwords&o1=nowordssubstr&product=LibreOffice&query_format=advanced&v1=filter%3A%2C perf");
+
 
 my @reg_toquery = ( 'Calc', 'Impress', 'Base', 'Draw', 'LibreOffice', 'Writer', 'BASIC', 'Chart', 'Extensions', 'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export', 'UI', 'filters and storage', 'framework', 'graphics stack', 'sdk' );
 for my $component (@reg_toquery) {
