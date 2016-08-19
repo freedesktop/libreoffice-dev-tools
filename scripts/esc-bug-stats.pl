@@ -111,7 +111,7 @@ $open = Bugzilla::get_query($bibisect_open_query);
 print STDERR "\n";
 print STDERR "* Bibisected bugs open: keyword 'bibisected'\n";
 print STDERR "\t+ $open (of $all) older ?\n";
-print STDERR "\t\t+ http://bit.ly/VQfF3Q\n";
+print STDERR "\t\t+ https://bugs.documentfoundation.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&f1=keywords&known_name=LibreOffice%20Bi-bisected&o1=substring&product=LibreOffice&query_based_on=LibreOffice%20Bi-bisected&query_format=advanced&resolution=---&v1=bibisected\n";
 print STDERR "\n";
 
 print STDERR "* all bugs tagged with 'regression'\n";
