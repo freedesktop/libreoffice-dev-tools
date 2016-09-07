@@ -1,3 +1,1 @@
 Help authoring extension is a tool to create and maintain the LibreOffice help files (.xhp) easily.
-
-For details, please see https://wiki.documentfoundation.org/Documentation/Help
