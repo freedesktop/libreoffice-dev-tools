@@ -38,7 +38,7 @@
     </publisher>
 
     <extension-description>
-        <src lang="en-US" xlink:href="description-en-US.txt"/>
+        <src lang="en-US" xlink:href="description/description-en-US.txt"/>
     </extension-description>
 
     <update-information>
