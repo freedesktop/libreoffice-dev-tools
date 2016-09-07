@@ -9,7 +9,7 @@ editing of the LibreOffice Help.  Usage info is here:
 
 If you want to improve the extension itself, get the sources here:
 
-  $ git clone git clone git://gerrit.libreoffice.org/dev-tools
+  $ git clone git://gerrit.libreoffice.org/dev-tools
 
 and start hacking it.  Most probably you'll want to do improvements to the
 .xhp export filter:
