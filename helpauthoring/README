@@ -45,9 +45,9 @@ Increase the version number both in:
 
 and then:
 
-  cd helpauthoring && make dist
+  cd helpauthoring && make
 
-The new version will be created in the helpauthoring/ directory.
+The new version will be created in the dist/ directory.
 
 Upload it to:
 
