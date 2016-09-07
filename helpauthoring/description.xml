@@ -24,8 +24,9 @@
     <identifier value="org.openoffice.helpauthoring"/>
 
     <version value="3.1.4"/>
+
     <display-name>
-        <name lang="en">Help authoring extension</name>
+        <name lang="en">Help Authoring Extension</name>
     </display-name>
 
     <dependencies>
@@ -44,4 +45,3 @@
     </update-information>
 
 </description>
-
