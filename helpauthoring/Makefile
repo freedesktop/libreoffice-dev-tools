@@ -7,9 +7,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-dist:
+default:
 	VER=`grep '<version' description.xml | sed -e 's/^.*value="//' -e 's/".*//'` ; \
-	    rm -f HelpAuthoring-$$VER.oxt ; \
-	    zip -r HelpAuthoring-$$VER.oxt . -x '*.oxt' '.*.sw*' '*.xcf' '*.svg' 'Makefile'
+	    rm -f dist/HelpAuthoring-$$VER.oxt ; \
+	    zip -r dist/HelpAuthoring-$$VER.oxt . -x '*.oxt' '.*.sw*' '*.xcf' '*.svg' 'Makefile'
 
 # vim: set noet:
