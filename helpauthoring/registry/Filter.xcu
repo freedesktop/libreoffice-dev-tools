@@ -25,7 +25,7 @@
         <prop oor:name="FileFormatVersion"><value>0</value></prop>
         <prop oor:name="Type"><value>XHP_Help</value></prop>
         <prop oor:name="DocumentService"><value>com.sun.star.text.TextDocument</value></prop>
-        <prop oor:name="UserData"><value oor:separator=",">com.sun.star.documentconversion.XSLTFilter,,com.sun.star.comp.Writer.XMLOasisImporter,com.sun.star.comp.Writer.XMLOasisExporter,%origin%/filter/xmlhelp2soffice.xsl,%origin%/filter/soffice2xmlhelp.xsl,%origin%/filter/xmlhel.dtd,%origin%/filter/xmlhelptemplate.ott</value></prop>
+        <prop oor:name="UserData"><value oor:separator=",">com.sun.star.documentconversion.XSLTFilter,,com.sun.star.comp.Writer.XMLOasisImporter,com.sun.star.comp.Writer.XMLOasisExporter,%origin%/../filter/xmlhelp2soffice.xsl,%origin%/../filter/soffice2xmlhelp.xsl,%origin%/../filter/xmlhel.dtd,%origin%/../filter/xmlhelptemplate.ott</value></prop>
         <prop oor:name="FilterService"><value>com.sun.star.comp.Writer.XmlFilterAdaptor</value></prop>
         <prop oor:name="UIName"><value>Help (xhp)</value></prop>
         <prop oor:name="Flags"><value>IMPORT EXPORT ALIEN 3RDPARTYFILTER</value></prop>
