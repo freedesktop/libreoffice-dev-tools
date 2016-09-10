@@ -1,0 +1,1 @@
+/home/moggi/devel/libo9/instdir/program/python /home/moggi/devel/libo9/uitest/test_main.py --debug --soffice=path:/home/moggi/devel/libo9/instdir/program/soffice --userdir=file:///tmp/libreoffice_$dir_name/4 --file=/home/moggi/devel/libo9/uitest/calc_tests/create_range_name.py
