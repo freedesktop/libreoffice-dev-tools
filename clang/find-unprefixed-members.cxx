@@ -269,7 +269,7 @@ public:
                 {
                     if (m_rContext.getYaml())
                     {
-                        std::cerr << "- OldName:        " << rResult.m_aScope << "::" << rResult.m_aOldName << std::endl;
+                        std::cerr << "- QualifiedName:  " << rResult.m_aScope << "::" << rResult.m_aOldName << std::endl;
                         std::cerr << "  NewName:        " << rResult.m_aNewName << std::endl;
                     }
                     else
