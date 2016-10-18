@@ -149,7 +149,7 @@ flatpak build --nofilesystem=host "${my_dir?}"/app appstream-compose \
  org.libreoffice.LibreOffice-{base,calc,draw,impress,writer}
 
 
-# 6  Generate bundle
+# 6  Generate repository, .flatpak bundle, and .flatpakref file
 
 flatpak build-finish --command=/app/libreoffice/program/soffice \
  --share=network --share=ipc --socket=x11 --socket=wayland --socket=pulseaudio \
@@ -178,3 +178,9 @@ flatpak build-bundle \
  --gpg-keys="${my_dir?}"/key "${my_dir?}"/repository \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice \
  "${my_flatpakbranch?}"
+rm -f "${my_dir?}"/LibreOffice.flatpakref
+printf '[Flatpak Ref]\nTitle=The Document Foundation LibreOffice\n' \
+ 'Name=org.libreoffice.LibreOffice\nBranch=%s\n' \
+ 'Url=http://download.documentfoundation.org/libreoffice/flatpak/repository\n' \
+ 'IsRuntime=False\nGPGKey=%s\n' "${my_flatpakbranch?}" \
+ $(base64 --wrap=0 < "${my_dir?}"/key) > "${my_dir?}"/LibreOffice.flatpakref
