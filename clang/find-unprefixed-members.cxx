@@ -72,6 +72,9 @@ public:
     /// Checks if a non-static member has an expected name
     bool checkNonStatic(const std::string& rName) const
     {
+        if (rName.empty())
+            return true;
+
         if (m_bPoco)
             return rName.find("_") == 0;
         else
@@ -81,6 +84,9 @@ public:
     /// Checks if a static member has an expected name
     bool checkStatic(const std::string& rName) const
     {
+        if (rName.empty())
+            return true;
+
         if (m_bPoco)
             return !rName.empty() && rName[0] >= 'A' && rName[0] <= 'Z';
         else
