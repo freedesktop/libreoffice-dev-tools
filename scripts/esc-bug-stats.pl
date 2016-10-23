@@ -89,17 +89,19 @@ for my $bucket (sort { $b cmp $a } keys %ver_open) {
     print STDERR "        $bucket: $open/$all - $percent%\n";
 }
 
-my ($reg_all, $reg_open, $reg_high);
+print STDERR "Querying for bisection:\n";
+my $bisect_query = "https://$Bugzilla::bugserver/buglist.cgi?keywords=bisected%2C&keywords_type=allwords&limit=0&order=tag DESC%2Cchangeddate DESC%2Cversion DESC%2Cpriority%2Cbug_severity&product=LibreOffice&query_format=advanced";
+my $bisect_open_query = "https://$Bugzilla::bugserver/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&keywords=bisected%2C&keywords_type=allwords&product=LibreOffice&query_format=advanced&resolution=---";
 
-print STDERR "Querying for regressions:\n";
-my $high_fragment = "bug_severity=blocker&bug_severity=critical";
-my $regression_query="https://$Bugzilla::bugserver/buglist.cgi?columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&keywords=regression%2C%20&keywords_type=allwords&list_id=267671&product=LibreOffice&query_format=advanced&order=bug_id&limit=0";
-my $regression_open_query="https://$Bugzilla::bugserver/buglist.cgi?keywords=regression%2C%20&keywords_type=allwords&list_id=267687&columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&resolution=---&query_based_on=Regressions&query_format=advanced&product=LibreOffice&known_name=Regressions&limit=0";
-my $regression_high_query= "$regression_open_query&$high_fragment&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED";
-
-$reg_all = Bugzilla::get_query($regression_query);
-$reg_open = Bugzilla::get_query($regression_open_query);
-$reg_high = Bugzilla::get_query($regression_high_query);
+my ($all, $open);
+$all = Bugzilla::get_query($bisect_query);
+$open = Bugzilla::get_query($bisect_open_query);
+print STDERR "\n";
+print STDERR "* bisected bugs open: keyword 'bisected'\n";
+print STDERR "\t+ more accurate - down to a single commit.\n";
+print STDERR "\t+ $open (of $all) older ?\n";
+print STDERR "\t\t+ https://bugs.documentfoundation.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&keywords=bisected%2C&keywords_type=allwords&query_format=advanced&resolution=---\n";
+print STDERR "\n";
 
 print STDERR "Querying for bibisection:\n";
 my $bibisect_query = "https://$Bugzilla::bugserver/buglist.cgi?f2=status_whiteboard&f3=OP&f4=keywords&f5=status_whiteboard&j3=OR&known_name=BibisectedAll&limit=0&list_id=579989&n2=1&o1=substring&o2=substring&o4=substring&o5=substring&order=changeddate DESC%2Cop_sys%2Cbug_status%2Cpriority%2Cassigned_to%2Cbug_id&product=LibreOffice&query_format=advanced&resolution=---&resolution=FIXED&resolution=INVALID&resolution=WONTFIX&resolution=DUPLICATE&resolution=WORKSFORME&resolution=MOVED&resolution=NOTABUG&resolution=NOTOURBUG&v1=bibisected&v2=bibisected35older&v4=bibisected&v5=bibisected";
@@ -113,6 +115,19 @@ print STDERR "* Bibisected bugs open: keyword 'bibisected'\n";
 print STDERR "\t+ $open (of $all) older ?\n";
 print STDERR "\t\t+ https://bugs.documentfoundation.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&f1=keywords&known_name=LibreOffice%20Bi-bisected&o1=substring&product=LibreOffice&query_based_on=LibreOffice%20Bi-bisected&query_format=advanced&resolution=---&v1=bibisected\n";
 print STDERR "\n";
+
+
+my ($reg_all, $reg_open, $reg_high);
+
+print STDERR "Querying for regressions:\n";
+my $high_fragment = "bug_severity=blocker&bug_severity=critical";
+my $regression_query="https://$Bugzilla::bugserver/buglist.cgi?columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&keywords=regression%2C%20&keywords_type=allwords&list_id=267671&product=LibreOffice&query_format=advanced&order=bug_id&limit=0";
+my $regression_open_query="https://$Bugzilla::bugserver/buglist.cgi?keywords=regression%2C%20&keywords_type=allwords&list_id=267687&columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc&resolution=---&query_based_on=Regressions&query_format=advanced&product=LibreOffice&known_name=Regressions&limit=0";
+my $regression_high_query= "$regression_open_query&$high_fragment&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED";
+
+$reg_all = Bugzilla::get_query($regression_query);
+$reg_open = Bugzilla::get_query($regression_open_query);
+$reg_high = Bugzilla::get_query($regression_high_query);
 
 print STDERR "* all bugs tagged with 'regression'\n";
 print STDERR "\t+ $reg_open(+?) bugs open of $reg_all(+?) total $reg_high high prio.\n";
