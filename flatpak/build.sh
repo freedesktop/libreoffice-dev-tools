@@ -130,6 +130,12 @@ for i in "${my_dir?}"/inst/share/icons/hicolor/*/apps/libreoffice-*; do
  cp -a "$i" \
   "$(dirname "${my_dir?}"/app/files/share/icons/hicolor/"${i#"${my_dir?}"/inst/share/icons/hicolor/}")"/org.libreoffice.LibreOffice-"${i##*/apps/libreoffice-}"
 done
+## libreoffice-*.appdata.xml -> org.libreoffice.LibreOffice-*.appdata.xml:
+mkdir "${my_dir?}"/app/files/share/appdata
+for i in "${my_dir?}"/inst/share/appdata/libreoffice-*.appdata.xml; do
+ sed -e 's/<id>libreoffice-/<id>org.libreoffice.LibreOffice-/' "$i" \
+  > "${my_dir?}"/app/files/share/appdata/org.libreoffice.LibreOffice-"${i##*/libreoffice-}"
+done
 ## see <https://github.com/flatpak/flatpak/blob/master/app/
 ## flatpak-builtins-build-finish.c> for further places where build-finish would
 ## look for data:
@@ -139,11 +145,6 @@ done
 ## see
 ## <https://github.com/flatpak/flatpak/blob/master/builder/builder-manifest.c>
 ## for the appstream-compose command line:
-mkdir "${my_dir?}"/app/files/share/appdata
-for i in "${my_dir?}"/inst/share/appdata/libreoffice-*.appdata.xml; do
- sed -e 's/<id>libreoffice-/<id>org.libreoffice.LibreOffice-/' "$i" \
-  > "${my_dir?}"/app/files/share/appdata/org.libreoffice.LibreOffice-"${i##*/libreoffice-}"
-done
 flatpak build --nofilesystem=host "${my_dir?}"/app appstream-compose \
  --prefix=/app --origin=flatpak --basename=org.libreoffice.LibreOffice \
  org.libreoffice.LibreOffice-{base,calc,draw,impress,writer}
