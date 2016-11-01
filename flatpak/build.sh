@@ -166,15 +166,31 @@ cat <<\EOF > \
  <url type="donation">https://donate.libreoffice.org/</url>
  <url type="faq">https://wiki.documentfoundation.org/Faq</url>
  <url type="help">http://www.libreoffice.org/get-help/documentation/</url>
+ <url type="translate">https://wiki.documentfoundation.org/Translating_LibreOffice</url>
  <screenshots>
-  <screenshot type="default">http://www.libreoffice.org/assets/Uploads/Discover/Screenshots/_resampled/ResizedImage400300-Writer-02-Table-of-Contents-Getting-Started-Guide-4-2.png</screenshot>
-  <screenshot type="default">http://www.libreoffice.org/assets/Uploads/Discover/Screenshots/_resampled/ResizedImage400300-Calc-02-exemple-ods.png</screenshot>
-  <screenshot type="default">http://www.libreoffice.org/assets/Uploads/Discover/Screenshots/_resampled/ResizedImage400300-Impress-01-Blank.png</screenshot>
-  <screenshot type="default">http://www.libreoffice.org/assets/Uploads/Discover/Screenshots/_resampled/ResizedImage400300-Draw-02-Tiger-fdo82219.png</screenshot>
-  <screenshot type="default">http://www.libreoffice.org/assets/Uploads/Screenshots/Base/Screenshot-78.png</screenshot>
+  <screenshot type="default">
+   <image>http://www.libreoffice.org/assets/Uploads/Discover/Screenshots/_resampled/ResizedImage400300-Writer-02-Table-of-Contents-Getting-Started-Guide-4-2.png</image>
+   <caption><!-- Describe this screenshot in less than ~10 words --></caption>
+  </screenshot>
+  <screenshot>
+   <image>http://www.libreoffice.org/assets/Uploads/Discover/Screenshots/_resampled/ResizedImage400300-Calc-02-exemple-ods.png</image>
+   <caption><!-- Describe this screenshot in less than ~10 words --></caption>
+  </screenshot>
+  <screenshot>
+   <image>http://www.libreoffice.org/assets/Uploads/Discover/Screenshots/_resampled/ResizedImage400300-Impress-01-Blank.png</image>
+   <caption><!-- Describe this screenshot in less than ~10 words --></caption>
+  </screenshot>
+  <screenshot>
+   <image>http://www.libreoffice.org/assets/Uploads/Discover/Screenshots/_resampled/ResizedImage400300-Draw-02-Tiger-fdo82219.png</image>
+   <caption><!-- Describe this screenshot in less than ~10 words --></caption>
+  </screenshot>
+  <screenshot>
+   <image>http://www.libreoffice.org/assets/Uploads/Screenshots/Base/Screenshot-78.png</image>
+   <caption><!-- Describe this screenshot in less than ~10 words --></caption>
+  </screenshot>
  </screenshots>
  <developer_name>The Document Foundation</developer_name>
- <updatecontact>libreoffice_at_lists.freedesktop.org</updatecontact>
+ <update_contact>libreoffice_at_lists.freedesktop.org</update_contact>
  <kudos>
   <kudo>HiDpiIcon</kudo>
   <kudo>HighContrast</kudo>
