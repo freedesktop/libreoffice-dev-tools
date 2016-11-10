@@ -3,7 +3,7 @@
 CLANGDEFS=-D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -fno-rtti
 CLANGWARNS=-Werror -Wall -Wno-missing-braces -Wnon-virtual-dtor -Wendif-labels -Wextra -Wundef -Wunused-macros -Wshadow -Woverloaded-virtual
 CLANGFLAGS = $(CLANGDEFS) $(CLANGWARNS) -g -std=c++11
-CLANGLIBS = -lLLVMSupport -lclangAST -lclangBasic -lclangFrontend -lclangRewrite -lclangTooling
+CLANGLIBS = -lclangAST -lclangBasic -lclangFrontend -lclangRewrite -lclangTooling -lLLVMSupport
 ifneq ($(GCOV),)
 CLANGFLAGS += --coverage
 endif
@@ -11,10 +11,10 @@ endif
 all: bin/rename bin/find-unprefixed-members
 
 bin/rename: rename.cxx Makefile
-	clang++ $(CLANGFLAGS) $(CLANGLIBS) -o $@ $<
+	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
 
 bin/find-unprefixed-members: find-unprefixed-members.cxx Makefile
-	clang++ $(CLANGFLAGS) $(CLANGLIBS) -o $@ $<
+	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
 
 test: test.cxx test.hxx Makefile
 	clang++ -o test test.cxx
