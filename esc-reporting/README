@@ -1,0 +1,6 @@
+This directory contains the tools that run on VM174, to generate esc reports (currently mentoring and UX)
+
+Patches are welcome, deployment can be done by any INFRA person, vm174 is currently maintained by jani
+
+
+
