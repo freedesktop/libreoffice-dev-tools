@@ -221,6 +221,8 @@ def analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, 
       if row['status'] == 'SUBMITTED' or row['status'] == 'DRAFT':
         row['status'] = 'NEW'
       xDate = datetime.datetime.strptime(row['updated'], '%Y-%m-%d %H:%M:%S.%f000')
+      if xDate > cfg['cutDate']:
+        continue
       ownerEmail = util_check_mail(row['owner']['name'], row['owner']['email'], statList, cfg['contributor']['combine-email'])
       statList['people'][ownerEmail]['gerrit']['userName'] = row['owner']['username']
       util_build_period_stat(cfg, statList, xDate, ownerEmail, row['status'], 'owner')
@@ -245,6 +247,8 @@ def analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, 
     for key in gitData['commits']:
       row = gitData['commits'][key]
       xDate = datetime.datetime.strptime(row['date'], "%Y-%m-%d %H:%M:%S")
+      if xDate > cfg['cutDate']:
+        continue
       if xDate < statOldDate:
         statOldDate = xDate
       if xDate > statNewDate:
@@ -282,6 +286,8 @@ def analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, 
         continue
 
       xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
+      if xDate > cfg['cutDate']:
+        continue
       if xDate < statOldDate:
         statOldDate = xDate
       if xDate > statNewDate:
@@ -317,6 +323,10 @@ def analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
       if row['status'] == 'RESOLVED' or row['status'] == 'VERIFIED' or not 'topicUI' in row['keywords']:
         continue
 
+      xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
+      if xDate > cfg['cutDate']:
+        continue
+
       statList['data']['ui']['topicUI'] += 1
       if 'needsUXEval' in row['keywords']:
         statList['data']['ui']['needsUXEval'] += 1
@@ -343,6 +353,9 @@ def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
     for key, row in bugzillaData['bugs'].items():
       email = util_check_mail('*UNKNOWN*', row['creator'], statList, cfg['contributor']['combine-email'])
       xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
+      if xDate > cfg['cutDate']:
+        continue
+
       util_build_period_stat(cfg, statList, xDate, email, row['status'], 'owner', base='qa')
 
       for change in row['comments']:
@@ -368,17 +381,18 @@ def analyze_final(statList, cfg):
       person['newestCommit'] = person['newestCommit'].strftime("%Y-%m-%d")
       person['prevCommit'] = person['prevCommit'].strftime("%Y-%m-%d")
 
-    myDay = datetime.date.today()
+    myDay = cfg['nowDate']
     x = (myDay - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
     weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
     if weekList is None:
       weekList = {'data': {}}
     statList['diff'] = util_build_diff(statList['data'], weekList['data'])
-    util_dump_file(cfg['homedir'] + 'stats.json', statList)
+    sFile = cfg['homedir'] + 'stats.json'
+    util_dump_file(sFile, statList)
     x = myDay.strftime('%Y-%m-%d')
-    util_dump_file(cfg['homedir'] + 'archive/stats_' + x + '.json', statList)
+    os.system('cp '+ sFile + ' ' + cfg['homedir'] + 'archive/stats_' + x + '.json')
     if myDay.strftime('%w') == '4':
-      util_dump_file(cfg['homedir'] + 'weeks/week_' + myDay.strftime('%Y_%W') + '.json', statList)
+        os.system('cp ' + sFile + ' ' +  cfg['homedir'] + 'weeks/week_' + myDay.strftime('%Y_%W') + '.json')
 
 
 
@@ -394,7 +408,7 @@ def runCfg(platform):
 
     cfg['contributor'] = util_load_data_file(cfg['homedir'] + 'dump/developers_dump.json')
     cfg['nowDate'] = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    cfg['cutDate'] = cfg['nowDate'] - datetime.timedelta(days=365)
+    cfg['cutDate'] = cfg['nowDate']
     cfg['1weekDate'] = cfg['nowDate'] - datetime.timedelta(days=7)
     cfg['1monthDate'] = cfg['nowDate'] - datetime.timedelta(days=30)
     cfg['3monthDate'] = cfg['nowDate'] - datetime.timedelta(days=90)
@@ -403,12 +417,7 @@ def runCfg(platform):
 
 
 
-def runAnalyze(cfg):
-    openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
-    bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
-    gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
-    gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
-
+def runAnalyze(cfg, openhubData, bugzillaData, gerritData, gitData):
     statList = util_create_statList()
     analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
     analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
@@ -418,5 +427,68 @@ def runAnalyze(cfg):
 
 
 
+def runLoad(cfg):
+    openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
+    bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
+    gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
+    gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
+
+    runAnalyze(cfg, openhubData, bugzillaData, gerritData, gitData)
+
+
+
+def runBackLoad(cfg):
+    openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
+    bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
+    gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
+    gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
+
+    cfg['nowDate'] = datetime.datetime(year=2016, month=11, day=1)
+    stopDate       = datetime.datetime(year=2016, month=11, day=13)
+
+    while stopDate > cfg['nowDate']:
+      cfg['cutDate'] = cfg['nowDate']
+      cfg['1weekDate'] = cfg['nowDate'] - datetime.timedelta(days=7)
+      cfg['1monthDate'] = cfg['nowDate'] - datetime.timedelta(days=30)
+      cfg['3monthDate'] = cfg['nowDate'] - datetime.timedelta(days=90)
+      cfg['1yearDate'] = cfg['nowDate'] - datetime.timedelta(days=365)
+      print('regenerate ' + cfg['nowDate'].strftime('%Y-%m-%d'))
+      runAnalyze(cfg, openhubData, bugzillaData, gerritData, gitData)
+      cfg['nowDate'] = cfg['nowDate'] + datetime.timedelta(days=1)
+
+
+
+def runUpgrade(cfg):
+    for i in range(40,46):
+      w = 'week_2016_' + str(i) + '.json'
+      print('upgrading ' + w)
+      statList = util_load_data_file(cfg['homedir'] + 'archiveOLD_2/' + w)
+      genFormat = util_load_data_file(cfg['homedir'] + 'weeks/' + w)
+
+      x = {'1month': {'#': statList['data']['commits']['1month']['committer']},
+           '1week': {'#': statList['data']['commits']['1week']['committer']},
+           '1year': {'#': statList['data']['commits']['1year']['committer']},
+           '3month': {'#': statList['data']['commits']['3month']['committer']}}
+      statList['data']['commits']['committer'] = x
+      x = {'1month': {'#': statList['data']['commits']['1month']['contributor']},
+           '1week': {'#': statList['data']['commits']['1week']['contributor']},
+           '1year': {'#': statList['data']['commits']['1year']['contributor']},
+           '3month': {'#': statList['data']['commits']['3month']['contributor']}}
+      statList['data']['commits']['contributor'] = x
+      statList['data']['ui'] = genFormat['data']['ui']
+      statList['data']['qa'] = genFormat['data']['qa']
+      if 'lists' in statList:
+        del statList['lists']
+
+      util_dump_file(cfg['homedir'] + 'weeks/' + w, statList)
+
+
+
 if __name__ == '__main__':
-    runAnalyze(runCfg(sys.platform))
+    if len(sys.argv) > 1:
+      if sys.argv[1] == 'backload':
+        runBackLoad(runCfg(sys.platform))
+      elif sys.argv[1] == 'upgrade':
+        runUpgrade(runCfg(sys.platform))
+    else:
+      runLoad(runCfg(sys.platform))
