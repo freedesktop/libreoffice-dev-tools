@@ -273,6 +273,10 @@ def analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, 
       committer = util_check_mail(row['committer'], row['committer-email'], statList, cfg['contributor']['combine-email'])
       statList['people'][author]['isContributor'] = True
       statList['people'][committer]['isContributor'] = True
+      if author in cfg['contributor']['contributors'] or author in cfg['contributor']['license-pending']:
+        statList['people'][author]['hasLicense'] = True
+      if committer in cfg['contributor']['contributors'] or committer in cfg['contributor']['license-pending']:
+        statList['people'][committer]['hasLicense'] = True
 
       for i in author, committer:
         if xDate > statList['people'][i]['newestCommit']:
