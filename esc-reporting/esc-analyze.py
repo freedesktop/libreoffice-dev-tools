@@ -148,6 +148,22 @@ def util_create_statList():
                                               '3month': {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0, 'total': 0},
                                               '1month': {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0, 'total': 0},
                                               '1week':  {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0, 'total': 0}}},
+                     'trendCommitter': {'1year':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                        '3month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                        '1month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                        '1week':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0}},
+                     'trendContributor': {'1year':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                          '3month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                          '1month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                          '1week':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0}},
+                     'trendQA': {'1year':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                 '3month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                 '1month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                 '1week':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0}},
+                     'trendUI': {'1year':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                 '3month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                 '1month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
+                                 '1week':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0}},
                      'ui': {'1year':  {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
                             '3month': {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
                             '1month': {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
@@ -190,7 +206,7 @@ def util_build_diff(newList, oldList):
         else:
           result[i] = util_build_diff(newList[i], oldList[i])
       else:
-        result[i] = newList[i] - oldList[i]
+          result[i] = newList[i] - oldList[i]
     return result
 
 
@@ -370,6 +386,44 @@ def analyze_myfunc(statList, openhubData, gerritData, gitData, bugzillaData, cfg
 
 
 
+def util_build_trend(cnt):
+    if cnt == 0:
+      return None
+    elif cnt <= 5:
+      return '1-5'
+    elif cnt <= 25:
+      return '6-25'
+    elif cnt <= 50:
+      return '26-50'
+    elif cnt <= 100:
+      return '51-100'
+    return '100+'
+
+
+
+def analyze_trend(statList, cfg):
+    for email in statList['people']:
+      person = statList['people'][email]
+
+      for inx in '1year', '3month', '1month', '1week':
+         x = util_build_trend(person['commits'][inx]['merged'])
+         if not x is None:
+           if person['isCommitter']:
+             statList['data']['trendCommitter'][inx][x] += 1
+             statList['data']['trendCommitter'][inx]['total'] += 1
+           elif person['isContributor']:
+             statList['data']['trendContributor'][inx][x] += 1
+             statList['data']['trendContributor'][inx]['total'] += 1
+         x = util_build_trend(person['qa'][inx]['total'])
+         if not x is None:
+           statList['data']['trendQA'][inx][x] += 1
+           statList['data']['trendQA'][inx]['total'] += 1
+         x = util_build_trend(person['ui'][inx]['total'])
+         if not x is None:
+           statList['data']['trendUI'][inx][x] += 1
+           statList['data']['trendUI'][inx]['total'] += 1
+
+
 def analyze_final(statList, cfg):
     print("Analyze final")
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
@@ -381,6 +435,7 @@ def analyze_final(statList, cfg):
       person['newestCommit'] = person['newestCommit'].strftime("%Y-%m-%d")
       person['prevCommit'] = person['prevCommit'].strftime("%Y-%m-%d")
 
+    analyze_trend(statList, cfg)
     myDay = cfg['nowDate']
     x = (myDay - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
     weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
@@ -458,29 +513,27 @@ def runBackLoad(cfg):
 
 
 
-def runUpgrade(cfg):
-    for i in range(40,46):
-      w = 'week_2016_' + str(i) + '.json'
-      print('upgrading ' + w)
-      statList = util_load_data_file(cfg['homedir'] + 'archiveOLD_2/' + w)
-      genFormat = util_load_data_file(cfg['homedir'] + 'weeks/' + w)
+def runUpgrade(cfg, fileList):
+    openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
+    bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
+    gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
+    gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
 
-      x = {'1month': {'#': statList['data']['commits']['1month']['committer']},
-           '1week': {'#': statList['data']['commits']['1week']['committer']},
-           '1year': {'#': statList['data']['commits']['1year']['committer']},
-           '3month': {'#': statList['data']['commits']['3month']['committer']}}
-      statList['data']['commits']['committer'] = x
-      x = {'1month': {'#': statList['data']['commits']['1month']['contributor']},
-           '1week': {'#': statList['data']['commits']['1week']['contributor']},
-           '1year': {'#': statList['data']['commits']['1year']['contributor']},
-           '3month': {'#': statList['data']['commits']['3month']['contributor']}}
-      statList['data']['commits']['contributor'] = x
-      statList['data']['ui'] = genFormat['data']['ui']
-      statList['data']['qa'] = genFormat['data']['qa']
-      if 'lists' in statList:
-        del statList['lists']
+    statList = util_load_data_file(cfg['homedir'] + 'weeks/week_2016_44.json')
+    cfg['nowDate'] = datetime.datetime(year=2016, month=11, day=9)
+    for i in fileList:
+      cfg['nowDate'] = cfg['nowDate'] + datetime.timedelta(days=1)
+      cfg['cutDate'] = cfg['nowDate']
+      cfg['1weekDate'] = cfg['nowDate'] - datetime.timedelta(days=7)
+      cfg['1monthDate'] = cfg['nowDate'] - datetime.timedelta(days=30)
+      cfg['3monthDate'] = cfg['nowDate'] - datetime.timedelta(days=90)
+      cfg['1yearDate'] = cfg['nowDate'] - datetime.timedelta(days=365)
+      week = util_load_data_file(cfg['homedir'] + 'archive/' + i)
+      analyze_trend(week, cfg)
+      week['diff'] = util_build_diff(week['data'], statList['data'])
+      del week['people']
+      util_dump_file(cfg['homedir'] + 'archive/' + i, week)
 
-      util_dump_file(cfg['homedir'] + 'weeks/' + w, statList)
 
 
 
@@ -489,6 +542,6 @@ if __name__ == '__main__':
       if sys.argv[1] == 'backload':
         runBackLoad(runCfg(sys.platform))
       elif sys.argv[1] == 'upgrade':
-        runUpgrade(runCfg(sys.platform))
+        runUpgrade(runCfg(sys.platform), sys.argv[2:])
     else:
       runLoad(runCfg(sys.platform))

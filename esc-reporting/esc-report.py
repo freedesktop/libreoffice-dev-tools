@@ -281,6 +281,17 @@ def report_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, c
     print(util_build_matrix('committer...', xRow, 'committer', statList), end='', file=fp)
     print(util_build_matrix('contributor...', xRow, 'contributor', statList), end='', file=fp)
 
+    print("    + Distribution of people based on number of merged patches:", file=fp)
+    xRow = [{'db': 'trendCommitter',  'tag': '1-5',    'text': '1-5'},
+            {'db': 'trendCommitter',  'tag': '6-25',   'text': '6-25'},
+            {'db': 'trendCommitter',  'tag': '26-50',  'text': '26-50'},
+            {'db': 'trendCommitter',  'tag': '51-100', 'text': '51-100'},
+            {'db': 'trendCommitter',  'tag': '100+',   'text': '100+'}]
+    print(util_build_matrix('Committer distribution', xRow, None, statList), end='', file=fp)
+    for i in xRow:
+      i['db'] = 'trendContributor'
+    print(util_build_matrix('Contributor distribution', xRow, None, statList), end='', file=fp)
+
     print("    + easyHack statistics:\n       ", end='', file=fp)
     for i1 in 'needsDevEval', 'needsUXEval', 'cleanup_comments', 'total', 'assigned', 'open':
       print(i1 + ' ' + util_build_escNumber('easyhacks', i1, statList) + '   ', end="", file=fp)
@@ -358,6 +369,13 @@ def report_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
             {'db': 'ui',  'tag': 'commented',  'text': 'commented'},
             {'db': 'ui',  'tag': 'removed',    'text': 'removed'}]
     print(util_build_matrix('BZ changes', xRow, None, statList), end='', file=fp)
+    print("    + Distribution of people based on number of changes:", file=fp)
+    xRow = [{'db': 'trendUI',  'tag': '1-5',    'text': '1-5'},
+            {'db': 'trendUI',  'tag': '6-25',   'text': '6-25'},
+            {'db': 'trendUI',  'tag': '26-50',  'text': '26-50'},
+            {'db': 'trendUI',  'tag': '51-100', 'text': '51-100'},
+            {'db': 'trendUI',  'tag': '100+',   'text': '100+'}]
+    print(util_build_matrix('distribution', xRow, None, statList), end='', file=fp)
 
     print("    + top 10 contributors:", file=fp)
     for i in range(0, 10):
@@ -401,6 +419,13 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
             {'db': 'qa',  'tag': 'commented',  'text': 'commented'},
             {'db': 'qa',  'tag': 'total',    'text': 'total'}]
     print(util_build_matrix('BZ changes', xRow, None, statList), end='', file=fp)
+    print("    + Distribution of people based on number of changes:", file=fp)
+    xRow = [{'db': 'trendQA',  'tag': '1-5',    'text': '1-5'},
+            {'db': 'trendQA',  'tag': '6-25',   'text': '6-25'},
+            {'db': 'trendQA',  'tag': '26-50',  'text': '26-50'},
+            {'db': 'trendQA',  'tag': '51-100', 'text': '51-100'},
+            {'db': 'trendQA',  'tag': '100+',   'text': '100+'}]
+    print(util_build_matrix('distribution', xRow, None, statList), end='', file=fp)
 
     print("\n    + top 10 contributors:", file=fp)
     for i in range(0, 10):
