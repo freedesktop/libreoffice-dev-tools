@@ -360,7 +360,7 @@ def report_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
     print("copy/paste to esc pad:\n"
           "* UX update (heiko)\n"
           "    + Bugzilla (topicUI) statistics\n"
-          "        {} bugs open, {} needs to be evaluated by the UXteam\n"
+          "        {} (topicUI) bugs open, {} (needsUXEval) needs to be evaluated by the UXteam\n"
           "    + Updates:".format(
           util_build_escNumber('ui', 'topicUI', statList),
           util_build_escNumber('ui', 'needsUXEval', statList)), file=fp)
@@ -380,7 +380,7 @@ def report_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
     print("    + top 10 contributors:", file=fp)
     for i in range(0, 10):
       print('          {} made {} changes in 1 month, and {} changes in 1 year'.format(
-            top10list[i]['mail'], top10list[i]['month'], top10list[i]['year']), file=fp)
+            top10list[i]['name'], top10list[i]['month'], top10list[i]['year']), file=fp)
     fp.close()
     return {'title': 'esc_mentoring, UI', 'mail': 'jani@documentfoundation.org',
             'file': '/tmp/esc_ui_report.txt'}

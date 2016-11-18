@@ -169,6 +169,7 @@ def util_create_statList():
                             '1month': {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
                             '1week':  {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
                             'needsUXEval' : 0,
+                            'closed' : 0,
                             'topicUI': 0},
                      'qa': {'1year':  {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
                                        'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0, 'total': 0},
@@ -340,16 +341,24 @@ def analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
     print("ui: analyze bugzilla", flush=True)
 
     for key, row in bugzillaData['bugs'].items():
-      if row['status'] == 'RESOLVED' or row['status'] == 'VERIFIED' or not 'topicUI' in row['keywords']:
-        continue
 
       xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
       if xDate > cfg['cutDate']:
         continue
 
-      statList['data']['ui']['topicUI'] += 1
+      if not 'topicUI' in row['keywords'] and not 'needsUXEval' in row['keywords']:
+        continue
+
+      if row['status'] == 'RESOLVED' or row['status'] == 'CLOSED' or row['status'] == 'VERIFIED':
+        if xDate > cfg['1weekDate']:
+          statList['data']['ui']['closed'] += 1
+        continue
+
       if 'needsUXEval' in row['keywords']:
         statList['data']['ui']['needsUXEval'] += 1
+
+      if 'topicUI' in row['keywords']:
+        statList['data']['ui']['topicUI'] += 1
 
       for change in row['comments']:
         email = util_check_mail('*UNKNOWN*', change['creator'], statList, cfg['contributor']['combine-email'])
