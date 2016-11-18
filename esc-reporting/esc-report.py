@@ -361,9 +361,11 @@ def report_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
           "* UX update (heiko)\n"
           "    + Bugzilla (topicUI) statistics\n"
           "        {} (topicUI) bugs open, {} (needsUXEval) needs to be evaluated by the UXteam\n"
+          "        {} closed during last week\n"
           "    + Updates:".format(
           util_build_escNumber('ui', 'topicUI', statList),
-          util_build_escNumber('ui', 'needsUXEval', statList)), file=fp)
+          util_build_escNumber('ui', 'needsUXEval', statList),
+          util_build_escNumber('ui', 'closed', statList)), file=fp)
 
     xRow = [{'db': 'ui',  'tag': 'added',       'text': 'added'},
             {'db': 'ui',  'tag': 'commented',  'text': 'commented'},
