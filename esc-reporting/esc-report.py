@@ -361,22 +361,21 @@ def report_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
           "* UX update (heiko)\n"
           "    + Bugzilla (topicUI) statistics\n"
           "        {} (topicUI) bugs open, {} (needsUXEval) needs to be evaluated by the UXteam\n"
-          "        {} closed during last week\n"
           "    + Updates:".format(
           util_build_escNumber('ui', 'topicUI', statList),
-          util_build_escNumber('ui', 'needsUXEval', statList),
-          util_build_escNumber('ui', 'closed', statList)), file=fp)
+          util_build_escNumber('ui', 'needsUXEval', statList)), file=fp)
 
-    xRow = [{'db': 'ui',  'tag': 'added',       'text': 'added'},
-            {'db': 'ui',  'tag': 'commented',  'text': 'commented'},
-            {'db': 'ui',  'tag': 'removed',    'text': 'removed'}]
+    xRow = [{'db': 'ui', 'tag': 'added',     'text': 'added'},
+            {'db': 'ui', 'tag': 'commented', 'text': 'commented'},
+            {'db': 'ui', 'tag': 'removed',   'text': 'removed'},
+            {'db': 'ui', 'tag': 'resolved',  'text': 'resolved'}]
     print(util_build_matrix('BZ changes', xRow, None, statList), end='', file=fp)
-    print("    + Distribution of people based on number of changes:", file=fp)
-    xRow = [{'db': 'trendUI',  'tag': '1-5',    'text': '1-5'},
-            {'db': 'trendUI',  'tag': '6-25',   'text': '6-25'},
-            {'db': 'trendUI',  'tag': '26-50',  'text': '26-50'},
-            {'db': 'trendUI',  'tag': '51-100', 'text': '51-100'},
-            {'db': 'trendUI',  'tag': '100+',   'text': '100+'}]
+#    print("    + Distribution of people based on number of changes:", file=fp)
+#    xRow = [{'db': 'trendUI',  'tag': '1-5',    'text': '1-5'},
+#            {'db': 'trendUI',  'tag': '6-25',   'text': '6-25'},
+#            {'db': 'trendUI',  'tag': '26-50',  'text': '26-50'},
+#            {'db': 'trendUI',  'tag': '51-100', 'text': '51-100'},
+#            {'db': 'trendUI',  'tag': '100+',   'text': '100+'}]
     print(util_build_matrix('distribution', xRow, None, statList), end='', file=fp)
 
     print("    + top 10 contributors:", file=fp)

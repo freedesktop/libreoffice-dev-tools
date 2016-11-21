@@ -82,8 +82,9 @@ def util_dump_file(fileName, rawList):
 def util_build_period_stat(cfg, statList, xDate, email, status, pstatus, base = 'gerrit'):
     for i in '1year', '3month', '1month', '1week':
       if xDate > cfg[i + 'Date']:
-        statList['people'][email][base][i][pstatus] += 1
-        statList['people'][email][base][i]['total'] += 1
+        if not email is None:
+          statList['people'][email][base][i][pstatus] += 1
+          statList['people'][email][base][i]['total'] += 1
         if not base == 'gerrit' :
           statList['data'][base][i][status] += 1
           statList['data'][base][i]['total'] += 1
@@ -164,12 +165,11 @@ def util_create_statList():
                                  '3month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
                                  '1month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0},
                                  '1week':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0, 'total': 0}},
-                     'ui': {'1year':  {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
-                            '3month': {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
-                            '1month': {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
-                            '1week':  {'added': 0, 'removed': 0, 'commented': 0, 'total': 0},
+                     'ui': {'1year':  {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0, 'total': 0},
+                            '3month': {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0, 'total': 0},
+                            '1month': {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0, 'total': 0},
+                            '1week':  {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0, 'total': 0},
                             'needsUXEval' : 0,
-                            'closed' : 0,
                             'topicUI': 0},
                      'qa': {'1year':  {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
                                        'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0, 'total': 0},
@@ -350,8 +350,7 @@ def analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
         continue
 
       if row['status'] == 'RESOLVED' or row['status'] == 'CLOSED' or row['status'] == 'VERIFIED':
-        if xDate > cfg['1weekDate']:
-          statList['data']['ui']['closed'] += 1
+        util_build_period_stat(cfg, statList, xDate, None, 'resolved', 'reviewer', base='ui')
         continue
 
       if 'needsUXEval' in row['keywords']:
@@ -369,11 +368,14 @@ def analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
         email = util_check_mail('*UNKNOWN*', change['who'], statList, cfg['contributor']['combine-email'])
         xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
         for entry in change['changes']:
-          if entry['added'] != '':
+          if entry['added'] != 'needsUXEval':
             st = 'added'
-          else:
+          elif entry['removed'] != 'needsUXEval':
             st = 'removed'
-          util_build_period_stat(cfg, statList, xDate, email, st, 'reviewer', base='ui')
+          else:
+            st = None
+          if not st is None:
+            util_build_period_stat(cfg, statList, xDate, email, st, 'reviewer', base='ui')
 
 
 def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
@@ -527,25 +529,29 @@ def runBackLoad(cfg):
 
 
 def runUpgrade(cfg, fileList):
-    openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
-    bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
-    gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
-    gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
+#    openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
+#    bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
+#    gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
+#    gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
 
-    statList = util_load_data_file(cfg['homedir'] + 'weeks/week_2016_44.json')
-    cfg['nowDate'] = datetime.datetime(year=2016, month=11, day=9)
+#    statList = util_load_data_file(cfg['homedir'] + 'weeks/week_2016_44.json')
+#    cfg['nowDate'] = datetime.datetime(year=2016, month=11, day=9)
     for i in fileList:
-      cfg['nowDate'] = cfg['nowDate'] + datetime.timedelta(days=1)
-      cfg['cutDate'] = cfg['nowDate']
-      cfg['1weekDate'] = cfg['nowDate'] - datetime.timedelta(days=7)
-      cfg['1monthDate'] = cfg['nowDate'] - datetime.timedelta(days=30)
-      cfg['3monthDate'] = cfg['nowDate'] - datetime.timedelta(days=90)
-      cfg['1yearDate'] = cfg['nowDate'] - datetime.timedelta(days=365)
-      week = util_load_data_file(cfg['homedir'] + 'archive/' + i)
-      analyze_trend(week, cfg)
-      week['diff'] = util_build_diff(week['data'], statList['data'])
-      del week['people']
-      util_dump_file(cfg['homedir'] + 'archive/' + i, week)
+      statList = util_load_data_file(cfg['homedir'] + 'archive/' + i)
+      if 'closed' in statList['data']['ui']:
+        del statList['data']['ui']['closed']
+      if 'ui' in statList['diff']:
+        if 'closed' in statList['diff']['ui']:
+          del statList['diff']['ui']['closed']
+        statList['diff']['ui']['1year']['resolved'] = 0
+        statList['diff']['ui']['3month']['resolved'] = 0
+        statList['diff']['ui']['1month']['resolved'] = 0
+        statList['diff']['ui']['1week']['resolved'] = 0
+      statList['data']['ui']['1year']['resolved'] = 0
+      statList['data']['ui']['3month']['resolved'] = 0
+      statList['data']['ui']['1month']['resolved'] = 0
+      statList['data']['ui']['1week']['resolved'] = 0
+      util_dump_file(cfg['homedir'] + 'archive/' + i, statList)
 
 
 
