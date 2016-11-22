@@ -368,9 +368,9 @@ def analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
         email = util_check_mail('*UNKNOWN*', change['who'], statList, cfg['contributor']['combine-email'])
         xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
         for entry in change['changes']:
-          if entry['added'] != 'needsUXEval':
+          if entry['added'] == 'needsUXEval':
             st = 'added'
-          elif entry['removed'] != 'needsUXEval':
+          elif entry['removed'] == 'needsUXEval':
             st = 'removed'
           else:
             st = None
@@ -489,7 +489,7 @@ def runCfg(platform):
 
 def runAnalyze(cfg, openhubData, bugzillaData, gerritData, gitData):
     statList = util_create_statList()
-    analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
+#    analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
     analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
     analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
     analyze_myfunc(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
