@@ -376,7 +376,7 @@ def report_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
 #            {'db': 'trendUI',  'tag': '26-50',  'text': '26-50'},
 #            {'db': 'trendUI',  'tag': '51-100', 'text': '51-100'},
 #            {'db': 'trendUI',  'tag': '100+',   'text': '100+'}]
-    print(util_build_matrix('distribution', xRow, None, statList), end='', file=fp)
+#    print(util_build_matrix('distribution', xRow, None, statList), end='', file=fp)
 
     print("    + top 10 contributors:", file=fp)
     for i in range(0, 10):
