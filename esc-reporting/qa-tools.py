@@ -148,7 +148,7 @@ def util_check_bugzilla_mail(statList, mail, name, date=None):
             statList['people'][mail]['newest'] = date
 
 def get_bugzilla(cfg):
-    fileName = '/home/xisco/stats/dump/bugzilla_dump.json'
+    fileName = homeDir + 'dump/bugzilla_dump.json'
     return util_load_file(fileName)
 
 def isOpen(status):
