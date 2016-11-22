@@ -470,7 +470,7 @@ def runCfg(platform):
     if 'esc_homedir' in os.environ:
       homeDir = os.environ['esc_homedir']
     else:
-      homeDir = '/home/jani/esc'
+      homeDir = '/home/xisco/dev-tools/esc-reporting'
     cfg = util_load_data_file(homeDir + '/config.json')
     cfg['homedir'] = homeDir + '/'
     cfg['platform'] = platform
