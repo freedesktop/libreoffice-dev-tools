@@ -489,7 +489,7 @@ def runCfg(platform):
 
 def runAnalyze(cfg, openhubData, bugzillaData, gerritData, gitData):
     statList = util_create_statList()
-#    analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
+    analyze_mentoring(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
     analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
     analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
     analyze_myfunc(statList, openhubData, gerritData, gitData, bugzillaData, cfg)
