@@ -175,6 +175,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
     statNewDate = statList['stat']['newest']
     statOldDate = statList['stat']['oldest']
 
+    statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
+
     for key in bugzillaData['bugs']:
         row = bugzillaData['bugs'][key]
         if not row['summary'].startswith('[META]'):
@@ -585,8 +587,6 @@ if __name__ == '__main__':
 
     statList = util_create_statList()
     analyze_bugzilla(statList, bugzillaData, cfg)
-
-    statList = util_load_file(cfg['homedir'] + 'stats.json')
 
     if len(sys.argv) > 1:
         if sys.argv[1] == 'report':
