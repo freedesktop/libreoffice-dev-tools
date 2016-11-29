@@ -562,7 +562,7 @@ def QA_Report(statList) :
 
     print('Thanks you all for making Libreoffice rocks!', file=fp)
     print(file=fp)
-    print('Generated on {} based on stats from {}. Note: Metabugs are ignoted.'.format(
+    print('Generated on {} based on stats from {}. Note: Metabugs are ignored.'.format(
         datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
     fp.close()
 
