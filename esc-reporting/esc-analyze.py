@@ -82,10 +82,10 @@ def util_dump_file(fileName, rawList):
 def util_build_period_stat(cfg, statList, xDate, email, status, pstatus, base = 'gerrit'):
     for i in '1year', '3month', '1month', '1week':
       if xDate > cfg[i + 'Date']:
-        if not email is None:
+        if email is not None:
           statList['people'][email][base][i][pstatus] += 1
           statList['people'][email][base][i]['total'] += 1
-        if not base == 'gerrit' :
+        if base != 'gerrit' :
           statList['data'][base][i][status] += 1
           statList['data'][base][i]['total'] += 1
         elif statList['people'][email]['isCommitter']:
@@ -384,10 +384,11 @@ def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
     for key, row in bugzillaData['bugs'].items():
       email = util_check_mail('*UNKNOWN*', row['creator'], statList, cfg['contributor']['combine-email'])
       xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
+      creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
       if xDate > cfg['cutDate']:
         continue
 
-      util_build_period_stat(cfg, statList, xDate, email, row['status'], 'owner', base='qa')
+      util_build_period_stat(cfg, statList, creationDate, email, row['status'], 'owner', base='qa')
 
       for change in row['comments']:
         email = util_check_mail('*UNKNOWN*', change['creator'], statList, cfg['contributor']['combine-email'])
