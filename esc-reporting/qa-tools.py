@@ -179,7 +179,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
     for key in bugzillaData['bugs']:
         row = bugzillaData['bugs'][key]
-        if not row['summary'].startswith('[META]'):
+	#Ignore META bugs and deletionrequest bugs.
+        if not row['summary'].startswith('[META]') \
+		and row['component'] != 'deletionrequest':
             creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
             if creationDate < statOldDate:
                 statOldDate = creationDate
@@ -369,7 +371,8 @@ def util_print_QA_line(fp, statList, string, number, tuple, action):
     elif action == 'keyword_removed':
         print(('  * \'' + string + '\' has been removed from {} bugs.').format(number), file=fp)
     elif action == 'created':
-        print(('  * {} have been created, of which, {} are still unconfirmed.').format(number[0], number[1]), file=fp)
+        print(('  * {} have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )').format(
+                number[0], number[1], number[2]), file=fp)
     else:
         print(('  * {} ' + auxString + ' been changed to \'' + string + '\'.').format(number), file=fp)
 
@@ -514,7 +517,8 @@ def QA_Report(statList) :
     print(file=fp)
 
     util_print_QA_line(fp, statList, '',
-                       [statList['detailedReport']['created_count'],statList['detailedReport']['unconfirmed_count']],
+                       [statList['detailedReport']['created_count'], statList['detailedReport']['unconfirmed_count'],
+                        statList['data']['bugs']['all']['status']['UNCONFIRMED']],
                        [statList['detailedReport']['lists']['unconfirmed']], 'created')
 
     print('  * {} comments have been written.'.format(statList['detailedReport']['comments_count']), file=fp)
