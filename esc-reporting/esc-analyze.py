@@ -122,10 +122,10 @@ def util_create_person_gerrit(person, email):
                          '3month': {'owner': 0, 'reviewer': 0, 'total': 0},
                          '1month': {'owner': 0, 'reviewer': 0, 'total': 0},
                          '1week':  {'owner': 0, 'reviewer': 0, 'total': 0}},
-             'qa':      {'1year':  {'owner': 0, 'reviewer': 0, 'bisected': 0, 'total': 0},
-                         '3month': {'owner': 0, 'reviewer': 0, 'bisected': 0, 'total': 0},
-                         '1month': {'owner': 0, 'reviewer': 0, 'bisected': 0, 'total': 0},
-                         '1week':  {'owner': 0, 'reviewer': 0, 'bisected': 0, 'total': 0}},
+             'qa':      {'1year':  {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0, 'bisected': 0, 'total': 0},
+                         '3month': {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0, 'bisected': 0, 'total': 0},
+                         '1month': {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0, 'bisected': 0, 'total': 0},
+                         '1week':  {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0, 'bisected': 0, 'total': 0}},
              'isCommitter': False,
              'isContributor': False,
              'hasLicense': False,
@@ -419,6 +419,10 @@ def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
             for keyword in keywordsAdded:
               if keyword == 'bisected':
                 util_build_period_stat(cfg, statList, xDate, email, '', 'bisected', base='qa')
+              if keyword == 'bibisected':
+                util_build_period_stat(cfg, statList, xDate, email, '', 'bibisected', base='qa')
+              if keyword == 'regression':
+                util_build_period_stat(cfg, statList, xDate, email, '', 'regression', base='qa')
 
       for change in row['comments']:
         email = util_check_mail('*UNKNOWN*', change['creator'], statList, cfg['contributor']['combine-email'])

@@ -462,10 +462,52 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
         if len(top10bisected) >= 10:
           break
 
-    print("\n    + Bisected by:", file=fp)
+    print("\n    + Done by:", file=fp)
     xRow = []
     for i in top10bisected:
       print('          {} bisected {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
+            i['name'], i['week'], i['month'], i['3month']), file=fp)
+
+
+    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['bibisected']), reverse=True)
+    top10bibisected = []
+    for i in tmpClist:
+      if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org' and \
+        statList['people'][i]['qa']['1week']['bibisected'] > 0:
+        x = {'mail': i,
+             'name': statList['people'][i]['name'],
+             'week' :statList['people'][i]['qa']['1week']['bibisected'],
+             'month' :statList['people'][i]['qa']['1month']['bibisected'],
+             '3month':statList['people'][i]['qa']['1month']['bibisected']}
+        top10bibisected.append(x)
+        if len(top10bibisected) >= 10:
+          break
+
+    print("\n    + Done by:", file=fp)
+    xRow = []
+    for i in top10bibisected:
+      print('          {} bibisected {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
+            i['name'], i['week'], i['month'], i['3month']), file=fp)
+
+
+    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['regression']), reverse=True)
+    top10regression = []
+    for i in tmpClist:
+      if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org' and \
+        statList['people'][i]['qa']['1week']['regression'] > 0:
+        x = {'mail': i,
+             'name': statList['people'][i]['name'],
+             'week' :statList['people'][i]['qa']['1week']['regression'],
+             'month' :statList['people'][i]['qa']['1month']['regression'],
+             '3month':statList['people'][i]['qa']['1month']['regression']}
+        top10regression.append(x)
+        if len(top10regression) >= 10:
+          break
+
+    print("\n    + Done by:", file=fp)
+    xRow = []
+    for i in top10regression:
+      print('          {} added \'regression\' to {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
             i['name'], i['week'], i['month'], i['3month']), file=fp)
 
     fp.close()
