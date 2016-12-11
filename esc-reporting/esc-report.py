@@ -389,13 +389,15 @@ def report_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
 
 
 def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
-    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1month']['total']), reverse=True)
+    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['owner']), reverse=True)
     top10list = []
     for i in tmpClist:
       if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org':
-        x = {'mail': i, 'name': statList['people'][i]['name'],
-             'month' :statList['people'][i]['qa']['1month']['total'],
-             'year':statList['people'][i]['qa']['1year']['total']}
+        x = {'mail': i,
+             'name': statList['people'][i]['name'],
+             'week' :statList['people'][i]['qa']['1week']['owner'],
+             'month' :statList['people'][i]['qa']['1month']['owner'],
+             '3month':statList['people'][i]['qa']['1month']['owner']}
         top10list.append(x)
         if len(top10list) >= 10:
           break
@@ -439,10 +441,11 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
             {'db': 'trendQA',  'tag': '100+',   'text': '100+'}]
     print(util_build_matrix('distribution', xRow, None, statList), end='', file=fp)
 
-    print("\n    + top 10 contributors:", file=fp)
+    print("\n    + top 10 bugs reporters:", file=fp)
+    xRow = []
     for i in range(0, 10):
-      print('          {} made {} changes in 1 month, and {} changes in 1 year'.format(
-            top10list[i]['mail'], top10list[i]['month'], top10list[i]['year']), file=fp)
+      print('          {} reported {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
+            top10list[i]['name'], top10list[i]['week'], top10list[i]['month'], top10list[i]['3month']), file=fp)
     fp.close()
     return None
 

@@ -81,7 +81,7 @@ def util_dump_file(fileName, rawList):
 
 def util_build_period_stat(cfg, statList, xDate, email, status, pstatus, base = 'gerrit'):
     for i in '1year', '3month', '1month', '1week':
-      if xDate > cfg[i + 'Date']:
+      if xDate >= cfg[i + 'Date']:
         if email is not None:
           statList['people'][email][base][i][pstatus] += 1
           statList['people'][email][base][i]['total'] += 1
@@ -192,8 +192,14 @@ def util_create_statList():
 def util_check_mail(name, mail, statList, combineMail):
     if mail in combineMail:
       mail = combineMail[mail]
+
     if not mail in statList['people']:
+      if not name:
+        name = '*UNKNOWN*'
       statList['people'][mail] = util_create_person_gerrit(name, mail)
+    elif name and name != '*UNKNOWN*':
+      statList['people'][mail]['name'] = name
+
     return mail
 
 
@@ -384,7 +390,7 @@ def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
     print("qa: analyze bugzilla", flush=True)
 
     for key, row in bugzillaData['bugs'].items():
-      email = util_check_mail('*UNKNOWN*', row['creator'], statList, cfg['contributor']['combine-email'])
+      email = util_check_mail(row['creator_detail']['real_name'], row['creator'], statList, cfg['contributor']['combine-email'])
       xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
       creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
       if xDate > cfg['cutDate']:
