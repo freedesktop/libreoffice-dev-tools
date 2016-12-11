@@ -437,7 +437,7 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
              'name': statList['people'][i]['name'],
              'week' :statList['people'][i]['qa']['1week']['owner'],
              'month' :statList['people'][i]['qa']['1month']['owner'],
-             '3month':statList['people'][i]['qa']['1month']['owner']}
+             '3month':statList['people'][i]['qa']['3month']['owner']}
         top10reporters.append(x)
         if len(top10reporters) >= 10:
           break
@@ -448,6 +448,27 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
       print('          {} reported {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
             i['name'], i['week'], i['month'], i['3month']), file=fp)
 
+
+    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['fixed']), reverse=True)
+    top10fixers = []
+    for i in tmpClist:
+      if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org':
+        x = {'mail': i,
+             'name': statList['people'][i]['name'],
+             'week' :statList['people'][i]['qa']['1week']['fixed'],
+             'month' :statList['people'][i]['qa']['1month']['fixed'],
+             '3month':statList['people'][i]['qa']['3month']['fixed']}
+        top10fixers.append(x)
+        if len(top10fixers) >= 10:
+          break
+
+    print("\n    + top 10 bugs fixers:", file=fp)
+    xRow = []
+    for i in top10fixers:
+      print('          {} fixed {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
+            i['name'], i['week'], i['month'], i['3month']), file=fp)
+
+
     tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['bisected']), reverse=True)
     top10bisected = []
     for i in tmpClist:
@@ -457,7 +478,7 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
              'name': statList['people'][i]['name'],
              'week' :statList['people'][i]['qa']['1week']['bisected'],
              'month' :statList['people'][i]['qa']['1month']['bisected'],
-             '3month':statList['people'][i]['qa']['1month']['bisected']}
+             '3month':statList['people'][i]['qa']['3month']['bisected']}
         top10bisected.append(x)
         if len(top10bisected) >= 10:
           break
@@ -478,7 +499,7 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
              'name': statList['people'][i]['name'],
              'week' :statList['people'][i]['qa']['1week']['bibisected'],
              'month' :statList['people'][i]['qa']['1month']['bibisected'],
-             '3month':statList['people'][i]['qa']['1month']['bibisected']}
+             '3month':statList['people'][i]['qa']['3month']['bibisected']}
         top10bibisected.append(x)
         if len(top10bibisected) >= 10:
           break
@@ -499,7 +520,7 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
              'name': statList['people'][i]['name'],
              'week' :statList['people'][i]['qa']['1week']['regression'],
              'month' :statList['people'][i]['qa']['1month']['regression'],
-             '3month':statList['people'][i]['qa']['1month']['regression']}
+             '3month':statList['people'][i]['qa']['3month']['regression']}
         top10regression.append(x)
         if len(top10regression) >= 10:
           break
@@ -519,7 +540,7 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
              'name': statList['people'][i]['name'],
              'week' :statList['people'][i]['qa']['1week']['backtrace'],
              'month' :statList['people'][i]['qa']['1month']['backtrace'],
-             '3month':statList['people'][i]['qa']['1month']['backtrace']}
+             '3month':statList['people'][i]['qa']['3month']['backtrace']}
         top10backtrace.append(x)
         if len(top10backtrace) >= 10:
           break

@@ -123,13 +123,13 @@ def util_create_person_gerrit(person, email):
                          '1month': {'owner': 0, 'reviewer': 0, 'total': 0},
                          '1week':  {'owner': 0, 'reviewer': 0, 'total': 0}},
              'qa':      {'1year':  {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
-                                    'bisected': 0, 'backtrace': 0, 'total': 0},
+                                    'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0},
                          '3month': {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
-                                    'bisected': 0, 'backtrace': 0, 'total': 0},
+                                    'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0},
                          '1month': {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
-                                    'bisected': 0, 'backtrace': 0, 'total': 0},
+                                    'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0},
                          '1week':  {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
-                                    'bisected': 0, 'backtrace': 0, 'total': 0}},
+                                    'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0}},
              'isCommitter': False,
              'isContributor': False,
              'hasLicense': False,
@@ -429,6 +429,10 @@ def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
                 util_build_period_stat(cfg, statList, xDate, email, '', 'regression', base='qa')
               if keyword == 'haveBacktrace':
                 util_build_period_stat(cfg, statList, xDate, email, '', 'backtrace', base='qa')
+          elif entry['field_name'] == 'resolution':
+            if entry['added'] == 'FIXED':
+              util_build_period_stat(cfg, statList, xDate, email, '', 'fixed', base='qa')
+
 
       for change in row['comments']:
         email = util_check_mail('*UNKNOWN*', change['creator'], statList, cfg['contributor']['combine-email'])
