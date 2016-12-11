@@ -178,7 +178,9 @@ def util_create_statList():
                             '1month': {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
                                        'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0, 'total': 0},
                             '1week':  {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
-                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0, 'total': 0}},
+                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0, 'total': 0},
+                            'unconfirmed': {'count': 0, 'enhancement' : 0, 'needsUXEval' : 0,
+                                            'haveBacktrace' : 0, 'needsDevAdvice' : 0}},
                      'easyhacks' : {'needsDevEval': 0,  'needsUXEval': 0, 'cleanup_comments': 0,
                                     'total': 0,         'assigned': 0,    'open': 0}},
                      'stat': {'openhub_last_analyse': "2001-01-01"},
@@ -387,6 +389,17 @@ def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
       creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
       if xDate > cfg['cutDate']:
         continue
+
+      if row['status'] == 'UNCONFIRMED':
+        statList['data']['qa']['unconfirmed']['count'] += 1
+        if 'needsUXEval' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['needsUXEval'] += 1
+        if 'needsDevAdvice' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['needsDevAdvice'] += 1
+        if 'haveBacktrace' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['haveBacktrace'] += 1
+        if row['severity'] == 'enhancement':
+          statList['data']['qa']['unconfirmed']['enhancement'] += 1
 
       util_build_period_stat(cfg, statList, creationDate, email, row['status'], 'owner', base='qa')
 

@@ -405,9 +405,20 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
           datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
 
     print("copy/paste to esc pad:\n"
-          "* qa update (xisco)\n"
-          "    + Bugzilla statistics", file=fp)
+          "* qa update (xisco)\n", file=fp)
 
+    print("    + UNCONFIRMED: {} ( )\n"
+        "        + enhancements: {}  ( )\n"
+        "        + needsUXEval: {} ( )\n"
+        "        + haveBackTrace: {} ( )\n"
+        "        + needsDevAdvice: {} ( )\n".format(
+                    statList['data']['qa']['unconfirmed']['count'],
+                    statList['data']['qa']['unconfirmed']['enhancement'],
+                    statList['data']['qa']['unconfirmed']['needsUXEval'],
+                    statList['data']['qa']['unconfirmed']['haveBacktrace'],
+                    statList['data']['qa']['unconfirmed']['needsDevAdvice'],), file=fp)
+
+    print("\n    + Bugzilla statistics:", file=fp)
     xRow = [{'db': 'qa',  'tag': 'ASSIGNED',       'text': 'ASSIGNED'},
             {'db': 'qa',  'tag': 'CLOSED',  'text': 'CLOSED'},
             {'db': 'qa',  'tag': 'NEEDINFO',  'text': 'NEEDINFO'},
