@@ -85,15 +85,16 @@ def util_build_period_stat(cfg, statList, xDate, email, status, pstatus, base = 
         if email is not None:
           statList['people'][email][base][i][pstatus] += 1
           statList['people'][email][base][i]['total'] += 1
-        if base != 'gerrit' :
-          statList['data'][base][i][status] += 1
-          statList['data'][base][i]['total'] += 1
-        elif statList['people'][email]['isCommitter']:
-          statList['data'][base]['committer'][i][status] += 1
-          statList['data'][base]['committer'][i]['total'] += 1
-        else:
-          statList['data'][base]['contributor'][i]['total'] += 1
-          statList['data'][base]['contributor'][i][status] += 1
+        if status:
+          if base != 'gerrit' :
+            statList['data'][base][i][status] += 1
+            statList['data'][base][i]['total'] += 1
+          elif statList['people'][email]['isCommitter']:
+            statList['data'][base]['committer'][i][status] += 1
+            statList['data'][base]['committer'][i]['total'] += 1
+          else:
+            statList['data'][base]['contributor'][i]['total'] += 1
+            statList['data'][base]['contributor'][i][status] += 1
 
 
 
@@ -121,10 +122,10 @@ def util_create_person_gerrit(person, email):
                          '3month': {'owner': 0, 'reviewer': 0, 'total': 0},
                          '1month': {'owner': 0, 'reviewer': 0, 'total': 0},
                          '1week':  {'owner': 0, 'reviewer': 0, 'total': 0}},
-             'qa':      {'1year':  {'owner': 0, 'reviewer': 0, 'total': 0},
-                         '3month': {'owner': 0, 'reviewer': 0, 'total': 0},
-                         '1month': {'owner': 0, 'reviewer': 0, 'total': 0},
-                         '1week':  {'owner': 0, 'reviewer': 0,'total': 0}},
+             'qa':      {'1year':  {'owner': 0, 'reviewer': 0, 'bisected': 0, 'total': 0},
+                         '3month': {'owner': 0, 'reviewer': 0, 'bisected': 0, 'total': 0},
+                         '1month': {'owner': 0, 'reviewer': 0, 'bisected': 0, 'total': 0},
+                         '1week':  {'owner': 0, 'reviewer': 0, 'bisected': 0, 'total': 0}},
              'isCommitter': False,
              'isContributor': False,
              'hasLicense': False,
@@ -408,6 +409,16 @@ def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
           statList['data']['qa']['unconfirmed']['enhancement'] += 1
 
       util_build_period_stat(cfg, statList, creationDate, email, row['status'], 'owner', base='qa')
+
+      for change in row['history']:
+        email = util_check_mail('*UNKNOWN*', change['who'], statList, cfg['contributor']['combine-email'])
+        xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
+        for entry in change['changes']:
+          if entry['field_name'] == 'keywords':
+            keywordsAdded = entry['added'].split(", ")
+            for keyword in keywordsAdded:
+              if keyword == 'bisected':
+                util_build_period_stat(cfg, statList, xDate, email, '', 'bisected', base='qa')
 
       for change in row['comments']:
         email = util_check_mail('*UNKNOWN*', change['creator'], statList, cfg['contributor']['combine-email'])

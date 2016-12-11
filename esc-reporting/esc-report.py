@@ -389,18 +389,6 @@ def report_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
 
 
 def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
-    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['owner']), reverse=True)
-    top10list = []
-    for i in tmpClist:
-      if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org':
-        x = {'mail': i,
-             'name': statList['people'][i]['name'],
-             'week' :statList['people'][i]['qa']['1week']['owner'],
-             'month' :statList['people'][i]['qa']['1month']['owner'],
-             '3month':statList['people'][i]['qa']['1month']['owner']}
-        top10list.append(x)
-        if len(top10list) >= 10:
-          break
 
     fp = open('/tmp/esc_qa_report.txt', 'w', encoding='utf-8')
     print('ESC QA report, generated {} based on stats.json from {}'.format(
@@ -441,11 +429,45 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
             {'db': 'trendQA',  'tag': '100+',   'text': '100+'}]
     print(util_build_matrix('distribution', xRow, None, statList), end='', file=fp)
 
+    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['owner']), reverse=True)
+    top10reporters = []
+    for i in tmpClist:
+      if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org':
+        x = {'mail': i,
+             'name': statList['people'][i]['name'],
+             'week' :statList['people'][i]['qa']['1week']['owner'],
+             'month' :statList['people'][i]['qa']['1month']['owner'],
+             '3month':statList['people'][i]['qa']['1month']['owner']}
+        top10reporters.append(x)
+        if len(top10reporters) >= 10:
+          break
+
     print("\n    + top 10 bugs reporters:", file=fp)
     xRow = []
-    for i in range(0, 10):
+    for i in top10reporters:
       print('          {} reported {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
-            top10list[i]['name'], top10list[i]['week'], top10list[i]['month'], top10list[i]['3month']), file=fp)
+            i['name'], i['week'], i['month'], i['3month']), file=fp)
+
+    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['bisected']), reverse=True)
+    top10bisected = []
+    for i in tmpClist:
+      if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org' and \
+        statList['people'][i]['qa']['1week']['bisected'] > 0:
+        x = {'mail': i,
+             'name': statList['people'][i]['name'],
+             'week' :statList['people'][i]['qa']['1week']['bisected'],
+             'month' :statList['people'][i]['qa']['1month']['bisected'],
+             '3month':statList['people'][i]['qa']['1month']['bisected']}
+        top10bisected.append(x)
+        if len(top10bisected) >= 10:
+          break
+
+    print("\n    + Bisected by:", file=fp)
+    xRow = []
+    for i in top10bisected:
+      print('          {} bisected {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
+            i['name'], i['week'], i['month'], i['3month']), file=fp)
+
     fp.close()
     return None
 
