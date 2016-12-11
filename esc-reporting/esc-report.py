@@ -510,6 +510,26 @@ def report_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
       print('          {} added \'regression\' to {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
             i['name'], i['week'], i['month'], i['3month']), file=fp)
 
+    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['backtrace']), reverse=True)
+    top10backtrace = []
+    for i in tmpClist:
+      if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org' and \
+        statList['people'][i]['qa']['1week']['backtrace'] > 0:
+        x = {'mail': i,
+             'name': statList['people'][i]['name'],
+             'week' :statList['people'][i]['qa']['1week']['backtrace'],
+             'month' :statList['people'][i]['qa']['1month']['backtrace'],
+             '3month':statList['people'][i]['qa']['1month']['backtrace']}
+        top10backtrace.append(x)
+        if len(top10backtrace) >= 10:
+          break
+
+    print("\n    + Done by:", file=fp)
+    xRow = []
+    for i in top10backtrace:
+      print('          {} added a backtrace to {} bugs in 1 week, {} bugs in 1 month and {} bugs in 3 months'.format(
+            i['name'], i['week'], i['month'], i['3month']), file=fp)
+
     fp.close()
     return None
 
