@@ -381,15 +381,15 @@ def analyze_ui(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
         email = util_check_mail('*UNKNOWN*', change['who'], statList, cfg['contributor']['combine-email'])
         xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
         for entry in change['changes']:
-          if entry['added'] == 'needsUXEval':
-            st = 'added'
-          elif entry['removed'] == 'needsUXEval':
-            st = 'removed'
-          else:
-            st = None
-          if not st is None:
-            util_build_period_stat(cfg, statList, xDate, email, st, 'reviewer', base='ui')
+          keywordsAdded = entry['added'].split(", ")
+          for keyword in keywordsAdded:
+            if keyword == 'needsUXEval':
+              util_build_period_stat(cfg, statList, xDate, email, 'added', 'reviewer', base='ui')
 
+          keywordsRemoved = entry['removed'].split(", ")
+          for keyword in keywordsRemoved:
+            if keyword == 'needsUXEval':
+              util_build_period_stat(cfg, statList, xDate, email, 'removed', 'reviewer', base='ui')
 
 def analyze_qa(statList, openhubData, gerritData, gitData, bugzillaData, cfg):
     print("qa: analyze bugzilla", flush=True)
