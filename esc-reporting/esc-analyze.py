@@ -107,23 +107,25 @@ def util_dump_file(fileName, rawList):
 
 
 
-def util_build_period_stat(xDate, email, status, pstatus, base = 'gerrit'):
+def util_build_period_stat(xDate, email, base, peopleTarget=None, dataTarget=None):
     global cfg, statList
-    for i in '1year', '3month', '1month', '1week':
-      if xDate > cfg[i + 'Date']:
-        if not email is None:
-          statList['people'][email][base][i][pstatus] += 1
-          statList['people'][email][base][i]['total'] += 1
-          statList['people'][email][base]['total'] += 1
-        if not base == 'gerrit' :
-          statList['data'][base][i][status] += 1
-          statList['data'][base]['total'] += 1
-        elif statList['people'][email]['isCommitter']:
-          statList['data'][base]['committer'][i][status] += 1
-          statList['data']['gerrit']['committer']['total'] += 1
-        else:
-          statList['data']['gerrit']['contributor']['total'] += 1
-          statList['data'][base]['contributor'][i][status] += 1
+
+    xType = 'contributor'
+    if email:
+      statList['people'][email][base]['total'] += 1
+      if statList['people'][email]['isCommitter'] and base != 'ui':
+        xType = 'committer'
+    if dataTarget:
+      statList['data'][base][xType]['total'] += 1
+
+    nextDate = {'1year': cfg['3monthDate'], '3month': cfg['1monthDate'], '1month': cfg['1weekDate'], '1week': cfg['nowDate']}
+    for i, oDate in nextDate.items():
+      if xDate >= cfg[i + 'Date'] and xDate < oDate:
+        if peopleTarget:
+          statList['people'][email][base][i][peopleTarget] += 1
+        if dataTarget:
+          statList['data'][base][xType][i][dataTarget] += 1
+        break
 
 
 
@@ -138,22 +140,30 @@ def util_load_data_file(fileName):
 def util_create_person_gerrit(person, email):
     return { 'name': person,
              'email': email,
-             'commits': {'1year':  {'merged': 0, 'reviewMerged': 0, 'total':  0},
-                         '3month': {'merged': 0, 'reviewMerged': 0, 'total':  0},
-                         '1month': {'merged': 0, 'reviewMerged': 0, 'total':  0},
-                         '1week':  {'merged': 0, 'reviewMerged': 0, 'total':  0},
+             'commits': {'1year':  {'owner': 0, 'reviewMerged': 0},
+                         '3month': {'owner': 0, 'reviewMerged': 0},
+                         '1month': {'owner': 0, 'reviewMerged': 0},
+                         '1week':  {'owner': 0, 'reviewMerged': 0},
                          'total':  0},
-             'gerrit':  {'1year':  {'owner': 0, 'reviewer': 0, 'total':  0},
-                         '3month': {'owner': 0, 'reviewer': 0, 'total':  0},
-                         '1month': {'owner': 0, 'reviewer': 0, 'total':  0},
-                         '1week':  {'owner': 0, 'reviewer': 0, 'total':  0},
+             'gerrit':  {'1year':  {'owner': 0, 'reviewer': 0},
+                         '3month': {'owner': 0, 'reviewer': 0},
+                         '1month': {'owner': 0, 'reviewer': 0},
+                         '1week':  {'owner': 0, 'reviewer': 0},
                          'total':  0,
                          'userName': '*DUMMY*'},
-             'ui':      {'1year':  {'owner': 0, 'reviewer': 0, 'total':  0},
-                         '3month': {'owner': 0, 'reviewer': 0, 'total':  0},
-                         '1month': {'owner': 0, 'reviewer': 0, 'total':  0},
-                         '1week':  {'owner': 0, 'reviewer': 0, 'total':  0},
+             'ui':      {'1year':  {'commented': 0, 'history': 0},
+                         '3month': {'commented': 0, 'history': 0},
+                         '1month': {'commented': 0, 'history': 0},
+                         '1week':  {'commented': 0, 'history': 0},
                          'total':  0},
+             'qa': {'1year':  {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
+                               'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0},
+                    '3month': {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
+                               'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0},
+                    '1month': {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
+                               'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0},
+                    '1week':  {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
+                               'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0}},
              'isCommitter': False,
              'isContributor': False,
              'licenseOK': False,
@@ -164,15 +174,15 @@ def util_create_person_gerrit(person, email):
 
 
 def util_create_statList():
-    return {'data': {'commits': {'committer':   {'1year':  {'merged': 0},
-                                                 '3month': {'merged': 0},
-                                                 '1month': {'merged': 0},
-                                                 '1week':  {'merged': 0},
+    return {'data': {'commits': {'committer':   {'1year':  {'owner': 0, 'reviewMerged': 0},
+                                                 '3month': {'owner': 0, 'reviewMerged': 0},
+                                                 '1month': {'owner': 0, 'reviewMerged': 0},
+                                                 '1week':  {'owner': 0, 'reviewMerged': 0},
                                                  'total':  0},
-                                 'contributor': {'1year':  {'merged': 0},
-                                                 '3month': {'merged': 0},
-                                                 '1month': {'merged': 0},
-                                                 '1week':  {'merged': 0},
+                                 'contributor': {'1year':  {'owner': 0, 'reviewMerged': 0},
+                                                 '3month': {'owner': 0, 'reviewMerged': 0},
+                                                 '1month': {'owner': 0, 'reviewMerged': 0},
+                                                 '1week':  {'owner': 0, 'reviewMerged': 0},
                                                  'total':  0}},
                      'openhub': {'lines_of_code': 0,
                                  'total_commits': 0,
@@ -189,25 +199,33 @@ def util_create_statList():
                                               '1month': {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0},
                                               '1week':  {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0},
                                               'total': 0}},
-                     'trendCommitter': {'1year':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                        '3month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                        '1month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                        '1week':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0}},
-                     'trendContributor': {'1year':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                          '3month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                          '1month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                          '1week':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0}},
-                     'trendUI': {'1year':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                 '3month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                 '1month': {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0},
-                                 '1week':  {'1-5': 0, '6-25': 0, '26-50': 0, '51-100': 0, '100+': 0}},
-                     'ui': {'1year':  {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0},
-                            '3month': {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0},
-                            '1month': {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0},
-                            '1week':  {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0},
+                     'trend' : {'committer':   {'owner':        {'1year': {}, '3month': {}, '1month': {}, '1week': {}},
+                                                'reviewMerged': {'1year': {}, '3month': {}, '1month': {}, '1week': {}}},
+                                'contributor': {'owner':        {'1year': {}, '3month': {}, '1month': {}, '1week': {}},
+                                                'reviewMerged': {'1year': {}, '3month': {}, '1month': {}, '1week': {}}},
+                                'ui':          {'commented':    {'1year': {}, '3month': {}, '1month': {}, '1week': {}},
+                                                'history':      {'1year': {}, '3month': {}, '1month': {}, '1week': {}}}},
+                     'ui': {'contributor': {'1year':  {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0},
+                                            '3month': {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0},
+                                            '1month': {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0},
+                                            '1week':  {'added': 0, 'removed': 0, 'commented': 0, 'resolved': 0},
+                                            'total': 0},
                             'needsUXEval' : 0,
-                            'total' : 0,
                             'topicUI': 0},
+                     'qa': {'1year':  {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
+                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0,
+                                       'total': 0},
+                            '3month': {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
+                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0,
+                                       'total': 0},
+                            '1month': {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
+                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0,
+                                       'total': 0},
+                            '1week':  {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
+                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0,
+                                       'total': 0},
+                            'unconfirmed': {'count': 0, 'enhancement': 0, 'needsUXEval': 0,
+                                            'haveBacktrace': 0, 'needsDevAdvice': 0}},
                      'easyhacks' : {'needsDevEval': 0,  'needsUXEval': 0, 'cleanup_comments': 0,
                                     'total': 0,         'assigned': 0,    'open': 0}},
                      'stat': {'openhub_last_analyse': "2001-01-01"},
@@ -279,13 +297,13 @@ def analyze_mentoring():
       ownerEmail = util_check_mail(row['owner']['name'], row['owner']['email'])
       statList['people'][ownerEmail]['gerrit']['userName'] = row['owner']['username']
       statList['people'][ownerEmail]['isContributor'] = True
-      util_build_period_stat(xDate, ownerEmail, row['status'], 'owner')
+      util_build_period_stat(xDate, ownerEmail, 'gerrit', dataTarget=row['status'], peopleTarget='owner')
 
       for i in 'Verified', 'Code-Review':
         for x in row['labels'][i]['all']:
           xEmail = util_check_mail(x['name'], x['email'])
           if xEmail != ownerEmail:
-            util_build_period_stat(xDate, xEmail, 'reviewed', 'reviewer')
+            util_build_period_stat(xDate, xEmail, 'gerrit', dataTarget='reviewed', peopleTarget='reviewer')
 
     print(" from " + statOldDate.strftime('%Y-%m-%d') + " to " + statNewDate.strftime('%Y-%m-%d'))
     print("mentoring: analyze git", end="", flush=True)
@@ -313,18 +331,9 @@ def analyze_mentoring():
           statList['people'][i]['newestCommit'] = xDate
         elif xDate > statList['people'][i]['prevCommit']:
           statList['people'][i]['prevCommit'] = xDate
-
-      for i in '1year', '3month', '1month', '1week':
-        if xDate > cfg[i + 'Date']:
-          if author != committer:
-            statList['people'][author]['commits'][i]['merged'] += 1
-            statList['people'][committer]['commits'][i]['reviewMerged'] += 1
-            statList['data']['commits']['contributor'][i]['merged'] += 1
-            statList['data']['commits']['contributor']['total'] += 1
-          else:
-            statList['people'][author]['commits'][i]['merged'] += 1
-            statList['data']['commits']['committer'][i]['merged'] += 1
-            statList['data']['commits']['committer']['total'] += 1
+      util_build_period_stat(xDate, author, 'commits', dataTarget='owner', peopleTarget='owner')
+      if author != committer:
+        util_build_period_stat(xDate, committer, 'commits', dataTarget='reviewMerged', peopleTarget='reviewMerged')
 
     print(" from " + statOldDate.strftime("%Y-%m-%d") + " to " + statNewDate.strftime("%Y-%m-%d"))
     print("mentoring: analyze easyhacks", end="", flush=True)
@@ -379,8 +388,19 @@ def analyze_ui():
       if not 'topicUI' in row['keywords'] and not 'needsUXEval' in row['keywords']:
         continue
 
+      for change in row['comments']:
+        email = util_check_mail('*UNKNOWN*', change['creator'])
+        xDate = datetime.datetime.strptime(change['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
+        util_build_period_stat(xDate, email, 'ui', dataTarget='commented', peopleTarget='commented')
+
+      for change in row['history']:
+        email = util_check_mail('*UNKNOWN*', change['who'])
+        xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
+        for entry in change['changes']:
+          util_build_period_stat(xDate, email, 'ui', peopleTarget='history')
+
       if row['status'] == 'RESOLVED' or row['status'] == 'CLOSED' or row['status'] == 'VERIFIED':
-        util_build_period_stat(xDate, None, 'resolved', 'reviewer', base='ui')
+        util_build_period_stat(xDate, None, 'ui', dataTarget='resolved')
         continue
 
       if 'needsUXEval' in row['keywords']:
@@ -389,23 +409,69 @@ def analyze_ui():
       if 'topicUI' in row['keywords']:
         statList['data']['ui']['topicUI'] += 1
 
-      for change in row['comments']:
-        email = util_check_mail('*UNKNOWN*', change['creator'])
-        xDate = datetime.datetime.strptime(change['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
-        util_build_period_stat(xDate, email, 'commented', 'reviewer', base='ui')
-
       for change in row['history']:
         email = util_check_mail('*UNKNOWN*', change['who'])
         xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
         for entry in change['changes']:
-          keywordsAdded = entry['added'].split(", ")
-          for keyword in keywordsAdded:
-            if keyword == 'needsUXEval':
-              util_build_period_stat(xDate, email, 'added', 'reviewer', base='ui')
-          keywordsRemoved = entry['removed'].split(", ")
-          for keyword in keywordsRemoved:
-            if keyword == 'needsUXEval':
-              util_build_period_stat(xDate, email, 'removed', 'reviewer', base='ui')
+          if 'needsUXEval' in entry['added']:
+            util_build_period_stat(xDate, email, 'ui', dataTarget='added')
+          if 'needsUXEval' in entry['removed']:
+            util_build_period_stat(xDate, email, 'ui', dataTarget='removed')
+
+
+
+def analyze_qa():
+    global cfg, statList, bugzillaData
+
+    print("qa: analyze bugzilla", flush=True)
+    return
+
+    for key, row in bugzillaData['bugs'].items():
+      email = util_check_mail(row['creator_detail']['real_name'], row['creator'], statList, cfg['contributor']['combine-email'])
+      xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
+      creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
+      if xDate > cfg['cutDate']:
+        continue
+
+      if row['status'] == 'UNCONFIRMED':
+        statList['data']['qa']['unconfirmed']['count'] += 1
+        if 'needsUXEval' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['needsUXEval'] += 1
+        if 'needsDevAdvice' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['needsDevAdvice'] += 1
+        if 'haveBacktrace' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['haveBacktrace'] += 1
+        if row['severity'] == 'enhancement':
+          statList['data']['qa']['unconfirmed']['enhancement'] += 1
+
+      util_build_period_stat(cfg, statList, creationDate, email, row['status'], 'owner', base='qa')
+
+    for key, row in bugzillaData['bugs'].items():
+      email = util_check_mail(row['creator_detail']['real_name'], row['creator'], statList, cfg['contributor']['combine-email'])
+      xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
+      creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
+      if xDate > cfg['cutDate']:
+        continue
+
+      if row['status'] == 'UNCONFIRMED':
+        statList['data']['qa']['unconfirmed']['count'] += 1
+        if 'needsUXEval' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['needsUXEval'] += 1
+        if 'needsDevAdvice' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['needsDevAdvice'] += 1
+        if 'haveBacktrace' in row['keywords']:
+          statList['data']['qa']['unconfirmed']['haveBacktrace'] += 1
+        if row['severity'] == 'enhancement':
+          statList['data']['qa']['unconfirmed']['enhancement'] += 1
+
+      util_build_period_stat(cfg, statList, creationDate, email, row['status'], 'owner', base='qa')
+      util_build_period_stat(cfg, statList, xDate, email, '', 'fixed', base='qa')
+
+      for change in row['comments']:
+        email = util_check_mail('*UNKNOWN*', change['creator'], statList, cfg['contributor']['combine-email'])
+        xDate = datetime.datetime.strptime(change['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
+        util_build_period_stat(cfg, statList, xDate, email, 'commented', 'reviewer', base='qa')
+
 
 
 def analyze_myfunc():
@@ -415,37 +481,30 @@ def analyze_myfunc():
 
 
 
-def util_build_trend(cnt):
-    if cnt == 0:
-      return None
-    elif cnt <= 5:
-      return '1-5'
-    elif cnt <= 25:
-      return '6-25'
-    elif cnt <= 50:
-      return '26-50'
-    elif cnt <= 100:
-      return '51-100'
-    return '100+'
+def buildTrend(xType, xTarget, xDate, xNum):
+    if xNum == 0:
+      return
+    xStr = str(xNum)
+    if xNum in statList['data']['trend'][xType][xTarget][xDate]:
+      statList['data']['trend'][xType][xTarget][xDate][xNum] += 1
+    else:
+      statList['data']['trend'][xType][xTarget][xDate][xNum] = 1
 
 
 
 def analyze_trend():
     global statList
 
-    for email in statList['people']:
-      person = statList['people'][email]
-
+    for email, person in statList['people'].items():
+      if person['isCommitter']:
+        xType = 'committer'
+      else:
+        xType = 'contributor'
       for inx in '1year', '3month', '1month', '1week':
-         x = util_build_trend(person['commits'][inx]['merged'])
-         if not x is None:
-           if person['isCommitter']:
-             statList['data']['trendCommitter'][inx][x] += 1
-           elif person['isContributor']:
-             statList['data']['trendContributor'][inx][x] += 1
-         x = util_build_trend(person['ui']['total'])
-         if not x is None:
-           statList['data']['trendUI'][inx][x] += 1
+        buildTrend(xType, 'owner', inx, person['commits'][inx]['owner'])
+        buildTrend(xType, 'reviewMerged', inx, person['commits'][inx]['reviewMerged'])
+        buildTrend('ui', 'commented', inx, person['ui'][inx]['commented'])
+        buildTrend('ui', 'history', inx, person['ui'][inx]['history'])
 
 
 
@@ -536,6 +595,7 @@ def runAnalyze(platform):
 
     analyze_mentoring()
     analyze_ui()
+    analyze_qa()
     analyze_myfunc()
     analyze_final()
 
