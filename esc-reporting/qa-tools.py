@@ -82,6 +82,8 @@ def util_create_detailed_person(email):
              'status_changed': 0,
              'keyword_added': 0,
              'keyword_removed': 0,
+             'whiteboard_added': 0,
+             'whiteboard_removed': 0,
              'severity_changed': 0,
              'priority_changed': 0,
              'system_changed': 0
@@ -114,6 +116,8 @@ def util_create_statList():
             'status_changed_to': {s:0 for s in statutes_list},
             'keyword_added': {k:0 for k in keywords_list},
             'keyword_removed': {k:0 for k in keywords_list},
+            'whiteboard_added': {},
+            'whiteboard_removed': {},
             'severity_changed': {s:0 for s in severities_list},
             'priority_changed':  {p:0 for p in priorities_list},
             'system_changed': {p:0 for p in system_list},
@@ -122,6 +126,8 @@ def util_create_statList():
                 'status_changed_to': {s: [[], []] for s in statutes_list},
                 'keyword_added': {k: [[], []] for k in keywords_list},
                 'keyword_removed': {k: [[], []] for k in keywords_list},
+                'whiteboard_added': {},
+                'whiteboard_removed': {},
                 'severity_changed': {s: [[], []] for s in severities_list},
                 'priority_changed': {p: [[], []] for p in priorities_list},
                 'system_changed': {p: [[], []] for p in system_list}
@@ -318,6 +324,33 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                     statList['detailedReport']['lists']['keyword_removed'][keyword][0].append(rowId)
                                     statList['detailedReport']['lists']['keyword_removed'][keyword][1].append(actionMail)
 
+                    elif change['field_name'] == 'whiteboard':
+                        for whiteboard in change['added'].split(' '):
+                            if 'backportrequest' in whiteboard.lower():
+                                util_increase_user_actions(statList, key, actionMail, bugTargets, 'whiteboard_added', actionDate)
+
+                                if actionDate >= cfg[reportPeriod] and whiteboard in row['whiteboard']:
+                                    if whiteboard not in statList['detailedReport']['whiteboard_added']:
+                                        statList['detailedReport']['whiteboard_added'][whiteboard] = 0
+                                        statList['detailedReport']['lists']['whiteboard_added'][whiteboard] = [[],[]]
+                                    statList['detailedReport']['whiteboard_added'][whiteboard] += 1
+
+                                    statList['detailedReport']['lists']['whiteboard_added'][whiteboard][0].append(rowId)
+                                    statList['detailedReport']['lists']['whiteboard_added'][whiteboard][1].append(actionMail)
+
+                        for whiteboard in change['removed'].split(' '):
+                            if 'backportrequest' in whiteboard.lower():
+                                util_increase_user_actions(statList, key, actionMail, bugTargets, 'whiteboard_removed', actionDate)
+
+                                if actionDate >= cfg[reportPeriod] and whiteboard not in row['whiteboard']:
+                                    if whiteboard not in statList['detailedReport']['whiteboard_removed']:
+                                        statList['detailedReport']['whiteboard_removed'][whiteboard] = 0
+                                        statList['detailedReport']['lists']['whiteboard_removed'][whiteboard] = [[],[]]
+                                    statList['detailedReport']['whiteboard_removed'][whiteboard] += 1
+
+                                    statList['detailedReport']['lists']['whiteboard_removed'][whiteboard][0].append(rowId)
+                                    statList['detailedReport']['lists']['whiteboard_removed'][whiteboard][1].append(actionMail)
+
                     elif change['field_name'] == 'op_sys':
                         newPlatform = change['added']
                         util_increase_user_actions(statList, key, actionMail, bugTargets, 'system_changed', actionDate)
@@ -366,9 +399,9 @@ def util_print_QA_line(fp, statList, string, number, tuple, action):
     else:
         auxString = "bugs have"
 
-    if action == 'keyword_added':
+    if action == 'keyword_added' or action == 'whiteboard_added':
         print(('  * \'' + string + '\' has been added to {} bugs.').format(number), file=fp)
-    elif action == 'keyword_removed':
+    elif action == 'keyword_removed' or action == 'whiteboard_removed':
         print(('  * \'' + string + '\' has been removed from {} bugs.').format(number), file=fp)
     elif action == 'created':
         print(('  * {} have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )').format(
@@ -543,6 +576,19 @@ def QA_Report(statList) :
         if value:
             util_print_QA_line(fp, statList, key, value,
                 statList['detailedReport']['lists']['keyword_removed'][key], 'keyword_removed')
+
+    print("== BACKPORTREQUEST ADDED ==", file=fp)
+    for key, value in sorted(statList['detailedReport']['whiteboard_added'].items()):
+        if value:
+            util_print_QA_line(fp, statList, key, value,
+                statList['detailedReport']['lists']['whiteboard_added'][key], 'whiteboard_added')
+
+
+    print("== BACKPORTREQUEST REMOVED ==", file=fp)
+    for key, value in sorted(statList['detailedReport']['whiteboard_removed'].items()):
+        if value:
+            util_print_QA_line(fp, statList, key, value,
+                statList['detailedReport']['lists']['whiteboard_removed'][key], 'whiteboard_removed')
 
 
     print("== SEVERITY CHANGED ==", file=fp)
