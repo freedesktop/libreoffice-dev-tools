@@ -163,7 +163,8 @@ def util_create_person_gerrit(person, email):
                     '1month': {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
                                'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0},
                     '1week':  {'owner': 0, 'reviewer': 0, 'regression': 0, 'bibisected': 0,
-                               'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0}},
+                               'bisected': 0, 'backtrace': 0, 'fixed': 0, 'total': 0},
+                    'total': 0},
              'isCommitter': False,
              'isContributor': False,
              'licenseOK': False,
@@ -212,19 +213,7 @@ def util_create_statList():
                                             'total': 0},
                             'needsUXEval' : 0,
                             'topicUI': 0},
-                     'qa': {'1year':  {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
-                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0,
-                                       'total': 0},
-                            '3month': {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
-                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0,
-                                       'total': 0},
-                            '1month': {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
-                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0,
-                                       'total': 0},
-                            '1week':  {'UNCONFIRMED': 0, 'NEW': 0, 'ASSIGNED': 0, 'REOPENED': 0, 'RESOLVED': 0,
-                                       'VERIFIED': 0, 'CLOSED': 0, 'NEEDINFO': 0, 'PLEASETEST': 0, 'commented': 0,
-                                       'total': 0},
-                            'unconfirmed': {'count': 0, 'enhancement': 0, 'needsUXEval': 0,
+                     'qa': {'unconfirmed': {'count': 0, 'enhancement': 0, 'needsUXEval': 0,
                                             'haveBacktrace': 0, 'needsDevAdvice': 0}},
                      'easyhacks' : {'needsDevEval': 0,  'needsUXEval': 0, 'cleanup_comments': 0,
                                     'total': 0,         'assigned': 0,    'open': 0}},
@@ -424,14 +413,14 @@ def analyze_qa():
     global cfg, statList, bugzillaData
 
     print("qa: analyze bugzilla", flush=True)
-    return
 
     for key, row in bugzillaData['bugs'].items():
-      email = util_check_mail(row['creator_detail']['real_name'], row['creator'], statList, cfg['contributor']['combine-email'])
+      email = util_check_mail(row['creator_detail']['real_name'], row['creator'])
       xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
       creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
       if xDate > cfg['cutDate']:
         continue
+
 
       if row['status'] == 'UNCONFIRMED':
         statList['data']['qa']['unconfirmed']['count'] += 1
@@ -444,35 +433,26 @@ def analyze_qa():
         if row['severity'] == 'enhancement':
           statList['data']['qa']['unconfirmed']['enhancement'] += 1
 
-      util_build_period_stat(cfg, statList, creationDate, email, row['status'], 'owner', base='qa')
+      util_build_period_stat(creationDate, email, 'qa', 'owner')
 
-    for key, row in bugzillaData['bugs'].items():
-      email = util_check_mail(row['creator_detail']['real_name'], row['creator'], statList, cfg['contributor']['combine-email'])
-      xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
-      creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
-      if xDate > cfg['cutDate']:
-        continue
-
-      if row['status'] == 'UNCONFIRMED':
-        statList['data']['qa']['unconfirmed']['count'] += 1
-        if 'needsUXEval' in row['keywords']:
-          statList['data']['qa']['unconfirmed']['needsUXEval'] += 1
-        if 'needsDevAdvice' in row['keywords']:
-          statList['data']['qa']['unconfirmed']['needsDevAdvice'] += 1
-        if 'haveBacktrace' in row['keywords']:
-          statList['data']['qa']['unconfirmed']['haveBacktrace'] += 1
-        if row['severity'] == 'enhancement':
-          statList['data']['qa']['unconfirmed']['enhancement'] += 1
-
-      util_build_period_stat(cfg, statList, creationDate, email, row['status'], 'owner', base='qa')
-      util_build_period_stat(cfg, statList, xDate, email, '', 'fixed', base='qa')
-
-      for change in row['comments']:
-        email = util_check_mail('*UNKNOWN*', change['creator'], statList, cfg['contributor']['combine-email'])
-        xDate = datetime.datetime.strptime(change['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
-        util_build_period_stat(cfg, statList, xDate, email, 'commented', 'reviewer', base='qa')
-
-
+      for change in row['history']:
+        email = util_check_mail('*UNKNOWN*', change['who'])
+        xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
+        for entry in change['changes']:
+          if entry['field_name'] == 'keywords':
+            keywordsAdded = entry['added'].split(", ")
+            for keyword in keywordsAdded:
+              if keyword == 'bisected':
+                util_build_period_stat(xDate, email, 'qa', 'bisected')
+              if keyword == 'bibisected':
+                util_build_period_stat(xDate, email, 'qa', 'bibisected')
+              if keyword == 'regression':
+                util_build_period_stat(xDate, email, 'qa', 'regression')
+              if keyword == 'haveBacktrace':
+                util_build_period_stat(xDate, email, 'qa', 'backtrace')
+          elif entry['field_name'] == 'resolution':
+            if entry['added'] == 'FIXED':
+              util_build_period_stat(xDate, email, 'qa', 'fixed')
 
 def analyze_myfunc():
     global cfg, statList, openhubData, bugzillaData, gerritData, gitData, aliasData, licenceCompanyData, licencePersonalData
