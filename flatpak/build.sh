@@ -243,8 +243,7 @@ flatpak build-bundle \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice \
  "${my_flatpakbranch?}"
 rm -f "${my_dir?}"/LibreOffice.flatpakref
-printf '[Flatpak Ref]\nTitle=The Document Foundation LibreOffice\n' \
- 'Name=org.libreoffice.LibreOffice\nBranch=%s\n' \
- 'Url=http://download.documentfoundation.org/libreoffice/flatpak/repository\n' \
- 'IsRuntime=False\nGPGKey=%s\n' "${my_flatpakbranch?}" \
- $(base64 --wrap=0 < "${my_dir?}"/key) > "${my_dir?}"/LibreOffice.flatpakref
+printf \
+ '[Flatpak Ref]\nTitle=The Document Foundation LibreOffice\nName=org.libreoffice.LibreOffice\nBranch=%s\nUrl=http://download.documentfoundation.org/libreoffice/flatpak/repository\nIsRuntime=False\nGPGKey=%s\nRuntimeRepo=https://sdk.gnome.org/gnome.flatpakrepo\n' \
+ "${my_flatpakbranch?}" "$(base64 --wrap=0 < "${my_dir?}"/key)" \
+ > "${my_dir?}"/LibreOffice.flatpakref
