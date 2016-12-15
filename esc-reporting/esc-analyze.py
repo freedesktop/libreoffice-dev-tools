@@ -74,6 +74,8 @@ def util_load_csv(fileName, split):
       fp.readline()
       for line in fp:
         line = line[:-1]
+        if len(line) == 0:
+          continue
         x = line.split(split)
         if split == ';' and len(x) != 3:
           raise Exception('misformed entry ' + line + ' in filename ' + fileName)
@@ -118,14 +120,12 @@ def util_build_period_stat(xDate, email, base, peopleTarget=None, dataTarget=Non
     if dataTarget:
       statList['data'][base][xType]['total'] += 1
 
-    nextDate = {'1year': cfg['3monthDate'], '3month': cfg['1monthDate'], '1month': cfg['1weekDate'], '1week': cfg['nowDate']}
-    for i, oDate in nextDate.items():
-      if xDate >= cfg[i + 'Date'] and xDate < oDate:
+    for i in '1year', '3month', '1month', '1week':
+      if xDate >= cfg[i + 'Date']:
         if peopleTarget:
           statList['people'][email][base][i][peopleTarget] += 1
         if dataTarget:
           statList['data'][base][xType][i][dataTarget] += 1
-        break
 
 
 
