@@ -224,12 +224,14 @@ def util_create_statList():
 
 
 def util_check_mail(name, mail):
-    global cfg, statList
+    global statList
 
-    if mail in cfg['aliases']:
-      mail = cfg['aliases'][mail]
+    if mail in statList['aliases']:
+      mail = statList['aliases'][mail]
     if not mail in statList['people']:
       statList['people'][mail] = util_create_person_gerrit(name, mail)
+      if mail == '*DUMMY*':
+        statList['people'][mail]['licenseOK'] = True
     return mail
 
 
@@ -455,7 +457,7 @@ def analyze_qa():
               util_build_period_stat(xDate, email, 'qa', 'fixed')
 
 def analyze_myfunc():
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData, aliasData, licenceCompanyData, licencePersonalData
+    global cfg, statList, openhubData, bugzillaData, gerritData, gitData, licenceCompanyData, licencePersonalData
 
     print("myfunc: analyze nothing", flush=True)
 
@@ -521,18 +523,18 @@ def runLoadCSV():
 
     try:
       fileName = cfg['homedir'] + 'gitdm-config/aliases'
-      cfg['aliases'] = util_load_csv(fileName, ' ')
+      statList['aliases'] = util_load_csv(fileName, ' ')
       fileName = cfg['homedir'] + 'gitdm-config/licenseCompany.csv'
       cfg['companies'] = util_load_csv(fileName, ';')
       fileName = cfg['homedir'] + 'gitdm-config/licensePersonal.csv'
       licencePersonalData = util_load_csv(fileName, ';')
 
       # check consistency
-      for i in cfg['aliases']:
+      for i in statList['aliases']:
         if i in licencePersonalData:
           raise Exception('alias ' + i + ' in aliases is licensed')
-        elif cfg['aliases'][i] not in licencePersonalData:
-          raise Exception('target ' + cfg['aliases'][i] + ' for alias ' + i + ' in aliases is NOT licensed')
+        elif statList['aliases'][i] not in licencePersonalData:
+          raise Exception('target ' + statList['aliases'][i] + ' for alias ' + i + ' in aliases is NOT licensed')
 
       # create base people info
       for id, row in licencePersonalData.items():
