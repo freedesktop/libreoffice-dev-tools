@@ -183,11 +183,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
-    for key in bugzillaData['bugs']:
-        row = bugzillaData['bugs'][key]
-	#Ignore META bugs and deletionrequest bugs.
-        if not row['summary'].startswith('[META]') \
-		and row['component'] != 'deletionrequest':
+    for key, row in bugzillaData['bugs'].items():
+	    #Ignore META bugs and deletionrequest bugs.
+        if not row['summary'].startswith('[META]') and row['component'] != 'deletionrequest':
             creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
             if creationDate < statOldDate:
                 statOldDate = creationDate
@@ -213,7 +211,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     if isOpen(rowStatus):
                         statList['data']['bugs']['open']['keywords'][keyword] += 1
 
-            rowId = row['id']
             if creationDate >= cfg[reportPeriod]:
                 statList['detailedReport']['created_count'] += 1
                 if rowStatus == 'UNCONFIRMED':
@@ -238,7 +235,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             util_increase_user_actions(statList, key, creatorMail, bugTargets, 'created', creationDate)
 
             actionMail = None
-            for action in row['history'][1:]:
+            for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
                 util_check_bugzilla_mail(statList, actionMail, '', actionDate)
@@ -256,7 +253,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 if actionDate >= cfg[reportPeriod] and rowStatus == addedStatus:
                                     statList['detailedReport']['status_changed_to'][addedStatus] += 1
                                     statList['detailedReport']['lists']['status_changed_to'][
-                                        addedStatus][0].append(rowId)
+                                        addedStatus][0].append(key)
                                     statList['detailedReport']['lists']['status_changed_to'][
                                         addedStatus][1].append(actionMail)
                             else:
@@ -267,7 +264,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             if actionDate >= cfg[reportPeriod] and rowStatus == addedStatus:
                                 statList['detailedReport']['status_changed_to'][addedStatus] += 1
                                 statList['detailedReport']['lists']['status_changed_to'][
-                                    addedStatus][0].append(rowId)
+                                    addedStatus][0].append(key)
                                 statList['detailedReport']['lists']['status_changed_to'][
                                     addedStatus][1].append(actionMail)
 
@@ -277,7 +274,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                         if actionDate >= cfg[reportPeriod] and rowStatus == addedStatus:
                             statList['detailedReport']['status_changed_to'][addedStatus] += 1
-                            statList['detailedReport']['lists']['status_changed_to'][addedStatus][0].append(rowId)
+                            statList['detailedReport']['lists']['status_changed_to'][addedStatus][0].append(key)
                             statList['detailedReport']['lists']['status_changed_to'][addedStatus][1].append(actionMail)
 
                         newStatus = None
@@ -287,7 +284,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         util_increase_user_actions(statList, key, actionMail, bugTargets, 'priority_changed', actionDate)
                         if actionDate >= cfg[reportPeriod] and newPriority == row['priority']:
                             statList['detailedReport']['priority_changed'][newPriority] += 1
-                            statList['detailedReport']['lists']['priority_changed'][newPriority][0].append(rowId)
+                            statList['detailedReport']['lists']['priority_changed'][newPriority][0].append(key)
                             statList['detailedReport']['lists']['priority_changed'][newPriority][1].append(actionMail)
 
 
@@ -296,11 +293,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         util_increase_user_actions(statList, key, actionMail, bugTargets, 'severity_changed', actionDate)
                         if actionDate >= cfg[reportPeriod] and newSeverity == row['severity']:
                             statList['detailedReport']['severity_changed'][newSeverity] += 1
-                            statList['detailedReport']['lists']['severity_changed'][newSeverity][0].append(rowId)
+                            statList['detailedReport']['lists']['severity_changed'][newSeverity][0].append(key)
                             statList['detailedReport']['lists']['severity_changed'][newSeverity][1].append(actionMail)
 
                     elif change['field_name'] == 'keywords':
-
                         keywordsAdded = change['added'].split(", ")
                         for keyword in keywordsAdded:
                             if keyword in keywords_list:
@@ -308,8 +304,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                                 if actionDate >= cfg[reportPeriod] and keyword in row['keywords']:
                                     statList['detailedReport']['keyword_added'][keyword] += 1
-
-                                    statList['detailedReport']['lists']['keyword_added'][keyword][0].append(rowId)
+                                    statList['detailedReport']['lists']['keyword_added'][keyword][0].append(key)
                                     statList['detailedReport']['lists']['keyword_added'][keyword][1].append(actionMail)
 
 
@@ -321,7 +316,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 if actionDate >= cfg[reportPeriod] and keyword not in row['keywords']:
                                     statList['detailedReport']['keyword_removed'][keyword] += 1
 
-                                    statList['detailedReport']['lists']['keyword_removed'][keyword][0].append(rowId)
+                                    statList['detailedReport']['lists']['keyword_removed'][keyword][0].append(key)
                                     statList['detailedReport']['lists']['keyword_removed'][keyword][1].append(actionMail)
 
                     elif change['field_name'] == 'whiteboard':
@@ -335,7 +330,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                         statList['detailedReport']['lists']['whiteboard_added'][whiteboard] = [[],[]]
                                     statList['detailedReport']['whiteboard_added'][whiteboard] += 1
 
-                                    statList['detailedReport']['lists']['whiteboard_added'][whiteboard][0].append(rowId)
+                                    statList['detailedReport']['lists']['whiteboard_added'][whiteboard][0].append(key)
                                     statList['detailedReport']['lists']['whiteboard_added'][whiteboard][1].append(actionMail)
 
                         for whiteboard in change['removed'].split(' '):
@@ -348,7 +343,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                         statList['detailedReport']['lists']['whiteboard_removed'][whiteboard] = [[],[]]
                                     statList['detailedReport']['whiteboard_removed'][whiteboard] += 1
 
-                                    statList['detailedReport']['lists']['whiteboard_removed'][whiteboard][0].append(rowId)
+                                    statList['detailedReport']['lists']['whiteboard_removed'][whiteboard][0].append(key)
                                     statList['detailedReport']['lists']['whiteboard_removed'][whiteboard][1].append(actionMail)
 
                     elif change['field_name'] == 'op_sys':
@@ -358,7 +353,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         if actionDate >= cfg[reportPeriod] and keyword not in row['platform']:
                             statList['detailedReport']['system_changed'][newPlatform] += 1
 
-                            statList['detailedReport']['lists']['system_changed'][newPlatform][0].append(rowId)
+                            statList['detailedReport']['lists']['system_changed'][newPlatform][0].append(key)
                             statList['detailedReport']['lists']['system_changed'][newPlatform][1].append(actionMail)
 
             commentMail = None
