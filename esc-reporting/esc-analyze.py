@@ -69,7 +69,7 @@ def util_load_file(fileName):
 def util_load_csv(fileName, split):
     global statList
     rawData = {}
-    with open(fileName, 'r') as fp:
+    with open(fileName, 'r', encoding='utf-8') as fp:
       fp.readline()
       fp.readline()
       for line in fp:
