@@ -232,6 +232,9 @@ def util_check_mail(name, mail):
       statList['people'][mail] = util_create_person_gerrit(name, mail)
       if mail == '*DUMMY*':
         statList['people'][mail]['licenseOK'] = True
+    else:
+      if name and name != '*UNKNOWN*' and statList['people'][mail]['name'] == '*UNKNOWN*':
+        statList['people'][mail]['name'] = name
     return mail
 
 
