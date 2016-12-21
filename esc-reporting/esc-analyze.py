@@ -26,7 +26,7 @@
 #
 # dump/developers_dump.json is used to identify:
 #   new contributors
-#   contributors missing license
+#   contributors missing licensek
 #   contributor award scheme
 #   cross reference emails (several people uses multiple emails, there is a function to control that)
 #

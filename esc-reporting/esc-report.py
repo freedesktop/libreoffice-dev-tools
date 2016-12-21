@@ -301,7 +301,7 @@ def report_mentoring():
 
     print("    + big CONGRATULATIONS to contributors who have at least 1 merged patch, since last report:", file=fp)
     for row in myStatList['award_1st_email']:
-        print('          ' + row['name'], file=fp)
+        print('          {} {} {}'.format(row['name'],row['email'],row['license']), file=fp)
     print("\n\n\n\n\n\n\n\n\n\n", file=fp)
     print('Day mentoring report, generated {} based on stats.json from {}'.format(
            datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
@@ -473,7 +473,7 @@ def runCfg(platform):
     cfg['platform'] = platform
     print("Reading and writing data to " + cfg['homedir'])
 
-    cfg['contributor'] = util_load_data_file(cfg['homedir'] + 'award.json')
+    cfg['award-mailed'] = util_load_data_file(cfg['homedir'] + 'award.json')['award-mailed']
     cfg['nowDate'] = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     cfg['cutDate'] = cfg['nowDate'] - datetime.timedelta(days=365)
     cfg['1weekDate'] = cfg['nowDate'] - datetime.timedelta(days=7)
