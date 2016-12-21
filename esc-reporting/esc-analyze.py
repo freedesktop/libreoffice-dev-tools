@@ -447,16 +447,16 @@ def analyze_qa():
             if entry['field_name'] == 'keywords':
               keywordsAdded = entry['added'].split(", ")
               for keyword in keywordsAdded:
-                if keyword == 'bisected':
+                if keyword == 'bisected' and 'bisected' in row['keywords']:
                   util_build_period_stat(xDate, email, 'qa', 'bisected')
-                if keyword == 'bibisected':
+                if keyword == 'bibisected' and 'bibisected' in row['keywords']:
                   util_build_period_stat(xDate, email, 'qa', 'bibisected')
-                if keyword == 'regression':
+                if keyword == 'regression' and 'regression' in row['keywords']:
                   util_build_period_stat(xDate, email, 'qa', 'regression')
-                if keyword == 'haveBacktrace':
+                if keyword == 'haveBacktrace' and 'haveBacktrace' in row['keywords']:
                   util_build_period_stat(xDate, email, 'qa', 'backtrace')
             elif entry['field_name'] == 'resolution':
-              if entry['added'] == 'FIXED':
+              if entry['added'] == 'FIXED' and row['resolution'] == 'FIXED':
                 util_build_period_stat(xDate, email, 'qa', 'fixed')
 
 def analyze_myfunc():
