@@ -372,53 +372,131 @@ def report_ui():
 
 def report_qa():
     global statList, openhubData, gerritData, gitData, bugzillaData, cfg
-    return
-    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1month']['total']), reverse=True)
-    top10list = []
-    for i in tmpClist:
-      if i != 'qa-admin@libreoffice.org' and i != 'libreoffice-commits@lists.freedesktop.org':
-        x = {'mail': i, 'name': statList['people'][i]['name'],
-             'month' :statList['people'][i]['qa']['1month']['total'],
-             'year':statList['people'][i]['qa']['1year']['total']}
-        top10list.append(x)
-        if len(top10list) >= 10:
-          break
 
     fp = open('/tmp/esc_qa_report.txt', 'w', encoding='utf-8')
     print('ESC QA report, generated {} based on stats.json from {}'.format(
           datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
 
     print("copy/paste to esc pad:\n"
-          "* qa update (xisco)\n"
-          "    + Bugzilla statistics", file=fp)
+          "* qa update (xisco)\n", file=fp)
 
-    xRow = [{'db': 'qa',  'tag': 'ASSIGNED',       'text': 'ASSIGNED'},
-            {'db': 'qa',  'tag': 'CLOSED',  'text': 'CLOSED'},
-            {'db': 'qa',  'tag': 'NEEDINFO',  'text': 'NEEDINFO'},
-            {'db': 'qa',  'tag': 'NEW',  'text': 'NEW'},
-            {'db': 'qa',  'tag': 'PLEASETEST',  'text': 'PLEASETEST'},
-            {'db': 'qa',  'tag': 'REOPENED',  'text': 'REOPENED'},
-            {'db': 'qa',  'tag': 'RESOLVED',  'text': 'RESOLVED'},
-            {'db': 'qa',  'tag': 'UNCONFIRMED',  'text': 'UNCONFIRMED'},
-            {'db': 'qa',  'tag': 'VERIFIED',  'text': 'VERIFIED'},
-            {'db': 'qa',  'tag': 'commented',  'text': 'commented'},
-            {'db': 'qa',  'tag': 'total',    'text': 'total'}]
-    print(util_build_matrix('BZ changes', xRow, None, statList), end='', file=fp)
-    print("    + Distribution of people based on number of changes:", file=fp)
-    xRow = [{'db': 'trendQA',  'tag': '1-5',    'text': '1-5'},
-            {'db': 'trendQA',  'tag': '6-25',   'text': '6-25'},
-            {'db': 'trendQA',  'tag': '26-50',  'text': '26-50'},
-            {'db': 'trendQA',  'tag': '51-100', 'text': '51-100'},
-            {'db': 'trendQA',  'tag': '100+',   'text': '100+'}]
-    print(util_build_matrix('distribution', xRow, None, statList), end='', file=fp)
+    print("    + UNCONFIRMED: {} ( )\n"
+        "        + enhancements: {}  ( )\n"
+        "        + needsUXEval: {} ( )\n"
+        "        + haveBackTrace: {} ( )\n"
+        "        + needsDevAdvice: {} ( )\n".format(
+                    statList['data']['qa']['unconfirmed']['count'],
+                    statList['data']['qa']['unconfirmed']['enhancement'],
+                    statList['data']['qa']['unconfirmed']['needsUXEval'],
+                    statList['data']['qa']['unconfirmed']['haveBacktrace'],
+                    statList['data']['qa']['unconfirmed']['needsDevAdvice'],), file=fp)
 
-    print("\n    + top 10 contributors:", file=fp)
-    for i in range(0, 10):
-      print('          {} made {} changes in 1 month, and {} changes in 1 year'.format(
-            top10list[i]['mail'], top10list[i]['month'], top10list[i]['year']), file=fp)
+    reporters = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['owner']), reverse=True)
+
+    print("\n    + top 10 bugs reporters:", file=fp)
+    top10reporters = reporters[0:10]
+    max_width = 0
+    for i in top10reporters:
+      if statList['people'][i]['qa']['1week']['owner'] == 0:
+        break
+      max_width = max(max_width, len(statList['people'][i]['name']))
+
+    for index, item in enumerate(top10reporters):
+      if statList['people'][item]['qa']['1week']['owner'] == 0:
+        break
+      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+            statList['people'][item]['name'], statList['people'][item]['qa']['1week']['owner'],
+            max_width), file=fp)
+
+    fixers = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['fixed']), reverse=True)
+
+    print("\n    + top 10 bugs fixers:", file=fp)
+    top10fixers = fixers[0:10]
+    max_width = 0
+    for i in top10fixers:
+      if statList['people'][i]['qa']['1week']['fixed'] == 0:
+        break
+      max_width = max(max_width, len(statList['people'][i]['name']))
+
+    for index, item in enumerate(top10fixers):
+      if statList['people'][item]['qa']['1week']['fixed'] == 0:
+        break
+      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+            statList['people'][item]['name'], statList['people'][item]['qa']['1week']['fixed'],
+            max_width), file=fp)
+
+
+    bisected = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['bisected']), reverse=True)
+
+    print("\n    + Bisected done by:", file=fp)
+    top10bisected = bisected[0:10]
+    max_width = 0
+    for i in top10bisected:
+      if statList['people'][i]['qa']['1week']['bisected'] == 0:
+        break
+      max_width = max(max_width, len(statList['people'][i]['name']))
+
+    for index, item in enumerate(top10bisected):
+      if statList['people'][item]['qa']['1week']['bisected'] == 0:
+        break
+      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+            statList['people'][item]['name'], statList['people'][item]['qa']['1week']['bisected'],
+            max_width), file=fp)
+
+    bibisected = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['bibisected']), reverse=True)
+
+    print("\n    + Bibisected done by:", file=fp)
+    top10bibisected = bibisected[0:10]
+    max_width = 0
+    for i in top10bibisected:
+      if statList['people'][i]['qa']['1week']['bibisected'] == 0:
+        break
+      max_width = max(max_width, len(statList['people'][i]['name']))
+
+    for index, item in enumerate(top10bibisected):
+      if statList['people'][item]['qa']['1week']['bibisected'] == 0:
+        break
+      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+            statList['people'][item]['name'], statList['people'][item]['qa']['1week']['bibisected'],
+            max_width), file=fp)
+
+    regression = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['regression']), reverse=True)
+
+    print("\n    + Regression added by:", file=fp)
+    top10regression = regression[0:10]
+    max_width = 0
+    for i in top10regression:
+      if statList['people'][i]['qa']['1week']['regression'] == 0:
+        break
+      max_width = max(max_width, len(statList['people'][i]['name']))
+
+    for index, item in enumerate(top10regression):
+      if statList['people'][item]['qa']['1week']['regression'] == 0:
+        break
+      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+            statList['people'][item]['name'], statList['people'][item]['qa']['1week']['regression'],
+            max_width), file=fp)
+
+
+    backtrace = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['backtrace']), reverse=True)
+
+    print("\n    + Backtrace added by:", file=fp)
+    top10backtrace = backtrace[0:10]
+    max_width = 0
+    for i in top10backtrace:
+      if statList['people'][i]['qa']['1week']['backtrace'] == 0:
+        break
+      max_width = max(max_width, len(statList['people'][i]['name']))
+
+    for index, item in enumerate(top10backtrace):
+      if statList['people'][item]['qa']['1week']['backtrace'] == 0:
+        break
+      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+            statList['people'][item]['name'], statList['people'][item]['qa']['1week']['backtrace'],
+            max_width), file=fp)
+
     fp.close()
     return None
-
 
 
 def report_myfunc():
