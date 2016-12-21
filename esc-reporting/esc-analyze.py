@@ -493,7 +493,7 @@ def analyze_trend():
 
 
 
-def analyze_final():
+def analyze_final(weekList = None):
     global cfg, statList, openhubData, bugzillaData, gerritData, gitData
 
     print("Analyze final")
@@ -507,9 +507,10 @@ def analyze_final():
     analyze_trend()
     myDay = cfg['nowDate']
     x = (myDay - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
-    weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
     if weekList is None:
-      weekList = {'data': {}}
+      weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
+      if weekList is None:
+        weekList = {'data': {}}
     statList['diff'] = util_build_diff(statList['data'], weekList['data'])
     sFile = cfg['homedir'] + 'stats.json'
     util_dump_file(sFile, statList)
@@ -517,6 +518,7 @@ def analyze_final():
     os.system('cp '+ sFile + ' ' + cfg['homedir'] + 'archive/stats_' + x + '.json')
     if myDay.strftime('%w') == '4':
         del statList['people']
+        del statList['aliases']
         util_dump_file(cfg['homedir'] + 'weeks/week_' + myDay.strftime('%Y_%W') + '.json', statList)
 
 
@@ -553,8 +555,8 @@ def runLoadCSV():
 
 
 
-def runAnalyze(platform):
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+def loadCfg(platform):
+    global cfg
 
     if 'esc_homedir' in os.environ:
       homeDir = os.environ['esc_homedir']
@@ -571,6 +573,11 @@ def runAnalyze(platform):
     cfg['1yearDate'] = cfg['nowDate'] - datetime.timedelta(days=365)
     print("Reading and writing data to " + cfg['homedir'])
 
+
+
+def runAnalyze():
+    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+
     openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
     bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
     gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
@@ -585,6 +592,89 @@ def runAnalyze(platform):
     analyze_final()
 
 
+def runUpgrade(args):
+    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+
+    args = args[1:]
+    openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
+    bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
+    gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
+    gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
+    statList = util_create_statList()
+    runLoadCSV()
+    csvList = statList
+    cfg['cutDate'] = datetime.datetime(day=27,month=8,year=2015)
+    weekList = util_create_statList()
+
+    for week in args:
+      print('upgrading ' + week)
+
+      # create new statlist
+      cfg['cutDate'] += datetime.timedelta(days=7)
+      cfg['nowDate'] = cfg['cutDate']
+      statList = util_create_statList()
+      statList['aliases'] = csvList['aliases']
+      analyze_mentoring()
+      analyze_ui()
+      analyze_qa()
+      analyze_myfunc()
+
+      # combine old statlist with new statlist
+      orgStatList = util_load_data_file(cfg['homedir'] + 'OLDweeks/' + week)
+
+      # copy from old data
+      statList['data']['easyhacks']['assigned'] = orgStatList['data']['easyhacks']['assigned']
+      statList['data']['easyhacks']['cleanup_comments'] = orgStatList['data']['easyhacks']['cleanup_comments']
+      statList['data']['easyhacks']['needsDevEval'] = orgStatList['data']['easyhacks']['needsDevEval']
+      statList['data']['easyhacks']['needsUXEval'] = orgStatList['data']['easyhacks']['needsUXEval']
+      statList['data']['easyhacks']['open'] = orgStatList['data']['easyhacks']['open']
+      statList['data']['easyhacks']['total'] = orgStatList['data']['easyhacks']['total']
+      statList['data']['gerrit']['committer']['1month']['ABANDONED'] = orgStatList['data']['gerrit']['committer']['1month']['ABANDONED']
+      statList['data']['gerrit']['committer']['1month']['MERGED'] = orgStatList['data']['gerrit']['committer']['1month']['MERGED']
+      statList['data']['gerrit']['committer']['1month']['NEW'] = orgStatList['data']['gerrit']['committer']['1month']['NEW']
+      statList['data']['gerrit']['committer']['1month']['reviewed'] = orgStatList['data']['gerrit']['committer']['1month']['reviewed']
+      statList['data']['gerrit']['committer']['1week']['ABANDONED'] = orgStatList['data']['gerrit']['committer']['1week']['ABANDONED']
+      statList['data']['gerrit']['committer']['1week']['MERGED'] = orgStatList['data']['gerrit']['committer']['1week']['MERGED']
+      statList['data']['gerrit']['committer']['1week']['NEW'] = orgStatList['data']['gerrit']['committer']['1week']['NEW']
+      statList['data']['gerrit']['committer']['1week']['reviewed'] = orgStatList['data']['gerrit']['committer']['1week']['reviewed']
+      statList['data']['gerrit']['committer']['1year']['ABANDONED'] = orgStatList['data']['gerrit']['committer']['1year']['ABANDONED']
+      statList['data']['gerrit']['committer']['1year']['MERGED'] = orgStatList['data']['gerrit']['committer']['1year']['MERGED']
+      statList['data']['gerrit']['committer']['1year']['NEW'] = orgStatList['data']['gerrit']['committer']['1year']['NEW']
+      statList['data']['gerrit']['committer']['1year']['reviewed'] = orgStatList['data']['gerrit']['committer']['1year']['reviewed']
+      statList['data']['gerrit']['committer']['3month']['ABANDONED'] = orgStatList['data']['gerrit']['committer']['3month']['ABANDONED']
+      statList['data']['gerrit']['committer']['3month']['MERGED'] = orgStatList['data']['gerrit']['committer']['3month']['MERGED']
+      statList['data']['gerrit']['committer']['3month']['NEW'] = orgStatList['data']['gerrit']['committer']['3month']['NEW']
+      statList['data']['gerrit']['committer']['3month']['reviewed'] = orgStatList['data']['gerrit']['committer']['3month']['reviewed']
+      statList['data']['gerrit']['committer']['total'] = orgStatList['data']['gerrit']['committer']['1year']['total']
+      statList['data']['gerrit']['contributor']['1month']['ABANDONED'] = orgStatList['data']['gerrit']['contributor']['1month']['ABANDONED']
+      statList['data']['gerrit']['contributor']['1month']['MERGED'] = orgStatList['data']['gerrit']['contributor']['1month']['MERGED']
+      statList['data']['gerrit']['contributor']['1month']['NEW'] = orgStatList['data']['gerrit']['contributor']['1month']['NEW']
+      statList['data']['gerrit']['contributor']['1month']['reviewed'] = orgStatList['data']['gerrit']['contributor']['1month']['reviewed']
+      statList['data']['gerrit']['contributor']['1week']['ABANDONED'] = orgStatList['data']['gerrit']['contributor']['1week']['ABANDONED']
+      statList['data']['gerrit']['contributor']['1week']['MERGED'] = orgStatList['data']['gerrit']['contributor']['1week']['MERGED']
+      statList['data']['gerrit']['contributor']['1week']['NEW'] = orgStatList['data']['gerrit']['contributor']['1week']['NEW']
+      statList['data']['gerrit']['contributor']['1week']['reviewed'] = orgStatList['data']['gerrit']['contributor']['1week']['reviewed']
+      statList['data']['gerrit']['contributor']['1year']['ABANDONED'] = orgStatList['data']['gerrit']['contributor']['1year']['ABANDONED']
+      statList['data']['gerrit']['contributor']['1year']['MERGED'] = orgStatList['data']['gerrit']['contributor']['1year']['MERGED']
+      statList['data']['gerrit']['contributor']['1year']['NEW'] = orgStatList['data']['gerrit']['contributor']['1year']['NEW']
+      statList['data']['gerrit']['contributor']['1year']['reviewed'] = orgStatList['data']['gerrit']['contributor']['1year']['reviewed']
+      statList['data']['gerrit']['contributor']['3month']['ABANDONED'] = orgStatList['data']['gerrit']['contributor']['3month']['ABANDONED']
+      statList['data']['gerrit']['contributor']['3month']['MERGED'] = orgStatList['data']['gerrit']['contributor']['3month']['MERGED']
+      statList['data']['gerrit']['contributor']['3month']['NEW'] = orgStatList['data']['gerrit']['contributor']['3month']['NEW']
+      statList['data']['gerrit']['contributor']['3month']['reviewed'] = orgStatList['data']['gerrit']['contributor']['3month']['reviewed']
+      statList['data']['gerrit']['contributor']['total'] = orgStatList['data']['gerrit']['contributor']['1year']['total']
+      statList['data']['openhub']['lines_of_code'] = orgStatList['data']['openhub']['lines_of_code']
+      statList['data']['openhub']['total_commits'] = orgStatList['data']['openhub']['total_commits']
+      statList['data']['openhub']['total_contributors'] = orgStatList['data']['openhub']['total_contributors']
+      statList['data']['openhub']['year_commits'] = orgStatList['data']['openhub']['year_commits']
+      statList['data']['openhub']['year_contributors'] = orgStatList['data']['openhub']['year_contributors']
+
+
+      analyze_final(weekList=weekList)
+      weekList = statList
+
 
 if __name__ == '__main__':
-    runAnalyze(sys.platform)
+    loadCfg(sys.platform)
+    runAnalyze()
+#    runUpgrade(sys.argv)
