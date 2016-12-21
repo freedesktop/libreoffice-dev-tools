@@ -417,44 +417,44 @@ def analyze_qa():
     print("qa: analyze bugzilla", flush=True)
 
     for key, row in bugzillaData['bugs'].items():
-      email = util_check_mail(row['creator_detail']['real_name'], row['creator'])
-      xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
-      creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
-      if xDate > cfg['cutDate']:
-        continue
+	    #Ignore META bugs and deletionrequest bugs.
+      if not row['summary'].startswith('[META]') \
+		      and row['component'] != 'deletionrequest':
+        email = util_check_mail(row['creator_detail']['real_name'], row['creator'])
+        xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
+        creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
 
+        if row['status'] == 'UNCONFIRMED':
+          statList['data']['qa']['unconfirmed']['count'] += 1
+          if 'needsUXEval' in row['keywords']:
+            statList['data']['qa']['unconfirmed']['needsUXEval'] += 1
+          if 'needsDevAdvice' in row['keywords']:
+            statList['data']['qa']['unconfirmed']['needsDevAdvice'] += 1
+          if 'haveBacktrace' in row['keywords']:
+            statList['data']['qa']['unconfirmed']['haveBacktrace'] += 1
+          if row['severity'] == 'enhancement':
+            statList['data']['qa']['unconfirmed']['enhancement'] += 1
 
-      if row['status'] == 'UNCONFIRMED':
-        statList['data']['qa']['unconfirmed']['count'] += 1
-        if 'needsUXEval' in row['keywords']:
-          statList['data']['qa']['unconfirmed']['needsUXEval'] += 1
-        if 'needsDevAdvice' in row['keywords']:
-          statList['data']['qa']['unconfirmed']['needsDevAdvice'] += 1
-        if 'haveBacktrace' in row['keywords']:
-          statList['data']['qa']['unconfirmed']['haveBacktrace'] += 1
-        if row['severity'] == 'enhancement':
-          statList['data']['qa']['unconfirmed']['enhancement'] += 1
+        util_build_period_stat(creationDate, email, 'qa', 'owner')
 
-      util_build_period_stat(creationDate, email, 'qa', 'owner')
-
-      for change in row['history']:
-        email = util_check_mail('*UNKNOWN*', change['who'])
-        xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
-        for entry in change['changes']:
-          if entry['field_name'] == 'keywords':
-            keywordsAdded = entry['added'].split(", ")
-            for keyword in keywordsAdded:
-              if keyword == 'bisected':
-                util_build_period_stat(xDate, email, 'qa', 'bisected')
-              if keyword == 'bibisected':
-                util_build_period_stat(xDate, email, 'qa', 'bibisected')
-              if keyword == 'regression':
-                util_build_period_stat(xDate, email, 'qa', 'regression')
-              if keyword == 'haveBacktrace':
-                util_build_period_stat(xDate, email, 'qa', 'backtrace')
-          elif entry['field_name'] == 'resolution':
-            if entry['added'] == 'FIXED':
-              util_build_period_stat(xDate, email, 'qa', 'fixed')
+        for change in row['history']:
+          email = util_check_mail('*UNKNOWN*', change['who'])
+          xDate = datetime.datetime.strptime(change['when'], "%Y-%m-%dT%H:%M:%SZ")
+          for entry in change['changes']:
+            if entry['field_name'] == 'keywords':
+              keywordsAdded = entry['added'].split(", ")
+              for keyword in keywordsAdded:
+                if keyword == 'bisected':
+                  util_build_period_stat(xDate, email, 'qa', 'bisected')
+                if keyword == 'bibisected':
+                  util_build_period_stat(xDate, email, 'qa', 'bibisected')
+                if keyword == 'regression':
+                  util_build_period_stat(xDate, email, 'qa', 'regression')
+                if keyword == 'haveBacktrace':
+                  util_build_period_stat(xDate, email, 'qa', 'backtrace')
+            elif entry['field_name'] == 'resolution':
+              if entry['added'] == 'FIXED':
+                util_build_period_stat(xDate, email, 'qa', 'fixed')
 
 def analyze_myfunc():
     global cfg, statList, openhubData, bugzillaData, gerritData, gitData, licenceCompanyData, licencePersonalData
