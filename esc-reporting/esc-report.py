@@ -230,8 +230,9 @@ def report_mentoring():
         xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
         if xDate < cfg['1monthDate']:
           myStatList['to_unassign'].append(key)
-        if row['assigned_to'] == '' or (row['assigned_to'] != '' and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org') :
-          myStatList['assign_problem'].append(key)
+      if (row['status'] == 'ASSIGNED' and (row['assigned_to'] == '' or row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org')) or \
+         (row['status'] != 'ASSIGNED' and row['assigned_to'] != '' and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org') :
+        myStatList['assign_problem'].append(key)
       if len(row['comments']) >= 5:
         myStatList['too_many_comments'].append(key)
       if not 'jani@documentfoundation.org' in row['cc']:
