@@ -496,7 +496,8 @@ def report_qa():
             max_width), file=fp)
 
     fp.close()
-    return None
+    return {'title': 'esc_report, QA', 'mail': 'xiscofauli@libreoffice.org',
+            'file': '/tmp/esc_qa_report.txt'}
 
 
 def report_myfunc():
