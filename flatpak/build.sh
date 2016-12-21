@@ -239,6 +239,7 @@ gpg2 --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
  "${my_gpgkeyid?}"
 flatpak build-bundle \
  --repo-url=http://download.documentfoundation.org/libreoffice/flatpak/repository \
+ --runtime-repo=https://sdk.gnome.org/gnome.flatpakrepo \
  --gpg-keys="${my_dir?}"/key "${my_dir?}"/repository \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice \
  "${my_flatpakbranch?}"
