@@ -393,105 +393,109 @@ def report_qa():
 
     reporters = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['owner']), reverse=True)
 
-    print("\n    + top 10 bugs reporters:", file=fp)
+    print("\n  + top 10 bugs reporters:", file=fp)
     top10reporters = reporters[0:10]
-    max_width = 0
+    max_width = 20
     for i in top10reporters:
       if statList['people'][i]['qa']['1week']['owner'] == 0:
         break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
-    for index, item in enumerate(top10reporters):
+    for item in top10reporters:
       if statList['people'][item]['qa']['1week']['owner'] == 0:
         break
-      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+      print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['owner'],
             max_width), file=fp)
 
     fixers = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['fixed']), reverse=True)
 
-    print("\n    + top 10 bugs fixers:", file=fp)
+    print("\n  + top 10 bugs fixers:", file=fp)
     top10fixers = fixers[0:10]
-    max_width = 0
+    max_width = 20
     for i in top10fixers:
       if statList['people'][i]['qa']['1week']['fixed'] == 0:
         break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
-    for index, item in enumerate(top10fixers):
+    for item in top10fixers:
       if statList['people'][item]['qa']['1week']['fixed'] == 0:
         break
-      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+      print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['fixed'],
             max_width), file=fp)
 
 
     bisected = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['bisected']), reverse=True)
 
-    print("\n    + Bisected done by:", file=fp)
+    print("\nBisected", file=fp)
+    print("\n  + Done by:", file=fp)
     top10bisected = bisected[0:10]
-    max_width = 0
+    max_width = 20
     for i in top10bisected:
       if statList['people'][i]['qa']['1week']['bisected'] == 0:
         break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
-    for index, item in enumerate(top10bisected):
+    for item in top10bisected:
       if statList['people'][item]['qa']['1week']['bisected'] == 0:
         break
-      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+      print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['bisected'],
             max_width), file=fp)
 
     bibisected = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['bibisected']), reverse=True)
 
-    print("\n    + Bibisected done by:", file=fp)
+    print("\nBibisected", file=fp)
+    print("\n  + Done by:", file=fp)
     top10bibisected = bibisected[0:10]
-    max_width = 0
+    max_width = 20
     for i in top10bibisected:
       if statList['people'][i]['qa']['1week']['bibisected'] == 0:
         break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
-    for index, item in enumerate(top10bibisected):
+    for item in top10bibisected:
       if statList['people'][item]['qa']['1week']['bibisected'] == 0:
         break
-      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+      print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['bibisected'],
             max_width), file=fp)
 
     regression = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['regression']), reverse=True)
 
-    print("\n    + Regression added by:", file=fp)
+    print("\nRegressions", file=fp)
+    print("\n  + Done by:", file=fp)
     top10regression = regression[0:10]
-    max_width = 0
+    max_width = 20
     for i in top10regression:
       if statList['people'][i]['qa']['1week']['regression'] == 0:
         break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
-    for index, item in enumerate(top10regression):
+    for item in top10regression:
       if statList['people'][item]['qa']['1week']['regression'] == 0:
         break
-      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+      print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['regression'],
             max_width), file=fp)
 
 
     backtrace = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['backtrace']), reverse=True)
 
-    print("\n    + Backtrace added by:", file=fp)
+    print("\nBacktrace", file=fp)
+    print("\n  + Done by:", file=fp)
     top10backtrace = backtrace[0:10]
-    max_width = 0
+    max_width = 20
     for i in top10backtrace:
       if statList['people'][i]['qa']['1week']['backtrace'] == 0:
         break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
-    for index, item in enumerate(top10backtrace):
+    for item in top10backtrace:
       if statList['people'][item]['qa']['1week']['backtrace'] == 0:
         break
-      print('          {0:2d}. {1:{3}s} :{2:3d}'.format( index + 1,
+      print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['backtrace'],
             max_width), file=fp)
 
