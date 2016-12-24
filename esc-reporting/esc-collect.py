@@ -93,7 +93,8 @@ def util_load_data_file(cfg, fileName, funcName, rawListProto):
       rawList = rawListProto
       rawList['newest-entry'] = (datetime.datetime.now() - datetime.timedelta(days=365)).strftime("%Y-%m-%d 00")
       print('retrieving full year of ' + funcName + ', take a coffee')
-    return datetime.datetime.strptime(rawList['newest-entry'], "%Y-%m-%d %H"), rawList
+    searchDate = datetime.datetime.strptime(rawList['newest-entry'], "%Y-%m-%d %H") - datetime.timedelta(days=2)
+    return searchDate, rawList
 
 
 
