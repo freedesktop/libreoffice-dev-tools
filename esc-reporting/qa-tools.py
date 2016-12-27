@@ -11,8 +11,9 @@ import sys
 import os
 import datetime
 import json
+from pyshorteners import Shortener
 
-homeDir = '/home/xisco/stats/'
+homeDir = '/home/xisco/dev-tools/esc-reporting/'
 
 reportPeriod = '7d'
 
@@ -409,7 +410,8 @@ def util_print_QA_line(fp, statList, string, number, tuple, action):
         url += str(bug) + "%2C"
 
     url = url[:-3]
-    print('\tLink: ' + url, file=fp)
+    shortener = Shortener('Tinyurl', timeout=9000)
+    print('\tLink: ' + shortener.short(url), file=fp)
 
     if not action == 'created':
         #Count the number of reps
