@@ -75,6 +75,8 @@ get_lo_src()
 build_cppcheck()
 {
     pushd "${CPPCHECK_DIR?}" > /dev/null || die "Failed to change directory to ${CPPCHECK_DIR?}"
+    # cppcheck is quite small so it can be built from scratch to avoid some pb
+    make clean
     make all || die "Failed to build cppcheck."
     popd > /dev/null || die "Failed to change directory out of ${CPPCHECK_DIR?}"
 }
