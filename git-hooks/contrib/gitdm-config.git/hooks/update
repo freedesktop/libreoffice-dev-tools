@@ -1,107 +1,140 @@
 #!/bin/sh
 #
-# An example hook script to blocks unannotated tags from entering.
+# An example hook script to mail out commit update information.
+# It also blocks tags that aren't annotated.
 # Called by git-receive-pack with arguments: refname sha1-old sha1-new
 #
-# To enable this hook, make this file executable by "chmod +x update".
-#
-# Config
-# ------
-# hooks.allowunannotated
-#   This boolean sets whether unannotated tags will be allowed into the
-#   repository.  By default they won't be.
-# hooks.allowdeletetag
-#   This boolean sets whether deleting tags will be allowed in the
-#   repository.  By default they won't be.
-# hooks.allowdeletebranch
-#   This boolean sets whether deleting branches will be allowed in the
-#   repository.  By default they won't be.
+# To enable this hook:
+# (1) change the recipient e-mail address
+# (2) make this file executable by "chmod +x update".
 #
 
-# --- Command line
-refname="$1"
-oldrev="$2"
-newrev="$3"
+# prevent pushing from anyone but the logerrit user
+if [ "$(id -u -n )" != "logerrit" ] ; then
+       echo "*** The reference for this repo is gerrit. do not push directly to fdo" >&2
+       exit 1
+fi
+from="$(git show -s --pretty=format:'%an <%ae>' $3^{})"
 
-# --- Safety check
-if [ -z "$GIT_DIR" ]; then
-	echo "Don't run this script from the command line." >&2
-	echo " (if you want, you could supply GIT_DIR then run" >&2
-	echo "  $0 <ref> <oldrev> <newrev>)" >&2
+project=$(cat $GIT_DIR/description)
+recipients="libreoffice-commits@lists.freedesktop.org"
+
+ref_type=$(git cat-file -t "$3")
+
+# Avoid re-introducing obsolete tags
+if grep -q "^$1$" hooks/obsolete-tags; then
+	echo "*** Re-introducing an obsolete tag ($1) is not allowed in this repo" >&2
+	echo "*** Use corereleasebranches/killtagslocal.sh from contrib/dev-tools.git to get rid of them." >&2
 	exit 1
 fi
 
-if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
-	echo "Usage: $0 <ref> <oldrev> <newrev>" >&2
-	exit 1
-fi
-
-# --- Config
-allowunannotated=$(git config --bool hooks.allowunannotated)
-allowdeletebranch=$(git config --bool hooks.allowdeletebranch)
-allowdeletetag=$(git config --bool hooks.allowdeletetag)
-
-# check for no description
-projectdesc=$(sed -e '1q' "$GIT_DIR/description")
-if [ -z "$projectdesc" -o "$projectdesc" = "Unnamed repository; edit this file to name it for gitweb." ]; then
-	echo "*** Project description file hasn't been set" >&2
-	exit 1
-fi
-
-# --- Check types
-# if $newrev is 0000...0000, it's a commit to delete a ref.
-if [ "$newrev" = "0000000000000000000000000000000000000000" ]; then
-	newrev_type=delete
-else
-	newrev_type=$(git-cat-file -t $newrev)
-fi
-
-case "$refname","$newrev_type" in
-	refs/tags/*,commit)
-		# un-annotated tag
-		short_refname=${refname##refs/tags/}
-		if [ "$allowunannotated" != "true" ]; then
-			echo "*** The un-annotated tag, $short_refname, is not allowed in this repository" >&2
-			echo "*** Use 'git tag [ -a | -s ]' for tags you want to propagate." >&2
-			exit 1
-		fi
-		;;
-	refs/tags/*,delete)
-		# delete tag
-		if [ "$allowdeletetag" != "true" ]; then
-			echo "*** Deleting a tag is not allowed in this repository" >&2
-			exit 1
-		fi
-		;;
-	refs/tags/*,tag)
-		# annotated tag
-		;;
-	refs/heads/*,commit)
-		# branch
-		;;
-	refs/heads/*,delete)
-		# delete branch
-		if [ "$allowdeletebranch" != "true" ]; then
-			echo "*** Deleting a branch is not allowed in this repository" >&2
-			exit 1
-		fi
-		;;
-	refs/remotes/*,commit)
-		# tracking branch
-		;;
-	refs/remotes/*,delete)
-		# delete tracking branch
-		if [ "$allowdeletebranch" != "true" ]; then
-			echo "*** Deleting a tracking branch is not allowed in this repository" >&2
-			exit 1
-		fi
-		;;
-	*)
-		# Anything else (is there anything else?)
-		echo "*** Update hook: unknown type of update to ref $refname of type $newrev_type" >&2
-		exit 1
-		;;
+# Only allow annotated tags in a shared repo
+# Remove this code to treat dumb tags the same as everything else
+case "$1","$ref_type" in
+refs/tags/*,commit)
+	echo "*** Un-annotated tags are not allowed in this repo" >&2
+	echo "*** Use 'git tag [ -a | -s ]' for tags you want to propagate."
+	exit 1;;
+refs/tags/*,tag)
+	echo "### Pushing version '${1##refs/tags/}' to the masses" >&2
+	# recipients="release-announce@somwehere.com announce@somewhereelse.com"
+	;;
 esac
 
-# --- Finished
+# set this  to 'cat' to get a very detailed listing.
+# short only kicks in when an annotated tag is added
+short='git shortlog'
+
+# see 'date --help' for info on how to write this
+# The default is a human-readable iso8601-like format with minute
+# precision ('2006-01-25 15:58 +0100' for example)
+date_format="%F %R %z"
+
+# Set to the number of pathname components you want in the subject line to
+# indicate which components of a project changed.
+num_path_components=2
+
+# Set subject
+if expr "$2" : '0*$' >/dev/null ; then
+	subject="Changes to '${1##refs/heads/}'"
+else
+	base=$(git-merge-base "$2" "$3")
+	subject=$(git-diff-tree -r --name-only "$base" "$3" |
+	          cut -d/ -f-$num_path_components | sort -u | xargs echo -n)
+        commits=$(git-rev-list "$3" "^$base" | wc -l)
+	if [ "$commits" -ne 1 ] ; then
+		subject="$commits commits - $subject"
+	fi
+	branch="${1##refs/heads/}"
+	if [ "$branch" != "master" ] ; then
+		subject="Branch '$branch' - $subject"
+	fi
+	repo=$(basename $(cd $GIT_DIR ; pwd))
+	subject="$repo: $subject"
+fi
+
+if expr "$2" : '0*$' >/dev/null
+then
+	# new ref
+	case "$1" in
+	refs/tags/*)
+		# a pushed and annotated tag (usually) means a new version
+		tag="${1##refs/tags/}"
+		if [ "$ref_type" = tag ]; then
+			eval $(git cat-file tag $3 | \
+				sed -n '4s/tagger \([^>]*>\)[^0-9]*\([0-9]*\).*/tagger="\1" ts="\2"/p')
+			date=$(date --date="1970-01-01 00:00:00 $ts seconds" +"$date_format")
+			echo "Tag '$tag' created by $tagger at $date"
+			git cat-file tag $3 | sed -n '5,$p'
+			echo
+		fi
+		prev=$(git describe "$3^" | sed 's/-g.*//')
+		# the first tag in a repo will yield no $prev
+		if [ -z "$prev" ]; then
+			echo "Changes since the dawn of time:"
+			git rev-list --pretty $3 | $short
+		else
+			echo "Changes since $prev:"
+			git rev-list --pretty $prev..$3 | $short
+			echo ---
+			git diff $prev..$3 | diffstat -p1
+			echo ---
+		fi
+		;;
+
+	refs/heads/*)
+		branch="${1##refs/heads/}"
+		echo "New branch '$branch' available with the following commits:"
+		git-rev-list --pretty "$3" $(git-rev-parse --not --all)
+		;;
+	esac
+else
+	case "$base" in
+	"$2")
+		git diff "$3" "^$base" | diffstat -p1
+		echo
+		echo "New commits:"
+		;;
+	*)
+		echo "Rebased ref, commits from common ancestor:"
+		;;
+	esac
+	bytes=0
+	IFS="$(echo)"
+	git-rev-list "$3" "^$base" | while read rev; do git-show $rev; done | sed 's#\\#\\\\#g' |
+		while read line
+		do
+			if [ "$bytes" -ge "0" ] ; then
+				bytes=$(( $bytes + ${#line} + 1 ))
+				if [ "$bytes" -gt "100000" ] ; then
+					bytes=-1
+					echo -e "\n... etc. - the rest is truncated"
+				else
+					echo "$line"
+				fi
+			fi
+		done
+fi |
+mail -s "$subject" -a "X-Git-Repository: git://anongit.freedesktop.org/git/libreoffice/contrib/gitdm-config.git" \
+     -a "List-Post: <mailto:libreoffice@lists.freedesktop.org>" -a "From: $from" $recipients
 exit 0
