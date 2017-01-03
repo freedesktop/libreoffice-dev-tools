@@ -16,7 +16,10 @@ for i in $(find . -name hooks)
 do
     for j in $i/*
     do
-        [ -e $prefix/$j ] || die "$prefix/$j doesn't exists, remove from repo"
+        if [ ! -e $prefix/$j ]; then
+            echo "$prefix/$j doesn't exists, remove from repo"
+            continue
+        fi
         if ! diff -q -u $j $prefix/$j; then
             if [ ! -w $prefix/$j ]; then
                 echo "$prefix/$j is not writable, skipping"
