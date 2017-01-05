@@ -404,6 +404,8 @@ def report_qa():
     for item in top10reporters:
       if statList['people'][item]['qa']['1week']['owner'] == 0:
         break
+      if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
+        statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
       print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['owner'],
             max_width), file=fp)
@@ -421,6 +423,8 @@ def report_qa():
     for item in top10fixers:
       if statList['people'][item]['qa']['1week']['fixed'] == 0:
         break
+      if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
+        statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
       print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['fixed'],
             max_width), file=fp)
@@ -440,6 +444,8 @@ def report_qa():
     for item in top10bisected:
       if statList['people'][item]['qa']['1week']['bisected'] == 0:
         break
+      if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
+        statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
       print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['bisected'],
             max_width), file=fp)
@@ -458,6 +464,8 @@ def report_qa():
     for item in top10bibisected:
       if statList['people'][item]['qa']['1week']['bibisected'] == 0:
         break
+      if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
+        statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
       print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['bibisected'],
             max_width), file=fp)
@@ -476,6 +484,8 @@ def report_qa():
     for item in top10regression:
       if statList['people'][item]['qa']['1week']['regression'] == 0:
         break
+      if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
+        statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
       print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['regression'],
             max_width), file=fp)
@@ -495,6 +505,8 @@ def report_qa():
     for item in top10backtrace:
       if statList['people'][item]['qa']['1week']['backtrace'] == 0:
         break
+      if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
+        statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
       print('        {0:{2}s} {1:3d}'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['backtrace'],
             max_width), file=fp)
