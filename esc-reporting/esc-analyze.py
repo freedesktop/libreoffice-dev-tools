@@ -70,8 +70,6 @@ def util_load_csv(fileName, split):
     global statList
     rawData = {}
     with open(fileName, 'r', encoding='utf-8') as fp:
-      fp.readline()
-      fp.readline()
       for line in fp:
         line = line[:-1]
         if len(line) == 0:
@@ -150,7 +148,7 @@ def util_create_person_gerrit(person, email):
                          '1month': {'owner': 0, 'reviewer': 0},
                          '1week':  {'owner': 0, 'reviewer': 0},
                          'total':  0,
-                         'userName': '*DUMMY*'},
+                         'userName': '*dummy*'},
              'ui':      {'1year':  {'commented': 0, 'history': 0},
                          '3month': {'commented': 0, 'history': 0},
                          '1month': {'commented': 0, 'history': 0},
@@ -223,14 +221,15 @@ def util_create_statList():
 
 
 
-def util_check_mail(name, mail):
+def util_check_mail(name, xmail):
     global statList
 
+    mail = xmail.lower()
     if mail in statList['aliases']:
       mail = statList['aliases'][mail]
     if not mail in statList['people']:
       statList['people'][mail] = util_create_person_gerrit(name, mail)
-      if mail == '*DUMMY*':
+      if mail == '*dummy*':
         statList['people'][mail]['licenseOK'] = True
     else:
       if name and name != '*UNKNOWN*' and statList['people'][mail]['name'] == '*UNKNOWN*':

@@ -52,8 +52,9 @@ def util_load_data_file(fileName):
 
 
 
-def util_check_mail(mail):
+def util_check_mail(xmail):
     global statList
+    mail = xmail.lower()
     if mail in statList['aliases']:
       mail = statList['aliases'][mail]
     if not mail in statList['people']:

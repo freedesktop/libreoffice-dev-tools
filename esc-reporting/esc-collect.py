@@ -184,7 +184,7 @@ def get_gerrit(cfg):
     for row in tmp:
       for i in 'username', 'email':
         if not i in row:
-          row[i] = '*DUMMY*'
+          row[i] = '*dummy*'
       rawList['committers'].append(row)
 
     url = urlBase + 'changes/?q=after:' + searchDate.strftime("%Y-%m-%d") + \
@@ -197,13 +197,13 @@ def get_gerrit(cfg):
       for row in tmp:
         for i in 'email', 'username', 'name':
           if not i in row['owner']:
-            row['owner'][i] = '*DUMMY*'
+            row['owner'][i] = '*dummy*'
         for x in row['messages']:
           if not 'author' in x:
             x['author'] = {}
           for i in 'email', 'username', 'name':
             if not i in x['author']:
-              x['author'][i] = '*DUMMY*'
+              x['author'][i] = '*dummy*'
         for i in 'Verified', 'Code-Review':
           if not i in row['labels']:
             row['labels'][i] = {}
@@ -211,11 +211,11 @@ def get_gerrit(cfg):
             row['labels'][i]['all'] = []
           for x in row['labels'][i]['all']:
             if 'name' not in x:
-              x['name'] = '*DUMMY*'
+              x['name'] = '*dummy*'
             if 'email' not in x:
-              x['email'] = '*DUMMY*'
+              x['email'] = '*dummy*'
             if 'username' not in x:
-              x['username'] = '*DUMMY*'
+              x['username'] = '*dummy*'
             if 'value' not in x:
               x['value'] = 0
 
