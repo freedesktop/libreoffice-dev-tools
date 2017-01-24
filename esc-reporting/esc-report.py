@@ -385,12 +385,14 @@ def report_qa():
         "        + enhancements: {}  ( )\n"
         "        + needsUXEval: {} ( )\n"
         "        + haveBackTrace: {} ( )\n"
-        "        + needsDevAdvice: {} ( )\n".format(
+        "        + needsDevAdvice: {} ( )\n"
+        "        + documentation:  {} ( )\n".format(
                     statList['data']['qa']['unconfirmed']['count'],
                     statList['data']['qa']['unconfirmed']['enhancement'],
                     statList['data']['qa']['unconfirmed']['needsUXEval'],
                     statList['data']['qa']['unconfirmed']['haveBacktrace'],
-                    statList['data']['qa']['unconfirmed']['needsDevAdvice'],), file=fp)
+                    statList['data']['qa']['unconfirmed']['needsDevAdvice'],
+                    statList['data']['qa']['unconfirmed']['documentation'],), file=fp)
 
     reporters = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['owner']), reverse=True)
 
