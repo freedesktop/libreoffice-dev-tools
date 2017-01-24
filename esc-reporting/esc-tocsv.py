@@ -91,7 +91,7 @@ def loadWeekGenerateCSV(argv):
     csv = {'git': {'committer':      {'week': [0] * 53, 'sum': [0] * 53, 'avg': [0] * 53},
                    'contributor':    {'week': [0] * 53, 'sum': [0] * 53, 'avg': [0] * 53},
                    'committer_cnt':  {'week': [0] * 105, 'all': [0] * 105, 'avg': [0] * 105},
-                   'contributor_cnt': {'week': [0] * 105, 'all': [0] * 105, 'avg': [0] * 105}},
+                   'contributor_cnt': {'week': [0] * 105, 'all': [0] * 105, 'avg': [0] * 105, 'patch1': [0] * 105, 'patch2': [0] * 105, 'patch3': [0] * 105}},
                    'gerrit': {'committer':   {'merged':   {'week': [0] * 53, 'sum': [0] * 53, 'avg': [0] * 53},
                                       'reviewed': {'week': [0] * 53, 'sum': [0] * 53, 'avg': [0] * 53}},
                       'contributor': {'merged':   {'week': [0] * 53, 'sum': [0] * 53, 'avg': [0] * 53}}},
@@ -108,7 +108,9 @@ def loadWeekGenerateCSV(argv):
                 'committer1' : [],
                 'contributor': [],
                 'contributor1': [],
-                'firsttime' : []}
+                'contributor1TOT' : [],
+                'contributor2TOT': [],
+                'contributor3TOT': []}
     for i in range(0,105):
         weekSum['committer'].append([])
         weekSum['committer1'].append([])
@@ -130,6 +132,16 @@ def loadWeekGenerateCSV(argv):
             xType = 'committer'
         else:
             xType = 'contributor'
+            if email not in weekSum['contributor1TOT']:
+                csv['git']['contributor_cnt']['patch1'][week] += 1
+                weekSum['contributor1TOT'].append(email)
+            elif email not in  weekSum['contributor2TOT']:
+                csv['git']['contributor_cnt']['patch2'][week] += 1
+                weekSum['contributor2TOT'].append(email)
+            elif email not in weekSum['contributor3TOT']:
+                csv['git']['contributor_cnt']['patch3'][week] += 1
+                weekSum['contributor3TOT'].append(email)
+
         xType1 = xType + '1'
         if not email in weekSum[xType1][week]:
             weekSum[xType1][week].append(email)
@@ -239,6 +251,11 @@ def loadWeekGenerateCSV(argv):
         doPrint('git;committer;week-cnt;', csv['git']['committer_cnt']['week'], fp, useTop=105)
         doPrint('git;committer;week-all;', csv['git']['committer_cnt']['all'], fp, useTop=105)
         doPrint('git;committer;week-avg;', csv['git']['committer_cnt']['avg'], fp, useTop=105)
+        print('', file=fp)
+        print('', file=fp)
+        doPrint('git;contributor;patch1;', csv['git']['contributor_cnt']['patch1'], fp, useTop=105)
+        doPrint('git;contributor;patch2;', csv['git']['contributor_cnt']['patch2'], fp, useTop=105)
+        doPrint('git;contributor;patch3;', csv['git']['contributor_cnt']['patch3'], fp, useTop=105)
 
     print('done see /tmp/esc.csv')
 
