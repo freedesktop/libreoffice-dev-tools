@@ -155,7 +155,7 @@ def report_mentoring():
     for id, row in statList['people'].items():
       entry = {'name': row['name'], 'email': id, 'license': row['licenseText']}
       newestCommitDate = datetime.datetime.strptime(row['newestCommit'], '%Y-%m-%d')
-      if newestCommitDate >= mailedDate and newestCommitDate < cfg['1monthDate']:
+      if newestCommitDate > mailedDate and newestCommitDate < cfg['3monthDate']:
         myStatList['we_miss_you_email'].append(entry)
       x = row['commits']['1month']['owner']
       if x != 0 and row['commits']['total'] == x and not id in cfg['award-mailed']:
