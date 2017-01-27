@@ -19,7 +19,8 @@
 # org.gnome.Platform 3.20 runtime (and SDK) from <http://sdk.gnome.org/repo/>.
 # To obtain the latter, do something like:
 #
-#  $ flatpak remote-add --user gnome-sdk http://sdk.gnome.org/repo/
+#  $ flatpak remote-add --user --from gnome-sdk \
+#     https://sdk.gnome.org/gnome.flatpakrepo
 #  $ flatpak install --user gnome-sdk org.gnome.Platform 3.20
 #  $ flatpak install --user gnome-sdk org.gnome.Sdk 3.20
 #  ...
