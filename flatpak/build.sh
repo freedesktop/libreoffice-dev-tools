@@ -69,6 +69,10 @@ fi
 
 rm -fr "${my_dir?}"/fetch
 mkdir "${my_dir?}"/fetch
+## Running autogen.sh in the host environment with the set of --without-system-*
+## from LibreOfficeFlatpak means that some implicit --with-system-* may happen
+## to not be satitisfied by the host environment, and necessary devel packages
+## need to be installed there at least temporarily:
 (cd "${my_dir?}"/fetch \
  && "${my_dir?}"/lo/autogen.sh --prefix="${my_dir?}"/inst \
   --with-distro=LibreOfficeFlatpak --with-external-tar="${my_dir?}"/tar \
