@@ -201,7 +201,7 @@ def report_mentoring():
           entry['email'] = row['author-email']
           entry['license'] = 'GIT AUTHOR NO LICENSE'
           myStatList['missing_license'].append(entry)
-        elif not statList['people'][ownerEmail]['licenseOK']:
+        elif not statList['people'][email]['licenseOK']:
           entry['license'] = 'GIT: ' + statList['people'][email]['licenseText']
           myStatList['missing_license'].append(entry)
 
