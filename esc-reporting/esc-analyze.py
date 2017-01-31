@@ -74,6 +74,8 @@ def util_load_csv(fileName, split):
         line = line[:-1]
         if len(line) == 0:
           continue
+        if line[0] == '#':
+          continue
         x = line.split(split)
         if split == ';' and len(x) != 3:
           raise Exception('misformed entry ' + line + ' in filename ' + fileName)
