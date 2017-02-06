@@ -351,7 +351,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         newPlatform = change['added']
                         util_increase_user_actions(statList, key, actionMail, bugTargets, 'system_changed', actionDate)
 
-                        if actionDate >= cfg[reportPeriod] and keyword not in row['platform']:
+                        if actionDate >= cfg[reportPeriod] and newPlatform not in row['platform']:
                             statList['detailedReport']['system_changed'][newPlatform] += 1
 
                             statList['detailedReport']['lists']['system_changed'][newPlatform][0].append(key)
