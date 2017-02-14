@@ -53,7 +53,7 @@ def runCfg(platform):
     if 'esc_homedir' in os.environ:
       homeDir = os.environ['esc_homedir']
     else:
-      homeDir = '/home/jani/esc'
+      homeDir = '/home/esc-mentoring/esc'
     cfg = util_load_data_file(homeDir + '/config.json')
     cfg['homedir'] = homeDir + '/'
     cfg['platform'] = platform
@@ -203,7 +203,7 @@ def loadWeekGenerateCSV(argv):
         csv['gerrit']['contributor']['merged']['sum'][i] += csv['gerrit']['contributor']['merged']['sum'][i-1]
         csv['gerrit']['contributor']['merged']['avg'][i] = int(csv['gerrit']['contributor']['merged']['sum'][i] / i)
 
-    with open('/Users/jani/TMPesc.csv', 'w') as fp:
+    with open('/Users/esc-mentoring/TMPesc.csv', 'w') as fp:
         print('Mentoring 2016;', file=fp)
         print('', file=fp)
         print('origin;type;art;', end='', file=fp)

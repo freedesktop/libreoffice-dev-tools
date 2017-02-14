@@ -566,7 +566,7 @@ def runCfg(platform):
     if 'esc_homedir' in os.environ:
       homeDir = os.environ['esc_homedir']
     else:
-      homeDir = '/home/jani/esc'
+      homeDir = '/home/esc-mentoring/esc'
     cfg = util_load_data_file(homeDir + '/config.json')
     cfg['homedir'] = homeDir + '/'
     cfg['platform'] = platform
