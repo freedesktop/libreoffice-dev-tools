@@ -215,7 +215,7 @@ def report_mentoring():
         continue
 
       if not 'easyHack' in row['keywords']:
-        if 'jani' in row['cc']:
+        if 'mentoring' in row['cc']:
           myStatList['remove_cc'].append(key)
         continue
 
@@ -236,7 +236,7 @@ def report_mentoring():
         myStatList['assign_problem'].append(key)
       if len(row['comments']) >= 5:
         myStatList['too_many_comments'].append(key)
-      if not 'jani@documentfoundation.org' in row['cc']:
+      if not 'mentoring@documentfoundation.org' in row['cc']:
         myStatList['missing_cc'].append(key)
       if row['comments'][-1]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and not key in cfg['bugzilla']['close_except']:
         myStatList['to_be_closed'].append(key)
@@ -325,7 +325,7 @@ def report_mentoring():
     util_print_line(fp, myStatList['too_many_comments'],  'easyhacks reduce comments', doBugzilla=True)
     util_print_line(fp, myStatList['pending_license'],    'pending license statement'  )
     fp.close()
-    return {'title': 'esc_mentoring, MENTORING', 'mail': 'jani@documentfoundation.org', 'file': '/tmp/esc_mentoring_report.txt'}
+    return {'title': 'esc_mentoring, MENTORING', 'mail': 'mentoring@documentfoundation.org', 'file': '/tmp/esc_mentoring_report.txt'}
 
 
 
@@ -366,7 +366,7 @@ def report_ui():
       print('          {} made {} changes in 1 month, and {} changes in 1 year'.format(
             top10list[i]['name'], top10list[i]['month'], top10list[i]['year']), file=fp)
     fp.close()
-    return {'title': 'esc_mentoring, UI', 'mail': 'jani@documentfoundation.org',
+    return {'title': 'esc_mentoring, UI', 'mail': 'mentoring@documentfoundation.org',
             'file': '/tmp/esc_ui_report.txt'}
 
 
