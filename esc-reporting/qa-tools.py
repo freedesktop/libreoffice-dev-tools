@@ -607,7 +607,7 @@ def QA_Report(statList) :
             util_print_QA_line(fp, statList, key, value,
                                statList['detailedReport']['lists']['system_changed'][key], 'system_changed')
 
-    print('Thanks you all for making Libreoffice rocks!', file=fp)
+    print('Thanks you all for making Libreoffice rock!', file=fp)
     print(file=fp)
     print('Generated on {} based on stats from {}. Note: Metabugs are ignored.'.format(
         datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
