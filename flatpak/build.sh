@@ -42,18 +42,7 @@ my_gpgkeyid="${5?}"
 mkdir -p "${my_dir?}"
 
 
-# 1  Install Perl:Archive-Zip not available in org.gnome.Sdk:
-
-if [ ! -e "${my_dir?}"/perl ]; then
- wget \
-  http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/Archive-Zip-1.56.tar.gz \
-  -O "${my_dir?}"/Archive-Zip-1.56.tar.gz
- mkdir "${my_dir?}"/perl
- (cd "${my_dir?}"/perl && tar xf "${my_dir?}"/Archive-Zip-1.56.tar.gz)
-fi
-
-
-# 2  Clone the LibreOffice git repo:
+# 1  Clone the LibreOffice git repo:
 
 if [ -e "${my_dir?}"/lo ]; then
  git -C "${my_dir?}"/lo fetch --tags
@@ -65,7 +54,7 @@ else
 fi
 
 
-# 3  Fetch external dependencies of LibreOffice:
+# 2  Fetch external dependencies of LibreOffice:
 
 rm -fr "${my_dir?}"/fetch
 mkdir "${my_dir?}"/fetch
@@ -79,20 +68,19 @@ mkdir "${my_dir?}"/fetch
  && make fetch)
 
 
-# 4  Build LibreOffice:
+# 3  Build LibreOffice:
 
 rm -fr "${my_dir?}"/app "${my_dir?}"/build "${my_dir?}"/inst
 flatpak build-init "${my_dir?}"/app org.libreoffice.LibreOffice org.gnome.Sdk \
  org.gnome.Platform 3.20
 mkdir "${my_dir?}"/build
-flatpak build --build-dir="${my_dir?}"/build \
- --env=PERLLIB="${my_dir?}"/perl/Archive-Zip-1.56/lib "${my_dir?}"/app bash -c \
+flatpak build --build-dir="${my_dir?}"/build "${my_dir?}"/app bash -c \
  '"${1?}"/lo/autogen.sh --prefix="${1?}"/inst --with-distro=LibreOfficeFlatpak \
   --with-external-tar="${1?}"/tar && make && make distro-pack-install' \
  bash "${my_dir?}"
 
 
-# 5  Assemble the app files and metadata:
+# 4  Assemble the app files and metadata:
 
 cp -r "${my_dir?}"/inst/lib/libreoffice "${my_dir?}"/app/files/
 ## Per "man gdbus" and <https://developer.gnome.org/glib/stable/
@@ -218,7 +206,7 @@ flatpak build --nofilesystem=host "${my_dir?}"/app appstream-compose \
  org.libreoffice.LibreOffice
 
 
-# 6  Generate repository, .flatpak bundle, and .flatpakref file
+# 5  Generate repository, .flatpak bundle, and .flatpakref file
 
 flatpak build-finish --command=/app/libreoffice/program/soffice \
  --share=network --share=ipc --socket=x11 --socket=wayland --socket=pulseaudio \
