@@ -397,17 +397,17 @@ def report_esc_prototype():
     for id in keyList:
       row = statList['data']['esc']['MAB'][id]
       diff = statList['diff']['esc']['MAB'][id]
-      txt += '     {} : {}/{} - {} %  ({:+d})\n'.format(id,
-              row['open'], row['total'], row['%'], diff['open'])
+      mab = '{} : {}/{} -'.format(id, row['open'], row['total'])
+      txt += '     {:<16} {} %  ({:+d})\n'.format(mab, row['%'], diff['%'])
     escPrototype = escPrototype.replace('$<ESC_MAB_UPDATE>', txt)
 
-    txt = '   +'
+    txt = '   + '
     for row in statList['escList']['bisect']:
       txt += str(row[0]) + '/' + str(row[1]) + ' '
     txt += '\n\n     done by:\n' + text_bisected
     escPrototype = escPrototype.replace('$<ESC_BISECTED_UPDATE>', txt)
 
-    txt = '   +'
+    txt = '   + '
     for row in statList['escList']['bibisect']:
       txt += str(row[0]) + '/' + str(row[1]) + ' '
     txt += '\n\n     done by:\n' + text_bibisected
@@ -435,9 +435,10 @@ def report_esc_prototype():
     txt = ''
     x = statList['data']['esc']['component']['all']
     for id, row in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)]:
-        xDiff = statList['diff']['esc']['component']['all'][id]
-        if row != 0 or xDiff != 0:
-          txt += '     {:<24} - {}({:+d})\n'.format(id, row, xDiff)
+        if id != 'Writer':
+          xDiff = statList['diff']['esc']['component']['all'][id]
+          if row != 0 or xDiff != 0:
+            txt += '     {:<24} - {}({:+d})\n'.format(id, row, xDiff)
     escPrototype = escPrototype.replace('$<ESC_COMPONENT_REGRESSION_ALL_UPDATE>', txt)
 
     fp = open('/tmp/esc_prototype_report.txt', 'w', encoding='utf-8')
@@ -740,24 +741,24 @@ def report_qa():
     global text_bisected, text_bibisected, text_regression
 
     fp = open('/tmp/esc_qa_report.txt', 'w', encoding='utf-8')
-    print("    + UNCONFIRMED: {} ({})\n"
-        "        + enhancements: {} ({})\n"
-        "        + needsUXEval: {} ({})\n"
-        "        + haveBackTrace: {} ({})\n"
-        "        + needsDevAdvice: {} ({})\n"
-        "        + documentation:  {} ({})\n".format(
+    print('ESC QA report, generated {} based on stats.json from {}'.format(
+          datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
+
+    print("copy/paste to esc pad:\n"
+          "* qa update (xisco)\n", file=fp)
+
+    print("    + UNCONFIRMED: {} ( )\n"
+        "        + enhancements: {}  ( )\n"
+        "        + needsUXEval: {} ( )\n"
+        "        + haveBackTrace: {} ( )\n"
+        "        + needsDevAdvice: {} ( )\n"
+        "        + documentation:  {} ( )\n".format(
                     statList['data']['qa']['unconfirmed']['count'],
-                    statList['diff']['qa']['unconfirmed']['count'],
                     statList['data']['qa']['unconfirmed']['enhancement'],
-                    statList['diff']['qa']['unconfirmed']['enhancement'],
                     statList['data']['qa']['unconfirmed']['needsUXEval'],
-                    statList['diff']['qa']['unconfirmed']['needsUXEval'],
                     statList['data']['qa']['unconfirmed']['haveBacktrace'],
-                    statList['diff']['qa']['unconfirmed']['haveBacktrace'],
                     statList['data']['qa']['unconfirmed']['needsDevAdvice'],
-                    statList['diff']['qa']['unconfirmed']['needsDevAdvice'],
-                    statList['data']['qa']['unconfirmed']['documentation'],
-                    statList['diff']['qa']['unconfirmed']['documentation'],), file=fp)
+                    statList['data']['qa']['unconfirmed']['documentation'],), file=fp)
 
     reporters = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['owner']), reverse=True)
 
@@ -806,37 +807,38 @@ def report_qa():
     max_width = 20
     for i in top10bisected:
       if statList['people'][i]['qa']['1week']['bisected'] == 0:
-        continue
+        break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
     text_bisected = ''
     for item in top10bisected:
       if statList['people'][item]['qa']['1week']['bisected'] == 0:
-        continue
+        break
       if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
         statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
       text_bisected += '        {0:{2}s} {1:3d}\n'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['bisected'],
             max_width)
     print(text_bisected, file=fp)
+
     bibisected = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['bibisected']), reverse=True)
 
     print("\nBibisected", file=fp)
     print("\n  + Done by:", file=fp)
     top10bibisected = bibisected[0:10]
-    text_bibisected = ''
     max_width = 20
     for i in top10bibisected:
       if statList['people'][i]['qa']['1week']['bibisected'] == 0:
-        continue
+        break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
+    text_bibisected = ''
     for item in top10bibisected:
       if statList['people'][item]['qa']['1week']['bibisected'] == 0:
-        continue
+        break
       if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
         statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
-      text_bibisected = '        {0:{2}s} {1:3d}\n'.format(
+      text_bibisected += '        {0:{2}s} {1:3d}\n'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['bibisected'],
             max_width)
     print(text_bibisected, file=fp)
@@ -845,20 +847,20 @@ def report_qa():
 
     print("\nRegressions", file=fp)
     print("\n  + Done by:", file=fp)
-    text_regression = ''
     top10regression = regression[0:10]
     max_width = 20
     for i in top10regression:
       if statList['people'][i]['qa']['1week']['regression'] == 0:
-        continue
+        break
       max_width = max(max_width, len(statList['people'][i]['name']))
 
+    text_regression = ''
     for item in top10regression:
       if statList['people'][item]['qa']['1week']['regression'] == 0:
-        continue
+        break
       if not statList['people'][item]['name'] or statList['people'][item]['name'] == '*UNKNOWN*':
         statList['people'][item]['name'] = statList['people'][item]['email'].split('@')[0]
-      text_regression = '        {0:{2}s} {1:3d}\n'.format(
+      text_regression += '        {0:{2}s} {1:3d}\n'.format(
             statList['people'][item]['name'], statList['people'][item]['qa']['1week']['regression'],
             max_width)
     print(text_regression, file=fp)
