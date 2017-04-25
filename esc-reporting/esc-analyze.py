@@ -216,9 +216,11 @@ def util_create_statList():
                      'qa': {'unconfirmed': {'count': 0, 'documentation': 0, 'enhancement': 0, 'needsUXEval': 0,
                                             'haveBacktrace': 0, 'needsDevAdvice': 0}},
                      'easyhacks' : {'needsDevEval': 0,  'needsUXEval': 0, 'cleanup_comments': 0,
-                                    'total': 0,         'assigned': 0,    'open': 0}},
+                                    'total': 0,         'assigned': 0,    'open': 0},
+                     'esc': {}},
                      'stat': {'openhub_last_analyse': "2001-01-01"},
-                     'people': {}}
+                     'people': {},
+                     'escList': {}}
 
 
 
@@ -462,6 +464,87 @@ def analyze_qa():
               if entry['added'] == 'FIXED' and row['resolution'] == 'FIXED':
                 util_build_period_stat(xDate, email, 'qa', 'fixed')
 
+
+
+def analyze_esc():
+    global cfg, statList, bugzillaData, bugzillaESCData, weekList
+
+    print("esc: analyze bugzilla", flush=True)
+
+    statList['data']['esc']['QAstat'] = {'opened': bugzillaESCData['ESC_QA_STATS_UPDATE']['opened'],
+                                         'closed': bugzillaESCData['ESC_QA_STATS_UPDATE']['closed']}
+    statList['data']['esc']['MAB'] = {}
+    statList['escList']['QAstat'] = {'top15_squashers' : {},
+                                     'top15_reporters' : {},
+                                     'top15_fixers' : []}
+    for line in bugzillaESCData['ESC_QA_STATS_UPDATE']['top15_closers']:
+      statList['escList']['QAstat']['top15_squashers'][line['who']] = line['closed']
+    for line in bugzillaESCData['ESC_QA_STATS_UPDATE']['top15_reporters']:
+      statList['escList']['QAstat']['top15_reporters'][line['who']] = line['reported']
+
+    bug_fixers = {}
+    for id, bug in bugzillaData['bugs'].items():
+      if not bug['status'] == 'RESOLVED':
+        continue
+      if 'FIXED' != bug['resolution'] != 'VERIFIED':
+        continue
+      if datetime.datetime.strptime(bug['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['1weekDate']:
+        continue
+
+      who = None
+      for i in range(len(bug['history'])-1,-1,-1):
+        fixed = False
+        changes = bug['history'][i]['changes']
+        for j in range(0,len(changes)):
+          if changes[j]['added'] == 'FIXED':
+            fixed = True
+            break
+        if fixed:
+          who = bug['history'][i]['who'].lower()
+          break
+      if not who:
+        continue
+      if who == 'libreoffice-commits@lists.freedesktop.org':
+        continue
+      if who in statList['aliases']:
+        who = statList['aliases'][who]
+      if who in statList['people']:
+        who = statList['people'][who]['name']
+      if not who in bug_fixers:
+        bug_fixers[who] = 0
+      bug_fixers[who] += 1
+    statList['escList']['QAstat']['top15_fixers'] = bug_fixers
+
+    for id, row in bugzillaESCData['ESC_MAB_UPDATE'].items():
+      statList['data']['esc']['MAB'][id] = row
+      statList['data']['esc']['MAB'][id]['%'] = int((row['open'] / row['total'])*100)
+
+    statList['escList']['bisect'] = weekList['escList']['bisect']
+    statList['escList']['bisect'].insert(0, [bugzillaESCData['ESC_BISECTED_UPDATE']['open'],
+                                             bugzillaESCData['ESC_BISECTED_UPDATE']['total']])
+    del statList['escList']['bisect'][-1]
+    statList['escList']['bibisect'] = weekList['escList']['bibisect']
+    statList['escList']['bibisect'].insert(0, [bugzillaESCData['ESC_BIBISECTED_UPDATE']['open'],
+                                               bugzillaESCData['ESC_BIBISECTED_UPDATE']['total']])
+    del statList['escList']['bibisect'][-1]
+
+    statList['data']['esc']['regression'] = {}
+    statList['data']['esc']['regression']['high'] = bugzillaESCData['ESC_REGRESSION_UPDATE']['high']
+    statList['data']['esc']['regression']['open'] = bugzillaESCData['ESC_REGRESSION_UPDATE']['open']
+    statList['data']['esc']['regression']['total'] = bugzillaESCData['ESC_REGRESSION_UPDATE']['total']
+
+    statList['data']['esc']['component'] = {}
+    statList['data']['esc']['component']['high'] = {}
+    for id, row in bugzillaESCData['ESC_COMPONENT_UPDATE']['high'].items():
+      statList['data']['esc']['component']['high'][id] = row['count']
+    statList['data']['esc']['component']['all'] = {}
+    for id, row in bugzillaESCData['ESC_COMPONENT_UPDATE']['all'].items():
+      statList['data']['esc']['component']['all'][id] = row['count']
+    statList['data']['esc']['component']['os'] = {}
+    for id, row in bugzillaESCData['ESC_COMPONENT_UPDATE']['os'].items():
+      statList['data']['esc']['component']['os'][id] = row['count']
+
+
 def analyze_myfunc():
     global cfg, statList, openhubData, bugzillaData, gerritData, gitData, licenceCompanyData, licencePersonalData
 
@@ -496,8 +579,8 @@ def analyze_trend():
 
 
 
-def analyze_final(weekList = None):
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+def analyze_final():
+    global cfg, statList, openhubData, bugzillaData, gerritData, gitData, weekList
 
     print("Analyze final")
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
@@ -507,22 +590,21 @@ def analyze_final(weekList = None):
       person['newestCommit'] = person['newestCommit'].strftime("%Y-%m-%d")
       person['prevCommit'] = person['prevCommit'].strftime("%Y-%m-%d")
 
-    analyze_trend()
+#    analyze_trend()
     myDay = cfg['nowDate']
-    x = (myDay - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
-    if weekList is None:
-      weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
-      if weekList is None:
-        weekList = {'data': {}}
     statList['diff'] = util_build_diff(statList['data'], weekList['data'])
     sFile = cfg['homedir'] + 'stats.json'
     util_dump_file(sFile, statList)
     x = myDay.strftime('%Y-%m-%d')
     os.system('cp '+ sFile + ' ' + cfg['homedir'] + 'archive/stats_' + x + '.json')
     if myDay.strftime('%w') == '4':
+      if 'people' in statList:
         del statList['people']
+      if 'aliases' in statList:
         del statList['aliases']
-        util_dump_file(cfg['homedir'] + 'weeks/week_' + myDay.strftime('%Y_%W') + '.json', statList)
+      if 'escList' in statList:
+        del statList['escList']
+      util_dump_file(cfg['homedir'] + 'weeks/week_' + myDay.strftime('%Y_%W') + '.json', statList)
 
 
 
@@ -565,6 +647,7 @@ def loadCfg(platform):
       homeDir = os.environ['esc_homedir']
     else:
       homeDir = '/home/esc-mentoring/esc'
+
     cfg = util_load_data_file(homeDir + '/config.json')
     cfg['homedir'] = homeDir + '/'
     cfg['platform'] = platform
@@ -579,10 +662,14 @@ def loadCfg(platform):
 
 
 def runAnalyze():
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+    global cfg, statList, openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, weekList
+
+    x = (cfg['nowDate'] - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
+    weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
 
     openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
     bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
+    bugzillaESCData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_esc_dump.json')
     gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
     gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
     statList = util_create_statList()
@@ -591,16 +678,18 @@ def runAnalyze():
     analyze_mentoring()
     analyze_ui()
     analyze_qa()
+    analyze_esc()
     analyze_myfunc()
     analyze_final()
 
 
 def runUpgrade(args):
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+    global cfg, statList, openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, weekList
 
     args = args[1:]
     openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
     bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
+    bugzillaESCData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_esc_dump.json')
     gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
     gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
     statList = util_create_statList()
@@ -625,9 +714,10 @@ def runUpgrade(args):
       analyze_mentoring()
       analyze_ui()
       analyze_qa()
+      analyze_esc()
       analyze_myfunc()
 
-      analyze_final(weekList=weekList)
+      analyze_final()
       weekList = statList
 
 

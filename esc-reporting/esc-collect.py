@@ -171,6 +171,356 @@ def get_bugzilla(cfg):
 
 
 
+def do_ESC_QA_STATS_UPDATE():
+    tmp= util_load_url('https://bugs.documentfoundation.org/page.cgi?id=weekly-bug-summary.html', useRaw=True)
+
+    rawList = {}
+
+    startIndex = tmp.find('Total Reports: ') + 15
+    stopIndex  = tmp.find(' ', startIndex)
+    rawList['total'] = int(tmp[startIndex:stopIndex])
+    startIndex = tmp.find('>', stopIndex) +1
+    stopIndex = tmp.find('<', startIndex)
+    rawList['opened'] = int(tmp[startIndex:stopIndex])
+    startIndex = tmp.find('>', stopIndex + 5) +1
+    stopIndex = tmp.find('<', startIndex)
+    rawList['closed'] = int(tmp[startIndex:stopIndex])
+
+    # outer loop, collect 3 Top 15 tables
+    topNames = ['top15_modules', 'top15_closers', 'top15_reporters']
+    curTopIndex = -1
+    while True:
+      startIndex = tmp.find('Top 15', startIndex+1)
+      if startIndex == -1:
+        break
+      startIndex = tmp.find('</tr>', startIndex+1) + 5
+      stopIndex = tmp.find('</table', startIndex+1)
+      curTopIndex += 1
+      rawList[topNames[curTopIndex]] = []
+
+      # second loop, collect all lines <tr>..</tr>
+      curLineIndex = -1
+      while True:
+        startIndex = tmp.find('<tr', startIndex)
+        if startIndex == -1 or startIndex >= stopIndex:
+          startIndex = stopIndex
+          break
+        stopLineIndex = tmp.find('</tr>', startIndex)
+        curLineIndex += 1
+
+        # third loop, collect single element
+        curItemIndex = -1
+        tmpList = []
+        while True:
+          startIndex = tmp.find('<td', startIndex)
+          if startIndex == -1 or startIndex >= stopLineIndex:
+            startIndex = stopLineIndex
+            break
+          while tmp[startIndex] == '<':
+            tmpIndex = tmp.find('>', startIndex) + 1
+            if tmp[startIndex+1] == 'a':
+              i = tmp.find('bug_id=', startIndex) +7
+              if -1 < i < tmpIndex:
+                x = tmp[i:tmpIndex-2]
+                tmpList.append(x)
+            startIndex = tmpIndex
+          stopCellIndex = tmp.find('<', startIndex)
+          x = tmp[startIndex:stopCellIndex].replace('\n', '')
+          if '0' <= x[0] <= '9' or x[0] == '+' or x[0] == '-':
+            x = int(x)
+          tmpList.append(x)
+        if len(tmpList):
+          if curTopIndex == 0:
+              x = {'product': tmpList[0],
+                   'open': tmpList[1],
+                   'opened7DList': tmpList[2].split(','),
+                   'opened7D': tmpList[3],
+                   'closed7DList': tmpList[4].split(','),
+                   'closed7D': tmpList[5],
+                   'change': tmpList[6]}
+          elif curTopIndex == 1:
+              x = {'position': tmpList[0],
+                   'who': tmpList[1],
+                   'closedList' : tmpList[2].split(','),
+                   'closed': tmpList[3]}
+          else:
+              x = {'position': tmpList[0],
+                   'who': tmpList[1],
+                   'reportedList' : tmpList[2].split(','),
+                   'reported': tmpList[3]}
+          rawList[topNames[curTopIndex]].append(x)
+    return rawList
+
+
+
+def do_ESC_MAB_UPDATE(bz):
+    # load report from Bugzilla
+    url = bz + '&f1=version&o1=regexp&priority=highest&v1=^'
+    rawList = {}
+
+    series = {'5.3' : '5.3',
+              '5.2' : '5.2',
+              '5.1' : '5.1',
+              '5.0' : '5.0',
+              '4.5' : '5.0',  # urgh
+              '4.4' : '4.4',
+              '4.3' : '4.3',
+              '4.2' : '4.2',
+              '4.1' : '4.1',
+              '4.0' : '4.0',
+              '3.6' : 'old',
+              '3.5' : 'old',
+              '3.4' : 'old',
+              '3.3' : 'old',
+              'Inherited from OOo' : 'old',
+              'PreBibisect' : 'old',
+              'unspecified' : 'old'
+             }
+
+    for key, id in series.items():
+      if id not in rawList:
+        rawList[id] = {'open': 0, 'total': 0}
+
+      urlCall = url + key + '.*'
+      tmpTotal = util_load_url(urlCall, useRaw=True)
+      rawList[id]['total'] += len(tmpTotal.split('\n')) -1
+      tmpOpen = util_load_url(urlCall + "&resolution=---", useRaw=True)
+      rawList[id]['open'] += len(tmpOpen.split('\n')) - 1
+
+    return rawList
+
+
+
+def do_ESC_counting(bz, urlAdd):
+    rawList = []
+    tmp = util_load_url(bz + urlAdd, useRaw=True).split('\n')[1:]
+    cnt = len(tmp)
+    for line in tmp:
+      rawList.append(line.split(',')[0])
+    return cnt, rawList
+
+
+
+def get_esc_bugzilla(cfg):
+    fileName = cfg['homedir'] + 'dump/bugzilla_esc_dump.json'
+
+    print("Updating ESC bugzilla dump")
+
+    rawList = {'ESC_QA_STATS_UPDATE': {},
+               'ESC_MAB_UPDATE': {},
+               'ESC_BISECTED_UPDATE': {},
+               'ESC_BIBISECTED_UPDATE': {},
+               'ESC_COMPONENT_UPDATE': {'all': {}, 'high': {}, 'os': {}},
+               'ESC_REGRESSION_UPDATE': {}}
+
+    bz = 'https://bugs.documentfoundation.org/buglist.cgi?' \
+         'product=LibreOffice' \
+         '&keywords_type=allwords' \
+         '&query_format=advanced' \
+         '&limit=0' \
+         '&ctype=csv' \
+         '&human=1'
+
+    rawList['ESC_QA_STATS_UPDATE'] = do_ESC_QA_STATS_UPDATE()
+    rawList['ESC_MAB_UPDATE'] = do_ESC_MAB_UPDATE(bz)
+
+    urlBi = '&keywords=bisected%2C'
+    url = '&order=tag DESC%2Cchangeddate DESC%2Cversion DESC%2Cpriority%2Cbug_severity'
+    rawList['ESC_BISECTED_UPDATE']['total'], \
+    rawList['ESC_BISECTED_UPDATE']['total_list'] = do_ESC_counting(bz, urlBi+url)
+    url = '&bug_status=UNCONFIRMED' \
+          '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&resolution=---'
+    rawList['ESC_BISECTED_UPDATE']['open'], \
+    rawList['ESC_BISECTED_UPDATE']['open_list'] = do_ESC_counting(bz, urlBi + url)
+
+    url = '&f2=status_whiteboard' \
+          '&f3=OP' \
+          '&f4=keywords' \
+          '&f5=status_whiteboard' \
+          '&j3=OR' \
+          '&known_name=BibisectedAll' \
+          '&n2=1' \
+          '&o1=substring' \
+          '&o2=substring' \
+          '&o4=substring' \
+          '&o5=substring' \
+          '&order=changeddate DESC%2Cop_sys%2Cbug_status%2Cpriority%2Cassigned_to%2Cbug_id' \
+          '&resolution=---' \
+          '&resolution=FIXED' \
+          '&resolution=INVALID' \
+          '&resolution=WONTFIX' \
+          '&resolution=DUPLICATE' \
+          '&resolution=WORKSFORME' \
+          '&resolution=MOVED' \
+          '&resolution=NOTABUG' \
+          '&resolution=NOTOURBUG' \
+          '&v1=bibisected' \
+          '&v2=bibisected35older' \
+          '&v4=bibisected' \
+          '&v5=bibisected'
+    rawList['ESC_BIBISECTED_UPDATE']['total'], \
+    rawList['ESC_BIBISECTED_UPDATE']['total_list'] = do_ESC_counting(bz, url)
+    url = '&f2=status_whiteboard' \
+          '&f3=OP' \
+          '&f4=keywords' \
+          '&f5=status_whiteboard' \
+          '&j3=OR' \
+          '&known_name=Bibisected' \
+          '&n2=1' \
+          '&o1=substring' \
+          '&o2=substring' \
+          '&o4=substring' \
+          '&o5=substring' \
+          '&query_based_on=Bibisected' \
+          '&resolution=---' \
+          '&v1=bibisected' \
+          '&v2=bibisected35older' \
+          '&v4=bibisected' \
+          '&v5=bibisected'
+    rawList['ESC_BIBISECTED_UPDATE']['open'], \
+    rawList['ESC_BIBISECTED_UPDATE']['open_list'] = do_ESC_counting(bz, url)
+
+    url = 'columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc' \
+          '&keywords=regression%2C%20' \
+          '&order=bug_id'
+    rawList['ESC_REGRESSION_UPDATE']['total'], \
+    rawList['ESC_REGRESSION_UPDATE']['total_list']  = do_ESC_counting(bz, url)
+    url = '&keywords=regression%2C%20' \
+          '&columnlist=bug_severity%2Cpriority%2Ccomponent%2Cop_sys%2Cassigned_to%2Cbug_status%2Cresolution%2Cshort_desc' \
+          '&resolution=---' \
+          '&query_based_on=Regressions' \
+          '&known_name=Regressions'
+    rawList['ESC_REGRESSION_UPDATE']['open'], \
+    rawList['ESC_REGRESSION_UPDATE']['open_list'] = do_ESC_counting(bz, url)
+    url = url + '&bug_severity=blocker' \
+                '&bug_severity=critical' \
+                '&bug_status=NEW' \
+                '&bug_status=ASSIGNED' \
+                '&bug_status=REOPENED'
+    rawList['ESC_REGRESSION_UPDATE']['high'], \
+    rawList['ESC_REGRESSION_UPDATE']['high_list'] = do_ESC_counting(bz, url)
+
+    rawList['ESC_COMPONENT_UPDATE']['all']['Crashes'] = {}
+    url = '&keywords=regression' \
+          '&short_desc=crash' \
+          '&query_based_on=CrashRegressions' \
+          '&bug_status=UNCONFIRMED' \
+          '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&bug_status=NEEDINFO' \
+          '&short_desc_type=allwordssubstr' \
+          '&known_name=CrashRegressions'
+    rawList['ESC_COMPONENT_UPDATE']['all']['Crashes']['count'], \
+    rawList['ESC_COMPONENT_UPDATE']['all']['Crashes']['list'] = do_ESC_counting(bz, url)
+    rawList['ESC_COMPONENT_UPDATE']['all']['Borders'] = {}
+    url = '&keywords=regression' \
+          '&short_desc=border' \
+          '&query_based_on=BorderRegressions' \
+          '&bug_status=UNCONFIRMED' \
+          '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&bug_status=NEEDINFO' \
+          '&short_desc_type=allwordssubstr' \
+          '&known_name=BorderRegressions'
+    rawList['ESC_COMPONENT_UPDATE']['all']['Borders']['count'], \
+    rawList['ESC_COMPONENT_UPDATE']['all']['Borders']['list'] = do_ESC_counting(bz, url)
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: docx filter'] = {}
+    url = '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&bug_status=PLEASETEST' \
+          '&component=Writer' \
+          '&keywords=regression%2C filter%3Adocx%2C '
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: docx filter']['count'], \
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: docx filter']['list'] = do_ESC_counting(bz, url)
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: doc filter'] = {}
+    url = '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&bug_status=PLEASETEST' \
+          '&component=Writer' \
+          '&keywords=regression%2C filter%3Adoc%2C '
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: doc filter']['count'], \
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: doc filter']['list'] = do_ESC_counting(bz, url)
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: other filter'] = {}
+    url = '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&bug_status=PLEASETEST' \
+          '&component=Writer' \
+          '&f1=keywords' \
+          '&f2=keywords' \
+          '&keywords=regression%2C' \
+          '&o1=nowords' \
+          '&o2=substring' \
+          '&v1=filter%3Adocx%2C filter%3Adoc' \
+          '&v2=filter%3A'
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: other filter']['count'], \
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: other filter']['list'] = do_ESC_counting(bz, url)
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: perf'] = {}
+    url = '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&bug_status=PLEASETEST' \
+          '&component=Writer' \
+          '&keywords=regression%2C perf%2C '
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: perf']['count'], \
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: perf']['list'] = do_ESC_counting(bz, url)
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: other'] = {}
+    url = '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&bug_status=PLEASETEST' \
+          '&component=Writer' \
+          '&f1=keywords' \
+          '&keywords=regression%2C' \
+          '&o1=nowordssubstr' \
+          '&v1=filter%3A%2C perf'
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: other']['count'], \
+    rawList['ESC_COMPONENT_UPDATE']['all']['Writer: other']['list'] = do_ESC_counting(bz, url)
+
+    for comp in ['Calc', 'Impress', 'Base', 'Draw', 'LibreOffice', 'Writer', 'BASIC', 'Chart', 'Extensions',
+                 'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export',
+                 'UI', 'filters and storage', 'framework', 'graphics stack', 'sdk']:
+      compUrl = comp
+      url = '&keywords=regression' \
+            '&bug_status=NEW' \
+            '&bug_status=ASSIGNED' \
+            '&bug_status=REOPENED' \
+            '&bug_status=PLEASETEST' \
+            '&component=' + compUrl
+      rawList['ESC_COMPONENT_UPDATE']['all'][comp] = {}
+      rawList['ESC_COMPONENT_UPDATE']['all'][comp]['count'], \
+      rawList['ESC_COMPONENT_UPDATE']['all'][comp]['list'] = do_ESC_counting(bz, url)
+      url = url + '&bug_severity=blocker' \
+                  '&bug_severity=critical'
+      rawList['ESC_COMPONENT_UPDATE']['high'][comp] = {}
+      rawList['ESC_COMPONENT_UPDATE']['high'][comp]['count'], \
+      rawList['ESC_COMPONENT_UPDATE']['high'][comp]['list'] = do_ESC_counting(bz, url)
+
+    for os in ['Linux (All)', 'Windows (All)', 'Mac OS X (All)', 'All']:
+        url = '&keywords=regression' \
+              '&bug_status=NEW' \
+              '&bug_status=ASSIGNED' \
+              '&bug_status=REOPENED' \
+              '&bug_status=PLEASETEST' \
+              '&bug_severity=blocker' \
+              '&bug_severity=critical' \
+              '&op_sys=' + os
+        rawList['ESC_COMPONENT_UPDATE']['os'][os] = {}
+        rawList['ESC_COMPONENT_UPDATE']['os'][os]['count'], \
+        rawList['ESC_COMPONENT_UPDATE']['os'][os]['list'] = do_ESC_counting(bz, url)
+
+    util_dump_file(fileName, rawList)
+    return rawList
+
+
+
 def get_gerrit(cfg):
     fileName = cfg['homedir'] + 'dump/gerrit_dump.json'
     searchDate, rawList = util_load_data_file(cfg, fileName, 'gerrit', {'patch': {}, 'committers' : []})
@@ -284,6 +634,7 @@ def runCfg(platform):
       homeDir = os.environ['esc_homedir']
     else:
       homeDir = '/home/esc-mentoring/esc'
+
     cfg = util_load_file(homeDir + '/config.json')
     if cfg == None:
         exit(-1)
@@ -302,6 +653,7 @@ def runCfg(platform):
 def runBuild(cfg):
     openhubData = get_openhub(cfg)
     bugzillaData = get_bugzilla(cfg)
+    ESCData = get_esc_bugzilla(cfg)
     gerritData = get_gerrit(cfg)
     gitData = get_git(cfg)
 
