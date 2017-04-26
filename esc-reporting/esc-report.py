@@ -364,7 +364,7 @@ def report_esc_prototype():
     fp.close()
     escPrototype = escPrototype.replace('$<ESC_MENTORING_UPDATE>', data)
 
-    fp = open('/tmp/esc_qa_report.txt', encoding='utf-8')
+    fp = open('/tmp/esc_qa_ESC_report.txt', encoding='utf-8')
     data = fp.read()
     fp.close()
     escPrototype = escPrototype.replace('$<ESC_QA_UPDATE>', data)
@@ -373,7 +373,7 @@ def report_esc_prototype():
     x2 = statList['diff']['esc']['QAstat']['opened']
     x3 = statList['data']['esc']['QAstat']['closed']
     x4 = statList['diff']['esc']['QAstat']['closed']
-    txt =  '      {:+d}({:+d})  {:+d}({:+d})   ({:+d}({:+d}) overall)\n      many thanks to the top bug squashers:\n'.format(
+    txt =  '      {:+d}  {:+d} ({:+d}) overall)\n      many thanks to the top bug squashers:\n'.format(
             x1, -x2, -x3, x4, x1 - x3, x2 - x4)
     x = statList['escList']['QAstat']['top15_squashers']
     for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)]:
@@ -420,12 +420,14 @@ def report_esc_prototype():
     txt += '\n     done by:\n' + text_regression
     escPrototype = escPrototype.replace('$<ESC_REGRESSION_UPDATE>', txt)
 
+    x = statList['data']['esc']['component']['high']
     txt = ''
-    for i in ['LibreOffice', 'Impress', 'Base', 'Calc', 'Extensions', 'Writer']:
-      txt += '     {:<13} - {}({:+d})\n'.format(
-             i,
-             statList['data']['esc']['component']['high'][i],
-             statList['diff']['esc']['component']['high'][i])
+    for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)]:
+      if name in ['LibreOffice', 'Impress', 'Base', 'Calc', 'Extensions', 'Writer']:
+        txt += '     {:<13} - {}({:+d})\n'.format(
+             name,
+             count,
+             statList['diff']['esc']['component']['high'][name])
     txt += '\n   by OS:\n'
     for id,row in statList['data']['esc']['component']['os'].items():
       idx = id.replace(' (All)', '')
@@ -644,7 +646,7 @@ def report_flatODF():
        '<table:table-cell table:number-columns-repeated="24"/>\n' \
        '</table:table-row>\n'.format(
               vDate  = statList['addDate'],
-              vOpen  = statList['date']['esc']['QAstat'][''],
+              vOpen  = 0,
               vTotal = 0,
               vSpreadsheet = 0,
               vPresentation = 0,
@@ -724,7 +726,6 @@ def report_flatODF():
         print("handling HighPrioRegressions")
       else:
         raise Exception("unknown sheet in bug-metrics: " + text[startIndex:startIndex+20])
-      print('start: {}     end {}'.format(startIndex, endIndex))
 
     fp = open(cfg['homedir'] + 'bug-test.fods', 'w', encoding='utf-8')
     print(text, file=fp)
@@ -773,6 +774,8 @@ def report_qa():
     global statList, openhubData, gerritData, gitData, bugzillaData, cfg
     global text_bisected, text_bibisected, text_regression
 
+
+    fpESC = open('/tmp/esc_qa_ESC_report.txt', 'w', encoding='utf-8')
     fp = open('/tmp/esc_qa_report.txt', 'w', encoding='utf-8')
     print('ESC QA report, generated {} based on stats.json from {}'.format(
           datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
@@ -780,18 +783,26 @@ def report_qa():
     print("copy/paste to esc pad:\n"
           "* qa update (xisco)\n", file=fp)
 
-    print("    + UNCONFIRMED: {} ( )\n"
-        "        + enhancements: {}  ( )\n"
-        "        + needsUXEval: {} ( )\n"
-        "        + haveBackTrace: {} ( )\n"
-        "        + needsDevAdvice: {} ( )\n"
-        "        + documentation:  {} ( )\n".format(
+    text = "    + UNCONFIRMED: {} ({:+d})\n" \
+        "        + enhancements: {}  ({:+d})\n" \
+        "        + needsUXEval: {} ({:+d})\n" \
+        "        + haveBackTrace: {} ({:+d})\n" \
+        "        + needsDevAdvice: {} ({:+d})\n" \
+        "        + documentation:  {} ({:+d})\n".format(
                     statList['data']['qa']['unconfirmed']['count'],
+                    statList['diff']['qa']['unconfirmed']['count'],
                     statList['data']['qa']['unconfirmed']['enhancement'],
+                    statList['diff']['qa']['unconfirmed']['enhancement'],
                     statList['data']['qa']['unconfirmed']['needsUXEval'],
+                    statList['diff']['qa']['unconfirmed']['needsUXEval'],
                     statList['data']['qa']['unconfirmed']['haveBacktrace'],
+                    statList['diff']['qa']['unconfirmed']['haveBacktrace'],
                     statList['data']['qa']['unconfirmed']['needsDevAdvice'],
-                    statList['data']['qa']['unconfirmed']['documentation'],), file=fp)
+                    statList['diff']['qa']['unconfirmed']['needsDevAdvice'],
+                    statList['data']['qa']['unconfirmed']['documentation'],
+                    statList['diff']['qa']['unconfirmed']['documentation'])
+    print(text, file=fp)
+    print(text, file=fpESC)
 
     reporters = sorted(statList['people'], key=lambda k: (statList['people'][k]['qa']['1week']['owner']), reverse=True)
 
@@ -919,6 +930,7 @@ def report_qa():
             max_width), file=fp)
 
     fp.close()
+    fpESC.close()
     return {'title': 'esc_report, QA', 'mail': 'xiscofauli@libreoffice.org',
             'file': '/tmp/esc_qa_report.txt'}
 
