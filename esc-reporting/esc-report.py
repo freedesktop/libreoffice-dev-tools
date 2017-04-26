@@ -423,7 +423,8 @@ def report_esc_prototype():
     x = statList['data']['esc']['component']['high']
     txt = ''
     for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)]:
-      if name in ['LibreOffice', 'Impress', 'Base', 'Calc', 'Extensions', 'Writer']:
+      lastCount = statList['diff']['esc']['component']['high'][name]
+      if count != 0 or lastCount != 0:
         txt += '     {:<13} - {}({:+d})\n'.format(
              name,
              count,
@@ -454,6 +455,37 @@ def report_esc_prototype():
 
 
 
+
+
+def gen_rowHighPriority(row):
+    global statList
+
+    text1 = ''
+    text2 = ''
+    for i in ['old', '4.0', '4.1', '4.2', '4.3', '4.4', '5.0', '5.1' '5.2' '5.3' '5.4' '5.5']:
+        if i in statList['data']['esc']['MAB']:
+            vOpen = statList['data']['esc']['MAB'][i]['open']
+            vTotal = statList['data']['esc']['MAB'][i]['total']
+        else :
+            vOpen = 0
+            vTotal = 0
+        vClosed = vTotal - vOpen
+
+        text1 += '<table:table-cell office:value-type="float" office:value="{vOpen}" calcext:value-type="float">' \
+                 '<text:p>{vOpen}</text:p></table:table-cell>' \
+                 '<table:table-cell office:value-type="float" office:value="{vClosed}" calcext:value-type="float">' \
+                 '<text:p>{vClosed}</text:p></table:table-cell>'
+
+    text = '<table:table-row table:style-name="ro2">' \
+           '<table:table-cell table:style-name="isodate" office:value-type="date" ' \
+                'office:date-value="{vDate}" calcext:value-type="date">' \
+                '<text:p>{vDate}</text:p></table:table-cell>\n'.format(
+                   vDate  = statList['addDate'])
+
+    return text
+
+
+
 def report_flatODF():
     global statList, cfg
 
@@ -462,46 +494,43 @@ def report_flatODF():
     text = fp.read()
     fp.close()
 
-
-    rowHighPriority = \
-       '<table:table-row table:style-name="ro2">\n' \
-       '<table:table-cell table:style-name="isodate" office:value-type="date" office:date-value="{vDate}" calcext:value-type="date">\n' \
-            '<text:p>{vDate}</text:p></table:table-cell>\n' \
+    rowHighPriority = gen_rowHighPriority('75')
+    rowHighPriority += \
        '<table:table-cell office:value-type="float" office:value="{vO_old}" calcext:value-type="float">\n' \
             '<text:p>{vO_old}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.T74]-[.B74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.Z74]-[.B74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_40}" calcext:value-type="float">\n' \
             '<text:p>{vO_40}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.U74]-[.D74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.AA74]-[.D74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_41}" calcext:value-type="float">\n' \
             '<text:p>{vO_41}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.V74]-[.F74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.AB74]-[.F74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_42}" calcext:value-type="float">\n' \
             '<text:p>{vO_42}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.W74]-[.H74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.AC74]-[.H74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_43}" calcext:value-type="float">\n' \
             '<text:p>{vO_43}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.X74]-[.J74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.AD74]-[.J74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_44}" calcext:value-type="float">\n' \
             '<text:p>{vO_44}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.Y74]-[.L74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.AE74]-[.L74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_50}" calcext:value-type="float">\n' \
             '<text:p>{vO_50}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.Z74]-[.N74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.AF74]-[.N74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_51}" calcext:value-type="float">\n' \
             '<text:p>{vO_51}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.AA74]-[.P74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.AG74]-[.P74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_52}" calcext:value-type="float">\n' \
             '<text:p>{vO_52}</text:p></table:table-cell>\n' \
-       '<table:table-cell table:style-name="Default" table:formula="of:=[.AB74]-[.R74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
+       '<table:table-cell table:style-name="Default" table:formula="of:=[.AH74]-[.R74]" office:value-type="float" office:value="-1" calcext:value-type="float">\n' \
             '<text:p>-1</text:p></table:table-cell>\n' \
        '<table:table-cell office:value-type="float" office:value="{vO_53}" calcext:value-type="float">\n' \
             '<text:p>{vO_53}</text:p></table:table-cell>\n' \
@@ -546,7 +575,6 @@ def report_flatODF():
             'office:value-type="float" office:value="-1" calcext:value-type="float">' \
             '<text:p>-1</text:p></table:table-cell>' \
        '</table:table-row>\n'.format(
-              vDate  = statList['addDate'],
               vO_old = statList['data']['esc']['MAB']['old']['open'],
               vT_old = statList['data']['esc']['MAB']['old']['total'],
               vO_40  = statList['data']['esc']['MAB']['4.0']['open'],
@@ -646,58 +674,61 @@ def report_flatODF():
        '<table:table-cell table:number-columns-repeated="24"/>\n' \
        '</table:table-row>\n'.format(
               vDate  = statList['addDate'],
-              vOpen  = 0,
-              vTotal = 0,
-              vSpreadsheet = 0,
-              vPresentation = 0,
-              vDatabase = 0,
-              vDrawing = 0,
-              vLibreOffice = 0,
-              vBorders = 0,
-              vCrashes = 0,
-              vBasic = 0,
-              vWriter = 0,
+              vOpen  = statList['data']['esc']['regression']['open'],
+              vTotal = statList['data']['esc']['regression']['total'],
+              vSpreadsheet = statList['data']['esc']['component']['all']['Calc'],
+              vPresentation = statList['data']['esc']['component']['all']['Impress'],
+              vDatabase = statList['data']['esc']['component']['all']['Base'],
+              vDrawing = statList['data']['esc']['component']['all']['Draw'],
+              vLibreOffice = statList['data']['esc']['component']['all']['LibreOffice'],
+              vBorders = statList['data']['esc']['component']['all']['Borders'],
+              vCrashes = statList['data']['esc']['component']['all']['Crashes'],
+              vBasic = statList['data']['esc']['component']['all']['BASIC'],
+              vWriter = statList['data']['esc']['component']['all']['Writer'],
               vMigration = 0,
-              vChart = 0,
-              vExtensions = 0,
-              vFormula = 0,
-              vImpressRemote = 0,
-              vInstallation = 0,
-              vLinguistic = 0,
-              vPrinting = 0,
-              vUI = 0,
-              vFilters = 0,
-              vFramework = 0,
-              vGraphics = 0,
-              vSdk = 0
+              vChart = statList['data']['esc']['component']['all']['Chart'],
+              vExtensions = statList['data']['esc']['component']['all']['Extensions'],
+              vFormula = statList['data']['esc']['component']['all']['Formula Editor'],
+              vImpressRemote = statList['data']['esc']['component']['all']['Impress Remote'],
+              vInstallation = statList['data']['esc']['component']['all']['Installation'],
+              vLinguistic = statList['data']['esc']['component']['all']['Linguistic'],
+              vPrinting = statList['data']['esc']['component']['all']['Printing and PDF export'],
+              vUI = statList['data']['esc']['component']['all']['UI'],
+              vFilters = statList['data']['esc']['component']['all']['filters and storage'],
+              vFramework = statList['data']['esc']['component']['all']['framework'],
+              vGraphics = statList['data']['esc']['component']['all']['graphics stack'],
+              vSdk = statList['data']['esc']['component']['all']['sdk']
     )
 
 
-    rowHighPrioRegressions = ''
-#    <table:table-row table:style-name="ro2">
-#     <table:table-cell table:style-name="ce14" office:value-type="date" office:date-value="2017-04-18" calcext:value-type="date">
-#      <text:p>2017-04-18</text:p>
-#     </table:table-cell>
-#     <table:table-cell office:value-type="float" office:value="1" calcext:value-type="float">
-#      <text:p>1</text:p>
-#     </table:table-cell>
-#     <table:table-cell table:number-columns-repeated="2" office:value-type="float" office:value="2" calcext:value-type="float">
-#      <text:p>2</text:p>
-#     </table:table-cell>
-#     <table:table-cell/>
-#     <table:table-cell office:value-type="float" office:value="4" calcext:value-type="float">
-#      <text:p>4</text:p>
-#     </table:table-cell>
-#     <table:table-cell table:number-columns-repeated="4"/>
-#     <table:table-cell office:value-type="float" office:value="1" calcext:value-type="float">
-#      <text:p>1</text:p>
-#     </table:table-cell>
-#     <table:table-cell table:number-columns-repeated="2"/>
-#     <table:table-cell office:value-type="float" office:value="1" calcext:value-type="float">
-#      <text:p>1</text:p>
-#     </table:table-cell>
-#     <table:table-cell table:number-columns-repeated="10"/>
-#    </table:table-row>
+    rowHighPrioRegressions = \
+       '<table:table-row table:style-name="ro2">\n' \
+       '<table:table-cell office:value-type="date" office:date-value="{vDate}" calcext:value-type="date">\n' \
+            '<text:p>{vDate}</text:p></table:table-cell>\n' \
+       '<table:table-cell office:value-type="float" office:value="{vSpreadsheet}" calcext:value-type="float">\n' \
+            '<text:p>{vSpreadsheet}</text:p></table:table-cell>\n' \
+       '<table:table-cell office:value-type="float" office:value="{vPresentation}" calcext:value-type="float">\n' \
+            '<text:p>{vPresentation}</text:p></table:table-cell>\n' \
+       '<table:table-cell office:value-type="float" office:value="{vDatabase}" calcext:value-type="float">\n' \
+            '<text:p>{vDatabase}</text:p></table:table-cell>\n' \
+       '<table:table-cell/>\n' \
+       '<table:table-cell office:value-type="float" office:value="{vLibreOffice}" calcext:value-type="float">\n' \
+            '<text:p>{vLibreOffice}</text:p></table:table-cell>\n' \
+       '<table:table-cell table:number-columns-repeated="4"/>\n' \
+       '<table:table-cell office:value-type="float" office:value="{vWriter}" calcext:value-type="float">\n' \
+            '<text:p>{vWriter}</text:p></table:table-cell>\n' \
+       '<table:table-cell table:number-columns-repeated="2"/>\n' \
+       '<table:table-cell office:value-type="float" office:value="{vExtensions}" calcext:value-type="float">\n' \
+            '<text:p>{vExtensions}</text:p></table:table-cell>\n' \
+       '<table:table-cell table:number-columns-repeated="10"/>\n' \
+       '</table:table-row>\n'.format(
+              vDate=statList['addDate'],
+              vSpreadsheet=statList['data']['esc']['component']['high']['Calc'],
+              vPresentation=statList['data']['esc']['component']['high']['Impress'],
+              vDatabase=statList['data']['esc']['component']['high']['Base'],
+              vLibreOffice=statList['data']['esc']['component']['high']['LibreOffice'],
+              vWriter=statList['data']['esc']['component']['high']['Writer'],
+              vExtensions=statList['data']['esc']['component']['high']['Extensions'])
 
     endIndex = 0
     searchStartSheet = '<table:table table:name='
@@ -721,9 +752,9 @@ def report_flatODF():
         inx  = text.rfind('<table:table-row table:style-name="ro2" table:number-rows-repeated="39">', startIndex, endIndex)
         text = text[:inx] + '\n\n' + rowHighPriority + '\n\n' + text[inx:]
       elif text[startIndex:].startswith('"Regressions"'):
-        print("handling Regressions")
+        text = text[:endIndex] + '\n\n' + rowRegressions + '\n\n' + text[endIndex:]
       elif text[startIndex:].startswith('"HighPrioRegressions"'):
-        print("handling HighPrioRegressions")
+        text = text[:endIndex] + '\n\n' + rowHighPrioRegressions + '\n\n' + text[endIndex:]
       else:
         raise Exception("unknown sheet in bug-metrics: " + text[startIndex:startIndex+20])
 
