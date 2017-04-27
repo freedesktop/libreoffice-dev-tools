@@ -531,7 +531,9 @@ def analyze_esc():
     statList['data']['esc']['regression'] = {}
     statList['data']['esc']['regression']['high'] = bugzillaESCData['ESC_REGRESSION_UPDATE']['high']
     statList['data']['esc']['regression']['open'] = bugzillaESCData['ESC_REGRESSION_UPDATE']['open']
+    statList['data']['esc']['regression']['open-1'] = weekList['data']['esc']['regression']['open']
     statList['data']['esc']['regression']['total'] = bugzillaESCData['ESC_REGRESSION_UPDATE']['total']
+    statList['data']['esc']['regression']['total-1'] = weekList['data']['esc']['regression']['total']
 
     statList['data']['esc']['component'] = {}
     statList['data']['esc']['component']['high'] = {}
