@@ -550,6 +550,10 @@ def gen_rowRegression(useHigh=False):
 def report_flatODF():
     global statList, cfg
 
+    if cfg['nowDate'].strftime('%w') != '2':
+      # only generate un tuesdays
+      return
+
     filename = cfg['homedir'] + 'bug-metrics.fods'
     fp = open(filename, encoding='utf-8')
     text = fp.read()
@@ -583,11 +587,11 @@ def report_flatODF():
       else:
         raise Exception("unknown sheet in bug-metrics: " + text[startIndex:startIndex+20])
 
-    fp = open(cfg['homedir'] + 'bug-test.fods', 'w', encoding='utf-8')
+    fp = open(filename, 'w', encoding='utf-8')
     print(text, file=fp)
     fp.close()
     data = 'ESC bug_metric.fods, based on stats.json from '+statList['addDate']
-    return {'title': data, 'mail': 'mentoring@documentfoundation.org', 'attach': '/tmp/esc_flatODF.fods', 'file' : '/tmp/esc_flatODF_body'}
+    return {'title': data, 'mail': 'mentoring@documentfoundation.org', 'attach': filename, 'file' : '/tmp/esc_flatODF_body'}
 
 
 def report_ui():
