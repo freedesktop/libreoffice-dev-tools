@@ -59,8 +59,11 @@ def util_load_url(url, useDict=False, useRaw=False, uUser=None, uPass=None):
       if uUser is None:
         r = requests.get(url)
         if useDict:
-          x = r.text.replace('<br>', '').replace('<img.*>', '')
-          rawData = xmltodict.parse(x)
+          try:
+            rawData = xmltodict.parse(x)
+          except Exception as e:
+            rawData = {'response': {'result': {'project': {},
+                                    'contributor_fact': {}}}}
         elif useRaw:
           rawData = r.text
         else:
@@ -116,6 +119,8 @@ def get_openhub(cfg):
       idList = util_load_url(url + str(pageId), useDict=True)['response']['result']['contributor_fact']
       for row in idList:
         rawList['people'][row['contributor_id']] = row
+      if len(idList) == 0:
+        break
       xDate = datetime.datetime.strptime(idList[-1]['last_commit_time'], "%Y-%m-%dT%H:%M:%SZ")
       if xDate < searchDate:
         break
