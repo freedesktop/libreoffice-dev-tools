@@ -481,6 +481,11 @@ def analyze_esc():
       statList['escList']['QAstat']['top15_squashers'][line['who']] = line['closed']
     for line in bugzillaESCData['ESC_QA_STATS_UPDATE']['top15_reporters']:
       statList['escList']['QAstat']['top15_reporters'][line['who']] = line['reported']
+    statList['escList']['MostPressingBugs'] = {'open': {'list': {}}, 'closed': {'list': {}}}
+    for type in 'open', 'closed':
+       statList['escList']['MostPressingBugs'][type]['count'] = bugzillaESCData['MostPressingBugs'][type]['count']
+       for id in bugzillaESCData['MostPressingBugs'][type]['list']:
+           statList['escList']['MostPressingBugs'][type]['list'][id] = bugzillaData['bugs'][id]['summary']
 
     bug_fixers = {}
     for id, bug in bugzillaData['bugs'].items():

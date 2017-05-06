@@ -52,6 +52,18 @@ def util_load_data_file(fileName):
 
 
 
+def util_dump_file(fileName, rawList):
+    try:
+      fp = open(fileName, 'w', encoding='utf-8')
+      json.dump(rawList, fp, ensure_ascii=False, indent=4, sort_keys=True)
+      fp.close()
+    except Exception as e:
+      print('Error dump file ' + fileName + ' due to ' + str(e))
+      os.remove(fileName)
+      exit(-1)
+
+
+
 def util_check_mail(xmail):
     global statList
     mail = xmail.lower()
@@ -242,31 +254,31 @@ def report_day_mentoring():
       if cDate >= cfg['1weekDate'] or 'easyhack' in row['history'][-1]['changes'][0]['added']:
         myStatList['easyhacks_new'].append(key)
 
+
     fp = open('/tmp/esc_day_mentoring_report.txt', 'w', encoding='utf-8')
     print('Day mentoring report, generated {} based on stats.json from {}'.format(
           datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
 
-    print(">> mail award pdf, and update award.json", file=fp)
-    for row in myStatList['award_1st_email'] :
-        print('        {} {} {}'.format(row['name'],row['email'],row['license']), file=fp)
-
     util_print_line(fp, myStatList['missing_license'],    'missing license statement'  )
-    util_print_line(fp, myStatList['to_abandon'],         'gerrit to abandon',         doGerrit=True)
-    util_print_line(fp, myStatList['to_review'],          'gerrit to review',          doGerrit=True)
-    util_print_line(fp, myStatList['to_unassign'],        'easyhacks to unassign',     doBugzilla=True)
     util_print_line(fp, myStatList['needinfo'],           'easyhacks with NEEDINFO',   doBugzilla=True)
     util_print_line(fp, myStatList['easyhacks_new'],      'easyhacks new',             doBugzilla=True)
-    util_print_line(fp, myStatList['missing_cc'],         'easyhacks missing cc',      doBugzilla=True)
-    util_print_line(fp, myStatList['remove_cc'],          'easyhacks remove cc',       doBugzilla=True)
-    util_print_line(fp, myStatList['missing_ui_cc'],      'easyhacks missing ui cc',   doBugzilla=True)
-    util_print_line(fp, myStatList['assign_problem'],     'easyhacks assign problem',  doBugzilla=True)
     util_print_line(fp, myStatList['to_be_closed'],       'easyhacks to be closed',    doBugzilla=True)
     util_print_line(fp, myStatList['needsDevEval'],       'easyhacks needsDevEval',    doBugzilla=True)
     util_print_line(fp, myStatList['needsUXEval'],        'easyhacks needsUXEval',     doBugzilla=True)
-    util_print_line(fp, myStatList['we_miss_you_email'],  'we miss you email'          )
     util_print_line(fp, myStatList['too_many_comments'],  'easyhacks reduce comments', doBugzilla=True)
     util_print_line(fp, myStatList['pending_license'],    'pending license statement'  )
     fp.close()
+
+    del myStatList['missing_license']
+    del myStatList['needinfo']
+    del myStatList['easyhacks_new']
+    del myStatList['to_be_closed']
+    del myStatList['needsDevEval']
+    del myStatList['needsUXEval']
+    del myStatList['too_many_comments']
+    del myStatList['pending_license']
+
+    util_dump_file(cfg['homedir'] + 'automate.json', myStatList)
     return {'title': 'esc_mentoring, Daily work', 'mail': 'mentoring@documentfoundation.org', 'file': '/tmp/esc_day_mentoring_report.txt'}
 
 
@@ -443,6 +455,16 @@ def report_esc_prototype():
           if row != 0 or xDiff != 0:
             txt += '     {:<24} - {}({:+d})\n'.format(id, row, xDiff)
     escPrototype = escPrototype.replace('$<ESC_COMPONENT_REGRESSION_ALL_UPDATE>', txt)
+
+    txt = '     open:\n'
+    for id, title in statList['escList']['MostPressingBugs']['open']['list'].items():
+        txt += '        {} "{}"\n'.format(id, title)
+    txt += '     closed:\n'
+    for id, title in statList['escList']['MostPressingBugs']['closed']['list'].items():
+        txt += '        {} "{}"\n'.format(id, title)
+
+    escPrototype = escPrototype.replace('$<ESC_MOST_PRESSING_BUGS>', txt)
+
 
     fp = open('/tmp/esc_prototype_report.txt', 'w', encoding='utf-8')
     print('ESC prototype report, generated {} based on stats.json from {}\n\n\n'.format(

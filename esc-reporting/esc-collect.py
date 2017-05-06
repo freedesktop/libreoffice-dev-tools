@@ -59,7 +59,8 @@ def util_load_url(url, useDict=False, useRaw=False, uUser=None, uPass=None):
       if uUser is None:
         r = requests.get(url)
         if useDict:
-          rawData = xmltodict.parse(r.text)
+          x = r.text.replace('<br>', '').replace('<img.*>', '')
+          rawData = xmltodict.parse(x)
         elif useRaw:
           rawData = r.text
         else:
@@ -516,6 +517,31 @@ def get_esc_bugzilla(cfg):
         rawList['ESC_COMPONENT_UPDATE']['os'][os]['count'], \
         rawList['ESC_COMPONENT_UPDATE']['os'][os]['list'] = do_ESC_counting(bz, url)
 
+    url = '&bug_status=UNCONFIRMED' \
+          '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&chfield=priority' \
+          '&chfieldfrom=-8d' \
+          '&chfieldto=Now' \
+          '&chfieldvalue=highest' \
+          '&priority=highest' \
+          '&resolution=---'
+    rawList['MostPressingBugs'] = {'open': {}, 'closed': {}}
+    rawList['MostPressingBugs']['open']['count'], \
+    rawList['MostPressingBugs']['open']['list'] = do_ESC_counting(bz, url)
+    url = '&bug_status=RESOLVED' \
+          '&bug_status=VERIFIED' \
+          '&bug_status=CLOSED' \
+          '&chfield=priority' \
+          '&chfieldfrom=-8d' \
+          '&chfieldto=Now' \
+          '&chfieldvalue=highest' \
+          '&priority=highest' \
+          '&resolution=---'
+    rawList['MostPressingBugs']['closed']['count'], \
+    rawList['MostPressingBugs']['closed']['list'] = do_ESC_counting(bz, url)
+
     util_dump_file(fileName, rawList)
     return rawList
 
@@ -651,7 +677,7 @@ def runCfg(platform):
 
 
 def runBuild(cfg):
-    openhubData = get_openhub(cfg)
+    #problem openhubData = get_openhub(cfg)
     bugzillaData = get_bugzilla(cfg)
     ESCData = get_esc_bugzilla(cfg)
     gerritData = get_gerrit(cfg)
