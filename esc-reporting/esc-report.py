@@ -547,15 +547,19 @@ def gen_rowRegression(useHigh=False):
     return text + buildText + endText + '</table:table-row>\n'
 
 
-def report_flatODF():
+def report_bug_metrics():
     global statList, cfg
 
     if cfg['nowDate'].strftime('%w') != '2':
       # only generate un tuesdays
       return
 
-    filename = cfg['homedir'] + 'bug-metrics.fods'
-    fp = open(filename, encoding='utf-8')
+    filename = cfg['homedir'] + 'bug-metrics/bug-metrics.ods'
+    fileContent = '/tmp/bugs/content.xml'
+
+    os.system('rm -rf /tmp/bugs')
+    os.system('unzip -d /tmp/bugs ' + filename)
+    fp = open(fileContent, encoding='utf-8')
     text = fp.read()
     fp.close()
 
@@ -578,8 +582,7 @@ def report_flatODF():
         # no handling
         continue
       elif text[startIndex:].startswith('"HighPriority"'):
-        inx  = text.rfind('<table:table-row table:style-name="ro2" table:number-rows-repeated="39">', startIndex, endIndex)
-        text = text[:inx] + gen_rowHighPriority() + text[inx:]
+        text = text[:endIndex] + gen_rowHighPriority() + text[endIndex:]
       elif text[startIndex:].startswith('"Regressions"'):
         text = text[:endIndex] + gen_rowRegression() + text[endIndex:]
       elif text[startIndex:].startswith('"HighPrioRegressions"'):
@@ -587,9 +590,11 @@ def report_flatODF():
       else:
         raise Exception("unknown sheet in bug-metrics: " + text[startIndex:startIndex+20])
 
-    fp = open(filename, 'w', encoding='utf-8')
+    fp = open(fileContent, 'w', encoding='utf-8')
     print(text, file=fp)
     fp.close()
+    os.system('cd /tmp/bugs; zip ' + filename + ' *')
+    os.system('cd ' + cfg['homedir'] + 'bug-metrics; git add *; git commit -m \'new version ' + statList['addDate'] + '\'')
     data = 'ESC bug_metric.fods, based on stats.json from '+statList['addDate']
     return {'title': data, 'mail': 'mentoring@documentfoundation.org', 'attach': filename, 'file' : '/tmp/esc_flatODF_body'}
 
@@ -870,6 +875,9 @@ def runReport():
     gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
 
     xMail = []
+    x = report_bug_metrics()
+    if not x is None:
+      xMail.append(x)
     x = report_day_mentoring()
     if not x is None:
       xMail.append(x)
@@ -886,9 +894,6 @@ def runReport():
     if not x is None:
       xMail.append(x)
     x = report_esc_prototype()
-    if not x is None:
-      xMail.append(x)
-    x = report_flatODF()
     if not x is None:
       xMail.append(x)
 
