@@ -262,13 +262,21 @@ def analyze_mentoring():
     global cfg, statList, openhubData, bugzillaData, gerritData, gitData
 
     print("mentoring: analyze openhub", end="", flush=True)
-    statList['data']['openhub']['lines_of_code'] = int(openhubData['project']['analysis']['total_code_lines'])
-    statList['data']['openhub']['total_commits'] = int(openhubData['project']['analysis']['total_commit_count'])
-    statList['data']['openhub']['total_contributors'] = int(openhubData['project']['analysis']['total_contributor_count'])
-    statList['data']['openhub']['year_commits'] = int(openhubData['project']['analysis']['twelve_month_commit_count'])
-    statList['data']['openhub']['year_contributors'] = int(openhubData['project']['analysis']['twelve_month_contributor_count'])
-    xDate = datetime.datetime.strptime(openhubData['project']['analysis']['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
-    statList['stat']['openhub_last_analyse'] = xDate.strftime('%Y-%m-%d')
+    if 'analysis' in openhubData['project']:
+      statList['data']['openhub']['lines_of_code'] = int(openhubData['project']['analysis']['total_code_lines'])
+      statList['data']['openhub']['total_commits'] = int(openhubData['project']['analysis']['total_commit_count'])
+      statList['data']['openhub']['total_contributors'] = int(openhubData['project']['analysis']['total_contributor_count'])
+      statList['data']['openhub']['year_commits'] = int(openhubData['project']['analysis']['twelve_month_commit_count'])
+      statList['data']['openhub']['year_contributors'] = int(openhubData['project']['analysis']['twelve_month_contributor_count'])
+      xDate = datetime.datetime.strptime(openhubData['project']['analysis']['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
+      statList['stat']['openhub_last_analyse'] = xDate.strftime('%Y-%m-%d')
+    else:
+      statList['data']['openhub']['lines_of_code'] = -1
+      statList['data']['openhub']['total_commits'] = -1
+      statList['data']['openhub']['total_contributors'] = -1
+      statList['data']['openhub']['year_commits'] = -1
+      statList['data']['openhub']['year_contributors'] = -1
+      statList['stat']['openhub_last_analyse'] = '2001-01-01'
 
     print(" to " + statList['stat']['openhub_last_analyse'])
     print("mentoring: analyze gerrit", end="", flush=True)
