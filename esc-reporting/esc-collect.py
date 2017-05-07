@@ -660,6 +660,46 @@ def get_git(cfg):
 
 
 
+def get_crash(cfg):
+    fileName = cfg['homedir'] + 'dump/crash_dump.json'
+    searchDate, rawList = util_load_data_file(cfg, fileName, 'crash', {'crashtest': {}, 'crashreport': {}})
+
+    print("Updating crashtest dump from " + rawList['newest-entry'])
+    dirList = util_load_url('http://dev-builds.libreoffice.org/crashtest/?C=M;O=D', useRaw=True)
+    inx = dirList.find('alt="[DIR]"', 0)
+    if inx == -1:
+       print("ERROR: http://dev-builds.libreoffice.org/crashtest/?C=M;O=D not showing DIR list")
+       return
+    inx = dirList.find('alt="[DIR]"', inx+8)
+    inx = dirList.find('href="', inx) +6
+    end = dirList.find('"', inx)
+    url = 'http://dev-builds.libreoffice.org/crashtest/' + dirList[inx:end]
+
+    for type in 'exportCrashes', 'importCrash', 'validationErrors':
+        tmp = util_load_url(url + type + '.csv', useRaw=True).replace('\r', '').split('\n')
+        csv = []
+        for line in tmp:
+            csv.append(line.split(','))
+        for line in csv[1:]:
+            for inx, item in enumerate(line):
+                if item == '':
+                   line[inx] = 0
+                else:
+                   line[inx] = int(item)
+        rawList['crashtest'][type] = {}
+        rawList['crashtest'][type]['title'] = csv[0]
+        rawList['crashtest'][type]['data'] = csv[1:]
+
+    print("Updating crashreport dump from " + rawList['newest-entry'])
+    print(".....talk with moggi, about REST API")
+
+
+    rawList['newest-entry'] = datetime.datetime.now().strftime('%Y-%m-%d %H')
+    util_dump_file(fileName, rawList)
+    return rawList
+
+
+
 def runCfg(platform):
     if 'esc_homedir' in os.environ:
       homeDir = os.environ['esc_homedir']
@@ -682,7 +722,8 @@ def runCfg(platform):
 
 
 def runBuild(cfg):
-    #problem openhubData = get_openhub(cfg)
+    crashData = get_crash(cfg)
+    openhubData = get_openhub(cfg)
     bugzillaData = get_bugzilla(cfg)
     ESCData = get_esc_bugzilla(cfg)
     gerritData = get_gerrit(cfg)
