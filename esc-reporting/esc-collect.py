@@ -722,12 +722,30 @@ def runCfg(platform):
 
 
 def runBuild(cfg):
-    crashData = get_crash(cfg)
-    openhubData = get_openhub(cfg)
-    bugzillaData = get_bugzilla(cfg)
-    ESCData = get_esc_bugzilla(cfg)
-    gerritData = get_gerrit(cfg)
-    gitData = get_git(cfg)
+    try:
+      crashData = get_crash(cfg)
+    except:
+      pass
+    try:
+      openhubData = get_openhub(cfg)
+    except:
+      pass
+    try:
+      bugzillaData = get_bugzilla(cfg)
+    except:
+      pass
+    try:
+      ESCData = get_esc_bugzilla(cfg)
+    except:
+      pass
+    try:
+      gerritData = get_gerrit(cfg)
+    except:
+      pass
+    try:
+      gitData = get_git(cfg)
+    except:
+      pass
 
 
 
