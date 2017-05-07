@@ -141,7 +141,7 @@ def util_build_matrix(title, lineDesc, index):
 
 
 def report_day_mentoring():
-    global statList, openhubData, gerritData, gitData, bugzillaData, cfg
+    global statList, cfg
 
     fp = open('/tmp/esc_day_mentoring_report.txt', 'w', encoding='utf-8')
     print('Day mentoring report, generated {} based on stats.json from {}'.format(
@@ -469,7 +469,7 @@ def report_bug_metrics():
 
 
 def report_ui():
-    global statList, openhubData, gerritData, gitData, bugzillaData, cfg
+    global statList, cfg
     tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['ui']['1month']['history']+statList['people'][k]['ui']['1month']['commented']), reverse=True)
     top10list = []
     for i in tmpClist:
@@ -505,7 +505,7 @@ def report_ui():
 
 
 def report_qa():
-    global statList, openhubData, gerritData, gitData, bugzillaData, cfg
+    global statList, cfg
     global text_bisected, text_bibisected, text_regression
 
 
@@ -670,7 +670,7 @@ def report_qa():
 
 
 def report_myfunc():
-   global statList, openhubData, gerritData, gitData, bugzillaData, cfg
+   global statList, cfg
 
    # {'title': 'mail from me', 'addr': 'my@own.home', 'file': '/tmp/myfile.txt'}
    return None
@@ -735,13 +735,9 @@ def runCfg(platform):
 
 
 def runReport():
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+    global cfg, statList
 
     statList = util_load_data_file(cfg['homedir'] + 'stats.json')
-    openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
-    bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
-    gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
-    gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
 
     xMail = []
     try:

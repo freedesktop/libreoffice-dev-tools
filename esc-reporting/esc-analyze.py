@@ -222,7 +222,7 @@ def util_create_statList():
                      'people': {},
                      'escList': {},
                      'reportList': {},
-                     'automateList': {}}
+                     'automateList': {'bugzilla': {}, 'gerrit': {}, 'pdf': {}}}
 
 
 
@@ -582,13 +582,13 @@ def analyze_reports():
                               'too_many_comments': [],
                               'top10commit': [],
                               'top10review': []}
-    statList['automateList'] = {'to_abandon': [],
-                                'to_review': [],
-                                'missing_ui_cc': [],
-                                'to_unassign': [],
-                                'missing_cc': [],
-                                'assign_problem': [],
-                                'remove_cc': []}
+    automateList = {'to_abandon': [],
+                    'to_review': [],
+                    'missing_ui_cc': [],
+                    'to_unassign': [],
+                    'missing_cc': [],
+                    'assign_problem': [],
+                    'remove_cc': []}
 
     for id, row in statList['people'].items():
       entry = {'name': row['name'], 'email': id, 'license': row['licenseText']}
@@ -626,9 +626,9 @@ def analyze_reports():
             if x['email'] != ownerEmail and x['email'] != 'ci@libreoffice.org':
               cntReview += 1
         if xDate < cfg['1monthDate'] and not doBlock:
-            statList['automateList']['to_abandon'].append(entry)
+          automateList['to_abandon'].append(entry)
         if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
-            statList['automateList']['to_review'].append(entry)
+          automateList['to_review'].append(entry)
 
     for key, row in bugzillaData['bugs'].items():
       if not 'cc' in row:
@@ -641,7 +641,7 @@ def analyze_reports():
 
       if not 'easyHack' in row['keywords']:
         if 'mentoring' in row['cc']:
-          statList['automateList']['remove_cc'].append(key)
+          automateList['remove_cc'].append(key)
         continue
 
       if 'needsDevEval' in row['keywords']:
@@ -649,20 +649,20 @@ def analyze_reports():
       if 'needsUXEval' in row['keywords']:
           statList['reportList']['needsUXEval'].append(key)
       if 'topicUI' in row['keywords'] and 'libreoffice-ux-advise@lists.freedesktop.org' not in row['cc']:
-          statList['automateList']['missing_ui_cc'].append(key)
+          automateList['missing_ui_cc'].append(key)
       if row['status'] == 'NEEDINFO':
           statList['reportList']['needinfo'].append(key)
       elif row['status'] == 'ASSIGNED':
         xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
         if xDate < cfg['1monthDate']:
-          statList['automateList']['to_unassign'].append(key)
+          automateList['to_unassign'].append(key)
       if (row['status'] == 'ASSIGNED' and (row['assigned_to'] == '' or row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org')) or \
          (row['status'] != 'ASSIGNED' and row['assigned_to'] != '' and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org') :
-          statList['automateList']['assign_problem'].append(key)
+          automateList['assign_problem'].append(key)
       if len(row['comments']) >= 5:
         statList['reportList']['too_many_comments'].append(key)
       if not 'mentoring@documentfoundation.org' in row['cc']:
-        statList['automateList']['missing_cc'].append(key)
+        automateList['missing_cc'].append(key)
       if row['comments'][-1]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and not key in cfg['bugzilla']['close_except']:
         statList['reportList']['to_be_closed'].append(key)
       cDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
@@ -688,8 +688,15 @@ def analyze_reports():
             if len(statList['reportList']['top10review']) >= 10:
                 break
 
-    statList['automateList']['award_1st_email'] = statList['reportList']['award_1st_email']
-
+    statList['automateList']['bugzilla'] = {'missing_ui_cc': automateList['missing_ui_cc'],
+                                            'to_unassign': automateList['to_unassign'],
+                                            'missing_cc': automateList['missing_cc'],
+                                            'assign_problem': automateList['assign_problem'],
+                                            'remove_cc': automateList['remove_cc']}
+    statList['automateList']['bugzilla'] = {'to_review': automateList['to_review'],
+                                            'to_abandon': automateList['to_abandon']}
+    statList['automateList']['pdf'] = {'award_1st_email': statList['reportList']['award_1st_email']}
+    statList['automateList'] = automateList
 
 
 def analyze_myfunc():

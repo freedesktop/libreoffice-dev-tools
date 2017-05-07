@@ -79,7 +79,7 @@ def runCfg(platform):
 def runAutomate():
     global cfg, autoList
 
-    autoList = util_load_data_file(cfg['homedir'] + 'automate.json')
+    autoList = util_load_data_file(cfg['homedir'] + 'stats.json')['automateList']
 
     xMail = []
     try:
