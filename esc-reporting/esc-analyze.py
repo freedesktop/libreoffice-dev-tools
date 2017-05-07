@@ -688,14 +688,34 @@ def runAnalyze():
     gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
     gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
     statList = util_create_statList()
-    runLoadCSV()
-
-    analyze_mentoring()
-    analyze_ui()
-    analyze_qa()
-    analyze_esc()
-    analyze_myfunc()
-    analyze_final()
+    try:
+      runLoadCSV()
+    except:
+      pass
+    try:
+      analyze_mentoring()
+    except:
+      pass
+    try:
+      analyze_ui()
+    except:
+      pass
+    try:
+      analyze_qa()
+    except:
+      pass
+    try:
+      analyze_esc()
+    except:
+      pass
+    try:
+      analyze_myfunc()
+    except:
+      pass
+    try:
+      analyze_final()
+    except:
+      pass
 
 
 def runUpgrade(args):

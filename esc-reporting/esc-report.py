@@ -897,27 +897,48 @@ def runReport():
     gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
 
     xMail = []
-    x = report_bug_metrics()
-    if not x is None:
-      xMail.append(x)
-    x = report_day_mentoring()
-    if not x is None:
-      xMail.append(x)
-    x = report_mentoring()
-    if not x is None:
-      xMail.append(x)
-    x = report_ui()
-    if not x is None:
-      xMail.append(x)
-    x = report_qa()
-    if not x is None:
-      xMail.append(x)
-    x = report_myfunc()
-    if not x is None:
-      xMail.append(x)
-    x = report_esc_prototype()
-    if not x is None:
-      xMail.append(x)
+    try:
+      x = report_bug_metrics()
+      if not x is None:
+        xMail.append(x)
+    except:
+      pass
+    try:
+      x = report_day_mentoring()
+      if not x is None:
+        xMail.append(x)
+    except:
+      pass
+    try:
+      x = report_mentoring()
+      if not x is None:
+        xMail.append(x)
+    except:
+      pass
+    try:
+      x = report_ui()
+      if not x is None:
+        xMail.append(x)
+    except:
+      pass
+    try:
+      x = report_qa()
+      if not x is None:
+        xMail.append(x)
+    except:
+      pass
+    try:
+      x = report_myfunc()
+      if not x is None:
+        xMail.append(x)
+    except:
+      pass
+    try:
+      x = report_esc_prototype()
+      if not x is None:
+        xMail.append(x)
+    except:
+      pass
 
     fp = open('/tmp/runMail', 'w', encoding='utf-8')
     print("#!/bin/bash", file=fp)
