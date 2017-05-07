@@ -308,9 +308,12 @@ def report_esc_prototype():
     txt += '     closed:\n'
     for id, title in statList['escList']['MostPressingBugs']['closed']['list'].items():
         txt += '        {} "{}"\n'.format(id, title)
-
     escPrototype = escPrototype.replace('$<ESC_MOST_PRESSING_BUGS>', txt)
 
+    txt = '    + {}({:+d}) import failure, {}({:+d}) export failures'.format(
+          statList['data']['esc']['crashtest']['import'], statList['diff']['esc']['crashtest']['import'],
+          statList['data']['esc']['crashtest']['export'], statList['diff']['esc']['crashtest']['export'])
+    escPrototype = escPrototype.replace('$<ESC_CRASHTEST_UPDATE>', txt)
 
     fp = open('/tmp/esc_prototype_report.txt', 'w', encoding='utf-8')
     print('ESC prototype report, generated {} based on stats.json from {}\n\n\n'.format(

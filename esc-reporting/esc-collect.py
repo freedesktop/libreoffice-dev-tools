@@ -662,9 +662,8 @@ def get_git(cfg):
 
 def get_crash(cfg):
     fileName = cfg['homedir'] + 'dump/crash_dump.json'
-    searchDate, rawList = util_load_data_file(cfg, fileName, 'crash', {'crashtest': {}, 'crashreport': {}})
-
-    print("Updating crashtest dump from " + rawList['newest-entry'])
+    rawList = {'crashtest': {}, 'crashreport': {}}
+    print("Updating crashtest dump")
     dirList = util_load_url('http://dev-builds.libreoffice.org/crashtest/?C=M;O=D', useRaw=True)
     inx = dirList.find('alt="[DIR]"', 0)
     if inx == -1:
@@ -675,22 +674,11 @@ def get_crash(cfg):
     end = dirList.find('"', inx)
     url = 'http://dev-builds.libreoffice.org/crashtest/' + dirList[inx:end]
 
-    for type in 'exportCrashes', 'importCrash', 'validationErrors':
-        tmp = util_load_url(url + type + '.csv', useRaw=True).replace('\r', '').split('\n')
-        csv = []
-        for line in tmp:
-            csv.append(line.split(','))
-        for line in csv[1:]:
-            for inx, item in enumerate(line):
-                if item == '':
-                   line[inx] = 0
-                else:
-                   line[inx] = int(item)
-        rawList['crashtest'][type] = {}
-        rawList['crashtest'][type]['title'] = csv[0]
-        rawList['crashtest'][type]['data'] = csv[1:]
+    for type in 'crashlog', 'exportCrash':
+        tmp = util_load_url(url + type + '.txt', useRaw=True).split('\n')
+        rawList['crashtest'][type] = len(tmp) -1
 
-    print("Updating crashreport dump from " + rawList['newest-entry'])
+    print("Updating crashreport dump")
     print(".....talk with moggi, about REST API")
 
 

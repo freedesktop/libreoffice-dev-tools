@@ -477,7 +477,7 @@ def analyze_qa():
 
 
 def analyze_esc():
-    global cfg, statList, bugzillaData, bugzillaESCData, weekList
+    global cfg, statList, bugzillaData, bugzillaESCData, crashData, weekList
 
     print("esc: analyze bugzilla", flush=True)
 
@@ -561,6 +561,8 @@ def analyze_esc():
     for id, row in bugzillaESCData['ESC_COMPONENT_UPDATE']['os'].items():
       statList['data']['esc']['component']['os'][id] = row['count']
 
+    statList['data']['esc']['crashtest'] = {'import': crashData['crashtest']['crashlog'],
+                                            'export': crashData['crashtest']['exportCrash']}
 
 
 
@@ -821,7 +823,7 @@ def loadCfg(platform):
 
 
 def runAnalyze():
-    global cfg, statList, openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, weekList
+    global cfg, statList, openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList
 
     x = (cfg['nowDate'] - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
     weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
@@ -831,6 +833,7 @@ def runAnalyze():
     bugzillaESCData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_esc_dump.json')
     gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
     gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
+    crashData = util_load_data_file(cfg['homedir'] + 'dump/crash_dump.json')
     statList = util_create_statList()
     try:
       runLoadCSV()
@@ -875,7 +878,7 @@ def runAnalyze():
 
 
 def runUpgrade(args):
-    global cfg, statList, openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, weekList
+    global cfg, statList, openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList
 
     args = args[1:]
     openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
@@ -883,6 +886,7 @@ def runUpgrade(args):
     bugzillaESCData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_esc_dump.json')
     gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
     gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
+    crashData = util_load_data_file(cfg['homedir'] + 'dump/crash_dump.json')
     statList = util_create_statList()
     runLoadCSV()
     csvList = statList
