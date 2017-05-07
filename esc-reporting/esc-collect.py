@@ -724,27 +724,33 @@ def runCfg(platform):
 def runBuild(cfg):
     try:
       crashData = get_crash(cfg)
-    except:
+    except Exception as e:
+      print('ERROR: get_crash failed with ' + str(e))
       pass
     try:
       openhubData = get_openhub(cfg)
-    except:
+    except Exception as e:
+      print('ERROR: get_openhub failed with ' + str(e))
       pass
     try:
       bugzillaData = get_bugzilla(cfg)
-    except:
+    except Exception as e:
+      print('ERROR: get_bugzilla failed with ' + str(e))
       pass
     try:
       ESCData = get_esc_bugzilla(cfg)
-    except:
+    except Exception as e:
+      print('ERROR: get_esc_bugzilla failed with ' + str(e))
       pass
     try:
       gerritData = get_gerrit(cfg)
-    except:
+    except Exception as e:
+      print('ERROR: get_gerrit failed with ' + str(e))
       pass
     try:
       gitData = get_git(cfg)
-    except:
+    except Exception as e:
+      print('ERROR: get_git failed with ' + str(e))
       pass
 
 

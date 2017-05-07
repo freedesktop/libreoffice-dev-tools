@@ -142,180 +142,26 @@ def util_build_matrix(title, lineDesc, index):
 
 def report_day_mentoring():
     global statList, openhubData, gerritData, gitData, bugzillaData, cfg
-    myStatList = {'needsDevEval': [],
-                  'needsUXEval': [],
-                  'missing_ui_cc': [],
-                  'needinfo': [],
-                  'to_be_closed': [],
-                  'easyhacks_new': [],
-                  'to_unassign': [],
-                  'too_many_comments': [],
-                  'missing_cc': [],
-                  'assign_problem': [],
-                  'we_miss_you_email': [],
-                  'award_1st_email': [],
-                  'pending_license': [],
-                  'missing_license': [],
-                  'to_abandon' : [],
-                  'to_review': [],
-                  'remove_cc': []
-                  }
-    mailedDate = datetime.datetime.strptime(cfg['git']['last-mail-run'], '%Y-%m-%d') - datetime.timedelta(days=90)
-    zeroDate = datetime.datetime(year=2001, month=1, day=1)
-    for id, row in statList['people'].items():
-      entry = {'name': row['name'], 'email': id, 'license': row['licenseText']}
-      newestCommitDate = datetime.datetime.strptime(row['newestCommit'], '%Y-%m-%d')
-      if newestCommitDate > mailedDate and newestCommitDate < cfg['3monthDate']:
-        myStatList['we_miss_you_email'].append(entry)
-      x = row['commits']['1month']['owner']
-      if x != 0 and row['commits']['total'] == x and not id in cfg['award-mailed']:
-        myStatList['award_1st_email'].append(entry)
-      if row['licenseText'].startswith('PENDING'):
-        myStatList['pending_license'].append(entry)
-
-    for key,row in gerritData['patch'].items():
-      if row['status'] == 'SUBMITTED' or row['status'] == 'DRAFT':
-        row['status'] = 'NEW'
-      xDate = datetime.datetime.strptime(row['updated'], '%Y-%m-%d %H:%M:%S.%f000')
-      ownerEmail = util_check_mail(row['owner']['email'])
-      entry = {'id': key, 'name': row['owner']['name'], 'email': ownerEmail, 'title': row['subject']}
-      if row['status'] != 'ABANDONED':
-        if ownerEmail is None:
-          ownerEmail = row['owner']['email']
-          entry['email'] = ownerEmail
-          entry['license'] = 'GERRIT NO LICENSE'
-          myStatList['missing_license'].append(entry)
-        elif not statList['people'][ownerEmail]['licenseOK']:
-          entry['license'] = 'GERRIT: ' + statList['people'][ownerEmail]['licenseText']
-          myStatList['missing_license'].append(entry)
-
-      if row['status'] == 'NEW':
-        doBlock = False
-        cntReview = 0
-        for x1 in 'Code-Review', 'Verified':
-          for x in row['labels'][x1]['all']:
-            if x['value'] == -2:
-              doBlock = True
-            if x['email'] != ownerEmail and x['email'] != 'ci@libreoffice.org':
-              cntReview += 1
-        if xDate < cfg['1monthDate'] and not doBlock:
-            myStatList['to_abandon'].append(entry)
-        if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
-          myStatList['to_review'].append(entry)
-
-    for key,row in gitData['commits'].items():
-      for i in 'author', 'committer':
-        email = util_check_mail(row[i+'-email'])
-        entry = {'id': key, 'name': row[i], 'email': email}
-        if email is None:
-          entry['email'] = row['author-email']
-          entry['license'] = 'GIT AUTHOR NO LICENSE'
-          myStatList['missing_license'].append(entry)
-        elif not statList['people'][email]['licenseOK']:
-          entry['license'] = 'GIT: ' + statList['people'][email]['licenseText']
-          myStatList['missing_license'].append(entry)
-
-    for key, row in bugzillaData['bugs'].items():
-      if not 'cc' in row:
-        row['cc'] = []
-      if not 'keywords' in row:
-        row['keywords'] = []
-
-      if row['status'] == 'RESOLVED' or row['status'] == 'VERIFIED':
-        continue
-
-      if not 'easyHack' in row['keywords']:
-        if 'mentoring' in row['cc']:
-          myStatList['remove_cc'].append(key)
-        continue
-
-      if 'needsDevEval' in row['keywords']:
-        myStatList['needsDevEval'].append(key)
-      if 'needsUXEval' in row['keywords']:
-        myStatList['needsUXEval'].append(key)
-      if 'topicUI' in row['keywords'] and 'libreoffice-ux-advise@lists.freedesktop.org' not in row['cc']:
-        myStatList['missing_ui_cc'].append(key)
-      if row['status'] == 'NEEDINFO':
-        myStatList['needinfo'].append(key)
-      elif row['status'] == 'ASSIGNED':
-        xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
-        if xDate < cfg['1monthDate']:
-          myStatList['to_unassign'].append(key)
-      if (row['status'] == 'ASSIGNED' and (row['assigned_to'] == '' or row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org')) or \
-         (row['status'] != 'ASSIGNED' and row['assigned_to'] != '' and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org') :
-        myStatList['assign_problem'].append(key)
-      if len(row['comments']) >= 5:
-        myStatList['too_many_comments'].append(key)
-      if not 'mentoring@documentfoundation.org' in row['cc']:
-        myStatList['missing_cc'].append(key)
-      if row['comments'][-1]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and not key in cfg['bugzilla']['close_except']:
-        myStatList['to_be_closed'].append(key)
-      cDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
-      if cDate >= cfg['1weekDate'] or 'easyhack' in row['history'][-1]['changes'][0]['added']:
-        myStatList['easyhacks_new'].append(key)
-
 
     fp = open('/tmp/esc_day_mentoring_report.txt', 'w', encoding='utf-8')
     print('Day mentoring report, generated {} based on stats.json from {}'.format(
           datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
 
-    util_print_line(fp, myStatList['missing_license'],    'missing license statement'  )
-    util_print_line(fp, myStatList['needinfo'],           'easyhacks with NEEDINFO',   doBugzilla=True)
-    util_print_line(fp, myStatList['easyhacks_new'],      'easyhacks new',             doBugzilla=True)
-    util_print_line(fp, myStatList['to_be_closed'],       'easyhacks to be closed',    doBugzilla=True)
-    util_print_line(fp, myStatList['needsDevEval'],       'easyhacks needsDevEval',    doBugzilla=True)
-    util_print_line(fp, myStatList['needsUXEval'],        'easyhacks needsUXEval',     doBugzilla=True)
-    util_print_line(fp, myStatList['too_many_comments'],  'easyhacks reduce comments', doBugzilla=True)
-    util_print_line(fp, myStatList['pending_license'],    'pending license statement'  )
+    util_print_line(fp, statList['reportList']['missing_license'],    'missing license statement'  )
+    util_print_line(fp, statList['reportList']['needinfo'],           'easyhacks with NEEDINFO',   doBugzilla=True)
+    util_print_line(fp, statList['reportList']['easyhacks_new'],      'easyhacks new',             doBugzilla=True)
+    util_print_line(fp, statList['reportList']['to_be_closed'],       'easyhacks to be closed',    doBugzilla=True)
+    util_print_line(fp, statList['reportList']['needsDevEval'],       'easyhacks needsDevEval',    doBugzilla=True)
+    util_print_line(fp, statList['reportList']['needsUXEval'],        'easyhacks needsUXEval',     doBugzilla=True)
+    util_print_line(fp, statList['reportList']['too_many_comments'],  'easyhacks reduce comments', doBugzilla=True)
+    util_print_line(fp, statList['reportList']['pending_license'],    'pending license statement'  )
     fp.close()
-
-    del myStatList['missing_license']
-    del myStatList['needinfo']
-    del myStatList['easyhacks_new']
-    del myStatList['to_be_closed']
-    del myStatList['needsDevEval']
-    del myStatList['needsUXEval']
-    del myStatList['too_many_comments']
-    del myStatList['pending_license']
-
-    util_dump_file(cfg['homedir'] + 'automate.json', myStatList)
     return {'title': 'esc_mentoring, Daily work', 'mail': 'mentoring@documentfoundation.org', 'file': '/tmp/esc_day_mentoring_report.txt'}
 
 
 
 def report_mentoring():
     global statList, openhubData, gerritData, gitData, bugzillaData, cfg
-    myStatList = {'award_1st_email': [],
-                  'top10commit': [],
-                  'top10review': [],
-                  }
-    mailedDate = datetime.datetime.strptime(cfg['git']['last-mail-run'], '%Y-%m-%d') - datetime.timedelta(days=90)
-    zeroDate = datetime.datetime(year=2001, month=1, day=1)
-    for id, row in statList['people'].items():
-      entry = {'name': row['name'], 'email': id, 'license': row['licenseText']}
-      newestCommitDate = datetime.datetime.strptime(row['newestCommit'], '%Y-%m-%d')
-      x = row['commits']['1month']['owner']
-      if x != 0 and row['commits']['total'] == x and not id in cfg['award-mailed']:
-        myStatList['award_1st_email'].append(entry)
-
-    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['commits']['1month']['owner']),reverse=True)
-    for i in tmpClist:
-        if not statList['people'][i]['isCommitter']:
-            x = {'mail': i, 'name': statList['people'][i]['name'],
-                 'month': statList['people'][i]['commits']['1month']['owner'],
-                 'year': statList['people'][i]['commits']['1year']['owner']}
-            myStatList['top10commit'].append(x)
-            if len(myStatList['top10commit']) >= 10:
-                break
-    tmpRlist = sorted(statList['people'], key=lambda k: (statList['people'][k]['gerrit']['1month']['reviewer']),reverse=True)
-    for i in tmpRlist:
-        if i != 'ci@libreoffice.org':
-            x = {'mail': i, 'name': statList['people'][i]['name'],
-                 'month': statList['people'][i]['gerrit']['1month']['reviewer'],
-                 'year': statList['people'][i]['gerrit']['1year']['reviewer']}
-            myStatList['top10review'].append(x)
-            if len(myStatList['top10review']) >= 10:
-                break
 
     fp = open('/tmp/esc_mentoring_report.txt', 'w', encoding='utf-8')
     print("    + openhub statistics ({}), {} people did {} commits in 12 month in {} lines of code\n"
@@ -340,18 +186,18 @@ def report_mentoring():
     print("\n    + top 5 contributors:", file=fp)
     for i in range(0, 5):
       print('          {} made {} patches in 1 month, and {} patches in 1 year'.format(
-            myStatList['top10commit'][i]['name'],
-            myStatList['top10commit'][i]['month'],
-            myStatList['top10commit'][i]['year']), file=fp)
+          statList['reportList']['top10commit'][i]['name'],
+          statList['reportList']['top10commit'][i]['month'],
+          statList['reportList']['top10commit'][i]['year']), file=fp)
     print("    + top 5 reviewers:", file=fp)
     for i in range(0, 5):
       print('          {} made {} review comments in 1 month, and {} in 1 year'.format(
-            myStatList['top10review'][i]['name'],
-            myStatList['top10review'][i]['month'],
-            myStatList['top10review'][i]['year']), file=fp)
+          statList['reportList']['top10review'][i]['name'],
+          statList['reportList']['top10review'][i]['month'],
+          statList['reportList']['top10review'][i]['year']), file=fp)
 
     print("    + big CONGRATULATIONS to contributors who have at least 1 merged patch, since last report:", file=fp)
-    for row in myStatList['award_1st_email']:
+    for row in statList['reportList']['award_1st_email']:
         print('          {} {} {}'.format(row['name'],row['email'],row['license']), file=fp)
     fp.close()
     return
@@ -619,6 +465,7 @@ def report_bug_metrics():
     os.system('cd ' + cfg['homedir'] + 'bug-metrics; git add *; git commit -m \'new version ' + statList['addDate'] + '\'')
     data = 'ESC bug_metric.fods, based on stats.json from '+statList['addDate']
     return {'title': data, 'mail': 'mentoring@documentfoundation.org', 'attach': filename, 'file' : '/tmp/esc_flatODF_body'}
+
 
 
 def report_ui():
@@ -901,43 +748,50 @@ def runReport():
       x = report_bug_metrics()
       if not x is None:
         xMail.append(x)
-    except:
+    except Exception as e:
+      print('ERROR: report_bug_metrics failed with ' + str(e))
       pass
     try:
       x = report_day_mentoring()
       if not x is None:
         xMail.append(x)
-    except:
+    except Exception as e:
+      print('ERROR: report_day_mentoring failed with ' + str(e))
       pass
     try:
       x = report_mentoring()
       if not x is None:
         xMail.append(x)
-    except:
+    except Exception as e:
+      print('ERROR: report_mentoring failed with ' + str(e))
       pass
     try:
       x = report_ui()
       if not x is None:
         xMail.append(x)
-    except:
+    except Exception as e:
+      print('ERROR: report_ui failed with ' + str(e))
       pass
     try:
       x = report_qa()
       if not x is None:
         xMail.append(x)
-    except:
+    except Exception as e:
+      print('ERROR: report_qa failed with ' + str(e))
       pass
     try:
       x = report_myfunc()
       if not x is None:
         xMail.append(x)
-    except:
+    except Exception as e:
+      print('ERROR: report_myfunc failed with ' + str(e))
       pass
     try:
       x = report_esc_prototype()
       if not x is None:
         xMail.append(x)
-    except:
+    except Exception as e:
+      print('ERROR: report_esc_prototype failed with ' + str(e))
       pass
 
     fp = open('/tmp/runMail', 'w', encoding='utf-8')

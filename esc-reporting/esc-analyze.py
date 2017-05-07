@@ -220,7 +220,9 @@ def util_create_statList():
                      'esc': {}},
                      'stat': {'openhub_last_analyse': "2001-01-01"},
                      'people': {},
-                     'escList': {}}
+                     'escList': {},
+                     'reportList': {},
+                     'automateList': {}}
 
 
 
@@ -560,6 +562,136 @@ def analyze_esc():
       statList['data']['esc']['component']['os'][id] = row['count']
 
 
+
+
+def analyze_reports():
+    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+
+    print("reports: analyze", flush=True)
+    mailedDate = datetime.datetime.strptime(cfg['git']['last-mail-run'], '%Y-%m-%d') - datetime.timedelta(days=90)
+    zeroDate = datetime.datetime(year=2001, month=1, day=1)
+    statList['reportList'] = {'we_miss_you_email': [],
+                              'award_1st_email': [],
+                              'pending_license': [],
+                              'missing_license': [],
+                              'to_be_closed': [],
+                              'needsDevEval': [],
+                              'needsUXEval': [],
+                              'needinfo': [],
+                              'easyhacks_new': [],
+                              'too_many_comments': [],
+                              'top10commit': [],
+                              'top10review': []}
+    statList['automateList'] = {'to_abandon': [],
+                                'to_review': [],
+                                'missing_ui_cc': [],
+                                'to_unassign': [],
+                                'missing_cc': [],
+                                'assign_problem': [],
+                                'remove_cc': []}
+
+    for id, row in statList['people'].items():
+      entry = {'name': row['name'], 'email': id, 'license': row['licenseText']}
+      if row['newestCommit'] > mailedDate and row['newestCommit'] < cfg['3monthDate']:
+        statList['reportList']['we_miss_you_email'].append(entry)
+      x = row['commits']['1month']['owner']
+      if x != 0 and row['commits']['total'] == x and not id in cfg['award-mailed']:
+          statList['reportList']['award_1st_email'].append(entry)
+      if row['licenseText'].startswith('PENDING'):
+          statList['reportList']['pending_license'].append(entry)
+
+    for key,row in gerritData['patch'].items():
+      if row['status'] == 'SUBMITTED' or row['status'] == 'DRAFT':
+        row['status'] = 'NEW'
+      xDate = datetime.datetime.strptime(row['updated'], '%Y-%m-%d %H:%M:%S.%f000')
+      ownerEmail = util_check_mail(row['owner']['name'], row['owner']['email'])
+      entry = {'id': key, 'name': row['owner']['name'], 'email': ownerEmail, 'title': row['subject']}
+      if row['status'] != 'ABANDONED':
+        if ownerEmail is None:
+          ownerEmail = row['owner']['email']
+          entry['email'] = ownerEmail
+          entry['license'] = 'GERRIT NO LICENSE'
+          statList['reportList']['missing_license'].append(entry)
+        elif not statList['people'][ownerEmail]['licenseOK']:
+          entry['license'] = 'GERRIT: ' + statList['people'][ownerEmail]['licenseText']
+          statList['reportList']['missing_license'].append(entry)
+
+      if row['status'] == 'NEW':
+        doBlock = False
+        cntReview = 0
+        for x1 in 'Code-Review', 'Verified':
+          for x in row['labels'][x1]['all']:
+            if x['value'] == -2:
+              doBlock = True
+            if x['email'] != ownerEmail and x['email'] != 'ci@libreoffice.org':
+              cntReview += 1
+        if xDate < cfg['1monthDate'] and not doBlock:
+            statList['automateList']['to_abandon'].append(entry)
+        if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
+            statList['automateList']['to_review'].append(entry)
+
+    for key, row in bugzillaData['bugs'].items():
+      if not 'cc' in row:
+        row['cc'] = []
+      if not 'keywords' in row:
+        row['keywords'] = []
+
+      if row['status'] == 'RESOLVED' or row['status'] == 'VERIFIED':
+        continue
+
+      if not 'easyHack' in row['keywords']:
+        if 'mentoring' in row['cc']:
+          statList['automateList']['remove_cc'].append(key)
+        continue
+
+      if 'needsDevEval' in row['keywords']:
+          statList['reportList']['needsDevEval'].append(key)
+      if 'needsUXEval' in row['keywords']:
+          statList['reportList']['needsUXEval'].append(key)
+      if 'topicUI' in row['keywords'] and 'libreoffice-ux-advise@lists.freedesktop.org' not in row['cc']:
+          statList['automateList']['missing_ui_cc'].append(key)
+      if row['status'] == 'NEEDINFO':
+          statList['reportList']['needinfo'].append(key)
+      elif row['status'] == 'ASSIGNED':
+        xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
+        if xDate < cfg['1monthDate']:
+          statList['automateList']['to_unassign'].append(key)
+      if (row['status'] == 'ASSIGNED' and (row['assigned_to'] == '' or row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org')) or \
+         (row['status'] != 'ASSIGNED' and row['assigned_to'] != '' and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org') :
+          statList['automateList']['assign_problem'].append(key)
+      if len(row['comments']) >= 5:
+        statList['reportList']['too_many_comments'].append(key)
+      if not 'mentoring@documentfoundation.org' in row['cc']:
+        statList['automateList']['missing_cc'].append(key)
+      if row['comments'][-1]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and not key in cfg['bugzilla']['close_except']:
+        statList['reportList']['to_be_closed'].append(key)
+      cDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
+      if cDate >= cfg['1weekDate'] or 'easyhack' in row['history'][-1]['changes'][0]['added']:
+        statList['reportList']['easyhacks_new'].append(key)
+
+    tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['commits']['1month']['owner']),reverse=True)
+    for i in tmpClist:
+        if not statList['people'][i]['isCommitter']:
+            x = {'mail': i, 'name': statList['people'][i]['name'],
+                 'month': statList['people'][i]['commits']['1month']['owner'],
+                 'year': statList['people'][i]['commits']['1year']['owner']}
+            statList['reportList']['top10commit'].append(x)
+            if len(statList['reportList']['top10commit']) >= 10:
+                break
+    tmpRlist = sorted(statList['people'], key=lambda k: (statList['people'][k]['gerrit']['1month']['reviewer']),reverse=True)
+    for i in tmpRlist:
+        if i != 'ci@libreoffice.org':
+            x = {'mail': i, 'name': statList['people'][i]['name'],
+                 'month': statList['people'][i]['gerrit']['1month']['reviewer'],
+                 'year': statList['people'][i]['gerrit']['1year']['reviewer']}
+            statList['reportList']['top10review'].append(x)
+            if len(statList['reportList']['top10review']) >= 10:
+                break
+
+    statList['automateList']['award_1st_email'] = statList['reportList']['award_1st_email']
+
+
+
 def analyze_myfunc():
     global cfg, statList, openhubData, bugzillaData, gerritData, gitData, licenceCompanyData, licencePersonalData
 
@@ -619,6 +751,10 @@ def analyze_final():
         del statList['aliases']
       if 'escList' in statList:
         del statList['escList']
+      if 'reportList' in statList:
+        del statList['reportList']
+      if 'automateList' in statList:
+        del statList['automateList']
       util_dump_file(cfg['homedir'] + 'weeks/week_' + myDay.strftime('%Y_%W') + '.json', statList)
 
 
@@ -665,6 +801,7 @@ def loadCfg(platform):
 
     cfg = util_load_data_file(homeDir + '/config.json')
     cfg['homedir'] = homeDir + '/'
+    cfg['award-mailed'] = util_load_data_file(cfg['homedir'] + 'award.json')['award-mailed']
     cfg['platform'] = platform
     cfg['nowDate'] = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     cfg['cutDate'] = cfg['nowDate']
@@ -690,31 +827,43 @@ def runAnalyze():
     statList = util_create_statList()
     try:
       runLoadCSV()
-    except:
+    except Exception as e:
+      print('ERROR: runLoadCSV failed with ' + str(e))
       pass
     try:
       analyze_mentoring()
-    except:
+    except Exception as e:
+      print('ERROR: analyze_mentoring failed with ' + str(e))
       pass
     try:
       analyze_ui()
-    except:
+    except Exception as e:
+      print('ERROR: analyze_ui failed with ' + str(e))
       pass
     try:
       analyze_qa()
-    except:
+    except Exception as e:
+      print('ERROR: analyze_qa failed with ' + str(e))
       pass
     try:
       analyze_esc()
-    except:
+    except Exception as e:
+      print('ERROR: analyze_esc failed with ' + str(e))
       pass
     try:
       analyze_myfunc()
-    except:
+    except Exception as e:
+      print('ERROR: analyze_myfunc failed with ' + str(e))
+      pass
+    try:
+      analyze_reports()
+    except Exception as e:
+      print('ERROR: analyze_reports failed with ' + str(e))
       pass
     try:
       analyze_final()
-    except:
+    except Exception as e:
+      print('ERROR: analyze_final failed with ' + str(e))
       pass
 
 
