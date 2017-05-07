@@ -161,7 +161,7 @@ def report_day_mentoring():
 
 
 def report_mentoring():
-    global statList, openhubData, gerritData, gitData, bugzillaData, cfg
+    global statList, cfg
 
     fp = open('/tmp/esc_mentoring_report.txt', 'w', encoding='utf-8')
     print("    + openhub statistics ({}), {} people did {} commits in 12 month in {} lines of code\n"
