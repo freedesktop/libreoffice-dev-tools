@@ -81,6 +81,19 @@ def runAutomate():
 
     autoList = util_load_data_file(cfg['homedir'] + 'stats.json')['automateList']
 
+    # analyze test for:
+    # "A polite ping"
+
+    # gerrit non-committer patches > 4 weeks: overdue review / poking reminders --> "to_abandon_comment"
+    # gerrit patches > extra 4 weeks: auto-abandon if no comments / changes. --> "to_abandon_abandon"
+    # gerrit patches from non-committers, add reviewer --> "to_review"
+    # bugzilla: easy-hacks: un-assign those un-touched for 4 weeks to de-conflict --> "to_unassign_comment" "to_unassign_unassign"
+    # bugzilla extra: easy-hacks, check assign consistent --> "assign_problem_status" "assign_problem_user",
+    # bugzilla: checking mentoring@ is CC'd on all easy-hacks --> "missing_cc"
+    # bugzilla:checking UX team is CC'd on all UX hacks --> "missing_ui_cc"
+    # 1st patch award email auto-generate that --> "award_1st_email"
+    # "we miss you" email --> "we_miss_you_email"
+
     xMail = []
     try:
       x = automate_gerrit()
