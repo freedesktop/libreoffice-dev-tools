@@ -50,6 +50,48 @@ def util_dump_file(fileName, rawList):
       exit(-1)
 
 
+def handle_gerrit_abandon(id, text):
+    return
+
+
+
+def handle_gerrit_comment(id, text):
+    return
+
+
+
+def handle_gerrit_review(id, email):
+    return
+
+
+
+def handle_bugzilla_comment(id, text):
+    return
+
+
+
+def handle_bugzilla_unassign(id, text):
+    return
+
+
+
+def handle_bugzilla_reset_status(id):
+    return
+
+
+
+def handle_bugzilla_cc(id, email):
+    return
+
+
+
+def handle_mail_pdf(name, email):
+    return
+
+
+
+def handle_mail_miss_you(name, email):
+    return
 
 
 
@@ -81,37 +123,78 @@ def runAutomate():
 
     autoList = util_load_data_file(cfg['homedir'] + 'stats.json')['automateList']
 
-    # analyze test for:
-    # "A polite ping"
+    try:
+      for id in autoList['gerrit']['to_abandon_abandon']:
+        handle_gerrit_abandon(id, "Abandoning due to lack of work, be aware it can anytime be reopened if you want to continue working")
+    except Exception as e:
+      print('ERROR: handle_gerrit_abandon failed with ' + str(e))
+      pass
+    try:
+      for id in autoList['gerrit']['to_abandon_comment']:
+        handle_gerrit_comment(id, "A polite ping, still working on this patch")
+    except Exception as e:
+      print('ERROR: handle_gerrit_comment failed with ' + str(e))
+      pass
+    try:
+      for row in autoList['gerrit']['to_review']:
+        handle_gerrit_review(row['id'], row['email'])
+    except Exception as e:
+      print('ERROR: handle_gerrit_review failed with ' + str(e))
+      pass
 
-    # gerrit non-committer patches > 4 weeks: overdue review / poking reminders --> "to_abandon_comment"
-    # gerrit patches > extra 4 weeks: auto-abandon if no comments / changes. --> "to_abandon_abandon"
-    # gerrit patches from non-committers, add reviewer --> "to_review"
-    # bugzilla: easy-hacks: un-assign those un-touched for 4 weeks to de-conflict --> "to_unassign_comment" "to_unassign_unassign"
-    # bugzilla extra: easy-hacks, check assign consistent --> "assign_problem_status" "assign_problem_user",
-    # bugzilla: checking mentoring@ is CC'd on all easy-hacks --> "missing_cc"
-    # bugzilla:checking UX team is CC'd on all UX hacks --> "missing_ui_cc"
-    # 1st patch award email auto-generate that --> "award_1st_email"
-    # "we miss you" email --> "we_miss_you_email"
+    try:
+      for id in autoList['bugzilla']['to_unassign_comment']:
+        handle_bugzilla_comment(id, "A polite ping, still working on this bug")
+    except Exception as e:
+      print('ERROR: handle_bugzilla_comment failed with ' + str(e))
+      pass
+    try:
+      for id in autoList['bugzilla']['to_unassign_unassign']:
+        handle_bugzilla_unassign(id, "Unassigning due to lack of work, be aware it can anytime be assigned again if you want to continue working")
+    except Exception as e:
+      print('ERROR: handle_bugzilla_unassign failed with ' + str(e))
+      pass
+    try:
+      for id in autoList['bugzilla']['assign_problem_status']:
+        handle_bugzilla_reset_status(id)
+    except Exception as e:
+      print('ERROR: handle_bugzilla_reset_status failed with ' + str(e))
+      pass
+    try:
+      for id in autoList['bugzilla']['to_unassign_unassign']:
+        handle_bugzilla_unassign(id, '')
+    except Exception as e:
+      print('ERROR: handle_bugzilla_unassign failed with ' + str(e))
+      pass
+    try:
+      for id in autoList['bugzilla']['missing_cc']:
+        handle_bugzilla_cc(id, 'mentoring@libreoffice.org')
+    except Exception as e:
+      print('ERROR: handle_bugzilla_cc failed with ' + str(e))
+      pass
+    try:
+      for id in autoList['bugzilla']['missing_ui_cc']:
+        handle_bugzilla_cc(id, 'libreoffice-ux-advise@lists.freedesktop.org')
+    except Exception as e:
+      print('ERROR: handle_bugzilla_cc failed with ' + str(e))
+      pass
 
     xMail = []
     try:
-      x = automate_gerrit()
-      if not x is None:
-        xMail.append(x)
-    except:
+      for row in autoList['mail']['award_1st_email']:
+        x = handle_mail_pdf(row['name'], row['email'])
+        if not x is None:
+          xMail.append(x)
+    except Exception as e:
+      print('ERROR: handle_mail_pdf failed with ' + str(e))
       pass
     try:
-      x = automate_bugzilla()
-      if not x is None:
-        xMail.append(x)
-    except:
-      pass
-    try:
-      x = automate_pdf()
-      if not x is None:
-        xMail.append(x)
-    except:
+      for row in autoList['mail']['we_miss_you_email']:
+        x = handle_mail_miss_you(row['name'], row['email'])
+        if not x is None:
+          xMail.append(x)
+    except Exception as e:
+      print('ERROR: analyze_reports failed with ' + str(e))
       pass
 
     fp = open('/tmp/runAutoMail', 'w', encoding='utf-8')

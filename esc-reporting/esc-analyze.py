@@ -52,6 +52,7 @@ import operator
 import datetime
 import json
 import xmltodict
+import re
 
 
 def util_load_file(fileName):
@@ -595,7 +596,7 @@ def analyze_reports():
                                             'remove_cc': []}
     statList['automateList']['mail'] = {'we_miss_you_email': [],
                                         'award_1st_email': []}
-                    
+
     for id, row in statList['people'].items():
       entry = {'name': row['name'], 'email': id, 'license': row['licenseText']}
       if row['newestCommit'] > mailedDate and row['newestCommit'] < cfg['3monthDate']:
@@ -607,6 +608,7 @@ def analyze_reports():
       if row['licenseText'].startswith('PENDING'):
           statList['reportList']['pending_license'].append(entry)
 
+    tmpListToReview = []
     for key,row in gerritData['patch'].items():
       if row['status'] == 'SUBMITTED' or row['status'] == 'DRAFT':
         row['status'] = 'NEW'
@@ -635,11 +637,30 @@ def analyze_reports():
         if xDate < cfg['1monthDate'] and not doBlock:
           txt = row['messages'][len(row['messages'])-1]
           if 'A polite ping' in txt:
-            statList['automateList']['gerrit']['to_abandon_abandon'].append(entry)
+            statList['automateList']['gerrit']['to_abandon_abandon'].append(entry['id'])
           else:
-            statList['automateList']['gerrit']['to_abandon_comment'].append(entry)
+            statList['automateList']['gerrit']['to_abandon_comment'].append(entry['id'])
         if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
-          statList['automateList']['gerrit']['to_review'].append(entry)
+            tmpListToReview.append(entry['id'])
+
+    for id in tmpListToReview:
+      reviewEmail = '<default>'
+      txt = gerritData['patch'][id]['subject']
+      if txt.startswith('tdf#'):
+        try:
+          row = bugzillaData['bugs'][re.findall('\d+', txt)[0]]
+          ownerEmail = util_check_mail(row['creator_detail']['name'], row['creator_detail']['email'])
+          if statList['people'][ownerEmail]['isCommitter']:
+            reviewEmail = ownerEmail
+          else:
+            for comment in row['comments']:
+              email = util_check_mail('', comment['creator'])
+              if not email == 'anistenis@gmail.com' and statList['people'][email]['isCommitter']:
+                reviewEmail = email
+                break
+        except Exception as e:
+          pass
+      statList['automateList']['gerrit']['to_review'].append({'id': id, 'email': reviewEmail})
 
     for key, row in bugzillaData['bugs'].items():
       if not 'cc' in row:
