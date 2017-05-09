@@ -86,29 +86,27 @@ def handle_bugzilla_cc(id, email):
 
 
 def handle_mail_pdf(name, email):
-    global mail_pdf_index
+    global cfg, mail_pdf_index
 
     mail_pdf_index += 1
-    return {'title': 'x', 'mail': 'mentoring@documentfoundation.org', 'attach': 'x', 'file' : '/tmp/x'}
+    fileName = '/tmp/esc_pdf_' + str(mail_pdf_index)
+    fp = open(fileName, 'w')
+    print(cfg['automate']['1st award']['content'], file=fp)
+    fp.close()
+    return {'title': cfg['automate']['1st award']['subject'], 'mail': 'mentoring@documentfoundation.org', 'attach': 'x', 'file' : fileName}
 
 
 
 def handle_mail_miss_you(name, email):
-    global mail_miss_you
+    global cfg, mail_miss_you
 
     mail_miss_you += 1
-    fileName = '/tmp/esc_pdf_' + str(mail_miss_you)
-    fp = fopen(fileName, 'w')
-    print('Hi\n' \
-          'We have noticed you have not submitted patches to LibreOffice in a while. ' \
-          'LibreOffice depend on volunteers like you to keep the software growing.\n' \
-          'Volunteering is something most of us does in our spare time, so it is normal to have periods where you ' \
-          'want to concentrate on other items, we basically just wanted to say "we miss you".\n' \
-          'If you have problems or want to comment on issues, please do not hesitate to contact our development mentor.\n\n' \
-          'Thanks in advance\n' \
-          'the LibreOffice Development Team\n', file=fp)
-    fclose(fp)
-    return {'title': 'LibreOffice calling for help', 'mail': 'mentoring@documentfoundation.org', 'file': fileName }
+    fileName = '/tmp/esc_miss_' + str(mail_miss_you)
+    fp = open(fileName, 'w')
+    print(cfg['automate']['we miss you']['content'], file=fp)
+    fp.close()
+    return {'title': cfg['automate']['we miss you']['subject'],
+            'mail': 'mentoring@documentfoundation.org', 'file': fileName }
 
 
 
@@ -144,13 +142,13 @@ def runAutomate():
 
     try:
       for id in autoList['gerrit']['to_abandon_abandon']:
-        handle_gerrit_abandon(id, "Abandoning due to lack of work, be aware it can anytime be reopened if you want to continue working")
+        handle_gerrit_abandon(id, cfg['automate']['gerrit']['abandon'])
     except Exception as e:
       print('ERROR: handle_gerrit_abandon failed with ' + str(e))
       pass
     try:
       for id in autoList['gerrit']['to_abandon_comment']:
-        handle_gerrit_comment(id, "A polite ping, still working on this patch")
+        handle_gerrit_comment(id, 'A polite ping, ' + cfg['automate']['gerrit']['comment'])
     except Exception as e:
       print('ERROR: handle_gerrit_comment failed with ' + str(e))
       pass
@@ -163,13 +161,13 @@ def runAutomate():
 
     try:
       for id in autoList['bugzilla']['to_unassign_comment']:
-        handle_bugzilla_comment(id, "A polite ping, still working on this bug")
+        handle_bugzilla_comment(id, 'A polite ping, ' + cfg['automate']['bugzilla']['comment'])
     except Exception as e:
       print('ERROR: handle_bugzilla_comment failed with ' + str(e))
       pass
     try:
       for id in autoList['bugzilla']['to_unassign_unassign']:
-        handle_bugzilla_unassign(id, "Unassigning due to lack of work, be aware it can anytime be assigned again if you want to continue working")
+        handle_bugzilla_unassign(id, cfg['automate']['bugzilla']['comment'])
     except Exception as e:
       print('ERROR: handle_bugzilla_unassign failed with ' + str(e))
       pass

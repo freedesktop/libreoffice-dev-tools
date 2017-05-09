@@ -644,7 +644,7 @@ def analyze_reports():
             tmpListToReview.append(entry['id'])
 
     for id in tmpListToReview:
-      reviewEmail = '<default>'
+      reviewEmail = cfg['automate']['gerritRewiewUserEmail']
       txt = gerritData['patch'][id]['subject']
       if txt.startswith('tdf#'):
         try:
