@@ -86,12 +86,29 @@ def handle_bugzilla_cc(id, email):
 
 
 def handle_mail_pdf(name, email):
-    return
+    global mail_pdf_index
+
+    mail_pdf_index += 1
+    return {'title': 'x', 'mail': 'mentoring@documentfoundation.org', 'attach': 'x', 'file' : '/tmp/x'}
 
 
 
 def handle_mail_miss_you(name, email):
-    return
+    global mail_miss_you
+
+    mail_miss_you += 1
+    fileName = '/tmp/esc_pdf_' + str(mail_miss_you)
+    fp = fopen(fileName, 'w')
+    print('Hi\n' \
+          'We have noticed you have not submitted patches to LibreOffice in a while. ' \
+          'LibreOffice depend on volunteers like you to keep the software growing.\n' \
+          'Volunteering is something most of us does in our spare time, so it is normal to have periods where you ' \
+          'want to concentrate on other items, we basically just wanted to say "we miss you".\n' \
+          'If you have problems or want to comment on issues, please do not hesitate to contact our development mentor.\n\n' \
+          'Thanks in advance\n' \
+          'the LibreOffice Development Team\n', file=fp)
+    fclose(fp)
+    return {'title': 'LibreOffice calling for help', 'mail': 'mentoring@documentfoundation.org', 'file': fileName }
 
 
 
@@ -120,6 +137,8 @@ def runCfg(platform):
 
 def runAutomate():
     global cfg, autoList
+    global mail_pdf_index, mail_miss_you
+
 
     autoList = util_load_data_file(cfg['homedir'] + 'stats.json')['automateList']
 
@@ -180,6 +199,8 @@ def runAutomate():
       pass
 
     xMail = []
+    mail_pdf_index = 0
+    mail_miss_you = 0
     try:
       for row in autoList['mail']['award_1st_email']:
         x = handle_mail_pdf(row['name'], row['email'])

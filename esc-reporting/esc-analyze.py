@@ -571,7 +571,7 @@ def analyze_reports():
     global cfg, statList, openhubData, bugzillaData, gerritData, gitData
 
     print("reports: analyze", flush=True)
-    mailedDate = datetime.datetime.strptime(cfg['git']['last-mail-run'], '%Y-%m-%d') - datetime.timedelta(days=90)
+    mailedDate = datetime.datetime.strptime(cfg['automate']['last-mail-run'], '%Y-%m-%d') - datetime.timedelta(days=90)
     zeroDate = datetime.datetime(year=2001, month=1, day=1)
     statList['reportList'] = {'award_1st_email': [],
                               'pending_license': [],
