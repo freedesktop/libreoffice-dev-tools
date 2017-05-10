@@ -16,13 +16,13 @@
 # * The GPG key ID for signing.
 #
 # The script expects an installation of flatpak and availability of the
-# org.gnome.Platform 3.20 runtime (and SDK) from <http://sdk.gnome.org/repo/>.
+# org.gnome.Platform 3.24 runtime (and SDK) from <http://sdk.gnome.org/repo/>.
 # To obtain the latter, do something like:
 #
 #  $ flatpak remote-add --user --from gnome-sdk \
 #     https://sdk.gnome.org/gnome.flatpakrepo
-#  $ flatpak install --user gnome-sdk org.gnome.Platform 3.20
-#  $ flatpak install --user gnome-sdk org.gnome.Sdk 3.20
+#  $ flatpak install --user gnome-sdk org.gnome.Platform 3.24
+#  $ flatpak install --user gnome-sdk org.gnome.Sdk 3.24
 #  ...
 #  $ flatpak update --user
 #
@@ -72,7 +72,7 @@ mkdir "${my_dir?}"/fetch
 
 rm -fr "${my_dir?}"/app "${my_dir?}"/build "${my_dir?}"/inst
 flatpak build-init "${my_dir?}"/app org.libreoffice.LibreOffice org.gnome.Sdk \
- org.gnome.Platform 3.20
+ org.gnome.Platform 3.24
 mkdir "${my_dir?}"/build
 flatpak build --build-dir="${my_dir?}"/build "${my_dir?}"/app bash -c \
  '"${1?}"/lo/autogen.sh --prefix="${1?}"/inst --with-distro=LibreOfficeFlatpak \
