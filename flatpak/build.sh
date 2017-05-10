@@ -76,7 +76,7 @@ flatpak build-init "${my_dir?}"/app org.libreoffice.LibreOffice org.gnome.Sdk \
 mkdir "${my_dir?}"/build
 flatpak build --build-dir="${my_dir?}"/build "${my_dir?}"/app bash -c \
  '"${1?}"/lo/autogen.sh --prefix="${1?}"/inst --with-distro=LibreOfficeFlatpak \
-  --with-external-tar="${1?}"/tar && make && make distro-pack-install' \
+  --with-external-tar="${1?}"/tar && make && make distro-pack-install-strip' \
  bash "${my_dir?}"
 
 
