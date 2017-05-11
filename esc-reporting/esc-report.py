@@ -466,8 +466,14 @@ def report_bug_metrics():
     fp.close()
     os.system('cd /tmp/bugs; zip ' + filename + ' *')
     os.system('cd ' + cfg['homedir'] + 'bug-metrics; git add *; git commit -m \'new version ' + statList['addDate'] + '\'')
+
+    fileBody='/tmp/esc_odf.txt'
+    fp = open(fileBody, 'w', encoding='utf-8')
+    print('the weekly bug-metrics.odf\nhave fun', file=fp)
+    fp.close()
+
     data = 'ESC bug_metric.fods, based on stats.json from '+statList['addDate']
-    return {'title': data, 'mail': 'mentoring@documentfoundation.org', 'attach': filename, 'file' : '/tmp/esc_flatODF_body'}
+    return {'title': data, 'mail': 'mentoring@documentfoundation.org', 'attach': filename, 'file' : fileBody}
 
 
 
