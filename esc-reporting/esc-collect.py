@@ -679,8 +679,7 @@ def get_crash(cfg):
         rawList['crashtest'][type] = len(tmp) -1
 
     print("Updating crashreport dump")
-    print(".....talk with moggi, about REST API")
-
+    rawList['crashreport'] = util_load_url('http://crashreport.libreoffice.org/api/get/crash-count')
 
     rawList['newest-entry'] = datetime.datetime.now().strftime('%Y-%m-%d %H')
     util_dump_file(fileName, rawList)

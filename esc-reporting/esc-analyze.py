@@ -564,6 +564,7 @@ def analyze_esc():
 
     statList['data']['esc']['crashtest'] = {'import': crashData['crashtest']['crashlog'],
                                             'export': crashData['crashtest']['exportCrash']}
+    statList['data']['esc']['crashreport'] = crashData['crashreport']['versions']
 
 
 

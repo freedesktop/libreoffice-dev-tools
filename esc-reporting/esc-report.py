@@ -315,6 +315,13 @@ def report_esc_prototype():
           statList['data']['esc']['crashtest']['export'], statList['diff']['esc']['crashtest']['export'])
     escPrototype = escPrototype.replace('$<ESC_CRASHTEST_UPDATE>', txt)
 
+    txt = ''
+    for id in sorted(statList['data']['esc']['crashreport']):
+        txt += '    + {}    {}({:+d})\n'.format(id,
+            statList['data']['esc']['crashreport'][id],
+            statList['diff']['esc']['crashreport'][id])
+    escPrototype = escPrototype.replace('$<ESC_CRASHREPORT_UPDATE>', txt)
+
     fp = open('/tmp/esc_prototype_report.txt', 'w', encoding='utf-8')
     print('ESC prototype report, generated {} based on stats.json from {}\n\n\n'.format(
           datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
@@ -509,7 +516,7 @@ def report_ui():
       print('          {} made {} changes in 1 month, and {} changes in 1 year'.format(
             top10list[i]['name'], top10list[i]['month'], top10list[i]['year']), file=fp)
     fp.close()
-    return {'title': 'ESC UI report', 'mail': 'tietze.heiko@gmail.com', 'file': '/tmp/esc_prototype_report.txt'}
+    return {'title': 'ESC UI report', 'mail': 'tietze.heiko@gmail.com', 'file': '/tmp/esc_ui_report.txt'}
 
 
 
