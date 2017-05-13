@@ -200,7 +200,7 @@ def runAutomate():
     executeLoop(handle_mail_miss_you, 'mail', 'we_miss_you_email')
     executeLoop(handle_mail_pdf, 'mail', 'award_1st_email')
 
-    #JIX util_dump_file(automateFile, autoList)
+    util_dump_file(automateFile, autoList)
 
 
 if __name__ == '__main__':
