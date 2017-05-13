@@ -696,11 +696,6 @@ def runCfg(platform):
     cfg = util_load_file(homeDir + '/config.json')
     if cfg == None:
         exit(-1)
-    keys = util_load_file(homeDir + '/config_collect.json')
-    if keys == None:
-        exit(-1)
-
-    cfg.update(keys)
     cfg['homedir'] = homeDir + '/'
     cfg['platform'] = platform
     print("Reading and writing data to " + cfg['homedir'])

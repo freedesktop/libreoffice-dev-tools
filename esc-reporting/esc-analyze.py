@@ -222,8 +222,7 @@ def util_create_statList():
                      'stat': {'openhub_last_analyse': "2001-01-01"},
                      'people': {},
                      'escList': {},
-                     'reportList': {},
-                     'automateList': {'bugzilla': {}, 'gerrit': {}, 'mail': {}}}
+                     'reportList': {}}
 
 
 
@@ -569,10 +568,10 @@ def analyze_esc():
 
 
 def analyze_reports():
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+    global cfg, statList, openhubData, bugzillaData, gerritData, gitData, automateData
 
     print("reports: analyze", flush=True)
-    mailedDate = datetime.datetime.strptime(cfg['automate']['last-mail-run'], '%Y-%m-%d') - datetime.timedelta(days=90)
+    mailedDate = cfg['3monthDate'] - datetime.timedelta(days=90)
     zeroDate = datetime.datetime(year=2001, month=1, day=1)
     statList['reportList'] = {'award_1st_email': [],
                               'pending_license': [],
@@ -585,29 +584,38 @@ def analyze_reports():
                               'too_many_comments': [],
                               'top10commit': [],
                               'top10review': []}
-    statList['automateList']['gerrit'] = {'to_abandon_comment': [],
-                                          'to_abandon_abandon': [],
-                                          'to_review': []}
-    statList['automateList']['bugzilla'] = {'missing_ui_cc': [],
-                                            'to_unassign_comment': [],
-                                            'to_unassign_unassign': [],
-                                            'missing_cc': [],
-                                            'assign_problem_status': [],
-                                            'assign_problem_user': [],
-                                            'remove_cc': []}
-    statList['automateList']['mail'] = {'we_miss_you_email': [],
-                                        'award_1st_email': []}
+    fileAutomate = cfg['homedir'] + 'automateTODO.json'
+    automateList = util_load_data_file(fileAutomate)
+    automateNow = cfg['nowDate'].strftime("%Y-%m-%d")
 
     for id, row in statList['people'].items():
       entry = {'name': row['name'], 'email': id, 'license': row['licenseText']}
-      if row['newestCommit'] > mailedDate and row['newestCommit'] < cfg['3monthDate']:
-        statList['automateList']['mail']['we_miss_you_email'].append(entry)
+      if row['newestCommit'] > mailedDate and row['newestCommit'] < cfg['3monthDate'] and id not in automateData['reminder']:
+        automateList['mail']['we_miss_you_email'][entry['email']] = entry['name']
+        automateData['reminder'][id] = automateNow
       x = row['commits']['1month']['owner']
-      if x != 0 and row['commits']['total'] == x and not id in cfg['award-mailed']:
-          statList['reportList']['award_1st_email'].append(entry)
-          statList['automateList']['mail']['award_1st_email'].append(entry)
+      if x != 0 and row['commits']['total'] == x and not id in automateData['award']:
+          automateList['mail']['award_1st_email'][entry['email']] = entry['name']
+          automateData['award'][entry['email']] = automateNow
       if row['licenseText'].startswith('PENDING'):
           statList['reportList']['pending_license'].append(entry)
+    delList = []
+    for id, xTime in automateData['reminder'].items():
+      x = datetime.datetime.strptime(xTime, '%Y-%m-%d')
+      if x < cfg['3monthDate']:
+        delList.append(id)
+    for id in delList:
+      del automateData['reminder'][id]
+    delList = []
+    for id, xTime in automateData['award'].items():
+      x = datetime.datetime.strptime(xTime, '%Y-%m-%d')
+      if x > cfg['1weekDate']:
+        entry = {'name': statList['people'][id]['name'], 'email': id, 'license': statList['people'][id]['licenseText']}
+        statList['reportList']['award_1st_email'].append(entry)
+      if x < cfg['1monthDate']:
+        delList.append(id)
+    for id in delList:
+      del automateData['award'][id]
 
     tmpListToReview = []
     for key,row in gerritData['patch'].items():
@@ -638,9 +646,9 @@ def analyze_reports():
         if xDate < cfg['1monthDate'] and not doBlock:
           txt = row['messages'][len(row['messages'])-1]
           if 'A polite ping' in txt:
-            statList['automateList']['gerrit']['to_abandon_abandon'].append(entry['id'])
+            automateList['gerrit']['to_abandon_abandon'][entry['id']] = 0
           else:
-            statList['automateList']['gerrit']['to_abandon_comment'].append(entry['id'])
+            automateList['gerrit']['to_abandon_comment'][entry['id']] = 0
         if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
             tmpListToReview.append(entry['id'])
 
@@ -661,7 +669,7 @@ def analyze_reports():
                 break
         except Exception as e:
           pass
-      statList['automateList']['gerrit']['to_review'].append({'id': id, 'email': reviewEmail})
+      automateList['gerrit']['to_review'][id] = reviewEmail
 
     for key, row in bugzillaData['bugs'].items():
       if not 'cc' in row:
@@ -674,7 +682,7 @@ def analyze_reports():
 
       if not 'easyHack' in row['keywords']:
         if 'mentoring' in row['cc']:
-            statList['automateList']['bugzilla']['remove_cc'].append(key)
+            automateList['bugzilla']['remove_cc'][key] = 0
         continue
 
       if 'needsDevEval' in row['keywords']:
@@ -682,7 +690,7 @@ def analyze_reports():
       if 'needsUXEval' in row['keywords']:
           statList['reportList']['needsUXEval'].append(key)
       if 'topicUI' in row['keywords'] and 'libreoffice-ux-advise@lists.freedesktop.org' not in row['cc']:
-        statList['automateList']['bugzilla']['missing_ui_cc'].append(key)
+        automateList['bugzilla']['missing_ui_cc'][key]= 0
       if row['status'] == 'NEEDINFO':
           statList['reportList']['needinfo'].append(key)
       elif row['status'] == 'ASSIGNED':
@@ -690,19 +698,19 @@ def analyze_reports():
         if xDate < cfg['1monthDate']:
           txt = row['comments'][len(row['comments'])-1]
           if 'A polite ping' in txt:
-            statList['automateList']['bugzilla']['to_unassign_unassign'].append(key)
+            automateList['bugzilla']['to_unassign_unassign'][key]= 0
           else:
-            statList['automateList']['bugzilla']['to_unassign_comment'].append(key)
+            automateList['bugzilla']['to_unassign_comment'][key] = 0
       if row['status'] == 'ASSIGNED' and (row['assigned_to'] == '' or row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org'):
-        statList['automateList']['bugzilla']['assign_problem_status'].append(key)
+        automateList['bugzilla']['assign_problem_status'][key] = 0
       if row['status'] != 'ASSIGNED' and row['assigned_to'] != '' and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
-        statList['automateList']['bugzilla']['assign_problem_user'].append(key)
+        automateList['bugzilla']['assign_problem_user'][key] = 0
       if len(row['comments']) >= 5:
         statList['reportList']['too_many_comments'].append(key)
       if not 'mentoring@documentfoundation.org' in row['cc']:
-          statList['automateList']['bugzilla']['missing_cc'].append(key)
+          automateList['bugzilla']['missing_cc'][key] = 0
       if row['comments'][-1]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and not key in cfg['bugzilla']['close_except']:
-        statList['reportList']['to_be_closed'].append(key)
+          statList['reportList']['to_be_closed'].append(key)
       cDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
       if cDate >= cfg['1weekDate'] or 'easyhack' in row['history'][-1]['changes'][0]['added']:
         statList['reportList']['easyhacks_new'].append(key)
@@ -725,6 +733,9 @@ def analyze_reports():
             statList['reportList']['top10review'].append(x)
             if len(statList['reportList']['top10review']) >= 10:
                 break
+
+    util_dump_file(fileAutomate, automateList)
+    util_dump_file(cfg['homedir'] + 'dump/automate.json', automateData)
 
 
 
@@ -789,8 +800,6 @@ def analyze_final():
         del statList['escList']
       if 'reportList' in statList:
         del statList['reportList']
-      if 'automateList' in statList:
-        del statList['automateList']
       util_dump_file(cfg['homedir'] + 'weeks/week_' + myDay.strftime('%Y_%W') + '.json', statList)
 
 
@@ -837,7 +846,8 @@ def loadCfg(platform):
 
     cfg = util_load_data_file(homeDir + '/config.json')
     cfg['homedir'] = homeDir + '/'
-    cfg['award-mailed'] = util_load_data_file(cfg['homedir'] + 'award.json')['award-mailed']
+
+
     cfg['platform'] = platform
     cfg['nowDate'] = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     cfg['cutDate'] = cfg['nowDate']
@@ -850,7 +860,8 @@ def loadCfg(platform):
 
 
 def runAnalyze():
-    global cfg, statList, openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList
+    global cfg, statList
+    global openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList, automateData
 
     x = (cfg['nowDate'] - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
     weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
@@ -861,6 +872,7 @@ def runAnalyze():
     gerritData = util_load_data_file(cfg['homedir'] + 'dump/gerrit_dump.json')
     gitData = util_load_data_file(cfg['homedir'] + 'dump/git_dump.json')
     crashData = util_load_data_file(cfg['homedir'] + 'dump/crash_dump.json')
+    automateData = util_load_data_file(cfg['homedir'] + 'dump/automate.json')
     statList = util_create_statList()
     try:
       runLoadCSV()
