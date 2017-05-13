@@ -50,12 +50,25 @@ def util_dump_file(fileName, rawList):
       exit(-1)
 
 
+def doMail(mail, subject, content, attach=None):
+    if attach:
+      attach = '-a ' + attach + ' '
+    else:
+      attach = ''
+    mail="jani@libreoffice.org"
+    sendMail = 'mail -r mentoring@libreoffice.org -s "' + subject + '" ' + attach + mail + ' <<EOF\n' + content + '\nEOF\n'
+    system(sendMail)
+
+
+
 def handle_gerrit_abandon(id, text):
+    # handle_gerrit_abandon(id, cfg['automate']['gerrit']['abandon'])
     return
 
 
 
 def handle_gerrit_comment(id, text):
+    # handle_gerrit_comment(id, 'A polite ping, ' + cfg['automate']['gerrit']['comment'])
     return
 
 
@@ -66,21 +79,35 @@ def handle_gerrit_review(id, email):
 
 
 def handle_bugzilla_comment(id, text):
+    #handle_bugzilla_comment(id, 'A polite ping, ' + cfg['automate']['bugzilla']['comment'])
     return
 
 
 
 def handle_bugzilla_unassign(id, text):
+    # handle_bugzilla_unassign(id, cfg['automate']['bugzilla']['comment'])
     return
 
 
 
-def handle_bugzilla_reset_status(id):
+def handle_bugzilla_reset_user(id, text):
+    return
+
+
+
+def handle_bugzilla_reset_status(id, text):
     return
 
 
 
 def handle_bugzilla_cc(id, email):
+    # handle_bugzilla_cc(id, 'mentoring@libreoffice.org')
+    return
+
+
+
+def handle_bugzilla_ui_cc(id, email):
+    # handle_bugzilla_ui_cc(id, 'libreoffice-ux-advise@lists.freedesktop.org')
     return
 
 
@@ -93,20 +120,44 @@ def handle_mail_pdf(name, email):
     fp = open(fileName, 'w')
     print(cfg['automate']['1st award']['content'], file=fp)
     fp.close()
+
+
+    fp = open('/tmp/runAutoMail', 'w', encoding='utf-8')
+    print("#!/bin/bash", file=fp)
+    print("")
+    xMail = []
+    for i in xMail:
+      if 'attach' in i:
+        attach = '-a ' + i['attach'] + ' '
+      else:
+        attach = ''
+      print("mail -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'], file=fp)
+    fp.close()
     return {'title': cfg['automate']['1st award']['subject'], 'mail': 'mentoring@documentfoundation.org', 'attach': 'x', 'file' : fileName}
 
 
 
-def handle_mail_miss_you(name, email):
-    global cfg, mail_miss_you
+def handle_mail_miss_you(email, name):
+    global cfg
 
-    mail_miss_you += 1
-    fileName = '/tmp/esc_miss_' + str(mail_miss_you)
-    fp = open(fileName, 'w')
-    print(cfg['automate']['we miss you']['content'], file=fp)
-    fp.close()
-    return {'title': cfg['automate']['we miss you']['subject'],
-            'mail': 'mentoring@documentfoundation.org', 'file': fileName }
+    text = cfg['automate']['we miss you']['content'].format(name)
+    doMail(email, cfg['automate']['we miss you']['subject'], text)
+
+
+
+def executeLoop(func, xType, xName):
+    global autoList
+
+    try:
+      for id in autoList[xType][xName]:
+        func(id, autoList[xType][xName][id])
+    except Exception as e:
+      print('ERROR: ' + str(func) + ' failed with ' + str(e))
+      return
+
+    del autoList[xType][xName]
+    autoList[xType][xName] = {}
+    return
 
 
 
@@ -122,7 +173,6 @@ def runCfg(platform):
     cfg['platform'] = platform
     print("Reading and writing data to " + cfg['homedir'])
 
-    cfg['award-mailed'] = util_load_data_file(cfg['homedir'] + 'award.json')['award-mailed']
     cfg['nowDate'] = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     cfg['cutDate'] = cfg['nowDate'] - datetime.timedelta(days=365)
     cfg['1weekDate'] = cfg['nowDate'] - datetime.timedelta(days=7)
@@ -134,99 +184,25 @@ def runCfg(platform):
 
 
 def runAutomate():
-    global cfg, autoList
-    global mail_pdf_index, mail_miss_you
+    global cfg, autoList, mail_pdf_index
 
 
-    autoList = util_load_data_file(cfg['homedir'] + 'stats.json')['automateList']
-
-    try:
-      for id in autoList['gerrit']['to_abandon_abandon']:
-        handle_gerrit_abandon(id, cfg['automate']['gerrit']['abandon'])
-    except Exception as e:
-      print('ERROR: handle_gerrit_abandon failed with ' + str(e))
-      pass
-    try:
-      for id in autoList['gerrit']['to_abandon_comment']:
-        handle_gerrit_comment(id, 'A polite ping, ' + cfg['automate']['gerrit']['comment'])
-    except Exception as e:
-      print('ERROR: handle_gerrit_comment failed with ' + str(e))
-      pass
-    try:
-      for row in autoList['gerrit']['to_review']:
-        handle_gerrit_review(row['id'], row['email'])
-    except Exception as e:
-      print('ERROR: handle_gerrit_review failed with ' + str(e))
-      pass
-
-    try:
-      for id in autoList['bugzilla']['to_unassign_comment']:
-        handle_bugzilla_comment(id, 'A polite ping, ' + cfg['automate']['bugzilla']['comment'])
-    except Exception as e:
-      print('ERROR: handle_bugzilla_comment failed with ' + str(e))
-      pass
-    try:
-      for id in autoList['bugzilla']['to_unassign_unassign']:
-        handle_bugzilla_unassign(id, cfg['automate']['bugzilla']['comment'])
-    except Exception as e:
-      print('ERROR: handle_bugzilla_unassign failed with ' + str(e))
-      pass
-    try:
-      for id in autoList['bugzilla']['assign_problem_status']:
-        handle_bugzilla_reset_status(id)
-    except Exception as e:
-      print('ERROR: handle_bugzilla_reset_status failed with ' + str(e))
-      pass
-    try:
-      for id in autoList['bugzilla']['to_unassign_unassign']:
-        handle_bugzilla_unassign(id, '')
-    except Exception as e:
-      print('ERROR: handle_bugzilla_unassign failed with ' + str(e))
-      pass
-    try:
-      for id in autoList['bugzilla']['missing_cc']:
-        handle_bugzilla_cc(id, 'mentoring@libreoffice.org')
-    except Exception as e:
-      print('ERROR: handle_bugzilla_cc failed with ' + str(e))
-      pass
-    try:
-      for id in autoList['bugzilla']['missing_ui_cc']:
-        handle_bugzilla_cc(id, 'libreoffice-ux-advise@lists.freedesktop.org')
-    except Exception as e:
-      print('ERROR: handle_bugzilla_cc failed with ' + str(e))
-      pass
-
-    xMail = []
+    automateFile = cfg['homedir'] + 'automateTODO.json'
+    autoList = util_load_data_file(automateFile)
     mail_pdf_index = 0
-    mail_miss_you = 0
-    try:
-      for row in autoList['mail']['award_1st_email']:
-        x = handle_mail_pdf(row['name'], row['email'])
-        if not x is None:
-          xMail.append(x)
-    except Exception as e:
-      print('ERROR: handle_mail_pdf failed with ' + str(e))
-      pass
-    try:
-      for row in autoList['mail']['we_miss_you_email']:
-        x = handle_mail_miss_you(row['name'], row['email'])
-        if not x is None:
-          xMail.append(x)
-    except Exception as e:
-      print('ERROR: analyze_reports failed with ' + str(e))
-      pass
 
-    fp = open('/tmp/runAutoMail', 'w', encoding='utf-8')
-    print("#!/bin/bash", file=fp)
-    print("")
-    for i in xMail:
-      if 'attach' in i:
-        attach = '-a ' + i['attach'] + ' '
-      else:
-        attach = ''
-      print("mail -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'], file=fp)
-    fp.close()
-
+    #JIX executeLoop(handle_gerrit_abandon, 'gerrit', 'to_abandon_abandon')
+    #JIX executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
+    #JIX executeLoop(handle_gerrit_review,  'gerrit', 'to_review')
+    #JIX executeLoop(handle_bugzilla_comment, 'bugzilla', 'to_unassign_comment')
+    #JIX executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
+    #JIX executeLoop(handle_bugzilla_reset_status, 'bugzilla', 'assign_problem_status')
+    #JIX executeLoop(handle_bugzilla_reset_user, 'bugzilla', 'assign_problem_user')
+    #JIX executeLoop(handle_bugzilla_cc, 'bugzilla', 'missing_cc')
+    #JIX executeLoop(handle_bugzilla_ui_cc, 'bugzilla', 'missing_ui_cc')
+    #JIX executeLoop(handle_mail_pdf, 'mail', 'award_1st_email')
+    executeLoop(handle_mail_miss_you, 'mail', 'we_miss_you_email')
+    util_dump_file(automateFile, autoList)
 
 
 if __name__ == '__main__':
