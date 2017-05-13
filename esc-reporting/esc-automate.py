@@ -57,7 +57,7 @@ def doMail(mail, subject, content, attach=None):
       attach = ''
     mail="jani@libreoffice.org"
     sendMail = 'mail -r mentoring@libreoffice.org -s "' + subject + '" ' + attach + mail + ' <<EOF\n' + content + '\nEOF\n'
-    system(sendMail)
+    os.system(sendMail)
 
 
 
