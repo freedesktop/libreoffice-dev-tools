@@ -25,6 +25,7 @@ import sys
 import os
 import datetime
 import json
+import requests
 
 
 def util_load_data_file(fileName):
@@ -48,6 +49,24 @@ def util_dump_file(fileName, rawList):
       print('Error dump file ' + fileName + ' due to ' + str(e))
       os.remove(fileName)
       exit(-1)
+
+
+
+def doBugzilla(id, command):
+    global cfg
+
+    url = 'https://bugs.documentfoundation.org/rest/bug/' + id + '?api_key=' + cfg['bugzilla']['api-key']
+    try:
+      r = requests.put(url, command)
+      rawData = json.loads(r.text)
+      r.close()
+    except Exception as e:
+      print('Error load url ' + url + ' due to ' + str(e))
+      exit(-1)
+    if 'code' in rawData:
+      raise Exception('code: ' + str(rawData['code']) + ' text: ' + rawData['message'])
+    return
+
 
 
 def doMail(mail, subject, content, attach=None):
@@ -100,14 +119,14 @@ def handle_bugzilla_reset_status(id, text):
 
 
 def handle_bugzilla_cc(id, email):
-    # handle_bugzilla_cc(id, 'mentoring@libreoffice.org')
-    return
+    command = '{"cc": {"add": ["mentoring@documentfoundation.org"]}}'
+    doBugzilla(id, command)
 
 
 
 def handle_bugzilla_ui_cc(id, email):
-    # handle_bugzilla_ui_cc(id, 'libreoffice-ux-advise@lists.freedesktop.org')
-    return
+    command = '{"cc": {"add": ["libreoffice-ux-advise@lists.freedesktop.org"]}}'
+    doBugzilla(id, command)
 
 
 
@@ -191,12 +210,13 @@ def runAutomate():
     #JIX executeLoop(handle_gerrit_abandon, 'gerrit', 'to_abandon_abandon')
     #JIX executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
     #JIX executeLoop(handle_gerrit_review,  'gerrit', 'to_review')
+
     #JIX executeLoop(handle_bugzilla_comment, 'bugzilla', 'to_unassign_comment')
     #JIX executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
     #JIX executeLoop(handle_bugzilla_reset_status, 'bugzilla', 'assign_problem_status')
     #JIX executeLoop(handle_bugzilla_reset_user, 'bugzilla', 'assign_problem_user')
-    #JIX executeLoop(handle_bugzilla_cc, 'bugzilla', 'missing_cc')
-    #JIX executeLoop(handle_bugzilla_ui_cc, 'bugzilla', 'missing_ui_cc')
+    executeLoop(handle_bugzilla_cc, 'bugzilla', 'missing_cc')
+    executeLoop(handle_bugzilla_ui_cc, 'bugzilla', 'missing_ui_cc')
     executeLoop(handle_mail_miss_you, 'mail', 'we_miss_you_email')
     executeLoop(handle_mail_pdf, 'mail', 'award_1st_email')
 
