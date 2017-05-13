@@ -664,7 +664,7 @@ def analyze_reports():
           else:
             for comment in row['comments']:
               email = util_check_mail('', comment['creator'])
-              if not email == 'anistenis@gmail.com' and statList['people'][email]['isCommitter']:
+              if not email == 'anistenis@gmail.com' and not email == 'jani@documentfoundation.org' and statList['people'][email]['isCommitter']:
                 reviewEmail = email
                 break
         except Exception as e:
