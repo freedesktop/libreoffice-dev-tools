@@ -111,28 +111,24 @@ def handle_bugzilla_ui_cc(id, email):
 
 
 
-def handle_mail_pdf(name, email):
-    global cfg, mail_pdf_index
+def handle_mail_pdf(email, name):
+    global cfg, pdfFieldData
 
-    mail_pdf_index += 1
-    fileName = '/tmp/esc_pdf_' + str(mail_pdf_index)
-    fp = open(fileName, 'w')
-    print(cfg['automate']['1st award']['content'], file=fp)
+    xDate = cfg['nowDate'].strftime('%Y-%m-%d')
+    x = pdfFieldData.replace('/V ()', '/V (' + name + ')', 1).replace('/V ()', '/V (' + xDate + ')', 1)
+
+    fileFdf = '/tmp/fields.fdf'
+    fp = open(fileFdf, 'w')
+    print(x, file=fp)
     fp.close()
 
+    filePdf = '/tmp/award.pdf'
+    pdfGen = 'pdftk ' + cfg['homedir'] + 'AcknowledgmentForm.pdf fill_form ' + fileFdf + ' output ' + filePdf
+    os.system(pdfGen)
 
-    fp = open('/tmp/runAutoMail', 'w', encoding='utf-8')
-    print("#!/bin/bash", file=fp)
-    print("")
-    xMail = []
-    for i in xMail:
-      if 'attach' in i:
-        attach = '-a ' + i['attach'] + ' '
-      else:
-        attach = ''
-      print("mail -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'], file=fp)
-    fp.close()
-    return {'title': cfg['automate']['1st award']['subject'], 'mail': 'mentoring@documentfoundation.org', 'attach': 'x', 'file' : fileName}
+    text = cfg['automate']['1st award']['content'].format(name)
+    doMail(email, cfg['automate']['1st award']['subject'], text, attach=filePdf)
+
 
 
 
@@ -183,12 +179,14 @@ def runCfg(platform):
 
 
 def runAutomate():
-    global cfg, autoList, mail_pdf_index
+    global cfg, autoList, mail_pdf_index, pdfFieldData
 
 
     automateFile = cfg['homedir'] + 'automateTODO.json'
     autoList = util_load_data_file(automateFile)
-    mail_pdf_index = 0
+    fp = open(cfg['homedir'] + 'AckFields.fdf', 'rb')
+    pdfFieldData = "".join(map(chr, fp.read()))
+    fp.close()
 
     #JIX executeLoop(handle_gerrit_abandon, 'gerrit', 'to_abandon_abandon')
     #JIX executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
@@ -199,9 +197,10 @@ def runAutomate():
     #JIX executeLoop(handle_bugzilla_reset_user, 'bugzilla', 'assign_problem_user')
     #JIX executeLoop(handle_bugzilla_cc, 'bugzilla', 'missing_cc')
     #JIX executeLoop(handle_bugzilla_ui_cc, 'bugzilla', 'missing_ui_cc')
-    #JIX executeLoop(handle_mail_pdf, 'mail', 'award_1st_email')
     executeLoop(handle_mail_miss_you, 'mail', 'we_miss_you_email')
-    util_dump_file(automateFile, autoList)
+    executeLoop(handle_mail_pdf, 'mail', 'award_1st_email')
+
+    #JIX util_dump_file(automateFile, autoList)
 
 
 if __name__ == '__main__':
