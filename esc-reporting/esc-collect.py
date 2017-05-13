@@ -138,6 +138,7 @@ def get_bugzilla(cfg):
     searchDate, rawList = util_load_data_file(cfg, fileName, 'bugzilla', {'bugs': {}})
     print("Updating bugzilla dump from " + rawList['newest-entry'])
 
+    searchDate - datetime.timedelta(days=1)
     url = 'https://bugs.documentfoundation.org/rest/bug?' \
           '&order=changeddate&chfieldto=Now&chfieldfrom=' + searchDate.strftime("%Y-%m-%d") + \
           '&limit=200&offset='
