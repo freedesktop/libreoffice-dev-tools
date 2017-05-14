@@ -164,12 +164,12 @@ def report_mentoring():
     global statList, cfg
 
     fp = open('/tmp/esc_mentoring_report.txt', 'w', encoding='utf-8')
-    print("    + openhub statistics ({}), {} people did {} commits in 12 month in {} lines of code\n"
-          "    + gerrit/git statistics:".format(
-          statList['stat']['openhub_last_analyse'],
-          util_build_escNumber('openhub', 'year_contributors'),
-          util_build_escNumber('openhub', 'year_commits'),
-          util_build_escNumber('openhub', 'lines_of_code')), file=fp)
+    #temp print("    + openhub statistics ({}), {} people did {} commits in 12 month in {} lines of code\n"
+    #temp       "    + gerrit/git statistics:".format(
+    #temp       statList['stat']['openhub_last_analyse'],
+    #temp       util_build_escNumber('openhub', 'year_contributors'),
+    #temp       util_build_escNumber('openhub', 'year_commits'),
+    #temp       util_build_escNumber('openhub', 'lines_of_code')), file=fp)
     xRow = [{'db': 'gerrit',  'tag': 'NEW',          'text': 'open'},
             {'db': 'gerrit',  'tag': 'reviewed',     'text': 'reviews'},
             {'db': 'gerrit',  'tag': 'MERGED',       'text': 'merged'},
