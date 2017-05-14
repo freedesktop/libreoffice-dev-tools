@@ -665,7 +665,7 @@ def analyze_reports():
             tmpListToReview.append(entry['id'])
 
     for id in tmpListToReview:
-      reviewEmail = cfg['automate']['gerritRewiewUserEmail']
+      reviewEmail = util_check_mail('', cfg['automate']['gerritRewiewUserEmail'])
       txt = gerritData['patch'][id]['subject']
       if txt.startswith('tdf#'):
         try:
@@ -681,7 +681,7 @@ def analyze_reports():
                 break
         except Exception as e:
           pass
-      automateList['gerrit']['to_review'][id] = reviewEmail
+      automateList['gerrit']['to_review'][id] = statList['people'][reviewEmail]['gerrit']['reviewName']
 
     for key, row in bugzillaData['bugs'].items():
       if not 'cc' in row:
