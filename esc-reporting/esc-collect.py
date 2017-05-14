@@ -140,7 +140,7 @@ def get_bugzilla(cfg):
 
     searchDate - datetime.timedelta(days=1)
     url = 'https://bugs.documentfoundation.org/rest/bug?' \
-          '&order=changeddate&chfieldto=Now&chfieldfrom=' + searchDate.strftime("%Y-%m-%d") + \
+          'f2=delta_ts&o2=greaterthaneq&query_format=advanced&resolution=---&v2=' + searchDate.strftime("%Y-%m-%d") + \
           '&limit=200&offset='
     newList = []
     while True:
@@ -152,6 +152,7 @@ def get_bugzilla(cfg):
     urlH = 'https://bugs.documentfoundation.org/rest/bug/{}/history'
     urlC = 'https://bugs.documentfoundation.org/rest/bug/{}/comment'
     cnt = 0
+
     for row in newList:
       id = str(row['id'])
       if not 'cc' in row:
