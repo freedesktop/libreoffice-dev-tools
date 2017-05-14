@@ -52,12 +52,19 @@ def util_dump_file(fileName, rawList):
 
 
 
-def doBugzilla(id, command):
+def doBugzilla(id, command, isComment=False):
     global cfg
 
-    url = 'https://bugs.documentfoundation.org/rest/bug/' + id + '?api_key=' + cfg['bugzilla']['api-key']
+    if isComment:
+      comment = '/comment'
+    else:
+      comment = ''
+    url = 'https://bugs.documentfoundation.org/rest/bug/' + id + comment + '?api_key=' + cfg['bugzilla']['api-key']
     try:
-      r = requests.put(url, command)
+      if isComment:
+        r = requests.post(url, command)
+      else:
+        r = requests.put(url, command)
       rawData = json.loads(r.text)
       r.close()
     except Exception as e:
@@ -96,25 +103,34 @@ def handle_gerrit_review(id, email):
 
 
 
-def handle_bugzilla_comment(id, text):
-    #handle_bugzilla_comment(id, 'A polite ping, ' + cfg['automate']['bugzilla']['comment'])
+def handle_bugzilla_unassign(id, text):
+    handle_bugzilla_reset_user(id, text)
+    handle_bugzilla_reset_status(id, text)
+    handle_bugzilla_comment(id, text, isPolite=False)
     return
 
 
 
-def handle_bugzilla_unassign(id, text):
-    # handle_bugzilla_unassign(id, cfg['automate']['bugzilla']['comment'])
+def handle_bugzilla_comment(id, text, isPolite=True):
+    if isPolite:
+      polite = 'A polite ping, '+ cfg['automate']['bugzilla']['comment']
+    else:
+      polite = cfg['automate']['bugzilla']['unassign']
+    command = '{"comment" : "' + polite + '", "is_private" : false}'
+    doBugzilla(id, command, isComment=True)
+
+
+
+def handle_bugzilla_reset_status(id, text):
+    command = '{"status": "NEW"}'
+    doBugzilla(id, command)
     return
 
 
 
 def handle_bugzilla_reset_user(id, text):
-    return
-
-
-
-def handle_bugzilla_reset_status(id, text):
-    return
+    command = '{"assigned_to": "libreoffice-bugs@lists.freedesktop.org"}'
+    doBugzilla(id, command)
 
 
 
@@ -147,7 +163,6 @@ def handle_mail_pdf(email, name):
 
     text = cfg['automate']['1st award']['content'].format(name)
     doMail(email, cfg['automate']['1st award']['subject'], text, attach=filePdf)
-
 
 
 
@@ -211,10 +226,10 @@ def runAutomate():
     #JIX executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
     #JIX executeLoop(handle_gerrit_review,  'gerrit', 'to_review')
 
-    #JIX executeLoop(handle_bugzilla_comment, 'bugzilla', 'to_unassign_comment')
-    #JIX executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
-    #JIX executeLoop(handle_bugzilla_reset_status, 'bugzilla', 'assign_problem_status')
-    #JIX executeLoop(handle_bugzilla_reset_user, 'bugzilla', 'assign_problem_user')
+    executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
+    executeLoop(handle_bugzilla_comment, 'bugzilla', 'to_unassign_comment')
+    executeLoop(handle_bugzilla_reset_status, 'bugzilla', 'assign_problem_status')
+    executeLoop(handle_bugzilla_reset_user, 'bugzilla', 'assign_problem_user')
     executeLoop(handle_bugzilla_cc, 'bugzilla', 'missing_cc')
     executeLoop(handle_bugzilla_ui_cc, 'bugzilla', 'missing_ui_cc')
     executeLoop(handle_mail_miss_you, 'mail', 'we_miss_you_email')
