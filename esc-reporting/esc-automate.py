@@ -26,6 +26,8 @@ import os
 import datetime
 import json
 import requests
+from requests.auth import HTTPDigestAuth
+
 
 
 def util_load_data_file(fileName):
@@ -76,6 +78,16 @@ def doBugzilla(id, command, isComment=False):
 
 
 
+def doGerrit(id, command):
+    global cfg
+
+    url = 'https://gerrit.libreoffice.org/a/changes/' + id
+    r = requests.post(url, None, command, auth=HTTPDigestAuth(cfg['gerrit']['user'], cfg['gerrit']['password']))
+    rawData = json.loads(r.text[5:])
+    r.close()
+
+
+
 def doMail(mail, subject, content, attach=None):
     if attach:
       attach = '-a ' + attach + ' '
@@ -92,14 +104,14 @@ def handle_gerrit_abandon(id, text):
 
 
 
-def handle_gerrit_comment(id, text):
-    # handle_gerrit_comment(id, 'A polite ping, ' + cfg['automate']['gerrit']['comment'])
-    return
-
-
-
 def handle_gerrit_review(id, email):
-    return
+    doGerrit(id + '/reviewers', '{"reviewer": "' + email + '"}')
+
+
+
+def handle_gerrit_comment(id, text):
+    polite = 'A polite ping, ' + cfg['automate']['gerrit']['comment']
+    doGerrit(id + '/revisions/current/review', polite)
 
 
 
@@ -107,7 +119,6 @@ def handle_bugzilla_unassign(id, text):
     handle_bugzilla_reset_user(id, text)
     handle_bugzilla_reset_status(id, text)
     handle_bugzilla_comment(id, text, isPolite=False)
-    return
 
 
 
@@ -223,8 +234,9 @@ def runAutomate():
     fp.close()
 
     #JIX executeLoop(handle_gerrit_abandon, 'gerrit', 'to_abandon_abandon')
-    #JIX executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
     #JIX executeLoop(handle_gerrit_review,  'gerrit', 'to_review')
+
+    executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
 
     executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
     executeLoop(handle_bugzilla_comment, 'bugzilla', 'to_unassign_comment')
