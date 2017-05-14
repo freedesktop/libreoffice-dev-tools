@@ -586,6 +586,9 @@ def analyze_reports():
                               'top10review': []}
     fileAutomate = cfg['homedir'] + 'automateTODO.json'
     automateList = util_load_data_file(fileAutomate)
+    automateList['gerrit']['to_abandon_abandon'] = {}
+    automateList['gerrit']['to_abandon_comment'] = {}
+    automateList['gerrit']['to_review'] = {}
     automateNow = cfg['nowDate'].strftime("%Y-%m-%d")
 
     for id, row in statList['people'].items():
