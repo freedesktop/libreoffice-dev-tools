@@ -234,10 +234,9 @@ def runAutomate():
     fp.close()
 
     #JIX executeLoop(handle_gerrit_abandon, 'gerrit', 'to_abandon_abandon')
-    #JIX executeLoop(handle_gerrit_review,  'gerrit', 'to_review')
 
+    executeLoop(handle_gerrit_review,  'gerrit', 'to_review')
     executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
-
     executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
     executeLoop(handle_bugzilla_comment, 'bugzilla', 'to_unassign_comment')
     executeLoop(handle_bugzilla_reset_status, 'bugzilla', 'assign_problem_status')
