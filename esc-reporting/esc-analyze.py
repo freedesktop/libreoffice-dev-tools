@@ -286,6 +286,7 @@ def analyze_mentoring():
     for row in gerritData['committers']:
       mail = util_check_mail(row['name'], row['email'])
       statList['people'][mail]['gerrit']['userName'] = row['username']
+      statList['people'][mail]['gerrit']['reviewName'] = '{} <{}>'.format(row['name'],row['email'])
       statList['people'][mail]['isCommitter'] = True
       statList['people'][mail]['isContributor'] = True
 
