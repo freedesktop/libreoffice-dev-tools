@@ -99,7 +99,7 @@ def doMail(mail, subject, content, attach=None):
 
 
 def handle_gerrit_abandon(id, text):
-    # handle_gerrit_abandon(id, cfg['automate']['gerrit']['abandon'])
+    doGerrit(id + '/abandon', cfg['automate']['gerrit']['abandon'])
     return
 
 
@@ -234,8 +234,7 @@ def runAutomate():
     pdfFieldData = "".join(map(chr, fp.read()))
     fp.close()
 
-    #JIX executeLoop(handle_gerrit_abandon, 'gerrit', 'to_abandon_abandon')
-
+    executeLoop(handle_gerrit_abandon, 'gerrit', 'to_abandon_abandon')
     executeLoop(handle_gerrit_review,  'gerrit', 'to_review')
     executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
     executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
