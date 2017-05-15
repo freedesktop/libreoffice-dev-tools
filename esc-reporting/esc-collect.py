@@ -625,6 +625,7 @@ def get_git(cfg):
     fileName = cfg['homedir'] + 'dump/git_dump.json'
     searchDate, rawList = util_load_data_file(cfg, fileName, 'git', {'commits': {}})
     print("Updating git dump from " + rawList['newest-entry'])
+    searchDate - datetime.timedelta(days=1)
 
     for repo in cfg['git']['repos']:
       print(' working on ' + repo['name'])
