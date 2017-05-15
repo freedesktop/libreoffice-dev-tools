@@ -664,19 +664,20 @@ def analyze_reports():
         if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
             tmpListToReview.append(entry['id'])
 
+    defaultEmail = util_check_mail('', cfg['automate']['gerritRewiewUserEmail'])
     for id in tmpListToReview:
-      reviewEmail = util_check_mail('', cfg['automate']['gerritRewiewUserEmail'])
+      reviewEmail = defaultEmail
       txt = gerritData['patch'][id]['subject']
       if txt.startswith('tdf#'):
         try:
           row = bugzillaData['bugs'][re.findall('\d+', txt)[0]]
           ownerEmail = util_check_mail(row['creator_detail']['name'], row['creator_detail']['email'])
-          if statList['people'][ownerEmail]['isCommitter']:
+          if 'reviewName' in statList['people'][ownerEmail]['gerrit']:
             reviewEmail = ownerEmail
           else:
             for comment in row['comments']:
               email = util_check_mail('', comment['creator'])
-              if not email == 'anistenis@gmail.com' and not email == 'jani@documentfoundation.org' and statList['people'][email]['isCommitter']:
+              if not email == 'anistenis@gmail.com' and not email == 'jani@documentfoundation.org' and 'reviewName' in statList['people'][ownerEmail]['gerrit']:
                 reviewEmail = email
                 break
         except Exception as e:
