@@ -106,6 +106,7 @@ def handle_gerrit_abandon(id, text):
 
 def handle_gerrit_review(id, email):
     doGerrit(id + '/reviewers', '{"reviewer": "' + email + '"}')
+    doGerrit(id + '/revisions/current/review', 'added reviewer')
 
 
 
