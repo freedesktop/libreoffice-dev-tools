@@ -559,11 +559,11 @@ def get_gerrit(cfg):
     searchDate, rawList = util_load_data_file(cfg, fileName, 'gerrit', {'patch': {}, 'committers' : []})
     print("Updating gerrit dump from " + rawList['newest-entry'])
 
-    urlBase = 'https://gerrit.libreoffice.org/a/'
+    urlBase = 'https://gerrit.libreoffice.org/'
     uid = cfg['gerrit']['user']
     upw = cfg['gerrit']['password']
     rawList['committers'] = []
-    tmp = util_load_url(urlBase + 'groups/Committers/members', uUser=uid, uPass=upw)
+    tmp = util_load_url(urlBase + 'a/groups/Committers/members', uUser=uid, uPass=upw)
     for row in tmp:
       for i in 'username', 'email':
         if not i in row:
@@ -708,6 +708,11 @@ def runCfg(platform):
 
 def runBuild(cfg):
     try:
+      gerritData = get_gerrit(cfg)
+    except Exception as e:
+      print('ERROR: get_gerrit failed with ' + str(e))
+      pass
+    try:
       crashData = get_crash(cfg)
     except Exception as e:
       print('ERROR: get_crash failed with ' + str(e))
@@ -726,11 +731,6 @@ def runBuild(cfg):
       ESCData = get_esc_bugzilla(cfg)
     except Exception as e:
       print('ERROR: get_esc_bugzilla failed with ' + str(e))
-      pass
-    try:
-      gerritData = get_gerrit(cfg)
-    except Exception as e:
-      print('ERROR: get_gerrit failed with ' + str(e))
       pass
     try:
       gitData = get_git(cfg)
