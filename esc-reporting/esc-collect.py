@@ -54,23 +54,26 @@ def util_load_file(fileName):
 
 
 
-def util_load_url(url, useDict=False, useRaw=False, uUser=None, uPass=None):
+def util_load_url(url, useDict=False, useRaw=False, useSkipJSON=False, uUser=None, uPass=None):
     try:
       if uUser is None:
         r = requests.get(url)
-        if useDict:
-          try:
-            rawData = xmltodict.parse(x)
-          except Exception as e:
-            rawData = {'response': {'result': {'project': {},
-                                    'contributor_fact': {}}}}
-        elif useRaw:
-          rawData = r.text
-        else:
-          rawData = r.json()
       else:
         r = requests.get(url, auth=HTTPDigestAuth(uUser, uPass))
+        useSkipJSON = True
+
+      if useDict:
+        try:
+          rawData = xmltodict.parse(x)
+        except Exception as e:
+          rawData = {'response': {'result': {'project': {},
+                                    'contributor_fact': {}}}}
+      elif useRaw:
+        rawData = r.text
+      elif useSkipJSON:
         rawData = json.loads(r.text[5:])
+      else:
+        rawData = r.json()
       r.close()
     except Exception as e:
       print('Error load url ' + url + ' due to ' + str(e))
@@ -576,7 +579,7 @@ def get_gerrit(cfg):
     if 'offset' in rawList:
       offset = int(rawList['offset'])
     while True:
-      tmp = util_load_url(url + str(offset), uUser=uid, uPass=upw)
+      tmp = util_load_url(url + str(offset), useSkipJSON=True)
       for row in tmp:
         for i in 'email', 'username', 'name':
           if not i in row['owner']:
