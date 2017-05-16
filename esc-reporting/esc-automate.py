@@ -162,7 +162,7 @@ def handle_mail_pdf(email, name):
     global cfg, pdfFieldData
 
     xDate = cfg['nowDate'].strftime('%Y-%m-%d')
-    x = pdfFieldData.replace('/V ()', '/V (' + name + ')', 1).replace('/V ()', '/V (' + xDate + ')', 1)
+    x = pdfFieldData.replace('/V ()', '/V (' + xDate + ')', 1).replace('/V ()', '/V (' + name + ')', 1)
 
     fileFdf = '/tmp/fields.fdf'
     fp = open(fileFdf, 'w')
