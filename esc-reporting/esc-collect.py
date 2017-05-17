@@ -562,18 +562,19 @@ def get_gerrit(cfg):
     searchDate, rawList = util_load_data_file(cfg, fileName, 'gerrit', {'patch': {}, 'committers' : []})
     print("Updating gerrit dump from " + rawList['newest-entry'])
 
-    urlBase = 'https://gerrit.libreoffice.org/'
-    uid = cfg['gerrit']['user']
-    upw = cfg['gerrit']['password']
     rawList['committers'] = []
-    tmp = util_load_url(urlBase + 'a/groups/Committers/members', uUser=uid, uPass=upw)
-    for row in tmp:
-      for i in 'username', 'email':
-        if not i in row:
-          row[i] = '*dummy*'
-      rawList['committers'].append(row)
+    os.system('ssh gerrit.libreoffice.org "gerrit ls-members Committers" > /tmp/committerList')
+    fp = open('/tmp/committerList', encoding='utf-8')
+    tmp = fp.read().split('\n')[1:-1]
+    fp.close()
+    for line in tmp:
+      row = line.split('\t')
+      rawList['committers'].append({"_account_id": int(row[0]),
+                                    "email": row[3],
+                                    "name": row[2],
+                                    "username": row[1]})
 
-    url = urlBase + 'changes/?q=after:' + searchDate.strftime("%Y-%m-%d") + \
+    url = 'https://gerrit.libreoffice.org/changes/?q=after:' + searchDate.strftime("%Y-%m-%d") + \
          '&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=MESSAGES&limit=200&start='
     offset = 0
     if 'offset' in rawList:
