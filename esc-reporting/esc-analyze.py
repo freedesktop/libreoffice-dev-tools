@@ -656,11 +656,17 @@ def analyze_reports():
             if x['email'] != ownerEmail and x['email'] != 'ci@libreoffice.org':
               cntReview += 1
         if xDate < cfg['1monthDate'] and not doBlock:
-          txt = row['messages'][len(row['messages'])-1]
-          if 'A polite ping' in txt:
-            automateList['gerrit']['to_abandon_abandon'][entry['id']] = 0
+          x = len(row['messages'])-1
+          if x >= 0:
+            patchset = row['messages'][x]['_revision_number']
+            txt = row['messages'][x]['message']
           else:
-            automateList['gerrit']['to_abandon_comment'][entry['id']] = 0
+            patchset = 1
+            txt = ''
+          if 'A polite ping' in txt:
+            automateList['gerrit']['to_abandon_abandon'][entry['id']] = patchset
+          else:
+            automateList['gerrit']['to_abandon_comment'][entry['id']] = patchset
         if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
             tmpListToReview.append(entry['id'])
 
