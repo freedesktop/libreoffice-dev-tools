@@ -655,25 +655,26 @@ def analyze_reports():
               doBlock = True
             if x['email'] != ownerEmail and x['email'] != 'ci@libreoffice.org':
               cntReview += 1
+
+        x = len(row['messages']) - 1
+        if x >= 0:
+          patchset = row['messages'][x]['_revision_number']
+          txt = row['messages'][x]['message']
+        else:
+          patchset = 1
+          txt = ''
         if xDate < cfg['1monthDate'] and not doBlock:
-          x = len(row['messages'])-1
-          if x >= 0:
-            patchset = row['messages'][x]['_revision_number']
-            txt = row['messages'][x]['message']
-          else:
-            patchset = 1
-            txt = ''
           if 'A polite ping' in txt:
             automateList['gerrit']['to_abandon_abandon'][entry['id']] = patchset
           else:
             automateList['gerrit']['to_abandon_comment'][entry['id']] = patchset
         if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
-            tmpListToReview.append(entry['id'])
+            tmpListToReview.append({'id': entry['id'], 'patchset': patchset})
 
     defaultEmail = util_check_mail('', cfg['automate']['gerritRewiewUserEmail'])
-    for id in tmpListToReview:
+    for rowTmp in tmpListToReview:
       reviewEmail = defaultEmail
-      txt = gerritData['patch'][id]['subject']
+      txt = gerritData['patch'][rowTmp['id']]['subject']
       if txt.startswith('tdf#'):
         try:
           row = bugzillaData['bugs'][re.findall('\d+', txt)[0]]
@@ -688,7 +689,8 @@ def analyze_reports():
                 break
         except Exception as e:
           pass
-      automateList['gerrit']['to_review'][id] = statList['people'][reviewEmail]['gerrit']['reviewName']
+      automateList['gerrit']['to_review'][rowTmp['id']] = {'name': statList['people'][reviewEmail]['gerrit']['reviewName'],
+                                                           'patchset': rowTmp['patchset']}
 
     for key, row in bugzillaData['bugs'].items():
       if not 'cc' in row:
