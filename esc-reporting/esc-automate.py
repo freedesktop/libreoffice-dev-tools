@@ -78,15 +78,11 @@ def doBugzilla(id, command, isComment=False):
 
 
 
-def doGerritHTTP(id, command):
-    global cfg
-
-    url = 'https://gerrit.libreoffice.org/a/changes/' + id
-    r = requests.post(url, None, command, auth=HTTPDigestAuth(cfg['gerrit']['user'], cfg['gerrit']['password']))
-    rawData = json.loads(r.text[5:])
-    r.close()
-
-# ssh gerrit.libreoffice.org "gerrit set-reviewers -a 'Thorsten Behrens <Thorsten.Behrens@CIB.de>' 37593"
+def doGerrit(id, command):
+    cmd = 'ssh gerrit.libreoffice.org gerrit ' + command + ' ' + id
+    r = os.system(cmd)
+    if r != 0:
+      raise Exception('error: ' + cmd + ' failed')
 
 
 
@@ -100,21 +96,28 @@ def doMail(mail, subject, content, attach=None):
 
 
 
-def handle_gerrit_abandon(id, text):
-    doGerritHTTP(id + '/abandon', cfg['automate']['gerrit']['abandon'])
-    return
+def handle_gerrit_abandon(id, patchset):
+    pid = str(id) + ',' + str(patchset)
+    cmd = 'review --abandon --message \'"' + cfg['automate']['gerrit']['abandon'] + '"\''
+    doGerrit(pid, cmd)
 
 
 
-def handle_gerrit_review(id, email):
-    doGerritHTTP(id + '/reviewers', '{"reviewer": "' + email + '"}')
-    doGerritHTTP(id + '/revisions/current/review', 'added reviewer')
+def handle_gerrit_review(id, row):
+    cmd = 'set-reviewers -a  \'"' + row['name'] + '"\''
+    doGerrit(id, cmd)
+    handle_gerrit_comment(id, row['patchset'], useText='added reviewer')
 
 
 
-def handle_gerrit_comment(id, text):
-    polite = 'A polite ping, ' + cfg['automate']['gerrit']['comment']
-    doGerritHTTP(id + '/revisions/current/review', polite)
+def handle_gerrit_comment(id, patchset, useText = None):
+    pid = str(id) + ',' + str(patchset)
+    if useText is None:
+      txt = 'A polite ping, ' + cfg['automate']['gerrit']['comment']
+    else:
+      txt = useText
+    cmd = 'review --message \'"' + txt + '"\''
+    doGerrit(pid, cmd)
 
 
 
