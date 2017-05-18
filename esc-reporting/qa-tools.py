@@ -19,9 +19,9 @@ reportPeriod = '7d'
 
 newUsersPeriod = '7d'
 
-targets_list = ['5.3.0']
+targets_list = ['5.2.7']
 
-periods_list = ['30d', '60d', '90d']
+periods_list = ['30d', '60d', '90d', '180d']
 
 priorities_list = ['highest','high','medium','low','lowest']
 
@@ -112,8 +112,21 @@ def util_create_statList():
         'detailedReport':
         {
             'created_count': 0,
-            'unconfirmed_count': 0,
+            'unconfirmed_count' : 0,
+            'enhancement_count': 0,
+            'no_enhancement_count': 0,
+            'created_week': {},
+            'is_confirm_count': 0,
+            'is_fixed': 0,
             'comments_count': 0,
+            'bug_component': {},
+            'bug_system': {},
+            'bug_platform': {},
+            'bug_status': {},
+            'bug_resolution': {},
+            'backTraceStatus': {},
+            'regressionStatus': {},
+            'bisectedStatus': {},
             'status_changed_to': {s:0 for s in statutes_list},
             'keyword_added': {k:0 for k in keywords_list},
             'keyword_removed': {k:0 for k in keywords_list},
@@ -123,6 +136,9 @@ def util_create_statList():
             'priority_changed':  {p:0 for p in priorities_list},
             'system_changed': {p:0 for p in system_list},
             'lists': {
+                'author': [[], []],
+                'confirm': [[], []],
+                'fixed': [[], []],
                 'unconfirmed': [],
                 'status_changed_to': {s: [[], []] for s in statutes_list},
                 'keyword_added': {k: [[], []] for k in keywords_list},
@@ -212,11 +228,52 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     if isOpen(rowStatus):
                         statList['data']['bugs']['open']['keywords'][keyword] += 1
 
+            creatorMail = row['creator']
+
             if creationDate >= cfg[reportPeriod]:
                 statList['detailedReport']['created_count'] += 1
+
+                if row['severity'] == 'enhancement':
+                    statList['detailedReport']['enhancement_count'] += 1
+                else:
+                    statList['detailedReport']['no_enhancement_count'] += 1
+
+                component = row['component']
+                if component not in statList['detailedReport']['bug_component']:
+                    statList['detailedReport']['bug_component'][component] = 0
+                statList['detailedReport']['bug_component'][component] += 1
+
+                status = row['status']
+                if status not in statList['detailedReport']['bug_status']:
+                    statList['detailedReport']['bug_status'][status] = 0
+                statList['detailedReport']['bug_status'][status] += 1
+
+                resolution = row['resolution']
+                if resolution not in statList['detailedReport']['bug_resolution']:
+                    statList['detailedReport']['bug_resolution'][resolution] = 0
+                statList['detailedReport']['bug_resolution'][resolution] += 1
+
+                platform = row['platform']
+                if platform not in statList['detailedReport']['bug_platform']:
+                    statList['detailedReport']['bug_platform'][platform] = 0
+                statList['detailedReport']['bug_platform'][platform] += 1
+
+                system = row['op_sys']
+                if system not in statList['detailedReport']['bug_system']:
+                    statList['detailedReport']['bug_system'][system] = 0
+                statList['detailedReport']['bug_system'][system] += 1
+
                 if rowStatus == 'UNCONFIRMED':
                     statList['detailedReport']['unconfirmed_count'] += 1
                     statList['detailedReport']['lists']['unconfirmed'].append(row['id'])
+
+                statList['detailedReport']['lists']['author'][0].append(key)
+                statList['detailedReport']['lists']['author'][1].append(creatorMail)
+
+                week = str(creationDate.year) + '-' + str(creationDate.strftime("%V"))
+                if week not in statList['detailedReport']['created_week']:
+                    statList['detailedReport']['created_week'][week] = 0
+                statList['detailedReport']['created_week'][week] += 1
 
             whiteboard_list = row['whiteboard'].split(' ')
             bugTargets = []
@@ -231,11 +288,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if creationDate >= cfg[period]:
                     statList['period'][period]['count'] += 1
 
-            creatorMail = row['creator']
             util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate)
             util_increase_user_actions(statList, key, creatorMail, bugTargets, 'created', creationDate)
 
             actionMail = None
+            confirmed = False
+            fixed = False
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -244,6 +302,18 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 # Use this variable in case the status is set before the resolution
                 newStatus = None
                 for change in action['changes']:
+                    if change['field_name'] == 'is_confirmed':
+                        if actionDate >= cfg[reportPeriod] and row['is_confirmed']:
+                            if confirmed:
+                                statList['detailedReport']['lists']['confirm'][0].pop()
+                                statList['detailedReport']['lists']['confirm'][1].pop()
+                                statList['detailedReport']['is_confirm_count'] -= 1
+
+                            statList['detailedReport']['is_confirm_count'] += 1
+                            statList['detailedReport']['lists']['confirm'][0].append(key)
+                            statList['detailedReport']['lists']['confirm'][1].append(actionMail)
+                            confirmed = True
+
                     if change['field_name'] == 'status':
 
                         addedStatus = change['added']
@@ -268,6 +338,18 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                     addedStatus][0].append(key)
                                 statList['detailedReport']['lists']['status_changed_to'][
                                     addedStatus][1].append(actionMail)
+
+                        if actionDate >= cfg[reportPeriod] and addedStatus == 'RESOLVED_FIXED':
+                            if fixed:
+                                statList['detailedReport']['lists']['fixed'][0].pop()
+                                statList['detailedReport']['lists']['fixed'][1].pop()
+                                statList['detailedReport']['is_fixed'] -= 1
+
+                            statList['detailedReport']['lists']['fixed'][0].append(key)
+                            statList['detailedReport']['lists']['fixed'][1].append(actionMail)
+                            statList['detailedReport']['is_fixed'] += 1
+                            fixed = True
+
 
                     elif newStatus and change['field_name'] == 'resolution':
                         addedStatus = newStatus + "_" + change['added']
@@ -307,6 +389,21 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                     statList['detailedReport']['keyword_added'][keyword] += 1
                                     statList['detailedReport']['lists']['keyword_added'][keyword][0].append(key)
                                     statList['detailedReport']['lists']['keyword_added'][keyword][1].append(actionMail)
+
+                                    if keyword == 'haveBacktrace':
+                                        if status not in statList['detailedReport']['backTraceStatus']:
+                                            statList['detailedReport']['backTraceStatus'][status] = 0
+                                        statList['detailedReport']['backTraceStatus'][status] += 1
+                                    elif keyword == 'regression':
+                                        if status not in statList['detailedReport']['regressionStatus']:
+                                            statList['detailedReport']['regressionStatus'][status] = 0
+                                        statList['detailedReport']['regressionStatus'][status] += 1
+                                    elif keyword == 'bisected':
+                                        if status not in statList['detailedReport']['bisectedStatus']:
+                                            statList['detailedReport']['bisectedStatus'][status] = 0
+                                        statList['detailedReport']['bisectedStatus'][status] += 1
+
+
 
 
                         keywordsRemoved = change['removed'].split(", ")
@@ -402,8 +499,11 @@ def util_print_QA_line(fp, statList, string, number, tuple, action):
     elif action == 'created':
         print(('  * {} have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )').format(
                 number[0], number[1], number[2]), file=fp)
+    elif action == 'author':
+        print(('  * {} have been created.').format(number), file=fp)
     else:
         print(('  * {} ' + auxString + ' been changed to \'' + string + '\'.').format(number), file=fp)
+
 
     url = "https://bugs.documentfoundation.org/buglist.cgi?bug_id="
     for bug in tuple[0]:
@@ -414,6 +514,7 @@ def util_print_QA_line(fp, statList, string, number, tuple, action):
     print('\tLink: ' + shortener.short(url), file=fp)
 
     if not action == 'created':
+
         #Count the number of reps
         my_dict = {i: tuple[1].count(i) for i in tuple[1]}
 
@@ -431,6 +532,55 @@ def util_print_QA_line(fp, statList, string, number, tuple, action):
         print(usersString[:-2], file=fp)
 
     print(file=fp)
+
+def util_print_QA_line_blog(fp, statList, number, tuple, total_count):
+
+    if len(tuple[0]) == 1:
+        auxString = 'bug.'
+    else:
+        auxString = "bugs."
+
+    print(('  * {} ' + auxString).format(number), file=fp)
+
+    #Count the number of reps
+    my_dict = {i: tuple[1].count(i) for i in tuple[1]}
+
+    d_view = [(v, k) for k, v in my_dict.items()]
+    d_view.sort(reverse=True)
+
+    print('  * Total users: {}'.format(len(d_view)), file=fp)
+
+    usersString = '  * Done by: \n'
+
+    count = 0
+    for i1,i2 in d_view:
+        try:
+            count += 1
+            if count <= total_count:
+                usersString += statList['people'][i2]['name'] + ' ( ' + str(i1) + ' ) \n'
+            else:
+                break
+        except:
+            continue
+
+    print(usersString[:-2], file=fp)
+
+    print(file=fp)
+
+def util_print_QA_line_created(fp, d , whole):
+    others = 0
+    s = [(k, d[k]) for k in sorted(d, key=d.get, reverse=True)]
+    total = 0
+    for k, v in s:
+        percent = 100 * float(v)/float(whole)
+        if percent >= 3:
+            print('{}: {} \t\t {}%'.format(k, v, percent), file=fp)
+            total += percent
+        else:
+            others += v
+    others_percent = 100 - total
+    print('OTHERS: {} \t\t {}%'.format(others, others_percent) , file=fp)
+
 
 def create_wikimedia_table_by_target(cfg, statList):
     from tabulate import tabulate
@@ -537,6 +687,97 @@ def users_Report(statList) :
     for v,k in statList['newUsersPeriod'].items():
         print(v)
 
+def Blog_Report(statList) :
+    fp = open('/tmp/blog_report.txt', 'w', encoding='utf-8')
+
+    print('* Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
+
+    print('* Total report created: {}'.format(statList['detailedReport']['created_count']), file=fp)
+
+    print('* Total enhancements created: {}'.format(statList['detailedReport']['enhancement_count']), file=fp)
+
+    print('* Total bugs created: {}'.format(statList['detailedReport']['no_enhancement_count']), file=fp)
+    print(file=fp)
+
+    print('* Bugs reported.', file=fp)
+    util_print_QA_line_blog(fp, statList,
+                       statList['detailedReport']['created_count'],
+                       statList['detailedReport']['lists']['author'], 15)
+
+
+    print(file=fp)
+    print('* Bugs confirmed.', file=fp)
+    util_print_QA_line_blog(fp, statList,
+                       statList['detailedReport']['is_confirm_count'],
+                       statList['detailedReport']['lists']['confirm'], 20)
+
+    print(file=fp)
+    print('* Bugs fixed.', file=fp)
+    util_print_QA_line_blog(fp, statList,
+                       statList['detailedReport']['is_fixed'],
+                       statList['detailedReport']['lists']['fixed'], 20)
+
+
+    print(file=fp)
+    for key, value in sorted(statList['detailedReport']['keyword_added'].items()):
+        if value and key in ['easyHack', 'bisected', 'haveBacktrace', 'regression']:
+            print('* ' + key + '.', file=fp)
+            util_print_QA_line_blog(fp, statList, value,
+                statList['detailedReport']['lists']['keyword_added'][key], 15)
+
+    print(file=fp)
+    for key, value in sorted(statList['detailedReport']['status_changed_to'].items()):
+        if value and key in ['RESOLVED_DUPLICATE', 'VERIFIED_FIXED']:
+            print('* ' + key.replace("_", " ") + '.', file=fp)
+            util_print_QA_line_blog(fp, statList, value,
+                               statList['detailedReport']['lists']['status_changed_to'][key], 20)
+
+    print(file=fp)
+    print('* Bugs created by week', file=fp)
+
+    for key, value in sorted(statList['detailedReport']['created_week'].items()):
+        print('{}: {}'.format(key, value), file=fp)
+
+    whole = statList['detailedReport']['created_count']
+
+    print(file=fp)
+    print('* Components of created bugs', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['bug_component'], whole)
+
+    print(file=fp)
+    print('* Systems of created bugs', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['bug_system'], whole)
+
+    print(file=fp)
+    print('* Platforms of created bugs', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['bug_platform'], whole)
+
+    print(file=fp)
+    print('* Statuses of created bugs', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['bug_status'], whole)
+
+    print(file=fp)
+    print('* Resolution of created bugs', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['bug_resolution'],
+        statList['detailedReport']['bug_status']['RESOLVED'])
+
+    print(file=fp)
+    print('* Regressions statuses', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['regressionStatus'],
+        statList['detailedReport']['keyword_added']['regression'])
+
+    print(file=fp)
+    print('* Bisected statuses', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['bisectedStatus'],
+        statList['detailedReport']['keyword_added']['bisected'])
+
+    print(file=fp)
+    print('* Backtrace statuses', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['backTraceStatus'],
+        statList['detailedReport']['keyword_added']['haveBacktrace'])
+
+    fp.close()
+
 def QA_Report(statList) :
     print('QA report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']))
     fp = open('/tmp/qa_report.txt', 'w', encoding='utf-8')
@@ -611,6 +852,8 @@ def QA_Report(statList) :
     print(file=fp)
     print('Generated on {} based on stats from {}. Note: Metabugs are ignored.'.format(
         datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
+    print(file=fp)
+    print('Regards', file=fp)
     fp.close()
 
 def runCfg(homeDir):
@@ -638,12 +881,17 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == 'report':
             QA_Report(statList)
+        if sys.argv[1] == 'blog':
+            Blog_Report(statList)
         elif sys.argv[1] == 'targets':
             create_wikimedia_table_by_target(cfg, statList)
         elif sys.argv[1] == 'periods':
             create_wikimedia_table_by_period(cfg, statList)
         elif sys.argv[1] == 'users':
             users_Report(statList)
+        else:
+            print('You must use \'report\', \'targets\', \'periods\' or \'users\' as parameter.')
+            sys.exit(1)
     else:
         QA_Report(statList)
         create_wikimedia_table_by_target(cfg, statList)
