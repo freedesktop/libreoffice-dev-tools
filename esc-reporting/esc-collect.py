@@ -141,9 +141,9 @@ def get_bugzilla(cfg):
     searchDate, rawList = util_load_data_file(cfg, fileName, 'bugzilla', {'bugs': {}})
     print("Updating bugzilla dump from " + rawList['newest-entry'])
 
-    searchDate - datetime.timedelta(days=1)
+    searchData = searchDate - datetime.timedelta(days=2)
     url = 'https://bugs.documentfoundation.org/rest/bug?' \
-          'f2=delta_ts&o2=greaterthaneq&query_format=advanced&resolution=---&v2=' + searchDate.strftime("%Y-%m-%d") + \
+          'f2=delta_ts&o2=greaterthaneq&query_format=advanced&v2=' + searchDate.strftime("%Y-%m-%d") + \
           '&limit=200&offset='
     newList = []
     while True:
