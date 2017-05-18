@@ -931,11 +931,11 @@ def runAnalyze():
     except Exception as e:
       print('ERROR: analyze_reports failed with ' + str(e))
       pass
-#    try:
-    analyze_final()
-#    except Exception as e:
-#      print('ERROR: analyze_final failed with ' + str(e))
-#      pass
+    try:
+      analyze_final()
+    except Exception as e:
+       print('ERROR: analyze_final failed with ' + str(e))
+       pass
 
 
 def runUpgrade(args):
