@@ -3,6 +3,7 @@
 # This file is part of the LibreOffice project.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
+# This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
@@ -489,9 +490,9 @@ def analyze_esc():
                                      'top15_reporters' : {},
                                      'top15_fixers' : []}
     for line in bugzillaESCData['ESC_QA_STATS_UPDATE']['top15_closers']:
-      statList['escList']['QAstat']['top15_squashers'][line['who']] = line['closed']
+      statList['escList']['QAstat']['top15_squashers'][str(line['who'])] = line['closed']
     for line in bugzillaESCData['ESC_QA_STATS_UPDATE']['top15_reporters']:
-      statList['escList']['QAstat']['top15_reporters'][line['who']] = line['reported']
+      statList['escList']['QAstat']['top15_reporters'][str(line['who'])] = line['reported']
     statList['escList']['MostPressingBugs'] = {'open': {'list': {}}, 'closed': {'list': {}}}
     for type in 'open', 'closed':
        statList['escList']['MostPressingBugs'][type]['count'] = bugzillaESCData['MostPressingBugs'][type]['count']
@@ -528,7 +529,7 @@ def analyze_esc():
         who = statList['people'][who]['name']
       if not who in bug_fixers:
         bug_fixers[who] = 0
-      bug_fixers[who] += 1
+      bug_fixers[str(who)] += 1
     statList['escList']['QAstat']['top15_fixers'] = bug_fixers
 
     for id, row in bugzillaESCData['ESC_MAB_UPDATE'].items():
@@ -930,11 +931,11 @@ def runAnalyze():
     except Exception as e:
       print('ERROR: analyze_reports failed with ' + str(e))
       pass
-    try:
-      analyze_final()
-    except Exception as e:
-      print('ERROR: analyze_final failed with ' + str(e))
-      pass
+#    try:
+    analyze_final()
+#    except Exception as e:
+#      print('ERROR: analyze_final failed with ' + str(e))
+#      pass
 
 
 def runUpgrade(args):
