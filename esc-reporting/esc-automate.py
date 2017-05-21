@@ -30,6 +30,15 @@ from requests.auth import HTTPDigestAuth
 
 
 
+
+
+def util_errorMail(text):
+    print(text)
+    sendMail = 'mail -r mentoring@libreoffice.org -s "ERROR: esc-automate FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    os.system(sendMail)
+
+
+
 def util_load_data_file(fileName):
     try:
       fp = open(fileName, encoding='utf-8')
@@ -92,7 +101,9 @@ def doMail(mail, subject, content, attach=None):
     else:
       attach = ''
     sendMail = 'mail -r mentoring@libreoffice.org -s "' + subject + '" ' + attach + mail + ' <<EOF\n' + content + '\nEOF\n'
-    os.system(sendMail)
+    r = os.system(sendMail)
+    if r != 0:
+      raise Exception('mail failed')
 
 
 
@@ -176,7 +187,9 @@ def handle_mail_pdf(email, name):
 
     filePdf = '/tmp/award.pdf'
     pdfGen = 'pdftk ' + cfg['homedir'] + 'AcknowledgmentForm.pdf fill_form ' + fileFdf + ' output ' + filePdf
-    os.system(pdfGen)
+    r = os.system(pdfGen)
+    if r != 0:
+      raise Exception('pdf generation failed ')
 
     text = cfg['automate']['1st award']['content'].format(name)
     doMail(email, cfg['automate']['1st award']['subject'], text, attach=filePdf)
@@ -198,7 +211,7 @@ def executeLoop(func, xType, xName):
       for id in autoList[xType][xName]:
         func(id, autoList[xType][xName][id])
     except Exception as e:
-      print('ERROR: ' + str(func) + ' failed with ' + str(e))
+      util_errorMail('ERROR: ' + str(func) + ' failed with ' + str(e))
       return
 
     del autoList[xType][xName]
