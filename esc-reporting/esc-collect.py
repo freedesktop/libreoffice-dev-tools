@@ -41,6 +41,12 @@ from requests.auth import HTTPDigestAuth
 
 
 
+def util_errorMail(text):
+    print(text)
+    sendMail = 'mail -r mentoring@libreoffice.org -s "ERROR: esc-collect FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    os.system(sendMail)
+
+
 def util_load_file(fileName):
     try:
       fp = open(fileName, encoding='utf-8')
@@ -563,7 +569,10 @@ def get_gerrit(cfg):
     print("Updating gerrit dump from " + rawList['newest-entry'])
 
     rawList['committers'] = []
-    os.system('ssh gerrit.libreoffice.org "gerrit ls-members Committers" > /tmp/committerList')
+    r = os.system('ssh gerrit.libreoffice.org "gerrit ls-members Committers" > /tmp/committerList')
+    if r != 0:
+      raise Exception('ssh gerrit... failed')
+
     fp = open('/tmp/committerList', encoding='utf-8')
     tmp = fp.read().split('\n')[1:-1]
     fp.close()
@@ -714,32 +723,32 @@ def runBuild(cfg):
     try:
       gerritData = get_gerrit(cfg)
     except Exception as e:
-      print('ERROR: get_gerrit failed with ' + str(e))
+      util_errorMail('ERROR: get_gerrit failed with ' + str(e))
       pass
     try:
       crashData = get_crash(cfg)
     except Exception as e:
-      print('ERROR: get_crash failed with ' + str(e))
+      util_errorMail('ERROR: get_crash failed with ' + str(e))
       pass
     try:
       openhubData = get_openhub(cfg)
     except Exception as e:
-      print('ERROR: get_openhub failed with ' + str(e))
+      util_errorMail('ERROR: get_openhub failed with ' + str(e))
       pass
     try:
       bugzillaData = get_bugzilla(cfg)
     except Exception as e:
-      print('ERROR: get_bugzilla failed with ' + str(e))
+      util_errorMail('ERROR: get_bugzilla failed with ' + str(e))
       pass
     try:
       ESCData = get_esc_bugzilla(cfg)
     except Exception as e:
-      print('ERROR: get_esc_bugzilla failed with ' + str(e))
+      util_errorMail('ERROR: get_esc_bugzilla failed with ' + str(e))
       pass
     try:
       gitData = get_git(cfg)
     except Exception as e:
-      print('ERROR: get_git failed with ' + str(e))
+      util_errorMail('ERROR: get_git failed with ' + str(e))
       pass
 
 
