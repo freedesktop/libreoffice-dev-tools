@@ -56,6 +56,21 @@ import xmltodict
 import re
 
 
+
+def util_errorMail(text):
+    print(text)
+    sendMail = 'mail -r mentoring@libreoffice.org -s "ERROR: esc-analyze FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    os.system(sendMail)
+
+
+
+
+def util_errorMail(text):
+    print(text)
+    sendMail = 'mail -r mentoring@libreoffice.org -s "' + text + '" mentoring@libreoffice.org <<EOF\nPlease have a look at vm174\nEOF\n'
+    os.system(sendMail)
+
+
 def util_load_file(fileName):
     try:
       fp = open(fileName, encoding='utf-8')
@@ -290,7 +305,7 @@ def analyze_mentoring():
       statList['people'][mail]['gerrit']['reviewName'] = '{} <{}>'.format(row['name'],row['email'])
       statList['people'][mail]['isCommitter'] = True
       statList['people'][mail]['isContributor'] = True
-
+    x1 = statList['people']['thb@openoffice.org']
     statNewDate = cfg['1yearDate']
     statOldDate = cfg['nowDate']
     for key, row in gerritData['patch'].items():
@@ -690,6 +705,7 @@ def analyze_reports():
                 break
         except Exception as e:
           pass
+      x = statList['people'][reviewEmail]
       automateList['gerrit']['to_review'][rowTmp['id']] = {'name': statList['people'][reviewEmail]['gerrit']['reviewName'],
                                                            'patchset': rowTmp['patchset']}
 
@@ -899,43 +915,43 @@ def runAnalyze():
     try:
       runLoadCSV()
     except Exception as e:
-      print('ERROR: runLoadCSV failed with ' + str(e))
+      util_errorMail('ERROR: runLoadCSV failed with ' + str(e))
       pass
     try:
       analyze_mentoring()
     except Exception as e:
-      print('ERROR: analyze_mentoring failed with ' + str(e))
+      util_errorMail('ERROR: analyze_mentoring failed with ' + str(e))
       pass
     try:
       analyze_ui()
     except Exception as e:
-      print('ERROR: analyze_ui failed with ' + str(e))
+      util_errorMail('ERROR: analyze_ui failed with ' + str(e))
       pass
     try:
       analyze_qa()
     except Exception as e:
-      print('ERROR: analyze_qa failed with ' + str(e))
+      util_errorMail('ERROR: analyze_qa failed with ' + str(e))
       pass
     try:
       analyze_esc()
     except Exception as e:
-      print('ERROR: analyze_esc failed with ' + str(e))
+      util_errorMail('ERROR: analyze_esc failed with ' + str(e))
       pass
     try:
       analyze_myfunc()
     except Exception as e:
-      print('ERROR: analyze_myfunc failed with ' + str(e))
+      util_errorMail('ERROR: analyze_myfunc failed with ' + str(e))
       pass
     try:
       analyze_reports()
     except Exception as e:
-      print('ERROR: analyze_reports failed with ' + str(e))
+      util_errorMail('ERROR: analyze_reports failed with ' + str(e))
       pass
     try:
       analyze_final()
     except Exception as e:
-       print('ERROR: analyze_final failed with ' + str(e))
-       pass
+      util_errorMail('ERROR: analyze_final failed with ' + str(e))
+      pass
 
 
 def runUpgrade(args):
