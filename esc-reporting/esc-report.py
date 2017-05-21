@@ -40,6 +40,15 @@ import json
 import xmltodict
 
 
+
+
+def util_errorMail(text):
+    print(text)
+    sendMail = 'mail -r mentoring@libreoffice.org -s "ERROR: esc-report FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    os.system(sendMail)
+
+
+
 def util_load_data_file(fileName):
     try:
       fp = open(fileName, encoding='utf-8')
@@ -739,7 +748,6 @@ def runCfg(platform):
     cfg['platform'] = platform
     print("Reading and writing data to " + cfg['homedir'])
 
-    cfg['award-mailed'] = util_load_data_file(cfg['homedir'] + 'award.json')['award-mailed']
     cfg['nowDate'] = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     cfg['cutDate'] = cfg['nowDate'] - datetime.timedelta(days=365)
     cfg['1weekDate'] = cfg['nowDate'] - datetime.timedelta(days=7)
@@ -761,62 +769,59 @@ def runReport():
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      print('ERROR: report_bug_metrics failed with ' + str(e))
+      util_errorMail('ERROR: report_bug_metrics failed with ' + str(e))
       pass
     try:
       x = report_day_mentoring()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      print('ERROR: report_day_mentoring failed with ' + str(e))
+      util_errorMail('ERROR: report_day_mentoring failed with ' + str(e))
       pass
     try:
       x = report_mentoring()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      print('ERROR: report_mentoring failed with ' + str(e))
+      util_errorMail('ERROR: report_mentoring failed with ' + str(e))
       pass
     try:
       x = report_ui()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      print('ERROR: report_ui failed with ' + str(e))
+      util_errorMail('ERROR: report_ui failed with ' + str(e))
       pass
     try:
       x = report_qa()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      print('ERROR: report_qa failed with ' + str(e))
+      util_errorMail('ERROR: report_qa failed with ' + str(e))
       pass
     try:
       x = report_myfunc()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      print('ERROR: report_myfunc failed with ' + str(e))
+      util_errorMail('ERROR: report_myfunc failed with ' + str(e))
       pass
     try:
       x = report_esc_prototype()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      print('ERROR: report_esc_prototype failed with ' + str(e))
+      util_errorMail('ERROR: report_esc_prototype failed with ' + str(e))
       pass
 
-    fp = open('/tmp/runMail', 'w', encoding='utf-8')
-    print("#!/bin/bash", file=fp)
-    print("")
     for i in xMail:
       if 'attach' in i:
         attach = '-a ' + i['attach'] + ' '
       else:
         attach = ''
-      print("mail -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'], file=fp)
-    fp.close()
-
+      r = os.system("mail -r mentoring@libreoffice.org -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'])
+      if r != 0:
+        util_errorMail('ERROR: mailing failed with ' + str(e))
 
 
 if __name__ == '__main__':
