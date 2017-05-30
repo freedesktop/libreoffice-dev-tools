@@ -96,7 +96,7 @@ FILTER FOR OPENOFFICE.ORG 2+
     </xsl:variable>
 
     <xsl:variable name="defaultcharstyles">
-        <xsl:value-of select="'acronym emph keycode literal menuitem path'"/>
+        <xsl:value-of select="'acronym emph keycode literal menuitem path sup sub'"/>
     </xsl:variable>
 
     <xsl:template match="/">
@@ -496,6 +496,28 @@ BASCODE
                 </text:variable-set>
             </text:span>
         </text:p>
+    </xsl:template>
+
+<!--
+#######################################################
+SUP
+#######################################################
+-->
+    <xsl:template match="sup">
+        <text:span text:style-name="hlp_sup">
+            <xsl:apply-templates />
+        </text:span>
+    </xsl:template>
+
+<!--
+#######################################################
+SUB
+#######################################################
+-->
+    <xsl:template match="sub">
+        <text:span text:style-name="hlp_sub">
+            <xsl:apply-templates />
+        </text:span>
     </xsl:template>
 
 <!--
@@ -1336,6 +1358,12 @@ VARIABLE
             <text:variable-decl text:value-type="string" text:name="_SECTION"/>
             <text:variable-decl text:value-type="string" text:name="SORT_"/>
             <text:variable-decl text:value-type="string" text:name="_SORT"/>
+            <!-- MIGHT NOT BE NEEDED -->
+            <text:variable-decl text:value-type="string" text:name="SUB_"/>
+            <text:variable-decl text:value-type="string" text:name="_SUB"/>
+            <text:variable-decl text:value-type="string" text:name="SUP_"/>
+            <text:variable-decl text:value-type="string" text:name="_SUP"/>
+            <!-- END -->
             <text:variable-decl text:value-type="string" text:name="SWITCH_"/>
             <text:variable-decl text:value-type="string" text:name="_SWITCH"/>
             <text:variable-decl text:value-type="string" text:name="SWITCHINLINE_"/>
@@ -1638,6 +1666,12 @@ CREATESTYLES
   </style:style>
   <style:style style:name="hlp_5f_emph" style:display-name="hlp_emph" style:family="text">
    <style:text-properties fo:font-weight="bold"/>
+  </style:style>
+  <style:style style:name="hlp_5f_sub" style:display-name="hlp_sub" style:family="text">
+    <style:text-properties style:text-position="sub 58%"/>
+  </style:style>
+  <style:style style:name="hlp_5f_sup" style:display-name="hlp_sup" style:family="text">
+    <style:text-properties style:text-position="super 58%"/>
   </style:style>
   <style:style style:name="hlp_5f_aux_5f_comment" style:display-name="hlp_aux_comment" style:family="text">
    <style:text-properties fo:color="#800000" fo:background-color="#e6ff00"/>

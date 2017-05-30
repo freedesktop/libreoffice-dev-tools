@@ -396,6 +396,24 @@ Sub SetCharBold
 	SetCharStyle( &quot;hlp_emph&quot; )
 End Sub
 
+&apos;=======================================================
+&apos; SetCharSuperscript
+&apos;-------------------------------------------------------
+&apos; 
+&apos;=======================================================
+Sub SetCharSuperscript
+    SetCharStyle( &quot;hlp_sup&quot; )
+End Sub
+
+&apos;=======================================================
+&apos; SetCharSubscript
+&apos;-------------------------------------------------------
+&apos; 
+&apos;=======================================================
+Sub SetCharSubscript
+    SetCharStyle( &quot;hlp_sub&quot; )
+End Sub
+
 Sub SetCharMenuItem
 	SetCharStyle( &quot;hlp_menuitem&quot; )
 End Sub

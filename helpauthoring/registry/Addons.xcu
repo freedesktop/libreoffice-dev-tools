@@ -143,6 +143,22 @@
                                     <value xml:lang="en-US">Default</value>
                                 </prop>
                             </node>
+                            <node oor:name="m03" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno:StyleApply?Style:string=hlp_sup&amp;FamilyName:string=CharacterStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml-lang="en-US">Superscript (hlp_sup)</value>
+                                </prop>
+                            </node>
+                            <node oor:name="m04" oor:op="replace">
+                                <prop oor:name="URL" oor:type="xs:string">
+                                    <value>.uno.StyleApply?Style:string=hlp_sub&amp;FamilyName:string=CharacterStyles</value>
+                                </prop>
+                                <prop oor:name="Title" oor:type="xs:string">
+                                    <value xml-lang="en-US">Subscript (hlp_sub)</value>
+                                </prop>
+                            </node>
                         </node>
                     </node>
 
@@ -864,6 +880,22 @@
                       </prop>
                       <prop oor:name="Title" oor:type="xs:string">
                           <value xml:lang="en-US">Menu</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m74" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetCharSuperscript?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml-lang="en-US">Superscript</value>
+                      </prop>
+                  </node>
+                  <node oor:name="m75" oor:op="replace">
+                      <prop oor:name="URL" oor:type="xs:string">
+                          <value>vnd.sun.star.script:HelpAuthoring.Helpers.SetCharSubscript?language=Basic&amp;location=application</value>
+                      </prop>
+                      <prop oor:name="Title" oor:type="xs:string">
+                          <value xml-lang="en-US">Subscript</value>
                       </prop>
                   </node>
 
