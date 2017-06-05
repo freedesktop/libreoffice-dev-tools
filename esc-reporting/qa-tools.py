@@ -243,10 +243,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     statList['detailedReport']['bug_component'][component] = 0
                 statList['detailedReport']['bug_component'][component] += 1
 
-                status = row['status']
-                if status not in statList['detailedReport']['bug_status']:
-                    statList['detailedReport']['bug_status'][status] = 0
-                statList['detailedReport']['bug_status'][status] += 1
+                if rowStatus not in statList['detailedReport']['bug_status']:
+                    statList['detailedReport']['bug_status'][rowStatus] = 0
+                statList['detailedReport']['bug_status'][rowStatus] += 1
 
                 resolution = row['resolution']
                 if resolution not in statList['detailedReport']['bug_resolution']:
@@ -391,18 +390,17 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                     statList['detailedReport']['lists']['keyword_added'][keyword][1].append(actionMail)
 
                                     if keyword == 'haveBacktrace':
-                                        if status not in statList['detailedReport']['backTraceStatus']:
-                                            statList['detailedReport']['backTraceStatus'][status] = 0
-                                        statList['detailedReport']['backTraceStatus'][status] += 1
+                                        if rowStatus not in statList['detailedReport']['backTraceStatus']:
+                                            statList['detailedReport']['backTraceStatus'][rowStatus] = 0
+                                        statList['detailedReport']['backTraceStatus'][rowStatus] += 1
                                     elif keyword == 'regression':
-                                        if status not in statList['detailedReport']['regressionStatus']:
-                                            statList['detailedReport']['regressionStatus'][status] = 0
-                                        statList['detailedReport']['regressionStatus'][status] += 1
+                                        if rowStatus not in statList['detailedReport']['regressionStatus']:
+                                            statList['detailedReport']['regressionStatus'][rowStatus] = 0
+                                        statList['detailedReport']['regressionStatus'][rowStatus] += 1
                                     elif keyword == 'bisected':
-                                        if status not in statList['detailedReport']['bisectedStatus']:
-                                            statList['detailedReport']['bisectedStatus'][status] = 0
-                                        statList['detailedReport']['bisectedStatus'][status] += 1
-
+                                        if rowStatus not in statList['detailedReport']['bisectedStatus']:
+                                            statList['detailedReport']['bisectedStatus'][rowStatus] = 0
+                                        statList['detailedReport']['bisectedStatus'][rowStatus] += 1
 
 
 
