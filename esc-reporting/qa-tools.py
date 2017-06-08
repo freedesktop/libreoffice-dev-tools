@@ -194,7 +194,7 @@ def util_increase_user_actions(statList, bug, mail, targets, action, actionTime)
             statList['period'][period]['people'][mail]['bugs'].append(bug)
 
 def analyze_bugzilla(statList, bugzillaData, cfg):
-    print("Analyze bugzilla", end="", flush=True)
+    print("Analyze bugzilla\n", end="", flush=True)
     statNewDate = statList['stat']['newest']
     statOldDate = statList['stat']['oldest']
 
@@ -202,7 +202,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
     for key, row in bugzillaData['bugs'].items():
 	    #Ignore META bugs and deletionrequest bugs.
-        if not row['summary'].startswith('[META]') and row['component'] != 'deletionrequest':
+        if not row['summary'].lower().startswith('[meta]') and row['component'] != 'deletionrequest':
             creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
             if creationDate < statOldDate:
                 statOldDate = creationDate
@@ -293,6 +293,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             actionMail = None
             confirmed = False
             fixed = False
+            autoConfirmed = False
+            movedFromNeedInfo = False
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -316,6 +318,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     if change['field_name'] == 'status':
 
                         addedStatus = change['added']
+                        removedStatus = change['removed']
                         if  addedStatus == 'RESOLVED' or addedStatus == 'VERIFIED':
                             if(rowResolution):
                                 addedStatus = addedStatus + "_" + rowResolution
@@ -349,6 +352,24 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['detailedReport']['is_fixed'] += 1
                             fixed = True
 
+                        #Auto-confirmed bug has been changed later on
+                        if autoConfirmed and isOpen(rowStatus) \
+                            and isOpen(addedStatus) and (removedStatus == 'UNCONFIRMED' or removedStatus == 'REOPENED'):
+                                autoConfirmed = False
+
+                        #NEEDINFO bug has been moved to UNCONFIRMED later on
+                        if movedFromNeedInfo and isOpen(rowStatus) \
+                            and addedStatus == 'UNCONFIRMED':
+                                movedFromNeedInfo = False
+
+                        #Check for auto-confirmed bugs and bugs moved from NEEDINFO to something else than UNCONFIRMED
+                        #Ignore bisected bugs
+                        if creationDate >= cfg[reportPeriod] and actionMail == creatorMail and isOpen(rowStatus) \
+                            and isOpen(addedStatus) and 'bisected' not in keywords:
+                            if removedStatus == 'UNCONFIRMED':
+                                autoConfirmed = True
+                            elif removedStatus == 'NEEDINFO':
+                                movedFromNeedInfo = True
 
                     elif newStatus and change['field_name'] == 'resolution':
                         addedStatus = newStatus + "_" + change['added']
@@ -467,6 +488,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 email = person['email']
                 if commentMail == email or actionMail == email:
                     util_check_bugzilla_mail(statList, email, person['real_name'])
+
+            if autoConfirmed:
+                print("AUTO-CONFIRMED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+            elif movedFromNeedInfo:
+                print("MOVED FROM NEEDINFO: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
