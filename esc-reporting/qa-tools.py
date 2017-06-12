@@ -12,6 +12,7 @@ import os
 import datetime
 import json
 from pyshorteners import Shortener
+import re
 
 homeDir = '/home/xisco/dev-tools/esc-reporting/'
 
@@ -200,6 +201,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
+    total = 0
     for key, row in bugzillaData['bugs'].items():
 	    #Ignore META bugs and deletionrequest bugs.
         if not row['summary'].lower().startswith('[meta]') and row['component'] != 'deletionrequest':
@@ -294,7 +296,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             confirmed = False
             fixed = False
             autoConfirmed = False
+            versionChanged = False
             movedFromNeedInfo = False
+            oldestVersion = 999999
+            newerVersion = False
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -314,6 +319,23 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['detailedReport']['lists']['confirm'][0].append(key)
                             statList['detailedReport']['lists']['confirm'][1].append(actionMail)
                             confirmed = True
+
+                    if change['field_name'] == 'version':
+                        if creationDate >= cfg[reportPeriod] and isOpen(rowStatus):
+                            addedVersion = change['added']
+                            if addedVersion == 'unspecified':
+                                addedVersion = 999999
+                            elif addedVersion == 'Inherited From OOo':
+                                addedVersion = 0
+                            else:
+                                addedVersion = int(''.join([s for s in re.split('\.|\s',addedVersion) if s.isdigit()]).ljust(4, '0'))
+
+
+                            if addedVersion <= oldestVersion:
+                                oldestVersion = addedVersion
+                                newerVersion = False
+                            else:
+                                newerVersion = True
 
                     if change['field_name'] == 'status':
 
@@ -490,9 +512,14 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     util_check_bugzilla_mail(statList, email, person['real_name'])
 
             if autoConfirmed:
-                print("AUTO-CONFIRMED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+                total += 1
+                print(str(total) + " - AUTO-CONFIRMED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
             elif movedFromNeedInfo:
-                print("MOVED FROM NEEDINFO: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+                total += 1
+                print(str(total) + " - MOVED FROM NEEDINFO: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+            elif newerVersion:
+                total += 1
+                print(str(total) + " - VERSION CHANGED TO A NEWER ONE: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
