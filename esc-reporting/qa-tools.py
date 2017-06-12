@@ -517,7 +517,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             elif movedFromNeedInfo:
                 total += 1
                 print(str(total) + " - MOVED FROM NEEDINFO: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
-            elif newerVersion:
+
+            if newerVersion:
                 total += 1
                 print(str(total) + " - VERSION CHANGED TO A NEWER ONE: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
 
