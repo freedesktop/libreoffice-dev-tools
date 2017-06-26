@@ -727,8 +727,6 @@ def analyze_reports():
           statList['reportList']['needsDevEval'].append(key)
       if 'needsUXEval' in row['keywords']:
           statList['reportList']['needsUXEval'].append(key)
-      if 'topicUI' in row['keywords'] and 'libreoffice-ux-advise@lists.freedesktop.org' not in row['cc']:
-        automateList['bugzilla']['missing_ui_cc'][key]= 0
       if row['status'] == 'NEEDINFO':
           statList['reportList']['needinfo'].append(key)
       elif row['status'] == 'ASSIGNED':
