@@ -20,7 +20,7 @@ reportPeriod = '7d'
 
 newUsersPeriod = '7d'
 
-targets_list = ['5.2.7']
+targets_list = ['5.4.0']
 
 periods_list = ['30d', '60d', '90d', '180d']
 
@@ -297,7 +297,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             fixed = False
             autoConfirmed = False
             versionChanged = False
-            movedFromNeedInfo = False
+            everConfirmed = False
             oldestVersion = 999999
             newerVersion = False
             for action in row['history']:
@@ -374,24 +374,19 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['detailedReport']['is_fixed'] += 1
                             fixed = True
 
-                        #Auto-confirmed bug has been changed later on
-                        if autoConfirmed and isOpen(rowStatus) \
-                            and isOpen(addedStatus) and (removedStatus == 'UNCONFIRMED' or removedStatus == 'REOPENED'):
+                        #if any other user moves it to open ( ASSIGNED, NEW or REOPENED ),
+                        #the bug is no longer autoconfirmed
+                        if not everConfirmed and isOpen(rowStatus) and isOpen(addedStatus) and actionMail != creatorMail:
+                                everConfirmed = True
                                 autoConfirmed = False
 
-                        #NEEDINFO bug has been moved to UNCONFIRMED later on
-                        if movedFromNeedInfo and isOpen(rowStatus) \
-                            and addedStatus == 'UNCONFIRMED':
-                                movedFromNeedInfo = False
-
-                        #Check for auto-confirmed bugs and bugs moved from NEEDINFO to something else than UNCONFIRMED
+                        #Check for autoconfirmed bugs:
+                        #Bug's status is open ( ASSIGNED, NEW or REOPENED ), moved to open by the reporter
+                        #from non-open status and never confirmed by someone else.
                         #Ignore bisected bugs
-                        if creationDate >= cfg[reportPeriod] and actionMail == creatorMail and isOpen(rowStatus) \
-                            and isOpen(addedStatus) and 'bisected' not in keywords:
-                            if removedStatus == 'UNCONFIRMED':
+                        if creationDate >= cfg[reportPeriod] and not everConfirmed and actionMail == creatorMail and \
+                            isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in keywords:
                                 autoConfirmed = True
-                            elif removedStatus == 'NEEDINFO':
-                                movedFromNeedInfo = True
 
                     elif newStatus and change['field_name'] == 'resolution':
                         addedStatus = newStatus + "_" + change['added']
@@ -514,9 +509,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             if autoConfirmed:
                 total += 1
                 print(str(total) + " - AUTO-CONFIRMED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
-            elif movedFromNeedInfo:
-                total += 1
-                print(str(total) + " - MOVED FROM NEEDINFO: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
 
             if newerVersion:
                 total += 1
