@@ -54,33 +54,20 @@ else
 fi
 
 
-# 2  Fetch external dependencies of LibreOffice:
-
-rm -fr "${my_dir?}"/fetch
-mkdir "${my_dir?}"/fetch
-## Running autogen.sh in the host environment with the set of --without-system-*
-## from LibreOfficeFlatpak means that some implicit --with-system-* may happen
-## to not be satitisfied by the host environment, and necessary devel packages
-## need to be installed there at least temporarily:
-(cd "${my_dir?}"/fetch \
- && "${my_dir?}"/lo/autogen.sh --prefix="${my_dir?}"/inst \
-  --with-distro=LibreOfficeFlatpak --with-external-tar="${my_dir?}"/tar \
- && make fetch)
-
-
-# 3  Build LibreOffice:
+# 2  Build LibreOffice:
 
 rm -fr "${my_dir?}"/app "${my_dir?}"/build "${my_dir?}"/inst
 flatpak build-init "${my_dir?}"/app org.libreoffice.LibreOffice org.gnome.Sdk \
  org.gnome.Platform 3.24
 mkdir "${my_dir?}"/build
-flatpak build --build-dir="${my_dir?}"/build "${my_dir?}"/app bash -c \
+flatpak build --build-dir="${my_dir?}"/build --share=network "${my_dir?}"/app \
+ bash -c \
  '"${1?}"/lo/autogen.sh --prefix="${1?}"/inst --with-distro=LibreOfficeFlatpak \
-  --with-external-tar="${1?}"/tar && make && make distro-pack-install-strip' \
+  && make && make distro-pack-install-strip' \
  bash "${my_dir?}"
 
 
-# 4  Assemble the app files and metadata:
+# 3  Assemble the app files and metadata:
 
 cp -r "${my_dir?}"/inst/lib/libreoffice "${my_dir?}"/app/files/
 ## Per "man gdbus" and <https://developer.gnome.org/glib/stable/
@@ -206,7 +193,7 @@ flatpak build --nofilesystem=host "${my_dir?}"/app appstream-compose \
  org.libreoffice.LibreOffice
 
 
-# 5  Generate repository, .flatpak bundle, and .flatpakref file
+# 4  Generate repository, .flatpak bundle, and .flatpakref file
 
 flatpak build-finish --command=/app/libreoffice/program/soffice \
  --share=network --share=ipc --socket=x11 --socket=wayland --socket=pulseaudio \
