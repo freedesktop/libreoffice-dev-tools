@@ -16,9 +16,9 @@ import re
 
 homeDir = '/home/xisco/dev-tools/esc-reporting/'
 
-reportPeriod = '7d'
+reportPeriod = '8d'
 
-newUsersPeriod = '7d'
+newUsersPeriod = '8d'
 
 targets_list = ['5.4.0']
 
@@ -93,7 +93,7 @@ def util_create_detailed_person(email):
 
 def util_create_statList():
     return {
-        'data': 
+        'data':
         {
             'bugs':
             {
@@ -182,7 +182,7 @@ def util_increase_user_actions(statList, bug, mail, targets, action, actionTime)
     for target in targets:
         if mail not in statList['targets'][target]['people']:
             statList['targets'][target]['people'][mail] = util_create_detailed_person(mail)
-        
+
         statList['targets'][target]['people'][mail][action] += 1
         statList['targets'][target]['people'][mail]['bugs'].append(bug)
 
@@ -190,7 +190,7 @@ def util_increase_user_actions(statList, bug, mail, targets, action, actionTime)
         if actionTime >= cfg[period]:
             if mail not in statList['period'][period]['people']:
                 statList['period'][period]['people'][mail] = util_create_detailed_person(mail)
-    
+
             statList['period'][period]['people'][mail][action] += 1
             statList['period'][period]['people'][mail]['bugs'].append(bug)
 
@@ -203,7 +203,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
     total = 0
     for key, row in bugzillaData['bugs'].items():
-	    #Ignore META bugs and deletionrequest bugs.
+        #Ignore META bugs and deletionrequest bugs.
         if not row['summary'].lower().startswith('[meta]') and row['component'] != 'deletionrequest':
             creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
             if creationDate < statOldDate:
@@ -300,6 +300,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             everConfirmed = False
             oldestVersion = 999999
             newerVersion = False
+            movedToFixed = False
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -387,6 +388,14 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         if creationDate >= cfg[reportPeriod] and not everConfirmed and actionMail == creatorMail and \
                             isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in keywords:
                                 autoConfirmed = True
+
+                        if movedToFixed and removedStatus == 'RESOLVED':
+                            movedToFixed = False
+
+                        if creationDate >= cfg[reportPeriod] and actionMail == creatorMail and \
+                            addedStatus == 'RESOLVED_FIXED' and rowStatus == 'RESOLVED_FIXED' and \
+                            removedStatus == 'NEEDINFO':
+                                movedToFixed = True
 
                     elif newStatus and change['field_name'] == 'resolution':
                         addedStatus = newStatus + "_" + change['added']
@@ -505,6 +514,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 email = person['email']
                 if commentMail == email or actionMail == email:
                     util_check_bugzilla_mail(statList, email, person['real_name'])
+
+            if movedToFixed:
+                total += 1
+                print(str(total) + " - MOVED TO FIXED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
 
             if autoConfirmed:
                 total += 1
