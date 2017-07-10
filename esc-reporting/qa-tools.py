@@ -16,9 +16,9 @@ import re
 
 homeDir = '/home/xisco/dev-tools/esc-reporting/'
 
-reportPeriod = '8d'
+reportPeriod = '7d'
 
-newUsersPeriod = '8d'
+newUsersPeriod = '7d'
 
 targets_list = ['5.4.0']
 
@@ -526,6 +526,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             if newerVersion:
                 total += 1
                 print(str(total) + " - VERSION CHANGED TO A NEWER ONE: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+
+            if row['cf_crashreport'] and not row['cf_crashreport'].startswith('["'):
+                total += 1
+                print(str(total) + " - INCORRECT CRASHREPORT SYNTAX: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
