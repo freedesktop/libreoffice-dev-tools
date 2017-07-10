@@ -128,6 +128,7 @@ def util_create_statList():
             'backTraceStatus': {},
             'regressionStatus': {},
             'bisectedStatus': {},
+            'crashSignatures': {},
             'status_changed_to': {s:0 for s in statutes_list},
             'keyword_added': {k:0 for k in keywords_list},
             'keyword_removed': {k:0 for k in keywords_list},
@@ -213,6 +214,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             statList['data']['bugs']['all']['count'] += 1
 
+            rowId = row['id']
             rowStatus = row['status']
             rowResolution = row['resolution']
 
@@ -266,7 +268,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                 if rowStatus == 'UNCONFIRMED':
                     statList['detailedReport']['unconfirmed_count'] += 1
-                    statList['detailedReport']['lists']['unconfirmed'].append(row['id'])
+                    statList['detailedReport']['lists']['unconfirmed'].append(rowId)
 
                 statList['detailedReport']['lists']['author'][0].append(key)
                 statList['detailedReport']['lists']['author'][1].append(creatorMail)
@@ -275,6 +277,14 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if week not in statList['detailedReport']['created_week']:
                     statList['detailedReport']['created_week'][week] = 0
                 statList['detailedReport']['created_week'][week] += 1
+
+
+            crashSignature = row['cf_crashreport']
+
+            if crashSignature:
+                if crashSignature not in statList['detailedReport']['crashSignatures']:
+                    statList['detailedReport']['crashSignatures'][crashSignature] = []
+                statList['detailedReport']['crashSignatures'][crashSignature].append([rowId, rowStatus])
 
             whiteboard_list = row['whiteboard'].split(' ')
             bugTargets = []
@@ -517,19 +527,19 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             if movedToFixed:
                 total += 1
-                print(str(total) + " - MOVED TO FIXED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+                print(str(total) + " - MOVED TO FIXED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
             if autoConfirmed:
                 total += 1
-                print(str(total) + " - AUTO-CONFIRMED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+                print(str(total) + " - AUTO-CONFIRMED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
             if newerVersion:
                 total += 1
-                print(str(total) + " - VERSION CHANGED TO A NEWER ONE: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+                print(str(total) + " - VERSION CHANGED TO A NEWER ONE: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
-            if row['cf_crashreport'] and not row['cf_crashreport'].startswith('["'):
+            if crashSignature and not crashSignature.startswith('["'):
                 total += 1
-                print(str(total) + " - INCORRECT CRASHREPORT SYNTAX: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(row['id']))
+                print(str(total) + " - INCORRECT CRASHREPORT SYNTAX: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
 
     for k, v in statList['people'].items():
@@ -749,6 +759,19 @@ def users_Report(statList) :
     for v,k in statList['newUsersPeriod'].items():
         print(v)
 
+def crashes_Report(statList) :
+    fp = open('/tmp/crashes_report.txt', 'w', encoding='utf-8')
+
+    print('* Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
+
+    for key, value in sorted(statList['detailedReport']['crashSignatures'].items()):
+        if len(value) > 1:
+            print(file=fp)
+            print('* ' + key + '.', file=fp)
+            for i in value:
+                print('\t - ' + i[1] + ' - https://bugs.documentfoundation.org/show_bug.cgi?id=' + str(i[0]), file=fp)
+    fp.close()
+
 def Blog_Report(statList) :
     fp = open('/tmp/blog_report.txt', 'w', encoding='utf-8')
 
@@ -840,7 +863,7 @@ def Blog_Report(statList) :
 
     fp.close()
 
-def QA_Report(statList) :
+def Weekly_Report(statList) :
     print('QA report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']))
     fp = open('/tmp/qa_report.txt', 'w', encoding='utf-8')
 
@@ -942,21 +965,21 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         if sys.argv[1] == 'report':
-            QA_Report(statList)
+            Weekly_Report(statList)
         if sys.argv[1] == 'blog':
             Blog_Report(statList)
-        elif sys.argv[1] == 'targets':
+        elif sys.argv[1] == 'target':
             create_wikimedia_table_by_target(cfg, statList)
-        elif sys.argv[1] == 'periods':
+        elif sys.argv[1] == 'period':
             create_wikimedia_table_by_period(cfg, statList)
-        elif sys.argv[1] == 'users':
+        elif sys.argv[1] == 'user':
             users_Report(statList)
+        elif sys.argv[1] == 'crash':
+            crashes_Report(statList)
         else:
-            print('You must use \'report\', \'targets\', \'periods\' or \'users\' as parameter.')
+            print('You must use \'report\',\'blog\', \'target\', \'period\', \'users\' or \'crash\' as parameter.')
             sys.exit(1)
     else:
-        QA_Report(statList)
-        create_wikimedia_table_by_target(cfg, statList)
-        create_wikimedia_table_by_period(cfg, statList)
+        Weekly_Report(statList)
 
     print('End of report')
