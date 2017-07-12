@@ -404,7 +404,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                         if creationDate >= cfg[reportPeriod] and actionMail == creatorMail and \
                             addedStatus == 'RESOLVED_FIXED' and rowStatus == 'RESOLVED_FIXED' and \
-                            removedStatus == 'NEEDINFO':
+                            'target:' not in row['whiteboard']:
                                 movedToFixed = True
 
                     elif newStatus and change['field_name'] == 'resolution':
