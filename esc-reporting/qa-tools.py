@@ -311,6 +311,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             oldestVersion = 999999
             newerVersion = False
             movedToFixed = False
+            addAssigned = False
+            removeAssigned = False
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -332,7 +334,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             confirmed = True
 
                     if change['field_name'] == 'version':
-                        if creationDate >= cfg[reportPeriod] and isOpen(rowStatus):
+                        if actionDate >= cfg[reportPeriod] and isOpen(rowStatus):
                             addedVersion = change['added']
                             if addedVersion == 'unspecified':
                                 addedVersion = 999999
@@ -395,17 +397,22 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         #Bug's status is open ( ASSIGNED, NEW or REOPENED ), moved to open by the reporter
                         #from non-open status and never confirmed by someone else.
                         #Ignore bisected bugs
-                        if creationDate >= cfg[reportPeriod] and not everConfirmed and actionMail == creatorMail and \
+                        if actionDate >= cfg[reportPeriod] and not everConfirmed and actionMail == creatorMail and \
                             isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in keywords:
                                 autoConfirmed = True
 
                         if movedToFixed and removedStatus == 'RESOLVED':
                             movedToFixed = False
 
-                        if creationDate >= cfg[reportPeriod] and actionMail == creatorMail and \
+                        if actionDate >= cfg[reportPeriod] and actionMail == creatorMail and \
                             addedStatus == 'RESOLVED_FIXED' and rowStatus == 'RESOLVED_FIXED' and \
                             'target:' not in row['whiteboard']:
                                 movedToFixed = True
+
+                        if actionDate >= cfg[reportPeriod] and removedStatus == "ASSIGNED" and \
+                            addedStatus == "NEW" and rowStatus == "NEW" and \
+                            row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
+                                removeAssigned = True
 
                     elif newStatus and change['field_name'] == 'resolution':
                         addedStatus = newStatus + "_" + change['added']
@@ -509,6 +516,18 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['detailedReport']['lists']['system_changed'][newPlatform][0].append(key)
                             statList['detailedReport']['lists']['system_changed'][newPlatform][1].append(actionMail)
 
+                    elif change['field_name'] == 'assigned_to':
+                        removedAssignee = change['removed']
+                        addedAssignee = change['added']
+
+                        if addAssigned and addedAssignee == "libreoffice-bugs@lists.freedesktop.org":
+                            addAssigned = False
+
+                        if actionDate >= cfg[reportPeriod] and removedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
+                            row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
+                            ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED'):
+                                addAssigned = True
+
             commentMail = None
             for comment in row['comments'][1:]:
                 commentMail = comment['creator']
@@ -541,6 +560,15 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 total += 1
                 print(str(total) + " - INCORRECT CRASHREPORT SYNTAX: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
+            #In case the reporter assigned the bug to himself at creation time
+            if addAssigned or (creationDate >= cfg[reportPeriod] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
+                ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED')):
+                total += 1
+                print(str(total) + " - ADD ASSIGNED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+
+            if removeAssigned:
+                total += 1
+                print(str(total) + " - REMOVE ASSIGNED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
