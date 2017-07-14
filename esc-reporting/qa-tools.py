@@ -313,6 +313,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             movedToFixed = False
             addAssigned = False
             removeAssigned = False
+            backPortAdded = False
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -493,6 +494,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                     statList['detailedReport']['lists']['whiteboard_added'][whiteboard][0].append(key)
                                     statList['detailedReport']['lists']['whiteboard_added'][whiteboard][1].append(actionMail)
 
+                                    if isOpen(rowStatus):
+                                        backPortAdded = True
+
+
                         for whiteboard in change['removed'].split(' '):
                             if 'backportrequest' in whiteboard.lower():
                                 util_increase_user_actions(statList, key, actionMail, bugTargets, 'whiteboard_removed', actionDate)
@@ -569,6 +574,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             if removeAssigned:
                 total += 1
                 print(str(total) + " - REMOVE ASSIGNED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+
+            if backPortAdded:
+                total += 1
+                print(str(total) + " - BACKPORT ADDED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
