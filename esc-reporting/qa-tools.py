@@ -20,6 +20,8 @@ reportPeriod = '7d'
 
 newUsersPeriod = '7d'
 
+lastAction = '30d'
+
 targets_list = ['5.4.0']
 
 periods_list = ['30d', '60d', '90d', '180d']
@@ -567,7 +569,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             #In case the reporter assigned the bug to himself at creation time
             if addAssigned or (creationDate >= cfg[reportPeriod] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
-                ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED')):
+                    ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED')):
                 total += 1
                 print(str(total) + " - ADD ASSIGNED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
@@ -578,6 +580,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             if backPortAdded:
                 total += 1
                 print(str(total) + " - BACKPORT ADDED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+
+            if isOpen(rowStatus) and commentMail == 'libreoffice-commits@lists.freedesktop.org' and \
+                    commentDate < cfg[lastAction] and commentDate >= cfg['diffAction'] and \
+                    'easyHack' not in row['keywords']:
+                total += 1
+                print(str(total) + " - FIX BUG PING: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
@@ -984,6 +992,8 @@ def runCfg(homeDir):
     cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
     cfg[reportPeriod] = cfg['todayDate'] - datetime.timedelta(days= int(reportPeriod[:-1]))
     cfg[newUsersPeriod] = cfg['todayDate'] - datetime.timedelta(days= int(newUsersPeriod[:-1]))
+    cfg[lastAction] = cfg['todayDate'] - datetime.timedelta(days= int(lastAction[:-1]))
+    cfg['diffAction'] = cfg['todayDate'] - datetime.timedelta(days= (int(lastAction[:-1]) + int(reportPeriod[:-1])))
 
     for period in periods_list:
         cfg[period] = cfg['todayDate'] - datetime.timedelta(days= int(period[:-1]))
