@@ -204,7 +204,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
-    total = 0
+    lResults = {}
+    urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
     for key, row in bugzillaData['bugs'].items():
         #Ignore META bugs and deletionrequest bugs.
         if not row['summary'].lower().startswith('[meta]') and row['component'] != 'deletionrequest':
@@ -552,40 +553,54 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     util_check_bugzilla_mail(statList, email, person['real_name'])
 
             if movedToFixed:
-                total += 1
-                print(str(total) + " - MOVED TO FIXED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+                if 'movedToFixed' not in lResults:
+                    lResults['movedToFixed'] = []
+                lResults['movedToFixed'].append(rowId)
 
             if autoConfirmed:
-                total += 1
-                print(str(total) + " - AUTO-CONFIRMED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+                if 'autoConfirmed' not in lResults:
+                    lResults['autoConfirmed'] = []
+                lResults['autoConfirmed'].append(rowId)
 
             if newerVersion:
-                total += 1
-                print(str(total) + " - VERSION CHANGED TO A NEWER ONE: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+                if 'newerVersion' not in lResults:
+                    lResults['newerVersion'] = []
+                lResults['newerVersion'].append(rowId)
 
             if crashSignature and not crashSignature.startswith('["'):
-                total += 1
-                print(str(total) + " - INCORRECT CRASHREPORT SYNTAX: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+                if 'crashSignature' not in lResults:
+                    lResults['crashSignature'] = []
+                lResults['crashSignature'].append(rowId)
 
             #In case the reporter assigned the bug to himself at creation time
             if addAssigned or (creationDate >= cfg[reportPeriod] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
                     ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED')):
-                total += 1
-                print(str(total) + " - ADD ASSIGNED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+                if 'addAssigned' not in lResults:
+                    lResults['addAssigned'] = []
+                lResults['addAssigned'].append(rowId)
 
             if removeAssigned:
-                total += 1
-                print(str(total) + " - REMOVE ASSIGNED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+                if 'removeAssigned' not in lResults:
+                    lResults['removeAssigned'] = []
+                lResults['removeAssigned'].append(rowId)
 
             if backPortAdded:
-                total += 1
-                print(str(total) + " - BACKPORT ADDED: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+                if 'backPortAdded' not in lResults:
+                    lResults['backPortAdded'] = []
+                lResults['backPortAdded'].append(rowId)
 
             if isOpen(rowStatus) and commentMail == 'libreoffice-commits@lists.freedesktop.org' and \
                     commentDate < cfg[lastAction] and commentDate >= cfg['diffAction'] and \
                     'easyHack' not in row['keywords']:
-                total += 1
-                print(str(total) + " - FIX BUG PING: https://bugs.documentfoundation.org/show_bug.cgi?id=" + str(rowId))
+                if 'fixBugPing' not in lResults:
+                    lResults['fixBugPing'] = []
+                lResults['fixBugPing'].append(rowId)
+
+    for dKey, dValue in lResults.items():
+        if dValue:
+            print('\n=== ' + dKey + ' ===')
+            for idx, val in enumerate(dValue):
+                print(str(idx + 1) + ' - ' + urlPath + str(val))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
