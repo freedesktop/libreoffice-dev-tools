@@ -338,8 +338,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             confirmed = True
 
                     if change['field_name'] == 'version':
-                        if actionDate >= cfg[reportPeriod] and isOpen(rowStatus):
+                        if actionDate >= cfg[reportPeriod] and (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
                             addedVersion = change['added']
+                            removedVersion = change['removed']
                             if addedVersion == 'unspecified':
                                 addedVersion = 999999
                             elif addedVersion == 'Inherited From OOo':
@@ -347,6 +348,15 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             else:
                                 addedVersion = int(''.join([s for s in re.split('\.|\s',addedVersion) if s.isdigit()]).ljust(4, '0'))
 
+                            if removedVersion == 'unspecified':
+                                removedVersion = 999999
+                            elif removedVersion == 'Inherited From OOo':
+                                removedVersion = 0
+                            else:
+                                removedVersion = int(''.join([s for s in re.split('\.|\s',removedVersion) if s.isdigit()]).ljust(4, '0'))
+
+                            if removedVersion < oldestVersion:
+                                oldestVersion = removedVersion
 
                             if addedVersion <= oldestVersion:
                                 oldestVersion = addedVersion
@@ -562,7 +572,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     lResults['autoConfirmed'] = []
                 lResults['autoConfirmed'].append(rowId)
 
-            if newerVersion:
+            if newerVersion and row['version'] != 'unspecified':
                 if 'newerVersion' not in lResults:
                     lResults['newerVersion'] = []
                 lResults['newerVersion'].append(rowId)
