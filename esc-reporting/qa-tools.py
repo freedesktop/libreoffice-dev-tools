@@ -308,15 +308,22 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             actionMail = None
             confirmed = False
             fixed = False
-            autoConfirmed = False
-            versionChanged = False
             everConfirmed = False
+            autoConfirmed = False
+            autoConfirmMail = ""
+            versionChanged = False
+            versionChangedMail = ""
             oldestVersion = 999999
             newerVersion = False
+            newerVersionMail = ""
             movedToFixed = False
+            movedToFixedMail = ""
             addAssigned = False
+            addAssignedMail = ""
             removeAssigned = False
+            removeAssignedMail = ""
             backPortAdded = False
+            backPortAddedMail = ""
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -363,6 +370,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 newerVersion = False
                             else:
                                 newerVersion = True
+                                newerVersionMail = actionMail
 
                     if change['field_name'] == 'status':
 
@@ -414,6 +422,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         if actionDate >= cfg[reportPeriod] and not everConfirmed and actionMail == creatorMail and \
                             isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in keywords:
                                 autoConfirmed = True
+                                autoConfirmedMail = actionMail
 
                         if movedToFixed and removedStatus == 'RESOLVED':
                             movedToFixed = False
@@ -422,11 +431,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             addedStatus == 'RESOLVED_FIXED' and rowStatus == 'RESOLVED_FIXED' and \
                             'target:' not in row['whiteboard']:
                                 movedToFixed = True
+                                movedToFixedMail = actionMail
 
                         if actionDate >= cfg[reportPeriod] and removedStatus == "ASSIGNED" and \
                             addedStatus == "NEW" and rowStatus == "NEW" and \
                             row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
                                 removeAssigned = True
+                                removeAssignedMail = actionMail
 
                     elif newStatus and change['field_name'] == 'resolution':
                         addedStatus = newStatus + "_" + change['added']
@@ -545,6 +556,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
                             ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED'):
                                 addAssigned = True
+                                addAssignedMail = actionMail
 
             commentMail = None
             for comment in row['comments'][1:]:
@@ -564,53 +576,61 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             if movedToFixed:
                 if 'movedToFixed' not in lResults:
-                    lResults['movedToFixed'] = []
-                lResults['movedToFixed'].append(rowId)
+                    lResults['movedToFixed'] = [[],[]]
+                lResults['movedToFixed'][0].append(rowId)
+                lResults['movedToFixed'][1].append(movedToFixedMail)
 
             if autoConfirmed:
                 if 'autoConfirmed' not in lResults:
-                    lResults['autoConfirmed'] = []
-                lResults['autoConfirmed'].append(rowId)
+                    lResults['autoConfirmed'] = [[],[]]
+                lResults['autoConfirmed'][0].append(rowId)
+                lResults['autoConfirmed'][1].append(autoConfirmedMail)
 
             if newerVersion and row['version'] != 'unspecified':
                 if 'newerVersion' not in lResults:
-                    lResults['newerVersion'] = []
-                lResults['newerVersion'].append(rowId)
+                    lResults['newerVersion'] =  [[],[]]
+                lResults['newerVersion'][0].append(rowId)
+                lResults['newerVersion'][1].append(newerVersionMail)
 
             if crashSignature and not crashSignature.startswith('["'):
                 if 'crashSignature' not in lResults:
-                    lResults['crashSignature'] = []
-                lResults['crashSignature'].append(rowId)
+                    lResults['crashSignature'] = [[],[]]
+                lResults['crashSignature'][0].append(rowId)
+                lResults['crashSignature'][1].append('')
 
             #In case the reporter assigned the bug to himself at creation time
             if addAssigned or (creationDate >= cfg[reportPeriod] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
                     ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED')):
                 if 'addAssigned' not in lResults:
-                    lResults['addAssigned'] = []
-                lResults['addAssigned'].append(rowId)
+                    lResults['addAssigned'] = [[],[]]
+                lResults['addAssigned'][0].append(rowId)
+                lResults['addAssigned'][1].append(addAssignedMail)
 
             if removeAssigned:
                 if 'removeAssigned' not in lResults:
-                    lResults['removeAssigned'] = []
-                lResults['removeAssigned'].append(rowId)
+                    lResults['removeAssigned'] =[[],[]]
+                lResults['removeAssigned'][0].append(rowId)
+                lResults['removeAssigned'][1].append(removeAssignedMail)
 
             if backPortAdded:
                 if 'backPortAdded' not in lResults:
-                    lResults['backPortAdded'] = []
-                lResults['backPortAdded'].append(rowId)
+                    lResults['backPortAdded'] = [[],[]]
+                lResults['backPortAdded'][0].append(rowId)
+                lResults['backPortAdded'][1].append(backPortAddedMail)
 
             if isOpen(rowStatus) and commentMail == 'libreoffice-commits@lists.freedesktop.org' and \
                     commentDate < cfg[lastAction] and commentDate >= cfg['diffAction'] and \
                     'easyHack' not in row['keywords']:
                 if 'fixBugPing' not in lResults:
-                    lResults['fixBugPing'] = []
-                lResults['fixBugPing'].append(rowId)
+                    lResults['fixBugPing'] = [[],[]]
+                lResults['fixBugPing'][0].append(rowId)
+                lResults['fixBugPing'][1].append('')
 
     for dKey, dValue in lResults.items():
         if dValue:
             print('\n=== ' + dKey + ' ===')
-            for idx, val in enumerate(dValue):
-                print(str(idx + 1) + ' - ' + urlPath + str(val))
+            for idx in range(len(dValue[0])):
+                print(str(idx + 1) + ' - ' + urlPath + str(dValue[0][idx]) + " - " + str(dValue[1][idx]))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
