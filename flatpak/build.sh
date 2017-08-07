@@ -4,22 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This shell script creates a LibreOffice.flatpak bundle from a given
-# flatpak-builder manifest.json.
+# This shell script creates a LibreOffice.flatpak bundle from a given git
+# branch/tag.
 #
 # It expects five command line arguments, in the following order:
 # * An absolute pathname for a directory where the script does all its work.
-# * The absolute pathname of the manifest.json file.
-# * The flatpak branch name (which must match the "branch" value in the
-#   manifest.json file).
+# * The requested git branch/tag (i.e., the --branch argument to "git clone").
+# * The flatpak branch name.
 # * The absolute pathname of the GPG home directory (i.e., the --homedir=
 #   argument to gpg)
 # * The GPG key ID for signing.
 #
 # The script expects an installation of flatpak and availability of the
-# org.gnome.Platform 3.24 runtime (and SDK) from <http://sdk.gnome.org/repo/>
-# (or whatever is specified in the manifest.json file).  To obtain the latter,
-# do something like:
+# org.gnome.Platform 3.24 runtime (and SDK) from <http://sdk.gnome.org/repo/>.
+# To obtain the latter, do something like:
 #
 #  $ flatpak remote-add --user --from gnome-sdk \
 #     https://sdk.gnome.org/gnome.flatpakrepo
@@ -28,23 +26,79 @@
 #  ...
 #  $ flatpak update --user
 #
+# Setting disable-fsckobjects is needed to avoid "error: object
+# 8dbc86aa82fb73668816f228779b2094de546aa0: missingSpaceBeforeEmail: invalid
+# author/committer line - missing space before email", which has "Author: Andre
+# Fischer <andre.f.fischer <Andre Fischer<andre.f.fischer@oracle.com>".
+#
 # TODO:
 #
 # * Explicitly specify the --arch to build?
+# * Properly encode my_{flatpak,git}branch in manifest.json
 
 set -e
 
 my_dir="${1?}"
-my_manifest="${2?}"
+my_gitbranch="${2?}"
 my_flatpakbranch="${3?}"
 my_gpghomedir="${4?}"
 my_gpgkeyid="${5?}"
 
 mkdir -p "${my_dir?}"
 
+rm -f "${my_dir?}"/manifest.json
+cat > "${my_dir?}"/manifest.json <<EOF
+{
+    "id": "org.libreoffice.LibreOffice",
+    "branch": "${my_flatpakbranch?}",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "3.24",
+    "sdk": "org.gnome.Sdk",
+    "command": "/app/libreoffice/program/soffice",
+    "separate-locales": false,
+    "modules": [
+        {
+            "name": "libreoffice",
+            "sources": [
+                {
+                    "type": "git",
+                    "url": "git://gerrit.libreoffice.org/core",
+                    "branch": "${my_gitbranch?}",
+                    "disable-fsckobjects": true
+                }
+            ],
+            "buildsystem": "simple",
+            "build-options": {
+                "build-args": [
+                    "--share=network"
+                ]
+            },
+            "build-commands": [
+                "./autogen.sh --prefix=/run/build/libreoffice/inst \
+--with-distro=LibreOfficeFlatpak",
+                "make",
+                "make distro-pack-install-strip",
+                "make cmd cmd='\$(SRCDIR)/solenv/bin/assemble-flatpak.sh'"
+            ]
+        }
+    ],
+    "finish-args": [
+        "--share=network",
+        "--share=ipc",
+        "--socket=x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--socket=system-bus",
+        "--socket=session-bus",
+        "--filesystem=host",
+        "--env=LIBO_FLATPAK=1"
+    ]
+}
+EOF
+
 flatpak-builder --repo="${my_dir?}"/repository \
  --gpg-homedir="${my_gpghomedir?}" --gpg-sign="${my_gpgkeyid?}" --force-clean \
- "${my_dir?}"/app "${my_manifest?}"
+ "${my_dir?}"/app "${my_dir?}"/manifest.json
 
 ## --prune-depth=1 leaves the one most recent older revision available; that
 ## keeps the repo from growing without bounds, but for one allows users to roll
