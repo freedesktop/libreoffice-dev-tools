@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# Get epubcheck from <https://github.com/idpf/epubcheck>.
+
+java -jar ~/git/epubcheck/target/epubcheck.jar "$@"
