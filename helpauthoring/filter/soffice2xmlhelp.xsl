@@ -62,7 +62,6 @@ META DATA
         <xsl:with-param name="file"><xsl:value-of select="$filename" /></xsl:with-param>
     </xsl:call-template>
 </xsl:variable>
-<xsl:variable name="fileonly" select="substring-after($filename,$path)"/>
 <xsl:variable name="topic_id" select="/office:document/office:meta/meta:user-defined[@meta:name='ID']"/>
 <xsl:variable name="topic_indexer" select="/office:document/office:meta/meta:user-defined[@meta:name='Indexer']"/>
 <xsl:variable name="kw" select="/office:document/office:meta/meta:keywords/meta:keyword"/>
