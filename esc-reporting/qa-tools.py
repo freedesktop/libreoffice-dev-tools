@@ -22,7 +22,7 @@ newUsersPeriod = '7d'
 
 lastAction = '30d'
 
-targets_list = ['5.4.0']
+targets_list = ['5.3.5']
 
 periods_list = ['30d', '60d', '90d', '180d']
 
@@ -119,13 +119,16 @@ def util_create_statList():
             'enhancement_count': 0,
             'no_enhancement_count': 0,
             'created_week': {},
+            'resolved_week': {},
             'is_confirm_count': 0,
             'is_fixed': 0,
             'comments_count': 0,
             'bug_component': {},
             'bug_system': {},
             'bug_platform': {},
-            'bug_status': {},
+            'closed_count': 0,
+            'bug_status_open': {},
+            'bug_status_close': {},
             'bug_resolution': {},
             'backTraceStatus': {},
             'regressionStatus': {},
@@ -180,6 +183,9 @@ def get_bugzilla(cfg):
 
 def isOpen(status):
     return status == 'NEW' or status == 'ASSIGNED' or status == 'REOPENED'
+
+def isClosed(status):
+    return status == 'VERIFIED' or status == 'RESOLVED' or status == 'CLOSED'
 
 def util_increase_user_actions(statList, bug, mail, targets, action, actionTime):
     for target in targets:
@@ -250,14 +256,16 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     statList['detailedReport']['bug_component'][component] = 0
                 statList['detailedReport']['bug_component'][component] += 1
 
-                if rowStatus not in statList['detailedReport']['bug_status']:
-                    statList['detailedReport']['bug_status'][rowStatus] = 0
-                statList['detailedReport']['bug_status'][rowStatus] += 1
+                if rowStatus not in statList['detailedReport']['bug_status_open']:
+                    statList['detailedReport']['bug_status_open'][rowStatus] = 0
+                statList['detailedReport']['bug_status_open'][rowStatus] += 1
 
-                resolution = row['resolution']
-                if resolution not in statList['detailedReport']['bug_resolution']:
-                    statList['detailedReport']['bug_resolution'][resolution] = 0
-                statList['detailedReport']['bug_resolution'][resolution] += 1
+                if isClosed(row['status']):
+                    statList['detailedReport']['closed_count'] += 1
+
+                    if rowResolution not in statList['detailedReport']['bug_resolution']:
+                        statList['detailedReport']['bug_resolution'][rowResolution] = 0
+                    statList['detailedReport']['bug_resolution'][rowResolution] += 1
 
                 platform = row['platform']
                 if platform not in statList['detailedReport']['bug_platform']:
@@ -324,6 +332,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             removeAssignedMail = ""
             backPortAdded = False
             backPortAddedMail = ""
+            bResolved = False
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -373,9 +382,20 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 newerVersionMail = actionMail
 
                     if change['field_name'] == 'status':
-
                         addedStatus = change['added']
                         removedStatus = change['removed']
+
+                        if actionDate >= cfg[reportPeriod] and not bResolved and isClosed(addedStatus) and isClosed(row['status']):
+                            bResolved = True
+                            week = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
+                            if week not in statList['detailedReport']['resolved_week']:
+                                statList['detailedReport']['resolved_week'][week] = 0
+                            statList['detailedReport']['resolved_week'][week] += 1
+
+                            if rowStatus not in statList['detailedReport']['bug_status_close']:
+                                statList['detailedReport']['bug_status_close'][rowStatus] = 0
+                            statList['detailedReport']['bug_status_close'][rowStatus] += 1
+
                         if  addedStatus == 'RESOLVED' or addedStatus == 'VERIFIED':
                             if(rowResolution):
                                 addedStatus = addedStatus + "_" + rowResolution
@@ -729,19 +749,24 @@ def util_print_QA_line_blog(fp, statList, number, tuple, total_count):
 
     print(file=fp)
 
-def util_print_QA_line_created(fp, d , whole):
+def util_print_QA_line_created(fp, d , whole=None):
     others = 0
     s = [(k, d[k]) for k in sorted(d, key=d.get, reverse=True)]
     total = 0
     for k, v in s:
-        percent = 100 * float(v)/float(whole)
-        if percent >= 3:
-            print('{}: {} \t\t {}%'.format(k, v, percent), file=fp)
-            total += percent
+        if whole:
+            percent = 100 * float(v)/float(whole)
+            if percent >= 3:
+                print('{}: {} \t\t {}%'.format(k, v, percent), file=fp)
+                total += percent
+            else:
+                others += v
         else:
-            others += v
-    others_percent = 100 - total
-    print('OTHERS: {} \t\t {}%'.format(others, others_percent) , file=fp)
+            print('{}: {}'.format(k, v), file=fp)
+
+    if whole:
+        others_percent = 100 - total
+        print('OTHERS: {} \t\t {}%'.format(others, others_percent) , file=fp)
 
 
 def create_wikimedia_table_by_target(cfg, statList):
@@ -913,6 +938,16 @@ def Blog_Report(statList) :
     for key, value in sorted(statList['detailedReport']['created_week'].items()):
         print('{}: {}'.format(key, value), file=fp)
 
+    print(file=fp)
+    print('* Bugs resolved by week', file=fp)
+
+    for key, value in sorted(statList['detailedReport']['resolved_week'].items()):
+        print('{}: {}'.format(key, value), file=fp)
+
+    print(file=fp)
+    print('* Statuses of closed bugs', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['bug_status_close'])
+
     whole = statList['detailedReport']['created_count']
 
     print(file=fp)
@@ -929,12 +964,12 @@ def Blog_Report(statList) :
 
     print(file=fp)
     print('* Statuses of created bugs', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['bug_status'], whole)
+    util_print_QA_line_created(fp, statList['detailedReport']['bug_status_open'], whole)
 
     print(file=fp)
     print('* Resolution of created bugs', file=fp)
     util_print_QA_line_created(fp, statList['detailedReport']['bug_resolution'],
-        statList['detailedReport']['bug_status']['RESOLVED'])
+        statList['detailedReport']['closed_count'])
 
     print(file=fp)
     print('* Regressions statuses', file=fp)
