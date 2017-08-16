@@ -1144,10 +1144,10 @@ if __name__ == '__main__':
             crashes_Report(statList)
         elif sys.argv[1] == 'untouched':
             untouchedBugs_Report(statList)
+        elif sys.argv[1] == 'weekly':
+            Weekly_Report(statList)
         else:
             print('You must use \'report\',\'blog\', \'target\', \'period\', \'users\' or \'crash\' as parameter.')
             sys.exit(1)
-    else:
-        Weekly_Report(statList)
 
     print('End of report')
