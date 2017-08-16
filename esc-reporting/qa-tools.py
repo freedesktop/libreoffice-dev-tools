@@ -50,6 +50,8 @@ system_list = ['All', 'Linux (All)', 'Android', 'Windows (All)', 'Mac OS X (All)
 product_list = ['cppunit', 'Document Liberation Project', 'Impress Remote', 'libabw', 'libetonyek', 'libexttextcatYes',
         'libfreehand', 'libgltf', 'libmspub', 'libpagemaker', 'LibreOffice', 'LibreOffice Online', 'libvisio', 'QA Tools']
 
+pingComment = "** Please read this message in its entirety before responding **\n\nTo make sure we're focusing on the bugs that affect our users today, LibreOffice QA is asking bug reporters and confirmers to retest open, confirmed bugs which have not been touched for over a year."
+
 def util_load_file(fileName):
     try:
         fp = open(fileName, encoding='utf-8')
@@ -157,6 +159,12 @@ def util_create_statList():
                 'system_changed': {p: [[], []] for p in system_list}
             }
         },
+        'untouched':
+            {
+                '1year': [],
+                '2years': [],
+                '3years': []
+            },
         'people': {},
         'newUsersPeriod': {},
         'targets': {t:{'count':0, 'people':{}} for t in targets_list},
@@ -579,7 +587,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 addAssignedMail = actionMail
 
             commentMail = None
-            for comment in row['comments'][1:]:
+            comments = row['comments'][1:]
+            for comment in comments:
                 commentMail = comment['creator']
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
 
@@ -588,6 +597,17 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 util_increase_user_actions(statList, key, commentMail, bugTargets, 'comments', commentDate)
                 if commentDate >= cfg[reportPeriod]:
                     statList['detailedReport']['comments_count'] += 1
+
+
+            if len(comments) > 0 and comments[-1]["text"].startswith(pingComment):
+
+                if len(comments) > 1 and comments[-2]["text"].startswith(pingComment):
+                    if len(comments) > 2 and comments[-3]["text"].startswith(pingComment):
+                        statList['untouched']['3years'].append(rowId)
+                    else:
+                        statList['untouched']['2years'].append(rowId)
+                else:
+                    statList['untouched']['1year'].append(rowId)
 
             for person in row['cc_detail']:
                 email = person['email']
@@ -865,6 +885,25 @@ def create_wikimedia_table_by_period(cfg, statList):
         print(output.replace('wikitable', 'wikitable sortable'), file=fp)
         fp.close()
 
+def untouchedBugs_Report(startList):
+    fp = open('/tmp/untouch_report.txt', 'w', encoding='utf-8')
+
+    print('* Untouched Bugs Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
+
+    for key, value in sorted(statList['untouched'].items()):
+        print(file=fp)
+        print('* ' + key + ' - ' + str(len(value)) + ' bugs.', file=fp)
+        for i in range(0, len(value), 400):
+            url = "https://bugs.documentfoundation.org/buglist.cgi?bug_id="
+            subList = value[i:i + 400]
+            for bug in subList:
+                url += str(bug) + "%2C"
+            url = url[:-3]
+            shortener = Shortener('Tinyurl', timeout=9000)
+            print(str(len(subList)) + ' bugs: ' + shortener.short(url), file=fp)
+
+    fp.close()
+
 def users_Report(statList) :
     print('Users report from {} to {}'.format(cfg[newUsersPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']))
     #fp = open('/tmp/users_report.txt', 'w', encoding='utf-8')
@@ -1103,6 +1142,8 @@ if __name__ == '__main__':
             users_Report(statList)
         elif sys.argv[1] == 'crash':
             crashes_Report(statList)
+        elif sys.argv[1] == 'untouched':
+            untouchedBugs_Report(statList)
         else:
             print('You must use \'report\',\'blog\', \'target\', \'period\', \'users\' or \'crash\' as parameter.')
             sys.exit(1)
