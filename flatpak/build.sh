@@ -50,7 +50,6 @@ rm -f "${my_dir?}"/manifest.json
 cat > "${my_dir?}"/manifest.json <<EOF
 {
     "id": "org.libreoffice.LibreOffice",
-    "branch": "${my_flatpakbranch?}",
     "runtime": "org.gnome.Platform",
     "runtime-version": "3.24",
     "sdk": "org.gnome.Sdk",
@@ -96,9 +95,10 @@ cat > "${my_dir?}"/manifest.json <<EOF
 }
 EOF
 
-flatpak-builder --repo="${my_dir?}"/repository \
- --gpg-homedir="${my_gpghomedir?}" --gpg-sign="${my_gpgkeyid?}" --force-clean \
- "${my_dir?}"/app "${my_dir?}"/manifest.json
+flatpak-builder --default-branch="${my_flatpakbranch?}" \
+ --repo="${my_dir?}"/repository --gpg-homedir="${my_gpghomedir?}" \
+ --gpg-sign="${my_gpgkeyid?}" --force-clean "${my_dir?}"/app \
+ "${my_dir?}"/manifest.json
 
 ## --prune-depth=1 leaves the one most recent older revision available; that
 ## keeps the repo from growing without bounds, but for one allows users to roll
