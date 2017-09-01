@@ -166,6 +166,7 @@ def util_create_statList():
         'massping':
             {
                 'needinfo': [],
+                'obsolete': [],
                 'untouched': [],
                 '1year': [],
                 '2years': [],
@@ -615,6 +616,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['massping']['2years'].append(rowId)
                     else:
                         statList['massping']['1year'].append(rowId)
+                        if "obsolete" in comments[-1]["tags"]:
+                            statList['massping']['obsolete'].append(rowId)
                 elif needInfoPingComment in comments[-1]["text"]:
                     if rowStatus == 'NEEDINFO':
                         statList['massping']['needinfo'].append(rowId)
