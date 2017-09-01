@@ -22,7 +22,9 @@ newUsersPeriod = '7d'
 
 lastAction = '30d'
 
-targets_list = ['5.3.5']
+untouchedPeriod = '365d'
+
+targets_list = ['5.3.6', '5.4.1']
 
 periods_list = ['30d', '60d', '90d', '180d']
 
@@ -50,7 +52,9 @@ system_list = ['All', 'Linux (All)', 'Android', 'Windows (All)', 'Mac OS X (All)
 product_list = ['cppunit', 'Document Liberation Project', 'Impress Remote', 'libabw', 'libetonyek', 'libexttextcatYes',
         'libfreehand', 'libgltf', 'libmspub', 'libpagemaker', 'LibreOffice', 'LibreOffice Online', 'libvisio', 'QA Tools']
 
-pingComment = "** Please read this message in its entirety before responding **\n\nTo make sure we're focusing on the bugs that affect our users today, LibreOffice QA is asking bug reporters and confirmers to retest open, confirmed bugs which have not been touched for over a year."
+untouchedPingComment = "** Please read this message in its entirety before responding **\n\nTo make sure we're focusing on the bugs that affect our users today, LibreOffice QA is asking bug reporters and confirmers to retest open, confirmed bugs which have not been touched for over a year."
+
+needInfoPingComment = "MassPing-NeedInfo-Ping"
 
 def util_load_file(fileName):
     try:
@@ -159,8 +163,10 @@ def util_create_statList():
                 'system_changed': {p: [[], []] for p in system_list}
             }
         },
-        'untouched':
+        'massping':
             {
+                'needinfo': [],
+                'untouched': [],
                 '1year': [],
                 '2years': [],
                 '3years': []
@@ -599,15 +605,22 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     statList['detailedReport']['comments_count'] += 1
 
 
-            if len(comments) > 0 and comments[-1]["text"].startswith(pingComment):
+            if len(comments) > 0:
+                if comments[-1]["text"].startswith(untouchedPingComment):
 
-                if len(comments) > 1 and comments[-2]["text"].startswith(pingComment):
-                    if len(comments) > 2 and comments[-3]["text"].startswith(pingComment):
-                        statList['untouched']['3years'].append(rowId)
+                    if len(comments) > 1 and comments[-2]["text"].startswith(untouchedPingComment):
+                        if len(comments) > 2 and comments[-3]["text"].startswith(untouchedPingComment):
+                            statList['massping']['3years'].append(rowId)
+                        else:
+                            statList['massping']['2years'].append(rowId)
                     else:
-                        statList['untouched']['2years'].append(rowId)
+                        statList['massping']['1year'].append(rowId)
+                elif needInfoPingComment in comments[-1]["text"]:
+                    if rowStatus == 'NEEDINFO':
+                        statList['massping']['needinfo'].append(rowId)
                 else:
-                    statList['untouched']['1year'].append(rowId)
+                    if datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedPeriod'] and rowStatus == 'NEW' and 'needsUXEval' not in row['keywords'] and 'easyHack' not in row['keywords'] and row['component'] != 'Documentation' and (row['product'] == 'LibreOffice' or row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
+                        statList['massping']['untouched'].append(rowId)
 
             for person in row['cc_detail']:
                 email = person['email']
@@ -890,7 +903,7 @@ def untouchedBugs_Report(startList):
 
     print('* Untouched Bugs Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
 
-    for key, value in sorted(statList['untouched'].items()):
+    for key, value in sorted(statList['massping'].items()):
         print(file=fp)
         print('* ' + key + ' - ' + str(len(value)) + ' bugs.', file=fp)
         for i in range(0, len(value), 400):
@@ -1113,6 +1126,7 @@ def runCfg(homeDir):
     cfg[newUsersPeriod] = cfg['todayDate'] - datetime.timedelta(days= int(newUsersPeriod[:-1]))
     cfg[lastAction] = cfg['todayDate'] - datetime.timedelta(days= int(lastAction[:-1]))
     cfg['diffAction'] = cfg['todayDate'] - datetime.timedelta(days= (int(lastAction[:-1]) + int(reportPeriod[:-1])))
+    cfg['untouchedPeriod'] = cfg['todayDate'] - datetime.timedelta(days= int(untouchedPeriod[:-1]))
 
     for period in periods_list:
         cfg[period] = cfg['todayDate'] - datetime.timedelta(days= int(period[:-1]))
@@ -1142,12 +1156,12 @@ if __name__ == '__main__':
             users_Report(statList)
         elif sys.argv[1] == 'crash':
             crashes_Report(statList)
-        elif sys.argv[1] == 'untouched':
+        elif sys.argv[1] == 'ping':
             untouchedBugs_Report(statList)
         elif sys.argv[1] == 'weekly':
             Weekly_Report(statList)
         else:
-            print('You must use \'report\',\'blog\', \'target\', \'period\', \'users\' or \'crash\' as parameter.')
+            print('You must use \'report\',\'blog\', \'target\', \'period\', \'users\', \'crash\', \'ping\' or \'weekly\' as parameter.')
             sys.exit(1)
 
     print('End of report')
