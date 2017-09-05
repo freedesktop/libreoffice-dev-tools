@@ -44,7 +44,7 @@ import xmltodict
 
 def util_errorMail(text):
     print(text)
-    sendMail = 'mail -r mentoring@libreoffice.org -s "ERROR: esc-report FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    sendMail = 'mail -r mentoring@libreoffice.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-report FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
     os.system(sendMail)
 
 
@@ -819,7 +819,7 @@ def runReport():
         attach = '-a ' + i['attach'] + ' '
       else:
         attach = ''
-      r = os.system("mail -r mentoring@libreoffice.org -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'])
+      r = os.system("mail -r mentoring@libreoffice.org " + cfg['mail']['bcc'] + " -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'])
       if r != 0:
         util_errorMail('ERROR: mailing failed with ' + str(e))
 

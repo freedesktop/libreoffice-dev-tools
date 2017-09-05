@@ -34,7 +34,7 @@ from requests.auth import HTTPDigestAuth
 
 def util_errorMail(text):
     print(text)
-    sendMail = 'mail -r mentoring@libreoffice.org -s "ERROR: esc-automate FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    sendMail = 'mail -r mentoring@libreoffice.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-automate FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
     os.system(sendMail)
 
 
@@ -88,7 +88,7 @@ def doBugzilla(id, command, isComment=False):
 
 
 def doGerrit(id, command):
-    cmd = 'ssh gerrit.libreoffice.org gerrit ' + command + ' ' + id
+    cmd = 'ssh gerrit.libreoffice.org gerrit ' + command + ' "' + id + '"'
     r = os.system(cmd)
     if r != 0:
       raise Exception('error: ' + cmd + ' failed')
@@ -100,7 +100,7 @@ def doMail(mail, subject, content, attach=None):
       attach = '-a ' + attach + ' '
     else:
       attach = ''
-    sendMail = 'mail -r mentoring@libreoffice.org -s "' + subject + '" ' + attach + mail + ' <<EOF\n' + content + '\nEOF\n'
+    sendMail = 'mail -r mentoring@libreoffice.org ' + cfg['mail']['bcc'] + ' -s "' + subject + '" ' + attach + mail + ' <<EOF\n' + content + '\nEOF\n'
     r = os.system(sendMail)
     if r != 0:
       raise Exception('mail failed')
@@ -117,7 +117,7 @@ def handle_gerrit_abandon(id, patchset):
 def handle_gerrit_review(id, row):
     cmd = 'set-reviewers -a  \'"' + row['name'] + '"\''
     doGerrit(id, cmd)
-    handle_gerrit_comment(id, row['patchset'], useText='added reviewer')
+    handle_gerrit_comment(row['id'], row['patchset'], useText='added reviewer')
 
 
 

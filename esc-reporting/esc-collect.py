@@ -43,7 +43,7 @@ from requests.auth import HTTPDigestAuth
 
 def util_errorMail(text):
     print(text)
-    sendMail = 'mail -r mentoring@libreoffice.org -s "ERROR: esc-collect FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    sendMail = 'mail -r mentoring@libreoffice.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-collect FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
     os.system(sendMail)
 
 
@@ -675,20 +675,20 @@ def get_git(cfg):
     return rawList
 
 
-
 def get_crash(cfg):
     fileName = cfg['homedir'] + 'dump/crash_dump.json'
     rawList = {'crashtest': {}, 'crashreport': {}}
     print("Updating crashtest dump")
     dirList = util_load_url('http://dev-builds.libreoffice.org/crashtest/?C=M;O=D', useRaw=True)
-    inx = dirList.find('alt="[DIR]"', 0)
+    # find newest entry by using sort - in nginx' fancyindex first row is parent-directory
+    # the second ones is most recent dir that was created. Only regular entries have a title
+    # attribute though, so use that as a shortcut, skip 
+    inx = dirList.find('title="', 0)
     if inx == -1:
        print("ERROR: http://dev-builds.libreoffice.org/crashtest/?C=M;O=D not showing DIR list")
        return
-    inx = dirList.find('alt="[DIR]"', inx+8)
-    inx = dirList.find('href="', inx) +6
-    end = dirList.find('"', inx)
-    url = 'http://dev-builds.libreoffice.org/crashtest/' + dirList[inx:end]
+    end = dirList.find('"', inx+7)
+    url = 'http://dev-builds.libreoffice.org/crashtest/' + dirList[inx:end] + '/'
 
     for type in 'crashlog', 'exportCrash':
         tmp = util_load_url(url + type + '.txt', useRaw=True).split('\n')

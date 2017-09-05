@@ -59,7 +59,7 @@ import re
 
 def util_errorMail(text):
     print(text)
-    sendMail = 'mail -r mentoring@libreoffice.org -s "ERROR: esc-analyze FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    sendMail = 'mail -r mentoring@libreoffice.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-analyze FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
     os.system(sendMail)
 
 
@@ -651,7 +651,10 @@ def analyze_reports():
         row['status'] = 'NEW'
       xDate = datetime.datetime.strptime(row['updated'], '%Y-%m-%d %H:%M:%S.%f000')
       ownerEmail = util_check_mail(row['owner']['name'], row['owner']['email'])
-      entry = {'id': key, 'name': row['owner']['name'], 'email': ownerEmail, 'title': row['subject']}
+      # while web is happy with the unique project~branch~changeID label, commandline interface
+      # only accepts ambiguous changeID, doesn't help, so fullid is not really fullid, but at least
+      # less prone to conflicts than just changeset-number that also can easily prefix-match commit-hashes
+      entry = {'id': key, 'fullid': row['change_id'], 'name': row['owner']['name'], 'email': ownerEmail, 'title': row['subject']}
       if row['status'] != 'ABANDONED':
         if ownerEmail is None:
           ownerEmail = row['owner']['email']
@@ -680,12 +683,13 @@ def analyze_reports():
           patchset = 1
           txt = ''
         if xDate < cfg['1monthDate'] and not doBlock:
+          # gerrit cli sucks and doesn't accept changeset,patchrev but only uses numericID
           if 'A polite ping' in txt:
             automateList['gerrit']['to_abandon_abandon'][entry['id']] = patchset
           else:
             automateList['gerrit']['to_abandon_comment'][entry['id']] = patchset
         if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
-            tmpListToReview.append({'id': entry['id'], 'patchset': patchset})
+            tmpListToReview.append({'id': entry['id'], 'fullid': entry['fullid'], 'patchset': patchset})
 
     defaultEmail = util_check_mail('', cfg['automate']['gerritRewiewUserEmail'])
     for rowTmp in tmpListToReview:
@@ -706,8 +710,8 @@ def analyze_reports():
         except Exception as e:
           pass
       x = statList['people'][reviewEmail]
-      automateList['gerrit']['to_review'][rowTmp['id']] = {'name': statList['people'][reviewEmail]['gerrit']['reviewName'],
-                                                           'patchset': rowTmp['patchset']}
+      automateList['gerrit']['to_review'][rowTmp['fullid']] = {'name': statList['people'][reviewEmail]['gerrit']['reviewName'],
+                                                               'patchset': rowTmp['patchset'], 'id': rowTmp['id']}
 
     for key, row in bugzillaData['bugs'].items():
       if not 'cc' in row:
