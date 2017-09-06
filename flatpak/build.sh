@@ -56,8 +56,7 @@ else
 fi
 
 rm -f "${my_dir?}"/manifest.json
-sed \
- "s!@SOURCE@!{ \"type\": \"git\", \"url\": \"git://gerrit.libreoffice.org/core\", \"branch\": \"${my_gitbranch?}\", \"disable-fsckobjects\": true }!" \
+sed "s/@BRANCH@/${my_gitbranch?}/" \
  < "${my_dir?}"/lo/solenv/flatpak-manifest.in > "${my_dir?}"/manifest.json
 
 flatpak-builder --default-branch="${my_flatpakbranch?}" \
