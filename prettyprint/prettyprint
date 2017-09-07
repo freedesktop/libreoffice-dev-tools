@@ -9,7 +9,7 @@ mydir=$(dirname $0)
 
 if [ "$kind" == "text/rtf" ]; then
 	$mydir/formatrtf $file
-elif [ "$kind" == "application/xml" -o "$kind" == "image/svg+xml" ]; then
+elif [ "$kind" == "application/xml" -o "$kind" == "image/svg+xml" -o "$kind" == "text/xml" ]; then
 	#xmllint --format --recover $file 2>/dev/null
 	$mydir/formatxml $file
 else
