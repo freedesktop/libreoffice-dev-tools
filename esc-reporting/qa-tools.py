@@ -24,6 +24,8 @@ lastAction = '30d'
 
 untouchedPeriod = '365d'
 
+inactiveAssigned = '90d'
+
 targets_list = ['5.3.6', '5.4.1']
 
 periods_list = ['30d', '60d', '90d', '180d']
@@ -348,6 +350,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             backPortAdded = False
             backPortAddedMail = ""
             bResolved = False
+            lastAssignedEmail = ""
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -399,6 +402,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     if change['field_name'] == 'status':
                         addedStatus = change['added']
                         removedStatus = change['removed']
+
+                        if rowStatus == 'ASSIGNED' and addedStatus == 'ASSIGNED':
+                            lastAssignedEmail = actionMail
 
                         if actionDate >= cfg[reportPeriod] and not bResolved and isClosed(addedStatus) and isClosed(row['status']):
                             bResolved = True
@@ -681,6 +687,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     lResults['fixBugPing'] = [[],[]]
                 lResults['fixBugPing'][0].append(rowId)
                 lResults['fixBugPing'][1].append('')
+
+            if rowStatus == 'ASSIGNED' and datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssigned'] and \
+                    'easyHack' not in row['keywords']:
+                if 'inactiveAssigned' not in lResults:
+                    lResults['inactiveAssigned'] = [[],[]]
+                lResults['inactiveAssigned'][0].append(rowId)
+                lResults['inactiveAssigned'][1].append(lastAssignedEmail)
 
     for dKey, dValue in lResults.items():
         if dValue:
@@ -1130,6 +1143,7 @@ def runCfg(homeDir):
     cfg[lastAction] = cfg['todayDate'] - datetime.timedelta(days= int(lastAction[:-1]))
     cfg['diffAction'] = cfg['todayDate'] - datetime.timedelta(days= (int(lastAction[:-1]) + int(reportPeriod[:-1])))
     cfg['untouchedPeriod'] = cfg['todayDate'] - datetime.timedelta(days= int(untouchedPeriod[:-1]))
+    cfg['inactiveAssigned'] = cfg['todayDate'] - datetime.timedelta(days= int(inactiveAssigned[:-1]))
 
     for period in periods_list:
         cfg[period] = cfg['todayDate'] - datetime.timedelta(days= int(period[:-1]))
