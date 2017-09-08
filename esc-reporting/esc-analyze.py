@@ -231,7 +231,7 @@ def util_create_statList():
                             'needsUXEval' : 0,
                             'topicUI': 0},
                      'qa': {'unconfirmed': {'count': 0, 'documentation': 0, 'enhancement': 0, 'needsUXEval': 0,
-                                            'haveBacktrace': 0, 'needsDevAdvice': 0}},
+                         'haveBacktrace': 0, 'needsDevAdvice': 0, 'android': 0}},
                      'easyhacks' : {'needsDevEval': 0,  'needsUXEval': 0, 'cleanup_comments': 0,
                                     'total': 0,         'assigned': 0,    'open': 0},
                      'esc': {}},
@@ -469,6 +469,8 @@ def analyze_qa():
             statList['data']['qa']['unconfirmed']['enhancement'] += 1
           if row['component'] == 'Documentation':
             statList['data']['qa']['unconfirmed']['documentation'] += 1
+          if row['component'] == 'Android app' or row['component'] == 'Android Viewer':
+            statList['data']['qa']['unconfirmed']['android'] += 1
 
         util_build_period_stat(creationDate, email, 'qa', 'owner')
 
