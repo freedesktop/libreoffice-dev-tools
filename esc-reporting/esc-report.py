@@ -243,15 +243,15 @@ def report_esc_prototype():
     txt =  '      {:+d}  {:+d} ({:+d}) overall)\n      many thanks to the top bug squashers:\n'.format(
             x1, -x2, -x3, x4, x1 - x3, x2 - x4)
     x = statList['escList']['QAstat']['top15_squashers']
-    for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)]:
+    for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)][0:10]:
       txt += '       {:<23} {}\n'.format(name, count)
     txt += '\n    + top 10 bugs reporters:\n'
     x = statList['escList']['QAstat']['top15_reporters']
-    for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)]:
+    for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)][0:10]:
       txt += '       {:<23} {}\n'.format(name, count)
     txt += '\n    + top 10 bugs fixers:\n'
     x = statList['escList']['QAstat']['top15_fixers']
-    for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)]:
+    for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)][0:10]:
       txt += '       {:<23} {}\n'.format(name, count)
     escPrototype = escPrototype.replace('$<ESC_QA_STATS_UPDATE>', txt)
 
