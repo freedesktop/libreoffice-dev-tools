@@ -688,8 +688,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 lResults['fixBugPing'][0].append(rowId)
                 lResults['fixBugPing'][1].append('')
 
-            if rowStatus == 'ASSIGNED' and datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssigned'] and \
-                    'easyHack' not in row['keywords']:
+            #Ignore tdf#89903
+            if rowStatus == 'ASSIGNED' and \
+                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssigned'] and \
+                    'easyHack' not in row['keywords'] and rowId != 89903:
                 if 'inactiveAssigned' not in lResults:
                     lResults['inactiveAssigned'] = [[],[]]
                 lResults['inactiveAssigned'][0].append(rowId)
