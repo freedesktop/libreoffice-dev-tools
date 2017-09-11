@@ -737,6 +737,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
         elif row['summary'].lower().startswith('[meta]'):
             statList['data']['bugs']['metabugs'][rowId] = row['alias']
 
+            if not row['alias']:
+                if 'emptyAlias' not in lResults:
+                    lResults['emptyAlias'] = [[],[]]
+                lResults['emptyAlias'][0].append(rowId)
+                lResults['emptyAlias'][1].append('')
+
     for dKey, dValue in lResults.items():
         if dValue:
             print('\n=== ' + dKey + ' ===')
