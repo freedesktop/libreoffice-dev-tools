@@ -98,7 +98,9 @@ def util_create_detailed_person(email):
              'whiteboard_removed': 0,
              'severity_changed': 0,
              'priority_changed': 0,
-             'system_changed': 0
+             'system_changed': 0,
+             'metabug_added': 0,
+             'metabug_removed': 0
          }
 
 def util_create_statList():
@@ -118,6 +120,7 @@ def util_create_statList():
                  'count': 0,
                  'keywords': {k:0 for k in keywords_list}
                  },
+             'metabugs': {}
              }
         },
         'detailedReport':
@@ -150,6 +153,8 @@ def util_create_statList():
             'severity_changed': {s:0 for s in severities_list},
             'priority_changed':  {p:0 for p in priorities_list},
             'system_changed': {p:0 for p in system_list},
+            'metabug_added': {},
+            'metabug_removed': {},
             'lists': {
                 'author': [[], []],
                 'confirm': [[], []],
@@ -162,7 +167,9 @@ def util_create_statList():
                 'whiteboard_removed': {},
                 'severity_changed': {s: [[], []] for s in severities_list},
                 'priority_changed': {p: [[], []] for p in priorities_list},
-                'system_changed': {p: [[], []] for p in system_list}
+                'system_changed': {p: [[], []] for p in system_list},
+                'metabug_added': {},
+                'metabug_removed': {}
             }
         },
         'massping':
@@ -230,6 +237,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
     lResults = {}
     urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
     for key, row in bugzillaData['bugs'].items():
+        rowId = row['id']
+
         #Ignore META bugs and deletionrequest bugs.
         if not row['summary'].lower().startswith('[meta]') and row['component'] != 'deletionrequest':
             creationDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
@@ -240,7 +249,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             statList['data']['bugs']['all']['count'] += 1
 
-            rowId = row['id']
             rowStatus = row['status']
             rowResolution = row['resolution']
 
@@ -359,6 +367,35 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 # Use this variable in case the status is set before the resolution
                 newStatus = None
                 for change in action['changes']:
+                    if change['field_name'] == 'blocks':
+                        if change['added']:
+                            for metabug in change['added'].split(', '):
+                                #TODO
+                                #util_increase_user_actions(statList, key, actionMail, bugTargets, 'metabug_added', actionDate)
+
+                                if actionDate >= cfg[reportPeriod] and int(metabug) in row['blocks']:
+                                    if metabug not in statList['detailedReport']['metabug_added']:
+                                        statList['detailedReport']['metabug_added'][metabug] = 0
+                                        statList['detailedReport']['lists']['metabug_added'][metabug] = [[],[]]
+                                    statList['detailedReport']['metabug_added'][metabug] += 1
+
+                                    statList['detailedReport']['lists']['metabug_added'][metabug][0].append(key)
+                                    statList['detailedReport']['lists']['metabug_added'][metabug][1].append(actionMail)
+
+                        if change['removed']:
+                            for metabug in change['removed'].split(', '):
+                                #TODO
+                                #util_increase_user_actions(statList, key, actionMail, bugTargets, 'metabug_added', actionDate)
+
+                                if actionDate >= cfg[reportPeriod] and int(metabug) in row['blocks']:
+                                    if metabug not in statList['detailedReport']['metabug_removed']:
+                                        statList['detailedReport']['metabug_removed'][metabug] = 0
+                                        statList['detailedReport']['lists']['metabug_removed'][metabug] = [[],[]]
+                                    statList['detailedReport']['metabug_removed'][metabug] += 1
+
+                                    statList['detailedReport']['lists']['metabug_removed'][metabug][0].append(key)
+                                    statList['detailedReport']['lists']['metabug_removed'][metabug][1].append(actionMail)
+
                     if change['field_name'] == 'is_confirmed':
                         if actionDate >= cfg[reportPeriod] and row['is_confirmed']:
                             if confirmed:
@@ -697,6 +734,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 lResults['inactiveAssigned'][0].append(rowId)
                 lResults['inactiveAssigned'][1].append(lastAssignedEmail)
 
+        elif row['summary'].lower().startswith('[meta]'):
+            statList['data']['bugs']['metabugs'][rowId] = row['alias']
+
     for dKey, dValue in lResults.items():
         if dValue:
             print('\n=== ' + dKey + ' ===')
@@ -722,13 +762,15 @@ def util_print_QA_line(fp, statList, string, number, tuple, action):
 
     if len(tuple[0]) == 1:
         auxString = 'bug has'
+        nBugs = 'bug'
     else:
         auxString = "bugs have"
+        nBugs = 'bugs'
 
     if action == 'keyword_added' or action == 'whiteboard_added':
-        print(('  * \'' + string + '\' has been added to {} bugs.').format(number), file=fp)
+        print(('  * \'' + string + '\' has been added to {} {}.').format(number, nBugs), file=fp)
     elif action == 'keyword_removed' or action == 'whiteboard_removed':
-        print(('  * \'' + string + '\' has been removed from {} bugs.').format(number), file=fp)
+        print(('  * \'' + string + '\' has been removed from {} {}.').format(number, nBugs), file=fp)
     elif action == 'created':
         print(('  * {} have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )').format(
                 number[0], number[1], number[2]), file=fp)
@@ -1121,12 +1163,25 @@ def Weekly_Report(statList) :
             util_print_QA_line(fp, statList, key, value,
                                statList['detailedReport']['lists']['priority_changed'][key], 'priority_changed')
 
-
     print("== SYSTEM CHANGED ==", file=fp)
     for key, value in sorted(statList['detailedReport']['system_changed'].items()):
         if value:
             util_print_QA_line(fp, statList, key, value,
                                statList['detailedReport']['lists']['system_changed'][key], 'system_changed')
+
+    print("== METABUGS ADDED ==", file=fp)
+
+    for key, value in sorted(statList['detailedReport']['metabug_added'].items()):
+        if value and int(key) in statList['data']['bugs']['metabugs']:
+            util_print_QA_line(fp, statList, statList['data']['bugs']['metabugs'][int(key)][0], value,
+                statList['detailedReport']['lists']['metabug_added'][key], 'keyword_added')
+
+
+    print("== METABUGS REMOVED ==", file=fp)
+    for key, value in sorted(statList['detailedReport']['metabug_removed'].items()):
+        if value and int(key) in statList['data']['bugs']['metabugs']:
+            util_print_QA_line(fp, statList, statList['data']['bugs']['metabugs'][int(key)][0], value,
+                statList['detailedReport']['lists']['metabug_removed'][key], 'keyword_removed')
 
     print('Thank you all for making Libreoffice rock!', file=fp)
     print(file=fp)
