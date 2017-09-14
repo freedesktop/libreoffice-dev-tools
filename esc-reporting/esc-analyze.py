@@ -518,35 +518,29 @@ def analyze_esc():
 
     bug_fixers = {}
     for id, bug in bugzillaData['bugs'].items():
-      if not bug['status'] == 'RESOLVED':
-        continue
-      if 'FIXED' != bug['resolution'] != 'VERIFIED':
-        continue
-      if datetime.datetime.strptime(bug['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['1weekDate']:
-        continue
+      if (bug['status'] == 'RESOLVED' or bug['status'] == 'VERIFIED' or bug['status'] == 'CLOSED') and 'FIXED' == bug['resolution']:
 
-      who = None
-      for i in range(len(bug['history'])-1,-1,-1):
-        fixed = False
-        changes = bug['history'][i]['changes']
-        for j in range(0,len(changes)):
-          if changes[j]['added'] == 'FIXED':
-            fixed = True
+        who = None
+        for i in range(len(bug['history'])-1,-1,-1):
+          fixed = False
+          changes = bug['history'][i]['changes']
+          when = datetime.datetime.strptime(bug['history'][i]['when'], "%Y-%m-%dT%H:%M:%SZ")
+          for j in range(0,len(changes)):
+            if changes[j]['added'] == 'FIXED' and when >= cfg['1weekDate']:
+              fixed = True
+              break
+          if fixed:
+            who = bug['history'][i]['who'].lower()
             break
-        if fixed:
-          who = bug['history'][i]['who'].lower()
-          break
-      if not who:
-        continue
-      if who == 'libreoffice-commits@lists.freedesktop.org':
-        continue
-      if who in statList['aliases']:
-        who = statList['aliases'][who]
-      if who in statList['people']:
-        who = statList['people'][who]['name']
-      if not who in bug_fixers:
-        bug_fixers[who] = 0
-      bug_fixers[str(who)] += 1
+        if who and who != 'libreoffice-commits@lists.freedesktop.org':
+          if who in statList['aliases']:
+            who = statList['aliases'][who]
+          if who in statList['people']:
+            who = statList['people'][who]['name']
+          if not who in bug_fixers:
+            bug_fixers[who] = 0
+          bug_fixers[str(who)] += 1
+
     statList['escList']['QAstat']['top15_fixers'] = bug_fixers
 
     for id, row in bugzillaESCData['ESC_MAB_UPDATE'].items():
