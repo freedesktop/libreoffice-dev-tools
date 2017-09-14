@@ -505,7 +505,8 @@ def analyze_esc():
     statList['data']['esc']['MAB'] = {}
     statList['escList']['QAstat'] = {'top15_squashers' : {},
                                      'top15_reporters' : {},
-                                     'top15_fixers' : []}
+                                     'top15_fixers' : [],
+                                     'top15_confirmers' : []}
     for line in bugzillaESCData['ESC_QA_STATS_UPDATE']['top15_closers']:
       statList['escList']['QAstat']['top15_squashers'][str(line['who'])] = line['closed']
     for line in bugzillaESCData['ESC_QA_STATS_UPDATE']['top15_reporters']:
@@ -517,31 +518,43 @@ def analyze_esc():
            statList['escList']['MostPressingBugs'][type]['list'][id] = bugzillaData['bugs'][id]['summary']
 
     bug_fixers = {}
+    bug_confirmers = {}
     for id, bug in bugzillaData['bugs'].items():
-      if (bug['status'] == 'RESOLVED' or bug['status'] == 'VERIFIED' or bug['status'] == 'CLOSED') and 'FIXED' == bug['resolution']:
+      if ((bug['status'] == 'RESOLVED' or bug['status'] == 'VERIFIED' or bug['status'] == 'CLOSED') and 'FIXED' == bug['resolution']) or \
+          bug['is_confirmed']:
 
-        who = None
+        fixer = None
+        confirmer = None
         for i in range(len(bug['history'])-1,-1,-1):
-          fixed = False
           changes = bug['history'][i]['changes']
           when = datetime.datetime.strptime(bug['history'][i]['when'], "%Y-%m-%dT%H:%M:%SZ")
           for j in range(0,len(changes)):
-            if changes[j]['added'] == 'FIXED' and when >= cfg['1weekDate']:
-              fixed = True
-              break
-          if fixed:
-            who = bug['history'][i]['who'].lower()
-            break
-        if who and who != 'libreoffice-commits@lists.freedesktop.org':
-          if who in statList['aliases']:
-            who = statList['aliases'][who]
-          if who in statList['people']:
-            who = statList['people'][who]['name']
-          if not who in bug_fixers:
-            bug_fixers[who] = 0
-          bug_fixers[str(who)] += 1
+            if when >= cfg['1weekDate']:
+              if changes[j]['field_name'] == 'resolution' and changes[j]['added'] == 'FIXED':
+                fixer = bug['history'][i]['who'].lower()
+              if changes[j]['field_name'] == 'is_confirmed' and changes[j]['added'] == '1':
+                confirmer = bug['history'][i]['who'].lower()
+
+        if fixer and fixer != 'libreoffice-commits@lists.freedesktop.org':
+          if fixer in statList['aliases']:
+            fixer = statList['aliases'][fixer]
+          if fixer in statList['people']:
+            fixer = statList['people'][fixer]['name']
+          if not fixer in bug_fixers:
+            bug_fixers[fixer] = 0
+          bug_fixers[str(fixer)] += 1
+
+        if confirmer and confirmer != 'libreoffice-commits@lists.freedesktop.org':
+          if confirmer in statList['aliases']:
+            confirmer = statList['aliases'][confirmer]
+          if confirmer in statList['people']:
+            confirmer = statList['people'][confirmer]['name']
+          if not confirmer in bug_confirmers:
+            bug_confirmers[confirmer] = 0
+          bug_confirmers[str(confirmer)] += 1
 
     statList['escList']['QAstat']['top15_fixers'] = bug_fixers
+    statList['escList']['QAstat']['top15_confirmers'] = bug_confirmers
 
     for id, row in bugzillaESCData['ESC_MAB_UPDATE'].items():
       statList['data']['esc']['MAB'][id] = row

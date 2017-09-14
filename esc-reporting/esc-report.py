@@ -253,6 +253,10 @@ def report_esc_prototype():
     x = statList['escList']['QAstat']['top15_fixers']
     for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)][0:10]:
       txt += '       {:<23} {}\n'.format(name, count)
+    txt += '\n    + top 10 bugs confirmers:\n'
+    x = statList['escList']['QAstat']['top15_confirmers']
+    for name, count in [(k, x[k]) for k in sorted(x, key=x.get, reverse=True)][0:10]:
+      txt += '       {:<23} {}\n'.format(name, count)
     escPrototype = escPrototype.replace('$<ESC_QA_STATS_UPDATE>', txt)
 
     txt = ''
