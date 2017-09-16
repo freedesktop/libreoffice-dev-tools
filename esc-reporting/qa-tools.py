@@ -18,7 +18,7 @@ homeDir = '/home/xisco/dev-tools/esc-reporting/'
 
 reportPeriod = '7d'
 
-newUsersPeriod = '7d'
+newUsersPeriod = '30d'
 
 lastAction = '30d'
 
@@ -83,7 +83,8 @@ def util_create_person_bugzilla(email, name):
     return { 'name': name,
              'email': email,
              'oldest': datetime.datetime.now(),
-             'newest': datetime.datetime(2001, 1, 1)
+             'newest': datetime.datetime(2001, 1, 1),
+             'bugs': set()
         }
 
 def util_create_detailed_person(email):
@@ -188,7 +189,7 @@ def util_create_statList():
         'stat': {'oldest': datetime.datetime.now(), 'newest': datetime.datetime(2001, 1, 1)}
     }
 
-def util_check_bugzilla_mail(statList, mail, name, date=None):
+def util_check_bugzilla_mail(statList, mail, name, date=None, bug=None):
     if mail not in statList['people']:
         statList['people'][mail] = util_create_person_bugzilla(mail, name)
 
@@ -200,6 +201,9 @@ def util_check_bugzilla_mail(statList, mail, name, date=None):
             statList['people'][mail]['oldest'] = date
         if date > statList['people'][mail]['newest']:
             statList['people'][mail]['newest'] = date
+
+    if bug:
+       statList['people'][mail]['bugs'].add(bug)
 
 def get_bugzilla(cfg):
     fileName = homeDir + 'dump/bugzilla_dump.json'
@@ -227,7 +231,7 @@ def util_increase_user_actions(statList, bug, mail, targets, action, actionTime)
             statList['period'][period]['people'][mail][action] += 1
             statList['period'][period]['people'][mail]['bugs'].append(bug)
 
-def analyze_bugzilla(statList, bugzillaData, cfg):
+def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
     print("Analyze bugzilla\n", end="", flush=True)
     statNewDate = statList['stat']['newest']
     statOldDate = statList['stat']['oldest']
@@ -335,7 +339,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if creationDate >= cfg[period]:
                     statList['period'][period]['count'] += 1
 
-            util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate)
+            util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
             util_increase_user_actions(statList, key, creatorMail, bugTargets, 'created', creationDate)
 
             actionMail = None
@@ -362,7 +366,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
-                util_check_bugzilla_mail(statList, actionMail, '', actionDate)
+                util_check_bugzilla_mail(statList, actionMail, '', actionDate, rowId)
 
                 # Use this variable in case the status is set before the resolution
                 newStatus = None
@@ -755,7 +759,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
         if statList['people'][k]['oldest'] >= cfg[newUsersPeriod]:
             statList['newUsersPeriod'][k] = statList['people'][k]
-
+        if statList['people'][k]['oldest'] >= cfg[newUsersPeriod] and len(statList['people'][k]['bugs']) >= 3 and \
+                statList['people'][k]['email'] not in lIgnore:
+            print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
+            lBugs = list(statList['people'][k]['bugs'])
+            for idx in range(len(lBugs)):
+                print(str(idx + 1) + ' - ' + urlPath + str(lBugs[idx]))
         statList['people'][k]['oldest'] = statList['people'][k]['oldest'].strftime("%Y-%m-%d")
         statList['people'][k]['newest'] = statList['people'][k]['newest'].strftime("%Y-%m-%d")
 
@@ -1220,8 +1229,13 @@ if __name__ == '__main__':
 
     bugzillaData = get_bugzilla(cfg)
 
+    lIgnore = []
+    if os.path.exists("ignore.txt"):
+        f = open('ignore.txt', 'r')
+        lIgnore = f.read().splitlines()
+
     statList = util_create_statList()
-    analyze_bugzilla(statList, bugzillaData, cfg)
+    analyze_bugzilla(statList, bugzillaData, cfg, lIgnore)
 
     if len(sys.argv) > 1:
         if sys.argv[1] == 'report':
