@@ -391,7 +391,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                 #TODO
                                 #util_increase_user_actions(statList, key, actionMail, bugTargets, 'metabug_added', actionDate)
 
-                                if actionDate >= cfg[reportPeriod] and int(metabug) in row['blocks']:
+                                if actionDate >= cfg[reportPeriod] and int(metabug) not in row['blocks']:
                                     if metabug not in statList['detailedReport']['metabug_removed']:
                                         statList['detailedReport']['metabug_removed'][metabug] = 0
                                         statList['detailedReport']['lists']['metabug_removed'][metabug] = [[],[]]
