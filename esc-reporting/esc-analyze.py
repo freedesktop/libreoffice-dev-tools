@@ -615,10 +615,7 @@ def analyze_reports():
     automateList['gerrit']['to_abandon_abandon'] = {}
     automateList['gerrit']['to_abandon_comment'] = {}
     automateList['gerrit']['to_review'] = {}
-    automateList['bugzilla']['assign_problem_status'] = {}
-    automateList['bugzilla']['assign_problem_user'] = {}
     automateList['bugzilla']['missing_cc'] = {}
-    automateList['bugzilla']['missing_ui_cc'] = {}
     automateList['bugzilla']['remove_cc'] = {}
     automateList['bugzilla']['to_unassign_comment'] = {}
     automateList['bugzilla']['to_unassign_unassign'] = {}
@@ -750,10 +747,6 @@ def analyze_reports():
             automateList['bugzilla']['to_unassign_unassign'][key]= 0
           else:
             automateList['bugzilla']['to_unassign_comment'][key] = 0
-      if row['status'] == 'ASSIGNED' and (row['assigned_to'] == '' or row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org'):
-        automateList['bugzilla']['assign_problem_status'][key] = 0
-      if row['status'] != 'CLOSED' and row['status'] != 'ASSIGNED' and row['assigned_to'] != '' and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
-          automateList['bugzilla']['assign_problem_user'][key] = 0
       if len(row['comments']) >= 5:
         statList['reportList']['too_many_comments'].append(key)
       if not 'mentoring@documentfoundation.org' in row['cc']:
