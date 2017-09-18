@@ -47,17 +47,16 @@ my_gpgkeyid="${5?}"
 
 mkdir -p "${my_dir?}"
 
-if [ -e "${my_dir?}"/lo ]; then
- git -C "${my_dir?}"/lo fetch --tags
- git -C "${my_dir?}"/lo checkout "${my_gitbranch?}"
-else
- git clone --branch "${my_gitbranch?}" git://gerrit.libreoffice.org/core \
-  "${my_dir?}"/lo
+if [ ! -e "${my_dir?}"/lo ]; then
+ git clone --mirror git://gerrit.libreoffice.org/core "${my_dir?}"/lo
 fi
 
+rm -f "${my_dir?}"/manifest.in
+git -C "${my_dir?}"/lo show "${my_gitbranch?}":solenv/flatpak-manifest.in \
+ > "${my_dir?}"/manifest.in
+
 rm -f "${my_dir?}"/manifest.json
-sed "s/@BRANCH@/${my_gitbranch?}/" \
- < "${my_dir?}"/lo/solenv/flatpak-manifest.in > "${my_dir?}"/manifest.json
+sed "s!@BRANCH@!${my_gitbranch?}!" < manifest.in > "${my_dir?}"/manifest.json
 
 flatpak-builder --default-branch="${my_flatpakbranch?}" \
  --repo="${my_dir?}"/repository --gpg-homedir="${my_gpghomedir?}" \
