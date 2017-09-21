@@ -48,6 +48,12 @@ case "$1" in
         # Writer RTF export
         coverage sw source/filter/ww8 'rtf*' sw 'CppunitTest_sw_rtfexport CppunitTest_sw_uiwriter'
     ;;
+    sw_epubexport)
+        # Writer EPUB export
+        rm -rf workdir/CxxObject/writerperfect/source/writer/exp/*.{gcda,gcno}
+        touch writerperfect/source/writer/exp/*
+        coverage writerperfect source/writer/ 'EPUB*' writerperfect 'CppunitTest_writerperfect_epubexport'
+    ;;
     *)
         echo "Unknown code area. The currently supported ones are:"
         echo
@@ -55,6 +61,7 @@ case "$1" in
         echo "sw_rtfexport"
         echo "sw_rtfimport"
         echo "sw_rtfpaste"
+        echo "sw_epubexport"
     ;;
 esac
 
