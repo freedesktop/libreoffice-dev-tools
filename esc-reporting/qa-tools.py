@@ -363,6 +363,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
             backPortAddedMail = ""
             bResolved = False
             lastAssignedEmail = ""
+            patchAdded = False
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -572,8 +573,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                         if rowStatus not in statList['detailedReport']['bisectedStatus']:
                                             statList['detailedReport']['bisectedStatus'][rowStatus] = 0
                                         statList['detailedReport']['bisectedStatus'][rowStatus] += 1
-
-
+                                    elif keyword == 'patch':
+                                        patchAdded = True
 
                         keywordsRemoved = change['removed'].split(", ")
                         for keyword in keywordsRemoved:
@@ -694,6 +695,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                     lResults['newerVersion'] =  [[],[]]
                 lResults['newerVersion'][0].append(rowId)
                 lResults['newerVersion'][1].append(newerVersionMail)
+
+            if (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and patchAdded:
+                if 'patchAdded' not in lResults:
+                    lResults['patchAdded'] = [[],[]]
+                lResults['patchAdded'][0].append(rowId)
+                lResults['patchAdded'][1].append('')
 
             if crashSignature and not crashSignature.startswith('["'):
                 if 'crashSignature' not in lResults:
