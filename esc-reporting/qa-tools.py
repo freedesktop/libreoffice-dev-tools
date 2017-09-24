@@ -364,6 +364,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
             bResolved = False
             lastAssignedEmail = ""
             patchAdded = False
+            isReopened = False
+            closeDate = None
+            reopenerEmail = ""
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -448,6 +451,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                         if rowStatus == 'ASSIGNED' and addedStatus == 'ASSIGNED':
                             lastAssignedEmail = actionMail
 
+
                         if actionDate >= cfg[reportPeriod] and not bResolved and isClosed(addedStatus) and isClosed(row['status']):
                             bResolved = True
                             week = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
@@ -522,16 +526,24 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                 removeAssigned = True
                                 removeAssignedMail = actionMail
 
-                    elif newStatus and change['field_name'] == 'resolution':
-                        addedStatus = newStatus + "_" + change['added']
-                        util_increase_user_actions(statList, key, actionMail, bugTargets, 'status_changed', actionDate)
+                    elif change['field_name'] == 'resolution':
+                        if newStatus:
+                            addedStatus = newStatus + "_" + change['added']
+                            util_increase_user_actions(statList, key, actionMail, bugTargets, 'status_changed', actionDate)
 
-                        if actionDate >= cfg[reportPeriod] and rowStatus == addedStatus:
-                            statList['detailedReport']['status_changed_to'][addedStatus] += 1
-                            statList['detailedReport']['lists']['status_changed_to'][addedStatus][0].append(key)
-                            statList['detailedReport']['lists']['status_changed_to'][addedStatus][1].append(actionMail)
+                            if actionDate >= cfg[reportPeriod] and rowStatus == addedStatus:
+                                statList['detailedReport']['status_changed_to'][addedStatus] += 1
+                                statList['detailedReport']['lists']['status_changed_to'][addedStatus][0].append(key)
+                                statList['detailedReport']['lists']['status_changed_to'][addedStatus][1].append(actionMail)
 
-                        newStatus = None
+                            newStatus = None
+
+                        if change['added'] == 'FIXED' and isOpen(rowStatus):
+                            closeDate = actionDate
+                        elif change['removed'] == 'FIXED' and closeDate and actionDate >= cfg[reportPeriod] and \
+                                (actionDate - closeDate).days > 180:
+                            isReopened = True
+                            reopenerEmail = actionMail
 
                     elif change['field_name'] == 'priority':
                         newPriority = change['added']
@@ -707,6 +719,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                     lResults['crashSignature'] = [[],[]]
                 lResults['crashSignature'][0].append(rowId)
                 lResults['crashSignature'][1].append('')
+
+            if isReopened:
+                if 'reopened6Months' not in lResults:
+                    lResults['reopened6Months'] = [[],[]]
+                lResults['reopened6Months'][0].append(rowId)
+                lResults['reopened6Months'][1].append(reopenerEmail)
 
             #In case the reporter assigned the bug to himself at creation time
             if addAssigned or (creationDate >= cfg[reportPeriod] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
