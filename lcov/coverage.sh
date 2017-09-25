@@ -52,7 +52,7 @@ case "$1" in
         # Writer EPUB export
         rm -rf workdir/CxxObject/writerperfect/source/writer/exp/*.{gcda,gcno}
         touch writerperfect/source/writer/exp/*
-        coverage writerperfect source/writer/ 'EPUB*' writerperfect 'CppunitTest_writerperfect_epubexport'
+        coverage writerperfect source/writer/ 'EPUB*' writerperfect 'CppunitTest_writerperfect_epubexport UITest_writerperfect_epubexport'
     ;;
     *)
         echo "Unknown code area. The currently supported ones are:"
