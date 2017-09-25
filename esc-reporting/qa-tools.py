@@ -359,6 +359,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
             addAssignedMail = ""
             removeAssigned = False
             removeAssignedMail = ""
+            addAssignee = False
+            addAssigneeMail = ""
+            removeAssignee = False
+            removeAssigneeMail = ""
             backPortAdded = False
             backPortAddedMail = ""
             bResolved = False
@@ -514,17 +518,20 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                         if movedToFixed and removedStatus == 'RESOLVED':
                             movedToFixed = False
 
-                        if actionDate >= cfg[reportPeriod] and actionMail == creatorMail and \
-                            addedStatus == 'RESOLVED_FIXED' and rowStatus == 'RESOLVED_FIXED' and \
-                            'target:' not in row['whiteboard']:
+                        if actionDate >= cfg[reportPeriod]:
+                            if actionMail == creatorMail and addedStatus == 'RESOLVED_FIXED' and \
+                                    rowStatus == 'RESOLVED_FIXED' and 'target:' not in row['whiteboard']:
                                 movedToFixed = True
                                 movedToFixedMail = actionMail
 
-                        if actionDate >= cfg[reportPeriod] and removedStatus == "ASSIGNED" and \
-                            addedStatus == "NEW" and rowStatus == "NEW" and \
-                            row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
-                                removeAssigned = True
-                                removeAssignedMail = actionMail
+                            if removedStatus == "ASSIGNED" and addedStatus == "NEW" and \
+                                    rowStatus == "NEW" and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
+                                removeAssignee = True
+                                removeAssigneeMail = actionMail
+                            elif addedStatus == "ASSIGNED" and rowStatus == "ASSIGNED" and \
+                                    row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org':
+                                addAssignee = True
+                                addAssigneeMail = actionMail
 
                     elif change['field_name'] == 'resolution':
                         if newStatus:
@@ -641,17 +648,19 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                             statList['detailedReport']['lists']['system_changed'][newPlatform][1].append(actionMail)
 
                     elif change['field_name'] == 'assigned_to':
-                        removedAssignee = change['removed']
-                        addedAssignee = change['added']
-
-                        if addAssigned and addedAssignee == "libreoffice-bugs@lists.freedesktop.org":
-                            addAssigned = False
-
-                        if actionDate >= cfg[reportPeriod] and removedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
-                            row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
-                            ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED'):
+                        if actionDate >= cfg[reportPeriod]:
+                            removedAssignee = change['removed']
+                            addedAssignee = change['added']
+                            if  removedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
+                                    row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
+                                    ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
                                 addAssigned = True
                                 addAssignedMail = actionMail
+                            if addedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
+                                    row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org' and \
+                                    rowStatus == 'ASSIGNED':
+                                removeAssigned = True
+                                removeAssignedMail = actionMail
 
             commentMail = None
             comments = row['comments'][1:]
@@ -728,7 +737,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
 
             #In case the reporter assigned the bug to himself at creation time
             if addAssigned or (creationDate >= cfg[reportPeriod] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
-                    ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED' or rowStatus == 'REOPENED')):
+                    (rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED')):
                 if 'addAssigned' not in lResults:
                     lResults['addAssigned'] = [[],[]]
                 lResults['addAssigned'][0].append(rowId)
@@ -739,6 +748,18 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                     lResults['removeAssigned'] =[[],[]]
                 lResults['removeAssigned'][0].append(rowId)
                 lResults['removeAssigned'][1].append(removeAssignedMail)
+
+            if addAssignee:
+                if 'addAssignee' not in lResults:
+                    lResults['addAssignee'] =[[],[]]
+                lResults['addAssignee'][0].append(rowId)
+                lResults['addAssignee'][1].append(addAssigneeMail)
+
+            if removeAssignee:
+                if 'removeAssignee' not in lResults:
+                    lResults['removeAssignee'] =[[],[]]
+                lResults['removeAssignee'][0].append(rowId)
+                lResults['removeAssignee'][1].append(removeAssigneeMail)
 
             if backPortAdded:
                 if 'backPortAdded' not in lResults:
