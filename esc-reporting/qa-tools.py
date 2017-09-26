@@ -13,6 +13,7 @@ import datetime
 import json
 from pyshorteners import Shortener
 import re
+import requests
 
 homeDir = '/home/xisco/dev-tools/esc-reporting/'
 
@@ -176,11 +177,15 @@ def util_create_statList():
         'massping':
             {
                 'needinfo': [],
-                'obsolete': [],
                 'untouched': [],
                 '1year': [],
                 '2years': [],
                 '3years': []
+            },
+        'tags':
+            {
+                'addObsolete': [],
+                'removeObsolete': []
             },
         'people': {},
         'newUsersPeriod': {},
@@ -205,8 +210,12 @@ def util_check_bugzilla_mail(statList, mail, name, date=None, bug=None):
     if bug:
        statList['people'][mail]['bugs'].add(bug)
 
-def get_bugzilla(cfg):
+def get_bugzilla():
     fileName = homeDir + 'dump/bugzilla_dump.json'
+    return util_load_file(fileName)
+
+def get_config():
+    fileName = homeDir + 'config.json'
     return util_load_file(fileName)
 
 def isOpen(status):
@@ -371,6 +380,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
             isReopened = False
             closeDate = None
             reopenerEmail = ""
+
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -674,6 +684,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                 if commentDate >= cfg[reportPeriod]:
                     statList['detailedReport']['comments_count'] += 1
 
+                if isOpen(rowStatus) and \
+                        "obsolete" not in [x.lower() for x in comment["tags"]] and \
+                        (comment["text"].startswith(untouchedPingComment) or \
+                        "[NinjaEdit]" in comment["text"]):
+                    statList['tags']['addObsolete'].append(comment["id"])
 
             if len(comments) > 0:
                 if comments[-1]["text"].startswith(untouchedPingComment):
@@ -685,8 +700,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                             statList['massping']['2years'].append(rowId)
                     else:
                         statList['massping']['1year'].append(rowId)
-                        if "obsolete" in comments[-1]["tags"]:
-                            statList['massping']['obsolete'].append(rowId)
+
+                    if isOpen(rowStatus):
+                        if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
+                            statList['tags']['addObsolete'].pop()
+                        else:
+                            statList['tags']['removeObsolete'].append(comments[-1]["id"])
                 elif needInfoPingComment in comments[-1]["text"]:
                     if rowStatus == 'NEEDINFO':
                         statList['massping']['needinfo'].append(rowId)
@@ -1019,11 +1038,10 @@ def create_wikimedia_table_by_period(cfg, statList):
         print(output.replace('wikitable', 'wikitable sortable'), file=fp)
         fp.close()
 
-def untouchedBugs_Report(startList):
+def untouchedBugs_Report(statList):
     fp = open('/tmp/untouch_report.txt', 'w', encoding='utf-8')
 
     print('* Untouched Bugs Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
-
     for key, value in sorted(statList['massping'].items()):
         print(file=fp)
         print('* ' + key + ' - ' + str(len(value)) + ' bugs.', file=fp)
@@ -1038,7 +1056,44 @@ def untouchedBugs_Report(startList):
 
     fp.close()
 
-def users_Report(statList) :
+def automated_tagging(statList):
+    #tags are sometimes not saved in bugzilla_dump.json
+    #thus, save those comments automatically tagged as obsolete
+    #so we don't tag them again next time
+    lAddObsolete = []
+    filename = "addObsolete.txt"
+    if os.path.exists(filename):
+        f = open(filename, 'r')
+        lAddObsolete = f.read().splitlines()
+        f.close()
+
+    for comment_id in statList['tags']['addObsolete']:
+        if str(comment_id) not in lAddObsolete:
+            command = '{"comment_id" : ' + str(comment_id) + ', "add" : ["obsolete"]}'
+            url = 'https://bugs.documentfoundation.org/rest/bug/comment/' + \
+                str(comment_id) + '/tags' + '?api_key=' + cfg['bugzilla']['api-key']
+            r = requests.put(url, command)
+            if os.path.exists(filename):
+                append_write = 'a'
+            else:
+                append_write = 'w'
+            f = open(filename,append_write)
+            f.write(str(comment_id) + '\n')
+            f.close()
+            print(str(comment_id) + ' - ' +  r.text)
+            r.close()
+        else:
+            print(str(comment_id) + ' - doing nothing')
+
+    for comment_id in statList['tags']['removeObsolete']:
+        command = '{"comment_id" : ' + str(comment_id) + ', "remove" : ["obsolete"]}'
+        url = 'https://bugs.documentfoundation.org/rest/bug/comment/' + \
+                str(comment_id) + '/tags' + '?api_key=' + cfg['bugzilla']['api-key']
+        r = requests.put(url, command)
+        print(str(comment_id) + ' - ' +  r.text)
+        r.close()
+
+def users_Report(statList):
     print('Users report from {} to {}'.format(cfg[newUsersPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']))
     #fp = open('/tmp/users_report.txt', 'w', encoding='utf-8')
 
@@ -1253,7 +1308,7 @@ def Weekly_Report(statList) :
     fp.close()
 
 def runCfg(homeDir):
-    cfg = {}
+    cfg = get_config()
     cfg['homedir'] = homeDir
     cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
     cfg[reportPeriod] = cfg['todayDate'] - datetime.timedelta(days= int(reportPeriod[:-1]))
@@ -1273,12 +1328,13 @@ if __name__ == '__main__':
 
     cfg = runCfg(homeDir)
 
-    bugzillaData = get_bugzilla(cfg)
+    bugzillaData = get_bugzilla()
 
     lIgnore = []
     if os.path.exists("ignore.txt"):
         f = open('ignore.txt', 'r')
         lIgnore = f.read().splitlines()
+        f.close()
 
     statList = util_create_statList()
     analyze_bugzilla(statList, bugzillaData, cfg, lIgnore)
@@ -1298,10 +1354,12 @@ if __name__ == '__main__':
             crashes_Report(statList)
         elif sys.argv[1] == 'ping':
             untouchedBugs_Report(statList)
+        elif sys.argv[1] == 'tag':
+            automated_tagging(statList)
         elif sys.argv[1] == 'weekly':
             Weekly_Report(statList)
         else:
-            print('You must use \'report\',\'blog\', \'target\', \'period\', \'users\', \'crash\', \'ping\' or \'weekly\' as parameter.')
+            print("You must use 'report','blog', 'target', 'period', 'users', 'crash', 'ping', 'tag' or 'weekly' as parameter.")
             sys.exit(1)
 
     print('End of report')
