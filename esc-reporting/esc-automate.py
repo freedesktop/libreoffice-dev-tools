@@ -168,12 +168,6 @@ def handle_bugzilla_cc(id, email):
 
 
 
-def handle_bugzilla_ui_cc(id, email):
-    command = '{"cc": {"add": ["libreoffice-ux-advise@lists.freedesktop.org"]}}'
-    doBugzilla(id, command)
-
-
-
 def handle_mail_pdf(email, name):
     global cfg, pdfFieldData
 
@@ -257,10 +251,7 @@ def runAutomate():
     executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
     executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
     executeLoop(handle_bugzilla_comment, 'bugzilla', 'to_unassign_comment')
-    executeLoop(handle_bugzilla_reset_status, 'bugzilla', 'assign_problem_status')
-    executeLoop(handle_bugzilla_reset_user, 'bugzilla', 'assign_problem_user')
     executeLoop(handle_bugzilla_cc, 'bugzilla', 'missing_cc')
-    executeLoop(handle_bugzilla_ui_cc, 'bugzilla', 'missing_ui_cc')
     executeLoop(handle_mail_miss_you, 'mail', 'we_miss_you_email')
     executeLoop(handle_mail_pdf, 'mail', 'award_1st_email')
 
