@@ -57,7 +57,11 @@ product_list = ['cppunit', 'Document Liberation Project', 'Impress Remote', 'lib
 
 untouchedPingComment = "** Please read this message in its entirety before responding **\n\nTo make sure we're focusing on the bugs that affect our users today, LibreOffice QA is asking bug reporters and confirmers to retest open, confirmed bugs which have not been touched for over a year."
 
-needInfoPingComment = "MassPing-NeedInfo-Ping"
+needInfoPingComment = "Dear Bug Submitter,\n\nThis bug has been in NEEDINFO status with no change for at least 6 months."
+
+needInfoFollowUpPingComment = "Dear Bug Submitter,\n\nPlease read this message in its entirety before proceeding."
+
+moveToNeedInfo = "I have set the bug's status to 'NEEDINFO'. Please change it back to 'UNCONFIRMED'"
 
 def util_load_file(fileName):
     try:
@@ -222,6 +226,7 @@ def isOpen(status):
     return status == 'NEW' or status == 'ASSIGNED' or status == 'REOPENED'
 
 def isClosed(status):
+    #Use row['status'], not rowStatus
     return status == 'VERIFIED' or status == 'RESOLVED' or status == 'CLOSED'
 
 def util_increase_user_actions(statList, bug, mail, targets, action, actionTime):
@@ -684,10 +689,15 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                 if commentDate >= cfg[reportPeriod]:
                     statList['detailedReport']['comments_count'] += 1
 
-                if isOpen(rowStatus) and \
+                if rowStatus != 'NEEDINFO' and \
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
                         (comment["text"].startswith(untouchedPingComment) or \
-                        "[NinjaEdit]" in comment["text"]):
+                        comment["text"].startswith("Migrating Whiteboard tags to Keywords:") or \
+                        "[NinjaEdit]" in comment["text"] or \
+                        moveToNeedInfo in comment["text"] or \
+                        comment["text"].startswith("(This is an automated message.)") or \
+                        comment["text"].startswith(needInfoPingComment) or \
+                        comment["text"].startswith(needInfoFollowUpPingComment)):
                     statList['tags']['addObsolete'].append(comment["id"])
 
             if len(comments) > 0:
@@ -701,14 +711,31 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                     else:
                         statList['massping']['1year'].append(rowId)
 
-                    if isOpen(rowStatus):
+                    if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
                             statList['tags']['addObsolete'].pop()
                         else:
                             statList['tags']['removeObsolete'].append(comments[-1]["id"])
-                elif needInfoPingComment in comments[-1]["text"]:
+                elif comments[-1]["text"].startswith(needInfoPingComment):
                     if rowStatus == 'NEEDINFO':
                         statList['massping']['needinfo'].append(rowId)
+                    else:
+                        if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
+                            statList['tags']['addObsolete'].pop()
+                        else:
+                            statList['tags']['removeObsolete'].append(comments[-1]["id"])
+                elif comments[-1]["text"].startswith(needInfoFollowUpPingComment):
+                    if rowStatus != 'NEEDINFO':
+                        if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
+                            statList['tags']['addObsolete'].pop()
+                        else:
+                            statList['tags']['removeObsolete'].append(comments[-1]["id"])
+                elif moveToNeedInfo in comments[-1]["text"]:
+                    if rowStatus != 'NEEDINFO':
+                        if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
+                            statList['tags']['addObsolete'].pop()
+                        else:
+                            statList['tags']['removeObsolete'].append(comments[-1]["id"])
                 else:
                     if datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedPeriod'] and rowStatus == 'NEW' and 'needsUXEval' not in row['keywords'] and 'easyHack' not in row['keywords'] and row['component'] != 'Documentation' and (row['product'] == 'LibreOffice' or row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['massping']['untouched'].append(rowId)
