@@ -61,7 +61,9 @@ needInfoPingComment = "Dear Bug Submitter,\n\nThis bug has been in NEEDINFO stat
 
 needInfoFollowUpPingComment = "Dear Bug Submitter,\n\nPlease read this message in its entirety before proceeding."
 
-moveToNeedInfo = "I have set the bug's status to 'NEEDINFO'. Please change it back to 'UNCONFIRMED'"
+moveToNeedInfoComment = "I have set the bug's status to 'NEEDINFO'. Please change it back to 'UNCONFIRMED'"
+
+oldNeedInfoComment = "Dear bug submitter!\n\nDue to the fact, that there are a lot of NEEDINFO bugs with no answer within"
 
 def util_load_file(fileName):
     try:
@@ -188,8 +190,8 @@ def util_create_statList():
             },
         'tags':
             {
-                'addObsolete': [],
-                'removeObsolete': []
+                'addObsolete': set(),
+                'removeObsolete': set()
             },
         'people': {},
         'newUsersPeriod': {},
@@ -679,7 +681,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
 
             commentMail = None
             comments = row['comments'][1:]
-            for comment in comments:
+            for idx, comment in enumerate(comments):
                 commentMail = comment['creator']
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
 
@@ -689,16 +691,22 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                 if commentDate >= cfg[reportPeriod]:
                     statList['detailedReport']['comments_count'] += 1
 
+                #Check for duplicated comments
+                if idx > 0 and comment['text'] == comments[idx-1]['text']:
+                        statList['tags']['addObsolete'].add(comment["id"])
+
                 if rowStatus != 'NEEDINFO' and \
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
                         (comment["text"].startswith(untouchedPingComment) or \
                         comment["text"].startswith("Migrating Whiteboard tags to Keywords:") or \
                         "[NinjaEdit]" in comment["text"] or \
-                        moveToNeedInfo in comment["text"] or \
+                        moveToNeedInfoComment in comment["text"] or \
                         comment["text"].startswith("(This is an automated message.)") or \
                         comment["text"].startswith(needInfoPingComment) or \
+                        comment["text"].startswith(oldNeedInfoComment) or \
+                        comment["text"].startswith("A polite ping, still working on this bug") or \
                         comment["text"].startswith(needInfoFollowUpPingComment)):
-                    statList['tags']['addObsolete'].append(comment["id"])
+                    statList['tags']['addObsolete'].add(comment["id"])
 
             if len(comments) > 0:
                 if comments[-1]["text"].startswith(untouchedPingComment):
@@ -713,29 +721,26 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
 
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
-                            statList['tags']['addObsolete'].pop()
+                            statList['tags']['addObsolete'].remove(comments[-1]["id"])
                         else:
-                            statList['tags']['removeObsolete'].append(comments[-1]["id"])
+                            statList['tags']['removeObsolete'].add(comments[-1]["id"])
                 elif comments[-1]["text"].startswith(needInfoPingComment):
                     if rowStatus == 'NEEDINFO':
                         statList['massping']['needinfo'].append(rowId)
                     else:
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
-                            statList['tags']['addObsolete'].pop()
+                            statList['tags']['addObsolete'].remove(comments[-1]["id"])
                         else:
-                            statList['tags']['removeObsolete'].append(comments[-1]["id"])
-                elif comments[-1]["text"].startswith(needInfoFollowUpPingComment):
+                            statList['tags']['removeObsolete'].add(comments[-1]["id"])
+                elif comments[-1]["text"].startswith(needInfoFollowUpPingComment) or \
+                        comments[-1]["text"].startswith(oldNeedInfoComment) or \
+                        comments[-1]["text"].startswith("A polite ping, still working on this bug") or \
+                        moveToNeedInfoComment in comments[-1]["text"]:
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
-                            statList['tags']['addObsolete'].pop()
+                            statList['tags']['addObsolete'].remove(comments[-1]["id"])
                         else:
-                            statList['tags']['removeObsolete'].append(comments[-1]["id"])
-                elif moveToNeedInfo in comments[-1]["text"]:
-                    if rowStatus != 'NEEDINFO':
-                        if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
-                            statList['tags']['addObsolete'].pop()
-                        else:
-                            statList['tags']['removeObsolete'].append(comments[-1]["id"])
+                            statList['tags']['removeObsolete'].add(comments[-1]["id"])
                 else:
                     if datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedPeriod'] and rowStatus == 'NEW' and 'needsUXEval' not in row['keywords'] and 'easyHack' not in row['keywords'] and row['component'] != 'Documentation' and (row['product'] == 'LibreOffice' or row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['massping']['untouched'].append(rowId)
@@ -1094,7 +1099,7 @@ def automated_tagging(statList):
         lAddObsolete = f.read().splitlines()
         f.close()
 
-    for comment_id in statList['tags']['addObsolete']:
+    for comment_id in list(statList['tags']['addObsolete']):
         if str(comment_id) not in lAddObsolete:
             command = '{"comment_id" : ' + str(comment_id) + ', "add" : ["obsolete"]}'
             url = 'https://bugs.documentfoundation.org/rest/bug/comment/' + \
@@ -1112,7 +1117,7 @@ def automated_tagging(statList):
         else:
             print(str(comment_id) + ' - doing nothing')
 
-    for comment_id in statList['tags']['removeObsolete']:
+    for comment_id in list(statList['tags']['removeObsolete']):
         command = '{"comment_id" : ' + str(comment_id) + ', "remove" : ["obsolete"]}'
         url = 'https://bugs.documentfoundation.org/rest/bug/comment/' + \
                 str(comment_id) + '/tags' + '?api_key=' + cfg['bugzilla']['api-key']
