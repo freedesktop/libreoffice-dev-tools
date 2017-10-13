@@ -63,8 +63,6 @@ needInfoFollowUpPingComment = "Dear Bug Submitter,\n\nPlease read this message i
 
 moveToNeedInfoComment = "I have set the bug's status to 'NEEDINFO'. Please change it back to 'UNCONFIRMED'"
 
-oldNeedInfoComment = "Dear bug submitter!\n\nDue to the fact, that there are a lot of NEEDINFO bugs with no answer within"
-
 def util_load_file(fileName):
     try:
         fp = open(fileName, encoding='utf-8')
@@ -698,13 +696,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                 if rowStatus != 'NEEDINFO' and \
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
                         (comment["text"].startswith(untouchedPingComment) or \
-                        comment["text"].startswith("Migrating Whiteboard tags to Keywords:") or \
-                        "[NinjaEdit]" in comment["text"] or \
                         moveToNeedInfoComment in comment["text"] or \
-                        comment["text"].startswith("(This is an automated message.)") or \
-                        comment["text"].startswith(needInfoPingComment) or \
-                        comment["text"].startswith(oldNeedInfoComment) or \
                         comment["text"].startswith("A polite ping, still working on this bug") or \
+                        comment["text"].startswith(needInfoPingComment) or \
                         comment["text"].startswith(needInfoFollowUpPingComment)):
                     statList['tags']['addObsolete'].add(comment["id"])
 
@@ -733,7 +727,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                         else:
                             statList['tags']['removeObsolete'].add(comments[-1]["id"])
                 elif comments[-1]["text"].startswith(needInfoFollowUpPingComment) or \
-                        comments[-1]["text"].startswith(oldNeedInfoComment) or \
                         comments[-1]["text"].startswith("A polite ping, still working on this bug") or \
                         moveToNeedInfoComment in comments[-1]["text"]:
                     if rowStatus != 'NEEDINFO':
@@ -1114,8 +1107,6 @@ def automated_tagging(statList):
             f.close()
             print(str(comment_id) + ' - ' +  r.text)
             r.close()
-        else:
-            print(str(comment_id) + ' - doing nothing')
 
     for comment_id in list(statList['tags']['removeObsolete']):
         command = '{"comment_id" : ' + str(comment_id) + ', "remove" : ["obsolete"]}'
