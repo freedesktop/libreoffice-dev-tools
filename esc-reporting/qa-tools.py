@@ -136,6 +136,7 @@ def util_create_statList():
             'enhancement_count': 0,
             'no_enhancement_count': 0,
             'created_week': {},
+            'created_month': {},
             'resolved_week': {},
             'is_confirm_count': 0,
             'is_fixed': 0,
@@ -148,6 +149,7 @@ def util_create_statList():
             'bug_status_close': {},
             'bug_resolution': {},
             'backTraceStatus': {},
+            'easyHackStatus': {},
             'regressionStatus': {},
             'bisectedStatus': {},
             'crashSignatures': {},
@@ -163,7 +165,7 @@ def util_create_statList():
             'metabug_removed': {},
             'lists': {
                 'author': [[], []],
-                'confirm': [[], []],
+                'confirm': [[], [], {s:0 for s in statutes_list}],
                 'fixed': [[], []],
                 'unconfirmed': [],
                 'status_changed_to': {s: [[], []] for s in statutes_list},
@@ -332,6 +334,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                     statList['detailedReport']['created_week'][week] = 0
                 statList['detailedReport']['created_week'][week] += 1
 
+                month = str(creationDate.year) + '-' + str(creationDate.strftime("%m"))
+                if month not in statList['detailedReport']['created_month']:
+                    statList['detailedReport']['created_month'][month] = 0
+                statList['detailedReport']['created_month'][month] += 1
+
 
             crashSignature = row['cf_crashreport']
 
@@ -424,16 +431,19 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                     statList['detailedReport']['lists']['metabug_removed'][metabug][1].append(actionMail)
 
                     if change['field_name'] == 'is_confirmed':
-                        if actionDate >= cfg[reportPeriod] and row['is_confirmed']:
-                            if confirmed:
+                        if actionDate >= cfg[reportPeriod]:
+                            if change['added'] == "1":
+
+                                statList['detailedReport']['is_confirm_count'] += 1
+                                statList['detailedReport']['lists']['confirm'][0].append(key)
+                                statList['detailedReport']['lists']['confirm'][1].append(actionMail)
+                                statList['detailedReport']['lists']['confirm'][2][rowStatus] += 1
+                                confirmed = True
+                            else:
                                 statList['detailedReport']['lists']['confirm'][0].pop()
                                 statList['detailedReport']['lists']['confirm'][1].pop()
+                                statList['detailedReport']['lists']['confirm'][2][rowStatus] -= 1
                                 statList['detailedReport']['is_confirm_count'] -= 1
-
-                            statList['detailedReport']['is_confirm_count'] += 1
-                            statList['detailedReport']['lists']['confirm'][0].append(key)
-                            statList['detailedReport']['lists']['confirm'][1].append(actionMail)
-                            confirmed = True
 
                     if change['field_name'] == 'version':
                         if actionDate >= cfg[reportPeriod] and (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
@@ -599,6 +609,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                         if rowStatus not in statList['detailedReport']['backTraceStatus']:
                                             statList['detailedReport']['backTraceStatus'][rowStatus] = 0
                                         statList['detailedReport']['backTraceStatus'][rowStatus] += 1
+                                    elif keyword == 'easyHack':
+                                        if rowStatus not in statList['detailedReport']['easyHackStatus']:
+                                            statList['detailedReport']['easyHackStatus'][rowStatus] = 0
+                                        statList['detailedReport']['easyHackStatus'][rowStatus] += 1
                                     elif keyword == 'regression':
                                         if rowStatus not in statList['detailedReport']['regressionStatus']:
                                             statList['detailedReport']['regressionStatus'][rowStatus] = 0
@@ -913,9 +927,9 @@ def util_print_QA_line(fp, statList, string, number, tuple, action):
 
     print(file=fp)
 
-def util_print_QA_line_blog(fp, statList, number, tuple, total_count):
+def util_print_QA_line_blog(fp, statList, number, lList, total_count):
 
-    if len(tuple[0]) == 1:
+    if len(lList[0]) == 1:
         auxString = 'bug.'
     else:
         auxString = "bugs."
@@ -923,7 +937,7 @@ def util_print_QA_line_blog(fp, statList, number, tuple, total_count):
     print(('  * {} ' + auxString).format(number), file=fp)
 
     #Count the number of reps
-    my_dict = {i: tuple[1].count(i) for i in tuple[1]}
+    my_dict = {i: lList[1].count(i) for i in lList[1]}
 
     d_view = [(v, k) for k, v in my_dict.items()]
     d_view.sort(reverse=True)
@@ -931,6 +945,13 @@ def util_print_QA_line_blog(fp, statList, number, tuple, total_count):
     print('  * Total users: {}'.format(len(d_view)), file=fp)
 
     usersString = '  * Done by: \n'
+
+    if len(lList) == 3:
+        print('  * Status: ', file=fp)
+        for k,v in lList[2].items():
+            print('      - ' + str(k) + ' : ' + str(v), file=fp)
+
+
 
     count = 0
     for i1,i2 in d_view:
@@ -1190,6 +1211,12 @@ def Blog_Report(statList) :
         print('{}: {}'.format(key, value), file=fp)
 
     print(file=fp)
+    print('* Bugs created by month', file=fp)
+
+    for key, value in sorted(statList['detailedReport']['created_month'].items()):
+        print('{}: {}'.format(key, value), file=fp)
+
+    print(file=fp)
     print('* Bugs resolved by week', file=fp)
 
     for key, value in sorted(statList['detailedReport']['resolved_week'].items()):
@@ -1236,6 +1263,11 @@ def Blog_Report(statList) :
     print('* Backtrace statuses', file=fp)
     util_print_QA_line_created(fp, statList['detailedReport']['backTraceStatus'],
         statList['detailedReport']['keyword_added']['haveBacktrace'])
+
+    print(file=fp)
+    print('* easyHack statuses', file=fp)
+    util_print_QA_line_created(fp, statList['detailedReport']['easyHackStatus'],
+        statList['detailedReport']['keyword_added']['easyHack'])
 
     fp.close()
 
