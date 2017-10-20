@@ -49,6 +49,8 @@ mkdir -p "${my_dir?}"
 
 if [ ! -e "${my_dir?}"/lo ]; then
  git clone --mirror git://gerrit.libreoffice.org/core "${my_dir?}"/lo
+else
+ git -C "${my_dir?}"/lo fetch
 fi
 
 rm -f "${my_dir?}"/manifest.in
