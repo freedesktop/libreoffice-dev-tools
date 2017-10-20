@@ -52,8 +52,7 @@ keywords_list = ['accessibility', 'bibisected', 'bibisectNotNeeded', 'bibisectRe
 system_list = ['All', 'Linux (All)', 'Android', 'Windows (All)', 'Mac OS X (All)', 'iOS', 'FreeBSD', 'NetBSD', 'OpenBSD',
         'BSD (Others)', 'Solaris', 'Cygwin', 'AIX', 'HP-UX', 'IRIX', 'Interix', 'other']
 
-product_list = ['cppunit', 'Document Liberation Project', 'Impress Remote', 'libabw', 'libetonyek', 'libexttextcatYes',
-        'libfreehand', 'libgltf', 'libmspub', 'libpagemaker', 'LibreOffice', 'LibreOffice Online', 'libvisio', 'QA Tools']
+urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
 
 untouchedPingComment = "** Please read this message in its entirety before responding **\n\nTo make sure we're focusing on the bugs that affect our users today, LibreOffice QA is asking bug reporters and confirmers to retest open, confirmed bugs which have not been touched for over a year."
 
@@ -111,74 +110,58 @@ def util_create_detailed_person(email):
 
 def util_create_statList():
     return {
-        'data':
+        'bugs':
         {
-            'bugs':
-            {
-             'all':
-                 {
-                 'count': 0,
-                 'status': {s:0 for s in statutes_list},
-                 'keywords': {k:0 for k in keywords_list}
-                 },
-             'open':
-                 {
-                 'count': 0,
-                 'keywords': {k:0 for k in keywords_list}
-                 },
-             'metabugs': {}
-             }
+            'all':
+                {
+                    'status': {s:0 for s in statutes_list},
+                },
+            'created':
+                {
+                    'id': [],
+                    'author': [],
+                    'enhancement_count': 0,
+                    'no_enhancement_count': 0,
+                    'split_week': {},
+                    'split_month': {},
+                    'component': {},
+                    'system': {p:0 for p in system_list},
+                    'platform': {},
+                    'status': {s:0 for s in statutes_list},
+                    'resolution': {},
+                },
+            'closed':
+                {
+                    'status': {s:0 for s in statutes_list},
+                    'split_week': {}
+                },
+            'confirmed':
+                {
+                    'id': [],
+                    'author': [],
+                    'status': {s:0 for s in statutes_list},
+                },
+            'fixed':
+                {
+                    'id': [],
+                    'author': [],
+                },
+            'metabugAlias': {}
         },
-        'detailedReport':
+        'weeklyReport':
         {
-            'created_count': 0,
-            'unconfirmed_count' : 0,
-            'enhancement_count': 0,
-            'no_enhancement_count': 0,
-            'created_week': {},
-            'created_month': {},
-            'resolved_week': {},
-            'is_confirm_count': 0,
-            'is_fixed': 0,
             'comments_count': 0,
-            'bug_component': {},
-            'bug_system': {},
-            'bug_platform': {},
-            'closed_count': 0,
-            'bug_status_open': {},
-            'bug_status_close': {},
-            'bug_resolution': {},
-            'backTraceStatus': {},
-            'easyHackStatus': {},
-            'regressionStatus': {},
-            'bisectedStatus': {},
             'crashSignatures': {},
-            'status_changed_to': {s:0 for s in statutes_list},
-            'keyword_added': {k:0 for k in keywords_list},
-            'keyword_removed': {k:0 for k in keywords_list},
+            'status_changed': {s: {'id':[], 'author': [] } for s in statutes_list},
+            'keyword_added': {k: {'id':[], 'author': [], 'status': {s:0 for s in statutes_list}} for k in keywords_list},
+            'keyword_removed': {k: {'id':[], 'author': []} for k in keywords_list},
             'whiteboard_added': {},
             'whiteboard_removed': {},
-            'severity_changed': {s:0 for s in severities_list},
-            'priority_changed':  {p:0 for p in priorities_list},
-            'system_changed': {p:0 for p in system_list},
+            'severity_changed': {s: {'id':[], 'author': []} for s in severities_list},
+            'priority_changed': {p: {'id':[], 'author': []} for p in priorities_list},
+            'system_changed': {p: {'id':[], 'author': []} for p in system_list},
             'metabug_added': {},
-            'metabug_removed': {},
-            'lists': {
-                'author': [[], []],
-                'confirm': [[], [], {s:0 for s in statutes_list}],
-                'fixed': [[], []],
-                'unconfirmed': [],
-                'status_changed_to': {s: [[], []] for s in statutes_list},
-                'keyword_added': {k: [[], []] for k in keywords_list},
-                'keyword_removed': {k: [[], []] for k in keywords_list},
-                'whiteboard_added': {},
-                'whiteboard_removed': {},
-                'severity_changed': {s: [[], []] for s in severities_list},
-                'priority_changed': {p: [[], []] for p in priorities_list},
-                'system_changed': {p: [[], []] for p in system_list},
-                'metabug_added': {},
-                'metabug_removed': {}
-            }
+            'metabug_removed': {}
         },
         'massping':
             {
@@ -221,7 +204,7 @@ def get_bugzilla():
     return util_load_file(fileName)
 
 def get_config():
-    fileName = homeDir + 'config.json'
+    fileName = homeDir + 'configQA.json'
     return util_load_file(fileName)
 
 def isOpen(status):
@@ -255,7 +238,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
     lResults = {}
-    urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
 
@@ -267,85 +249,66 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
             if creationDate > statNewDate:
                 statNewDate = creationDate
 
-            statList['data']['bugs']['all']['count'] += 1
-
             rowStatus = row['status']
             rowResolution = row['resolution']
 
             if rowStatus == 'VERIFIED' or rowStatus == 'RESOLVED':
                 rowStatus += "_" + rowResolution
 
-            statList['data']['bugs']['all']['status'][rowStatus] += 1
-            if isOpen(rowStatus):
-                statList['data']['bugs']['open']['count'] += 1
+            statList['bugs']['all']['status'][rowStatus] += 1
 
             keywords = row['keywords']
-            for keyword in keywords:
-                if keyword in keywords_list:
-                    statList['data']['bugs']['all']['keywords'][keyword] += 1
-                    if isOpen(rowStatus):
-                        statList['data']['bugs']['open']['keywords'][keyword] += 1
 
             creatorMail = row['creator']
 
+            #get information about created bugs in reportPeriod
             if creationDate >= cfg[reportPeriod]:
-                statList['detailedReport']['created_count'] += 1
-
                 if row['severity'] == 'enhancement':
-                    statList['detailedReport']['enhancement_count'] += 1
+                    statList['bugs']['created']['enhancement_count'] += 1
                 else:
-                    statList['detailedReport']['no_enhancement_count'] += 1
+                    statList['bugs']['created']['no_enhancement_count'] += 1
 
                 component = row['component']
-                if component not in statList['detailedReport']['bug_component']:
-                    statList['detailedReport']['bug_component'][component] = 0
-                statList['detailedReport']['bug_component'][component] += 1
+                if component not in statList['bugs']['created']['component']:
+                    statList['bugs']['created']['component'][component] = 0
+                statList['bugs']['created']['component'][component] += 1
 
-                if rowStatus not in statList['detailedReport']['bug_status_open']:
-                    statList['detailedReport']['bug_status_open'][rowStatus] = 0
-                statList['detailedReport']['bug_status_open'][rowStatus] += 1
+                statList['bugs']['created']['status'][rowStatus] += 1
 
                 if isClosed(row['status']):
-                    statList['detailedReport']['closed_count'] += 1
-
-                    if rowResolution not in statList['detailedReport']['bug_resolution']:
-                        statList['detailedReport']['bug_resolution'][rowResolution] = 0
-                    statList['detailedReport']['bug_resolution'][rowResolution] += 1
+                    if rowResolution not in statList['bugs']['created']['resolution']:
+                        statList['bugs']['created']['resolution'][rowResolution] = 0
+                    statList['bugs']['created']['resolution'][rowResolution] += 1
 
                 platform = row['platform']
-                if platform not in statList['detailedReport']['bug_platform']:
-                    statList['detailedReport']['bug_platform'][platform] = 0
-                statList['detailedReport']['bug_platform'][platform] += 1
+                if platform not in statList['bugs']['created']['platform']:
+                    statList['bugs']['created']['platform'][platform] = 0
+                statList['bugs']['created']['platform'][platform] += 1
 
                 system = row['op_sys']
-                if system not in statList['detailedReport']['bug_system']:
-                    statList['detailedReport']['bug_system'][system] = 0
-                statList['detailedReport']['bug_system'][system] += 1
+                if system not in statList['bugs']['created']['system']:
+                    statList['bugs']['created']['system'][system] = 0
+                statList['bugs']['created']['system'][system] += 1
 
-                if rowStatus == 'UNCONFIRMED':
-                    statList['detailedReport']['unconfirmed_count'] += 1
-                    statList['detailedReport']['lists']['unconfirmed'].append(rowId)
-
-                statList['detailedReport']['lists']['author'][0].append(key)
-                statList['detailedReport']['lists']['author'][1].append(creatorMail)
+                statList['bugs']['created']['id'].append(rowId)
+                statList['bugs']['created']['author'].append(creatorMail)
 
                 week = str(creationDate.year) + '-' + str(creationDate.strftime("%V"))
-                if week not in statList['detailedReport']['created_week']:
-                    statList['detailedReport']['created_week'][week] = 0
-                statList['detailedReport']['created_week'][week] += 1
+                if week not in statList['bugs']['created']['split_week']:
+                    statList['bugs']['created']['split_week'][week] = 0
+                statList['bugs']['created']['split_week'][week] += 1
 
                 month = str(creationDate.year) + '-' + str(creationDate.strftime("%m"))
-                if month not in statList['detailedReport']['created_month']:
-                    statList['detailedReport']['created_month'][month] = 0
-                statList['detailedReport']['created_month'][month] += 1
-
+                if month not in statList['bugs']['created']['split_month']:
+                    statList['bugs']['created']['split_month'][month] = 0
+                statList['bugs']['created']['split_month'][month] += 1
 
             crashSignature = row['cf_crashreport']
 
             if crashSignature:
-                if crashSignature not in statList['detailedReport']['crashSignatures']:
-                    statList['detailedReport']['crashSignatures'][crashSignature] = []
-                statList['detailedReport']['crashSignatures'][crashSignature].append([rowId, rowStatus])
+                if crashSignature not in statList['weeklyReport']['crashSignatures']:
+                    statList['weeklyReport']['crashSignatures'][crashSignature] = []
+                statList['weeklyReport']['crashSignatures'][crashSignature].append([rowId, rowStatus])
 
             whiteboard_list = row['whiteboard'].split(' ')
             bugTargets = []
@@ -364,7 +327,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
             util_increase_user_actions(statList, key, creatorMail, bugTargets, 'created', creationDate)
 
             actionMail = None
-            confirmed = False
             fixed = False
             everConfirmed = False
             autoConfirmed = False
@@ -408,13 +370,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                 #util_increase_user_actions(statList, key, actionMail, bugTargets, 'metabug_added', actionDate)
 
                                 if actionDate >= cfg[reportPeriod] and int(metabug) in row['blocks']:
-                                    if metabug not in statList['detailedReport']['metabug_added']:
-                                        statList['detailedReport']['metabug_added'][metabug] = 0
-                                        statList['detailedReport']['lists']['metabug_added'][metabug] = [[],[]]
-                                    statList['detailedReport']['metabug_added'][metabug] += 1
+                                    if metabug not in statList['weeklyReport']['metabug_added']:
+                                        statList['weeklyReport']['metabug_added'][metabug] = {'id':[], 'author':[]}
 
-                                    statList['detailedReport']['lists']['metabug_added'][metabug][0].append(key)
-                                    statList['detailedReport']['lists']['metabug_added'][metabug][1].append(actionMail)
+                                    statList['weeklyReport']['metabug_added'][metabug]['id'].append(rowId)
+                                    statList['weeklyReport']['metabug_added'][metabug]['author'].append(actionMail)
 
                         if change['removed']:
                             for metabug in change['removed'].split(', '):
@@ -422,28 +382,22 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                 #util_increase_user_actions(statList, key, actionMail, bugTargets, 'metabug_added', actionDate)
 
                                 if actionDate >= cfg[reportPeriod] and int(metabug) not in row['blocks']:
-                                    if metabug not in statList['detailedReport']['metabug_removed']:
-                                        statList['detailedReport']['metabug_removed'][metabug] = 0
-                                        statList['detailedReport']['lists']['metabug_removed'][metabug] = [[],[]]
-                                    statList['detailedReport']['metabug_removed'][metabug] += 1
+                                    if metabug not in statList['weeklyReport']['metabug_removed']:
+                                        statList['weeklyReport']['metabug_removed'][metabug] = {'id':[], 'author':[]}
 
-                                    statList['detailedReport']['lists']['metabug_removed'][metabug][0].append(key)
-                                    statList['detailedReport']['lists']['metabug_removed'][metabug][1].append(actionMail)
+                                    statList['weeklyReport']['metabug_removed'][metabug]['id'].append(rowId)
+                                    statList['weeklyReport']['metabug_removed'][metabug]['author'].append(actionMail)
 
                     if change['field_name'] == 'is_confirmed':
                         if actionDate >= cfg[reportPeriod]:
                             if change['added'] == "1":
-
-                                statList['detailedReport']['is_confirm_count'] += 1
-                                statList['detailedReport']['lists']['confirm'][0].append(key)
-                                statList['detailedReport']['lists']['confirm'][1].append(actionMail)
-                                statList['detailedReport']['lists']['confirm'][2][rowStatus] += 1
-                                confirmed = True
+                                statList['bugs']['confirmed']['id'].append(rowId)
+                                statList['bugs']['confirmed']['author'].append(actionMail)
+                                statList['bugs']['confirmed']['status'][rowStatus] += 1
                             else:
-                                statList['detailedReport']['lists']['confirm'][0].pop()
-                                statList['detailedReport']['lists']['confirm'][1].pop()
-                                statList['detailedReport']['lists']['confirm'][2][rowStatus] -= 1
-                                statList['detailedReport']['is_confirm_count'] -= 1
+                                statList['bugs']['confirmed']['id'].pop()
+                                statList['bugs']['confirmed']['author'].pop()
+                                statList['bugs']['confirmed']['status'][rowStatus] -= 1
 
                     if change['field_name'] == 'version':
                         if actionDate >= cfg[reportPeriod] and (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
@@ -484,45 +438,35 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                         if actionDate >= cfg[reportPeriod] and not bResolved and isClosed(addedStatus) and isClosed(row['status']):
                             bResolved = True
                             week = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
-                            if week not in statList['detailedReport']['resolved_week']:
-                                statList['detailedReport']['resolved_week'][week] = 0
-                            statList['detailedReport']['resolved_week'][week] += 1
+                            if week not in statList['bugs']['closed']['split_week']:
+                                statList['bugs']['closed']['split_week'][week] = 0
+                            statList['bugs']['closed']['split_week'][week] += 1
 
-                            if rowStatus not in statList['detailedReport']['bug_status_close']:
-                                statList['detailedReport']['bug_status_close'][rowStatus] = 0
-                            statList['detailedReport']['bug_status_close'][rowStatus] += 1
+                            statList['bugs']['closed']['status'][rowStatus] += 1
 
                         if  addedStatus == 'RESOLVED' or addedStatus == 'VERIFIED':
                             if(rowResolution):
                                 addedStatus = addedStatus + "_" + rowResolution
                                 util_increase_user_actions(statList, key, actionMail, bugTargets, 'status_changed', actionDate)
                                 if actionDate >= cfg[reportPeriod] and rowStatus == addedStatus:
-                                    statList['detailedReport']['status_changed_to'][addedStatus] += 1
-                                    statList['detailedReport']['lists']['status_changed_to'][
-                                        addedStatus][0].append(key)
-                                    statList['detailedReport']['lists']['status_changed_to'][
-                                        addedStatus][1].append(actionMail)
+                                    statList['weeklyReport']['status_changed'][addedStatus]['id'].append(rowId)
+                                    statList['weeklyReport']['status_changed'][addedStatus]['author'].append(actionMail)
                             else:
                                 newStatus = addedStatus
                         else:
                             util_increase_user_actions(statList, key, actionMail, bugTargets, 'status_changed', actionDate)
 
                             if actionDate >= cfg[reportPeriod] and rowStatus == addedStatus:
-                                statList['detailedReport']['status_changed_to'][addedStatus] += 1
-                                statList['detailedReport']['lists']['status_changed_to'][
-                                    addedStatus][0].append(key)
-                                statList['detailedReport']['lists']['status_changed_to'][
-                                    addedStatus][1].append(actionMail)
+                                statList['weeklyReport']['status_changed'][addedStatus]['id'].append(rowId)
+                                statList['weeklyReport']['status_changed'][addedStatus]['author'].append(actionMail)
 
                         if actionDate >= cfg[reportPeriod] and addedStatus == 'RESOLVED_FIXED':
                             if fixed:
-                                statList['detailedReport']['lists']['fixed'][0].pop()
-                                statList['detailedReport']['lists']['fixed'][1].pop()
-                                statList['detailedReport']['is_fixed'] -= 1
+                                statList['bugs']['fixed']['id'].pop()
+                                statList['bugs']['fixed']['author'].pop()
 
-                            statList['detailedReport']['lists']['fixed'][0].append(key)
-                            statList['detailedReport']['lists']['fixed'][1].append(actionMail)
-                            statList['detailedReport']['is_fixed'] += 1
+                            statList['bugs']['fixed']['id'].append(rowId)
+                            statList['bugs']['fixed']['author'].append(actionMail)
                             fixed = True
 
                         #if any other user moves it to open ( ASSIGNED, NEW or REOPENED ),
@@ -564,9 +508,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                             util_increase_user_actions(statList, key, actionMail, bugTargets, 'status_changed', actionDate)
 
                             if actionDate >= cfg[reportPeriod] and rowStatus == addedStatus:
-                                statList['detailedReport']['status_changed_to'][addedStatus] += 1
-                                statList['detailedReport']['lists']['status_changed_to'][addedStatus][0].append(key)
-                                statList['detailedReport']['lists']['status_changed_to'][addedStatus][1].append(actionMail)
+                                statList['weeklyReport']['status_changed'][addedStatus]['id'].append(rowId)
+                                statList['weeklyReport']['status_changed'][addedStatus]['author'].append(actionMail)
 
                             newStatus = None
 
@@ -581,18 +524,16 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                         newPriority = change['added']
                         util_increase_user_actions(statList, key, actionMail, bugTargets, 'priority_changed', actionDate)
                         if actionDate >= cfg[reportPeriod] and newPriority == row['priority']:
-                            statList['detailedReport']['priority_changed'][newPriority] += 1
-                            statList['detailedReport']['lists']['priority_changed'][newPriority][0].append(key)
-                            statList['detailedReport']['lists']['priority_changed'][newPriority][1].append(actionMail)
+                            statList['weeklyReport']['priority_changed'][newPriority]['id'].append(rowId)
+                            statList['weeklyReport']['priority_changed'][newPriority]['author'].append(actionMail)
 
 
                     elif change['field_name'] == 'severity':
                         newSeverity = change['added']
                         util_increase_user_actions(statList, key, actionMail, bugTargets, 'severity_changed', actionDate)
                         if actionDate >= cfg[reportPeriod] and newSeverity == row['severity']:
-                            statList['detailedReport']['severity_changed'][newSeverity] += 1
-                            statList['detailedReport']['lists']['severity_changed'][newSeverity][0].append(key)
-                            statList['detailedReport']['lists']['severity_changed'][newSeverity][1].append(actionMail)
+                            statList['weeklyReport']['severity_changed'][newSeverity]['id'].append(rowId)
+                            statList['weeklyReport']['severity_changed'][newSeverity]['author'].append(actionMail)
 
                     elif change['field_name'] == 'keywords':
                         keywordsAdded = change['added'].split(", ")
@@ -601,27 +542,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                 util_increase_user_actions(statList, key, actionMail, bugTargets, 'keyword_added', actionDate)
 
                                 if actionDate >= cfg[reportPeriod] and keyword in row['keywords']:
-                                    statList['detailedReport']['keyword_added'][keyword] += 1
-                                    statList['detailedReport']['lists']['keyword_added'][keyword][0].append(key)
-                                    statList['detailedReport']['lists']['keyword_added'][keyword][1].append(actionMail)
+                                    statList['weeklyReport']['keyword_added'][keyword]['id'].append(rowId)
+                                    statList['weeklyReport']['keyword_added'][keyword]['author'].append(actionMail)
+                                    statList['weeklyReport']['keyword_added'][keyword]['status'][rowStatus] += 1
 
-                                    if keyword == 'haveBacktrace':
-                                        if rowStatus not in statList['detailedReport']['backTraceStatus']:
-                                            statList['detailedReport']['backTraceStatus'][rowStatus] = 0
-                                        statList['detailedReport']['backTraceStatus'][rowStatus] += 1
-                                    elif keyword == 'easyHack':
-                                        if rowStatus not in statList['detailedReport']['easyHackStatus']:
-                                            statList['detailedReport']['easyHackStatus'][rowStatus] = 0
-                                        statList['detailedReport']['easyHackStatus'][rowStatus] += 1
-                                    elif keyword == 'regression':
-                                        if rowStatus not in statList['detailedReport']['regressionStatus']:
-                                            statList['detailedReport']['regressionStatus'][rowStatus] = 0
-                                        statList['detailedReport']['regressionStatus'][rowStatus] += 1
-                                    elif keyword == 'bisected':
-                                        if rowStatus not in statList['detailedReport']['bisectedStatus']:
-                                            statList['detailedReport']['bisectedStatus'][rowStatus] = 0
-                                        statList['detailedReport']['bisectedStatus'][rowStatus] += 1
-                                    elif keyword == 'patch':
+                                    if keyword == 'patch':
                                         patchAdded = True
 
                         keywordsRemoved = change['removed'].split(", ")
@@ -630,24 +555,20 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                                 util_increase_user_actions(statList, key, actionMail, bugTargets, 'keyword_removed', actionDate)
 
                                 if actionDate >= cfg[reportPeriod] and keyword not in row['keywords']:
-                                    statList['detailedReport']['keyword_removed'][keyword] += 1
-
-                                    statList['detailedReport']['lists']['keyword_removed'][keyword][0].append(key)
-                                    statList['detailedReport']['lists']['keyword_removed'][keyword][1].append(actionMail)
+                                    statList['weeklyReport']['keyword_removed'][keyword]['id'].append(rowId)
+                                    statList['weeklyReport']['keyword_removed'][keyword]['author'].append(actionMail)
 
                     elif change['field_name'] == 'whiteboard':
                         for whiteboard in change['added'].split(' '):
                             if 'backportrequest' in whiteboard.lower():
-                                util_increase_user_actions(statList, key, actionMail, bugTargets, 'whiteboard_added', actionDate)
+                                util_increase_user_actions(statList, rowId, actionMail, bugTargets, 'whiteboard_added', actionDate)
 
                                 if actionDate >= cfg[reportPeriod] and whiteboard in row['whiteboard']:
-                                    if whiteboard not in statList['detailedReport']['whiteboard_added']:
-                                        statList['detailedReport']['whiteboard_added'][whiteboard] = 0
-                                        statList['detailedReport']['lists']['whiteboard_added'][whiteboard] = [[],[]]
-                                    statList['detailedReport']['whiteboard_added'][whiteboard] += 1
+                                    if whiteboard not in statList['weeklyReport']['whiteboard_added']:
+                                        statList['weeklyReport']['whiteboard_added'][whiteboard] = {'id':[], 'author':[]}
 
-                                    statList['detailedReport']['lists']['whiteboard_added'][whiteboard][0].append(key)
-                                    statList['detailedReport']['lists']['whiteboard_added'][whiteboard][1].append(actionMail)
+                                    statList['weeklyReport']['whiteboard_added'][whiteboard]['id'].append(rowId)
+                                    statList['weeklyReport']['whiteboard_added'][whiteboard]['author'].append(actionMail)
 
                                     if isOpen(rowStatus):
                                         backPortAdded = True
@@ -655,26 +576,22 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
 
                         for whiteboard in change['removed'].split(' '):
                             if 'backportrequest' in whiteboard.lower():
-                                util_increase_user_actions(statList, key, actionMail, bugTargets, 'whiteboard_removed', actionDate)
+                                util_increase_user_actions(statList, rowId, actionMail, bugTargets, 'whiteboard_removed', actionDate)
 
                                 if actionDate >= cfg[reportPeriod] and whiteboard not in row['whiteboard']:
-                                    if whiteboard not in statList['detailedReport']['whiteboard_removed']:
-                                        statList['detailedReport']['whiteboard_removed'][whiteboard] = 0
-                                        statList['detailedReport']['lists']['whiteboard_removed'][whiteboard] = [[],[]]
-                                    statList['detailedReport']['whiteboard_removed'][whiteboard] += 1
+                                    if whiteboard not in statList['weeklyReport']['whiteboard_removed']:
+                                        statList['weeklyReport']['whiteboard_removed'][whiteboard] = {'id':[], 'author':[]}
 
-                                    statList['detailedReport']['lists']['whiteboard_removed'][whiteboard][0].append(key)
-                                    statList['detailedReport']['lists']['whiteboard_removed'][whiteboard][1].append(actionMail)
+                                    statList['weeklyReport']['whiteboard_removed'][whiteboard]['id'].append(rowId)
+                                    statList['weeklyReport']['whiteboard_removed'][whiteboard]['author'].append(actionMail)
 
                     elif change['field_name'] == 'op_sys':
-                        newPlatform = change['added']
-                        util_increase_user_actions(statList, key, actionMail, bugTargets, 'system_changed', actionDate)
+                        newSystem = change['added']
+                        util_increase_user_actions(statList, rowId, actionMail, bugTargets, 'system_changed', actionDate)
 
-                        if actionDate >= cfg[reportPeriod] and newPlatform not in row['platform']:
-                            statList['detailedReport']['system_changed'][newPlatform] += 1
-
-                            statList['detailedReport']['lists']['system_changed'][newPlatform][0].append(key)
-                            statList['detailedReport']['lists']['system_changed'][newPlatform][1].append(actionMail)
+                        if actionDate >= cfg[reportPeriod] and newSystem not in row['op_sys']:
+                            statList['weeklyReport']['system_changed'][newSystem]['id'].append(rowId)
+                            statList['weeklyReport']['system_changed'][newSystem]['author'].append(actionMail)
 
                     elif change['field_name'] == 'assigned_to':
                         if actionDate >= cfg[reportPeriod]:
@@ -699,9 +616,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
 
                 util_check_bugzilla_mail(statList, commentMail, '', commentDate)
 
-                util_increase_user_actions(statList, key, commentMail, bugTargets, 'comments', commentDate)
+                util_increase_user_actions(statList, rowId, commentMail, bugTargets, 'comments', commentDate)
                 if commentDate >= cfg[reportPeriod]:
-                    statList['detailedReport']['comments_count'] += 1
+                    statList['weeklyReport']['comments_count'] += 1
 
                 #Check for duplicated comments
                 if idx > 0 and comment['text'] == comments[idx-1]['text']:
@@ -749,7 +666,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                         else:
                             statList['tags']['removeObsolete'].add(comments[-1]["id"])
                 else:
-                    if datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedPeriod'] and rowStatus == 'NEW' and 'needsUXEval' not in row['keywords'] and 'easyHack' not in row['keywords'] and row['component'] != 'Documentation' and (row['product'] == 'LibreOffice' or row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
+                    if datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedPeriod'] and \
+                            rowStatus == 'NEW' and 'needsUXEval' not in row['keywords'] and 'easyHack' not in row['keywords'] and \
+                            row['component'] != 'Documentation' and (row['product'] == 'LibreOffice' or \
+                            row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['massping']['untouched'].append(rowId)
 
             for person in row['cc_detail']:
@@ -843,8 +763,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                 lResults['inactiveAssigned'][1].append(lastAssignedEmail)
 
         elif row['summary'].lower().startswith('[meta]'):
-            statList['data']['bugs']['metabugs'][rowId] = row['alias']
-
+            statList['bugs']['metabugAlias'][rowId] = row['alias']
             if not row['alias']:
                 if 'emptyAlias' not in lResults:
                     lResults['emptyAlias'] = [[],[]]
@@ -877,67 +796,66 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
     statList['stat']['oldest'] = statOldDate.strftime("%Y-%m-%d")
     print(" from " + statList['stat']['oldest'] + " to " + statList['stat']['newest'])
 
-def util_print_QA_line(fp, statList, string, number, tuple, action):
+def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
 
-    if len(tuple[0]) == 1:
-        auxString = 'bug has'
-        nBugs = 'bug'
-    else:
-        auxString = "bugs have"
-        nBugs = 'bugs'
+    for key, value in dValue.items():
+        if value['id']:
+            nBugs = len(value['id'])
+            if nBugs == 1:
+                aux1 = 'bug has'
+                aux2 = 'bug'
+            else:
+                aux1 = "bugs have"
+                aux2 = 'bugs'
 
-    if action == 'keyword_added' or action == 'whiteboard_added':
-        print(('  * \'' + string + '\' has been added to {} {}.').format(number, nBugs), file=fp)
-    elif action == 'keyword_removed' or action == 'whiteboard_removed':
-        print(('  * \'' + string + '\' has been removed from {} {}.').format(number, nBugs), file=fp)
-    elif action == 'created':
-        print(('  * {} have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )').format(
-                number[0], number[1], number[2]), file=fp)
-    elif action == 'author':
-        print(('  * {} have been created.').format(number), file=fp)
-    else:
-        print(('  * {} ' + auxString + ' been changed to \'' + string + '\'.').format(number), file=fp)
+            if action == 'added' or action == 'removed':
+                if isMetabug and int(key) in statList['bugs']['metabugAlias']:
+                    key = statList['bugs']['metabugAlias'][int(key)][0]
+                aux3 = 'to'
+                if action == 'removed':
+                    aux3 = 'from'
+                print(('  * \'{}\' has been {} {} {} {}.').format(key, action, aux3, nBugs, aux2), file=fp)
+            else:
+                print(('  * {} {} been changed to \'{}\'.').format(nBugs, aux1, key), file=fp)
 
+            util_create_short_url(fp, value['id'])
+            #Count the number of reps
+            my_dict = {i: value['author'].count(i) for i in value['author']}
 
-    url = "https://bugs.documentfoundation.org/buglist.cgi?bug_id="
-    for bug in tuple[0]:
+            d_view = [(v, k) for k, v in my_dict.items()]
+
+            d_view.sort(reverse=True)
+            usersString = '\tDone by: '
+
+            for i1,i2 in d_view:
+                try:
+                    usersString += statList['people'][i2]['name'] + ' ( ' + str(i1) + ' ), '
+                except:
+                    continue
+
+            print(usersString[:-2], file=fp)
+            print(file=fp)
+
+def util_create_short_url(fp, lBugs):
+    url = urlPath
+    for bug in lBugs:
         url += str(bug) + "%2C"
 
     url = url[:-3]
     shortener = Shortener('Tinyurl', timeout=9000)
     print('\tLink: ' + shortener.short(url), file=fp)
 
-    if not action == 'created':
+def util_print_QA_line_blog(fp, statList, dValue, total_count):
 
-        #Count the number of reps
-        my_dict = {i: tuple[1].count(i) for i in tuple[1]}
-
-        d_view = [(v, k) for k, v in my_dict.items()]
-
-        d_view.sort(reverse=True)
-        usersString = '\tDone by: '
-
-        for i1,i2 in d_view:
-            try:
-                usersString += statList['people'][i2]['name'] + ' ( ' + str(i1) + ' ), '
-            except:
-                continue
-
-        print(usersString[:-2], file=fp)
-
-    print(file=fp)
-
-def util_print_QA_line_blog(fp, statList, number, lList, total_count):
-
-    if len(lList[0]) == 1:
-        auxString = 'bug.'
+    if len(dValue['id']) > 1:
+        auxString = 'bugs.'
     else:
-        auxString = "bugs."
+        auxString = "bug."
 
-    print(('  * {} ' + auxString).format(number), file=fp)
+    print(('  * {} ' + auxString).format(len(dValue['id'])), file=fp)
 
     #Count the number of reps
-    my_dict = {i: lList[1].count(i) for i in lList[1]}
+    my_dict = {i: dValue['author'].count(i) for i in dValue['author']}
 
     d_view = [(v, k) for k, v in my_dict.items()]
     d_view.sort(reverse=True)
@@ -945,20 +863,12 @@ def util_print_QA_line_blog(fp, statList, number, lList, total_count):
     print('  * Total users: {}'.format(len(d_view)), file=fp)
 
     usersString = '  * Done by: \n'
-
-    if len(lList) == 3:
-        print('  * Status: ', file=fp)
-        for k,v in lList[2].items():
-            print('      - ' + str(k) + ' : ' + str(v), file=fp)
-
-
-
     count = 0
     for i1,i2 in d_view:
         try:
             count += 1
             if count <= total_count:
-                usersString += statList['people'][i2]['name'] + ' ( ' + str(i1) + ' ) \n'
+                usersString += '      ' +  statList['people'][i2]['name'] + ' ( ' + str(i1) + ' ) \n'
             else:
                 break
         except:
@@ -966,27 +876,19 @@ def util_print_QA_line_blog(fp, statList, number, lList, total_count):
 
     print(usersString[:-2], file=fp)
 
+    if 'status' in dValue:
+        print('  * Status: ', file=fp)
+        for k,v in dValue['status'].items():
+            print('      ' + str(k) + ' : ' + str(v), file=fp)
+
     print(file=fp)
 
-def util_print_QA_line_created(fp, d , whole=None):
+def util_print_QA_line_created(fp, dValue ):
     others = 0
-    s = [(k, d[k]) for k in sorted(d, key=d.get, reverse=True)]
+    s = [(k, dValue[k]) for k in sorted(dValue, key=dValue.get, reverse=True)]
     total = 0
     for k, v in s:
-        if whole:
-            percent = 100 * float(v)/float(whole)
-            if percent >= 3:
-                print('{}: {} \t\t {}%'.format(k, v, percent), file=fp)
-                total += percent
-            else:
-                others += v
-        else:
-            print('{}: {}'.format(k, v), file=fp)
-
-    if whole:
-        others_percent = 100 - total
-        print('OTHERS: {} \t\t {}%'.format(others, others_percent) , file=fp)
-
+        print('      {}: {}'.format(k, v), file=fp)
 
 def create_wikimedia_table_by_target(cfg, statList):
     from tabulate import tabulate
@@ -1032,7 +934,7 @@ def create_wikimedia_table_by_target(cfg, statList):
         output += '[[Category:EN]]\n'
         output += '[[Category:QA/Stats]]'
 
-        fp = open('/tmp/' + kT + '_table.txt', 'w', encoding='utf-8')
+        fp = open('/tmp/table_' + kT + '.txt', 'w', encoding='utf-8')
         print(output.replace('wikitable', 'wikitable sortable'), file=fp)
         fp.close()
 
@@ -1080,25 +982,20 @@ def create_wikimedia_table_by_period(cfg, statList):
         output += '[[Category:EN]]\n'
         output += '[[Category:QA/Stats]]'
 
-        fp = open('/tmp/' + kT + '_period.txt', 'w', encoding='utf-8')
+        fp = open('/tmp/period_' + kT + '.txt', 'w', encoding='utf-8')
         print(output.replace('wikitable', 'wikitable sortable'), file=fp)
         fp.close()
 
-def untouchedBugs_Report(statList):
-    fp = open('/tmp/untouch_report.txt', 'w', encoding='utf-8')
+def massping_Report(statList):
+    fp = open('/tmp/massping_report.txt', 'w', encoding='utf-8')
 
-    print('* Untouched Bugs Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
+    print('* Massping Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
     for key, value in sorted(statList['massping'].items()):
         print(file=fp)
         print('* ' + key + ' - ' + str(len(value)) + ' bugs.', file=fp)
         for i in range(0, len(value), 400):
-            url = "https://bugs.documentfoundation.org/buglist.cgi?bug_id="
             subList = value[i:i + 400]
-            for bug in subList:
-                url += str(bug) + "%2C"
-            url = url[:-3]
-            shortener = Shortener('Tinyurl', timeout=9000)
-            print(str(len(subList)) + ' bugs: ' + shortener.short(url), file=fp)
+            util_create_short_url(fp, subList)
 
     fp.close()
 
@@ -1151,7 +1048,7 @@ def crashes_Report(statList) :
 
     print('* Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
 
-    for key, value in sorted(statList['detailedReport']['crashSignatures'].items()):
+    for key, value in sorted(statList['weeklyReport']['crashSignatures'].items()):
         if len(value) > 1:
             print(file=fp)
             print('* ' + key + '.', file=fp)
@@ -1164,195 +1061,143 @@ def Blog_Report(statList) :
 
     print('* Report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
 
-    print('* Total report created: {}'.format(statList['detailedReport']['created_count']), file=fp)
+    print('* Total reports created: {}'.format(len(statList['bugs']['created']['id'])), file=fp)
 
-    print('* Total enhancements created: {}'.format(statList['detailedReport']['enhancement_count']), file=fp)
+    print('* Total enhancements created: {}'.format(statList['bugs']['created']['enhancement_count']), file=fp)
 
-    print('* Total bugs created: {}'.format(statList['detailedReport']['no_enhancement_count']), file=fp)
+    print('* Total bugs created: {}'.format(statList['bugs']['created']['no_enhancement_count']), file=fp)
     print(file=fp)
 
     print('* Bugs reported.', file=fp)
-    util_print_QA_line_blog(fp, statList,
-                       statList['detailedReport']['created_count'],
-                       statList['detailedReport']['lists']['author'], 15)
-
+    util_print_QA_line_blog(fp, statList, statList['bugs']['created'], 15)
 
     print(file=fp)
     print('* Bugs confirmed.', file=fp)
-    util_print_QA_line_blog(fp, statList,
-                       statList['detailedReport']['is_confirm_count'],
-                       statList['detailedReport']['lists']['confirm'], 20)
+    util_print_QA_line_blog(fp, statList, statList['bugs']['confirmed'], 20)
 
     print(file=fp)
     print('* Bugs fixed.', file=fp)
-    util_print_QA_line_blog(fp, statList,
-                       statList['detailedReport']['is_fixed'],
-                       statList['detailedReport']['lists']['fixed'], 20)
-
+    util_print_QA_line_blog(fp, statList, statList['bugs']['fixed'], 20)
 
     print(file=fp)
-    for key, value in sorted(statList['detailedReport']['keyword_added'].items()):
+    for key, value in sorted(statList['weeklyReport']['keyword_added'].items()):
         if value and key in ['easyHack', 'bisected', 'haveBacktrace', 'regression']:
             print('* ' + key + '.', file=fp)
-            util_print_QA_line_blog(fp, statList, value,
-                statList['detailedReport']['lists']['keyword_added'][key], 15)
+            util_print_QA_line_blog(fp, statList, value, 15)
 
     print(file=fp)
-    for key, value in sorted(statList['detailedReport']['status_changed_to'].items()):
+    for key, value in sorted(statList['weeklyReport']['status_changed'].items()):
         if value and key in ['RESOLVED_DUPLICATE', 'VERIFIED_FIXED']:
             print('* ' + key.replace("_", " ") + '.', file=fp)
-            util_print_QA_line_blog(fp, statList, value,
-                               statList['detailedReport']['lists']['status_changed_to'][key], 20)
+            util_print_QA_line_blog(fp, statList, value, 20)
 
     print(file=fp)
     print('* Bugs created by week', file=fp)
 
-    for key, value in sorted(statList['detailedReport']['created_week'].items()):
+    for key, value in sorted(statList['bugs']['created']['split_week'].items()):
         print('{}: {}'.format(key, value), file=fp)
 
     print(file=fp)
     print('* Bugs created by month', file=fp)
 
-    for key, value in sorted(statList['detailedReport']['created_month'].items()):
+    for key, value in sorted(statList['bugs']['created']['split_month'].items()):
         print('{}: {}'.format(key, value), file=fp)
-
-    print(file=fp)
-    print('* Bugs resolved by week', file=fp)
-
-    for key, value in sorted(statList['detailedReport']['resolved_week'].items()):
-        print('{}: {}'.format(key, value), file=fp)
-
-    print(file=fp)
-    print('* Statuses of closed bugs', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['bug_status_close'])
-
-    whole = statList['detailedReport']['created_count']
 
     print(file=fp)
     print('* Components of created bugs', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['bug_component'], whole)
+    util_print_QA_line_created(fp, statList['bugs']['created']['component'])
 
     print(file=fp)
     print('* Systems of created bugs', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['bug_system'], whole)
+    util_print_QA_line_created(fp, statList['bugs']['created']['system'])
 
     print(file=fp)
     print('* Platforms of created bugs', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['bug_platform'], whole)
+    util_print_QA_line_created(fp, statList['bugs']['created']['platform'])
 
     print(file=fp)
     print('* Statuses of created bugs', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['bug_status_open'], whole)
+    util_print_QA_line_created(fp, statList['bugs']['created']['status'])
 
     print(file=fp)
     print('* Resolution of created bugs', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['bug_resolution'],
-        statList['detailedReport']['closed_count'])
+    util_print_QA_line_created(fp, statList['bugs']['created']['resolution'])
+    print(file=fp)
+
+    print('* Bugs moved to resolved by week', file=fp)
+
+    for key, value in sorted(statList['bugs']['closed']['split_week'].items()):
+        print('{}: {}'.format(key, value), file=fp)
 
     print(file=fp)
-    print('* Regressions statuses', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['regressionStatus'],
-        statList['detailedReport']['keyword_added']['regression'])
-
-    print(file=fp)
-    print('* Bisected statuses', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['bisectedStatus'],
-        statList['detailedReport']['keyword_added']['bisected'])
-
-    print(file=fp)
-    print('* Backtrace statuses', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['backTraceStatus'],
-        statList['detailedReport']['keyword_added']['haveBacktrace'])
-
-    print(file=fp)
-    print('* easyHack statuses', file=fp)
-    util_print_QA_line_created(fp, statList['detailedReport']['easyHackStatus'],
-        statList['detailedReport']['keyword_added']['easyHack'])
+    print('* Statuses of bugs moved to resolved', file=fp)
+    util_print_QA_line_created(fp, statList['bugs']['moveToClosed']['status'])
 
     fp.close()
 
-def Weekly_Report(statList) :
+def weekly_Report(statList) :
     print('QA report from {} to {}'.format(cfg[reportPeriod].strftime("%Y-%m-%d"), statList['stat']['newest']))
-    fp = open('/tmp/qa_report.txt', 'w', encoding='utf-8')
+    fp = open('/tmp/weekly_report.txt', 'w', encoding='utf-8')
 
     print('Hello,', file=fp)
     print(file=fp)
     print('What have happened in QA in the last {} days?'.format(reportPeriod[:-1]), file=fp)
     print(file=fp)
 
-    util_print_QA_line(fp, statList, '',
-                       [statList['detailedReport']['created_count'], statList['detailedReport']['unconfirmed_count'],
-                        statList['data']['bugs']['all']['status']['UNCONFIRMED']],
-                       [statList['detailedReport']['lists']['unconfirmed']], 'created')
+    print('  * {} have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )'.format(\
+            len(statList['bugs']['created']['id']),
+            statList['bugs']['created']['status']['UNCONFIRMED'],
+            statList['bugs']['all']['status']['UNCONFIRMED']), file=fp)
 
-    print('  * {} comments have been written.'.format(statList['detailedReport']['comments_count']), file=fp)
+    util_create_short_url(fp, statList['bugs']['created']['id'])
+
+    print(file=fp)
+    print('  * {} comments have been written.'.format(statList['weeklyReport']['comments_count']), file=fp)
     print(file=fp)
 
-    print("== STATUS CHANGED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['status_changed_to'].items()):
-        if value:
-            util_print_QA_line(fp, statList, key.replace("_", " "), value,
-                               statList['detailedReport']['lists']['status_changed_to'][key], 'status_changed_to')
+    if statList['weeklyReport']['status_changed']:
+        print("== STATUS CHANGED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['status_changed'], 'changed')
 
+    if statList['weeklyReport']['keyword_added']:
+        print("== KEYWORDS ADDED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['keyword_added'], 'added')
 
-    print("== KEYWORDS ADDED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['keyword_added'].items()):
-        if value:
-            util_print_QA_line(fp, statList, key, value,
-                statList['detailedReport']['lists']['keyword_added'][key], 'keyword_added')
+    if statList['weeklyReport']['keyword_removed']:
+        print("== KEYWORDS REMOVED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['keyword_removed'], 'removed')
 
+    if statList['weeklyReport']['whiteboard_added']:
+        print("== BACKPORTREQUEST ADDED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['whiteboard_added'], 'added')
 
-    print("== KEYWORDS REMOVED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['keyword_removed'].items()):
-        if value:
-            util_print_QA_line(fp, statList, key, value,
-                statList['detailedReport']['lists']['keyword_removed'][key], 'keyword_removed')
+    if statList['weeklyReport']['whiteboard_removed']:
+        print("== BACKPORTREQUEST REMOVED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['whiteboard_removed'], 'removed')
 
-    print("== BACKPORTREQUEST ADDED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['whiteboard_added'].items()):
-        if value:
-            util_print_QA_line(fp, statList, key, value,
-                statList['detailedReport']['lists']['whiteboard_added'][key], 'whiteboard_added')
+    if statList['weeklyReport']['severity_changed']:
+        print("== SEVERITY CHANGED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['severity_changed'], 'changed')
 
+    if statList['weeklyReport']['priority_changed']:
+        print("== PRIORITY CHANGED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['priority_changed'], 'changed')
 
-    print("== BACKPORTREQUEST REMOVED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['whiteboard_removed'].items()):
-        if value:
-            util_print_QA_line(fp, statList, key, value,
-                statList['detailedReport']['lists']['whiteboard_removed'][key], 'whiteboard_removed')
+    if statList['weeklyReport']['system_changed']:
+        print("== SYSTEM CHANGED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['system_changed'], 'changed')
 
+    if statList['weeklyReport']['status_changed']:
+        print("== STATUS CHANGED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['status_changed'], 'changed')
 
-    print("== SEVERITY CHANGED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['severity_changed'].items()):
-        if value:
-            util_print_QA_line(fp, statList, key, value,
-                               statList['detailedReport']['lists']['severity_changed'][key], 'severity_changed')
+    if statList['weeklyReport']['metabug_added']:
+        print("== METABUGS ADDED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['metabug_added'], 'added', True)
 
-    print("== PRIORITY CHANGED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['priority_changed'].items()):
-        if value:
-            util_print_QA_line(fp, statList, key, value,
-                               statList['detailedReport']['lists']['priority_changed'][key], 'priority_changed')
-
-    print("== SYSTEM CHANGED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['system_changed'].items()):
-        if value:
-            util_print_QA_line(fp, statList, key, value,
-                               statList['detailedReport']['lists']['system_changed'][key], 'system_changed')
-
-    print("== METABUGS ADDED ==", file=fp)
-
-    for key, value in sorted(statList['detailedReport']['metabug_added'].items()):
-        if value and int(key) in statList['data']['bugs']['metabugs']:
-            util_print_QA_line(fp, statList, statList['data']['bugs']['metabugs'][int(key)][0], value,
-                statList['detailedReport']['lists']['metabug_added'][key], 'keyword_added')
-
-
-    print("== METABUGS REMOVED ==", file=fp)
-    for key, value in sorted(statList['detailedReport']['metabug_removed'].items()):
-        if value and int(key) in statList['data']['bugs']['metabugs']:
-            util_print_QA_line(fp, statList, statList['data']['bugs']['metabugs'][int(key)][0], value,
-                statList['detailedReport']['lists']['metabug_removed'][key], 'keyword_removed')
+    if statList['weeklyReport']['metabug_removed']:
+        print("== METABUG REMOVED ==", file=fp)
+        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['metabug_removed'], 'removed', True)
 
     print('Thank you all for making Libreoffice rock!', file=fp)
     print(file=fp)
@@ -1395,8 +1240,6 @@ if __name__ == '__main__':
     analyze_bugzilla(statList, bugzillaData, cfg, lIgnore)
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'report':
-            Weekly_Report(statList)
         if sys.argv[1] == 'blog':
             Blog_Report(statList)
         elif sys.argv[1] == 'target':
@@ -1407,14 +1250,14 @@ if __name__ == '__main__':
             users_Report(statList)
         elif sys.argv[1] == 'crash':
             crashes_Report(statList)
-        elif sys.argv[1] == 'ping':
-            untouchedBugs_Report(statList)
+        elif sys.argv[1] == 'massping':
+            massping_Report(statList)
         elif sys.argv[1] == 'tag':
             automated_tagging(statList)
         elif sys.argv[1] == 'weekly':
-            Weekly_Report(statList)
+            weekly_Report(statList)
         else:
-            print("You must use 'report','blog', 'target', 'period', 'users', 'crash', 'ping', 'tag' or 'weekly' as parameter.")
+            print("You must use 'blog', 'target', 'period', 'users', 'crash', 'massping', 'tag' or 'weekly' as parameter.")
             sys.exit(1)
 
     print('End of report')
