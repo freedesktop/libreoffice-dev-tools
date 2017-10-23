@@ -60,7 +60,7 @@ needInfoPingComment = "Dear Bug Submitter,\n\nThis bug has been in NEEDINFO stat
 
 needInfoFollowUpPingComment = "Dear Bug Submitter,\n\nPlease read this message in its entirety before proceeding."
 
-moveToNeedInfoComment = "I have set the bug's status to 'NEEDINFO'. Please change it back to 'UNCONFIRMED'"
+moveToNeedInfoComment = "I have set the bug's status to 'NEEDINFO'"
 
 def util_load_file(fileName):
     try:
@@ -816,7 +816,7 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
                     aux3 = 'from'
                 print(('  * \'{}\' has been {} {} {} {}.').format(key, action, aux3, nBugs, aux2), file=fp)
             else:
-                print(('  * {} {} been changed to \'{}\'.').format(nBugs, aux1, key), file=fp)
+                print(('  * {} {} been changed to \'{}\'.').format(nBugs, aux1, key.replace('_', ' ')), file=fp)
 
             util_create_short_url(fp, value['id'])
             #Count the number of reps
@@ -1144,7 +1144,7 @@ def weekly_Report(statList) :
     print('What have happened in QA in the last {} days?'.format(reportPeriod[:-1]), file=fp)
     print(file=fp)
 
-    print('  * {} have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )'.format(\
+    print('  * {} bugs have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )'.format(\
             len(statList['bugs']['created']['id']),
             statList['bugs']['created']['status']['UNCONFIRMED'],
             statList['bugs']['all']['status']['UNCONFIRMED']), file=fp)
@@ -1156,7 +1156,7 @@ def weekly_Report(statList) :
     print(file=fp)
 
     if statList['weeklyReport']['status_changed']:
-        print("== STATUS CHANGED ==", file=fp)
+        print("== STATUSES CHANGED ==", file=fp)
         util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['status_changed'], 'changed')
 
     if statList['weeklyReport']['keyword_added']:
@@ -1186,10 +1186,6 @@ def weekly_Report(statList) :
     if statList['weeklyReport']['system_changed']:
         print("== SYSTEM CHANGED ==", file=fp)
         util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['system_changed'], 'changed')
-
-    if statList['weeklyReport']['status_changed']:
-        print("== STATUS CHANGED ==", file=fp)
-        util_print_QA_line_weekly(fp, statList, statList['weeklyReport']['status_changed'], 'changed')
 
     if statList['weeklyReport']['metabug_added']:
         print("== METABUGS ADDED ==", file=fp)
