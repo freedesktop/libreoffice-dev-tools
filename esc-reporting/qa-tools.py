@@ -52,9 +52,8 @@ keywords_list = ['accessibility', 'bibisected', 'bibisectNotNeeded', 'bibisectRe
 system_list = ['All', 'Linux (All)', 'Android', 'Windows (All)', 'Mac OS X (All)', 'iOS', 'FreeBSD', 'NetBSD', 'OpenBSD',
         'BSD (Others)', 'Solaris', 'Cygwin', 'AIX', 'HP-UX', 'IRIX', 'Interix', 'other']
 
-urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
 
-untouchedPingComment = "** Please read this message in its entirety before responding **\n\nTo make sure we're focusing on the bugs that affect our users today, LibreOffice QA is asking bug reporters and confirmers to retest open, confirmed bugs which have not been touched for over a year."
+untouchedPingComment = "** Please read this message in its entirety before responding **\n\nTo make sure we're focusing on the bugs that affect our users today, LibreOffice QA is asking bug reporters and confirmers to retest open, confirmed bugs which have not been touched for over a year.\n\nThere have been thousands of bug fixes and commits since anyone checked on this bug report. During that time, it's possible that the bug has been fixed, or the details of the problem have changed. We'd really appreciate your help in getting confirmation that the bug is still present.\n\nIf you have time, please do the following:\n\nTest to see if the bug is still present with the latest version of LibreOffice from https://www.libreoffice.org/download/\n\nIf the bug is present, please leave a comment that includes the information from Help - About LibreOffice.\n \nIf the bug is NOT present, please set the bug's Status field to RESOLVED-WORKSFORME and leave a comment that includes the information from Help - About LibreOffice.\n\nPlease DO NOT\n\nUpdate the version field\nReply via email (please reply directly on the bug tracker)\nSet the bug's Status field to RESOLVED - FIXED (this status has a particular meaning that is not \nappropriate in this case)\n\n\nIf you want to do more to help you can test to see if your issue is a REGRESSION. To do so:\n1. Download and install oldest version of LibreOffice (usually 3.3 unless your bug pertains to a feature added after 3.3) from http://downloadarchive.documentfoundation.org/libreoffice/old/\n\n2. Test your bug\n3. Leave a comment with your results.\n4a. If the bug was present with 3.3 - set version to 'inherited from OOo';\n4b. If the bug was not present in 3.3 - add 'regression' to keyword\n\n\nFeel free to come ask questions or to say hello in our QA chat: https://kiwiirc.com/nextclient/irc.freenode.net/#libreoffice-qa\n\nThank you for helping us make LibreOffice even better for everyone!\n\nWarm Regards,\nQA Team\n\nMassPing-UntouchedBug"
 
 needInfoPingComment = "Dear Bug Submitter,\n\nThis bug has been in NEEDINFO status with no change for at least"
 
@@ -238,6 +237,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
     lResults = {}
+    urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
 
@@ -626,7 +626,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
 
                 if rowStatus != 'NEEDINFO' and \
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
-                        (comment["text"].startswith(untouchedPingComment) or \
+                        (comment["text"].startswith(untouchedPingComment[:250]) or \
                         moveToNeedInfoComment in comment["text"] or \
                         comment["text"].startswith("A polite ping, still working on this bug") or \
                         comment["text"].startswith(needInfoPingComment) or \
@@ -634,10 +634,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                     statList['tags']['addObsolete'].add(comment["id"])
 
             if len(comments) > 0:
-                if comments[-1]["text"].startswith(untouchedPingComment):
+                if comments[-1]["text"].startswith(untouchedPingComment[:250]):
 
-                    if len(comments) > 1 and comments[-2]["text"].startswith(untouchedPingComment):
-                        if len(comments) > 2 and comments[-3]["text"].startswith(untouchedPingComment):
+                    if len(comments) > 1 and comments[-2]["text"].startswith(untouchedPingComment[:250]):
+                        if len(comments) > 2 and comments[-3]["text"].startswith(untouchedPingComment[:250]):
                             statList['massping']['3years'].append(rowId)
                         else:
                             statList['massping']['2years'].append(rowId)
@@ -837,7 +837,7 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
             print(file=fp)
 
 def util_create_short_url(fp, lBugs):
-    url = urlPath
+    url = "https://bugs.documentfoundation.org/buglist.cgi?bug_id="
     for bug in lBugs:
         url += str(bug) + "%2C"
 
@@ -999,10 +999,30 @@ def massping_Report(statList):
 
     fp.close()
 
+def automated_massping(statList):
+
+    print('== Massping ==')
+    for bugId in statList['massping']['untouched']:
+        bugId = str(bugId)
+        command = '{"comment" : "' + untouchedPingComment.replace('\n', '\\n') + '", "is_private" : false}'
+
+        urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['bugzilla']['api-key']
+        rGet = requests.get(urlGet)
+        rawData = json.loads(rGet.text)
+        rGet.close()
+
+        if rawData['bugs'][bugId]['comments'][-1]['text'][:250] != untouchedPingComment[:250]:
+            urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['bugzilla']['api-key']
+            rPost = requests.post(urlPost, command)
+            print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
+            rPost.close()
+
 def automated_tagging(statList):
     #tags are sometimes not saved in bugzilla_dump.json
     #thus, save those comments automatically tagged as obsolete
     #so we don't tag them again next time
+
+    print('== Obsolete comments ==')
     lAddObsolete = []
     filename = "addObsolete.txt"
     if os.path.exists(filename):
@@ -1233,6 +1253,7 @@ if __name__ == '__main__':
         f.close()
 
     statList = util_create_statList()
+
     analyze_bugzilla(statList, bugzillaData, cfg, lIgnore)
 
     if len(sys.argv) > 1:
@@ -1248,12 +1269,13 @@ if __name__ == '__main__':
             crashes_Report(statList)
         elif sys.argv[1] == 'massping':
             massping_Report(statList)
-        elif sys.argv[1] == 'tag':
+        elif sys.argv[1] == 'automate':
             automated_tagging(statList)
+            automated_massping(statList)
         elif sys.argv[1] == 'weekly':
             weekly_Report(statList)
         else:
-            print("You must use 'blog', 'target', 'period', 'users', 'crash', 'massping', 'tag' or 'weekly' as parameter.")
+            print("You must use 'blog', 'target', 'period', 'users', 'crash', 'massping', 'automate' or 'weekly' as parameter.")
             sys.exit(1)
 
     print('End of report')
