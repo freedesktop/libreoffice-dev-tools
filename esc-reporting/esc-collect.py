@@ -679,13 +679,13 @@ def get_crash(cfg):
     fileName = cfg['homedir'] + 'dump/crash_dump.json'
     rawList = {'crashtest': {}, 'crashreport': {}}
     print("Updating crashtest dump")
-    dirList = util_load_url('http://dev-builds.libreoffice.org/crashtest/?C=M;O=D', useRaw=True)
+    dirList = util_load_url('http://dev-builds.libreoffice.org/crashtest/?C=M&O=D', useRaw=True)
     # find newest entry by using sort - in nginx' fancyindex first row is parent-directory
     # the second ones is most recent dir that was created. Only regular entries have a title
     # attribute though, so use that as a shortcut, skip 
     inx = dirList.find('title="', 0)
     if inx == -1:
-       print("ERROR: http://dev-builds.libreoffice.org/crashtest/?C=M;O=D not showing DIR list")
+       print("ERROR: http://dev-builds.libreoffice.org/crashtest/?C=M&O=D not showing DIR list")
        return
     end = dirList.find('"', inx+7)
     url = 'http://dev-builds.libreoffice.org/crashtest/' + dirList[inx:end] + '/'
