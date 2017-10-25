@@ -687,12 +687,13 @@ def get_crash(cfg):
     if inx == -1:
        print("ERROR: http://dev-builds.libreoffice.org/crashtest/?C=M&O=D not showing DIR list")
        return
-    end = dirList.find('"', inx+7)
+    inx = inx + 7
+    end = dirList.find('"', inx)
     url = 'http://dev-builds.libreoffice.org/crashtest/' + dirList[inx:end] + '/'
 
     for type in 'crashlog', 'exportCrash':
         tmp = util_load_url(url + type + '.txt', useRaw=True).split('\n')
-        rawList['crashtest'][type] = len(tmp) -1
+        rawList['crashtest'][type] = len(tmp) - 1
 
     print("Updating crashreport dump")
     rawList['crashreport'] = util_load_url('http://crashreport.libreoffice.org/api/get/crash-count')
