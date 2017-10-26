@@ -14,6 +14,7 @@ import json
 from pyshorteners import Shortener
 import re
 import requests
+from tabulate import tabulate
 
 homeDir = '/home/xisco/dev-tools/esc-reporting/'
 
@@ -52,6 +53,7 @@ keywords_list = ['accessibility', 'bibisected', 'bibisectNotNeeded', 'bibisectRe
 system_list = ['All', 'Linux (All)', 'Android', 'Windows (All)', 'Mac OS X (All)', 'iOS', 'FreeBSD', 'NetBSD', 'OpenBSD',
         'BSD (Others)', 'Solaris', 'Cygwin', 'AIX', 'HP-UX', 'IRIX', 'Interix', 'other']
 
+urlShowBug = "https://bugs.documentfoundation.org/show_bug.cgi?id="
 
 untouchedPingComment = "** Please read this message in its entirety before responding **\n\nTo make sure we're focusing on the bugs that affect our users today, LibreOffice QA is asking bug reporters and confirmers to retest open, confirmed bugs which have not been touched for over a year.\n\nThere have been thousands of bug fixes and commits since anyone checked on this bug report. During that time, it's possible that the bug has been fixed, or the details of the problem have changed. We'd really appreciate your help in getting confirmation that the bug is still present.\n\nIf you have time, please do the following:\n\nTest to see if the bug is still present with the latest version of LibreOffice from https://www.libreoffice.org/download/\n\nIf the bug is present, please leave a comment that includes the information from Help - About LibreOffice.\n \nIf the bug is NOT present, please set the bug's Status field to RESOLVED-WORKSFORME and leave a comment that includes the information from Help - About LibreOffice.\n\nPlease DO NOT\n\nUpdate the version field\nReply via email (please reply directly on the bug tracker)\nSet the bug's Status field to RESOLVED - FIXED (this status has a particular meaning that is not \nappropriate in this case)\n\n\nIf you want to do more to help you can test to see if your issue is a REGRESSION. To do so:\n1. Download and install oldest version of LibreOffice (usually 3.3 unless your bug pertains to a feature added after 3.3) from http://downloadarchive.documentfoundation.org/libreoffice/old/\n\n2. Test your bug\n3. Leave a comment with your results.\n4a. If the bug was present with 3.3 - set version to 'inherited from OOo';\n4b. If the bug was not present in 3.3 - add 'regression' to keyword\n\n\nFeel free to come ask questions or to say hello in our QA chat: https://kiwiirc.com/nextclient/irc.freenode.net/#libreoffice-qa\n\nThank you for helping us make LibreOffice even better for everyone!\n\nWarm Regards,\nQA Team\n\nMassPing-UntouchedBug"
 
@@ -107,6 +109,14 @@ def util_create_detailed_person(email):
              'metabug_removed': 0
          }
 
+def util_create_bug(summary, component, version, keywords, creationDate, count_cc):
+    return { 'summary': summary,
+             'component': component,
+             'version': version,
+             'keywords': keywords,
+             'creationDate': creationDate,
+             'count': count_cc
+        }
 def util_create_statList():
     return {
         'bugs':
@@ -179,6 +189,7 @@ def util_create_statList():
         'newUsersPeriod': {},
         'targets': {t:{'count':0, 'people':{}} for t in targets_list},
         'period': {p:{'count':0, 'people':{}} for p in periods_list},
+        'MostCCBugs': {},
         'stat': {'oldest': datetime.datetime.now(), 'newest': datetime.datetime(2001, 1, 1)}
     }
 
@@ -237,7 +248,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
     lResults = {}
-    urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
 
@@ -325,6 +335,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
 
             util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
             util_increase_user_actions(statList, key, creatorMail, bugTargets, 'created', creationDate)
+
+            if isOpen(rowStatus) and len(row['cc']) >= 10:
+                statList['MostCCBugs'][rowId] = util_create_bug(
+                        row['summary'], row['component'], row['version'], keywords, creationDate, len(row['cc']))
+
 
             actionMail = None
             fixed = False
@@ -774,7 +789,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
         if dValue:
             print('\n=== ' + dKey + ' ===')
             for idx in range(len(dValue[0])):
-                print(str(idx + 1) + ' - ' + urlPath + str(dValue[0][idx]) + " - " + str(dValue[1][idx]))
+                print(str(idx + 1) + ' - ' + urlShowBug + str(dValue[0][idx]) + " - " + str(dValue[1][idx]))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
@@ -787,7 +802,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
             print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
             lBugs = list(statList['people'][k]['bugs'])
             for idx in range(len(lBugs)):
-                print(str(idx + 1) + ' - ' + urlPath + str(lBugs[idx]))
+                print(str(idx + 1) + ' - ' + urlShowBug + str(lBugs[idx]))
         statList['people'][k]['oldest'] = statList['people'][k]['oldest'].strftime("%Y-%m-%d")
         statList['people'][k]['newest'] = statList['people'][k]['newest'].strftime("%Y-%m-%d")
 
@@ -890,8 +905,67 @@ def util_print_QA_line_created(fp, dValue ):
     for k, v in s:
         print('      {}: {}'.format(k, v), file=fp)
 
+def create_wikimedia_table_mostCCBugs(cfg, statList):
+    for nameList in ['MostCCBugs']:
+        print('Creating wikimedia table for ' + nameList)
+        output = ""
+
+        output += '{{TopMenu}}\n'
+        output += '{{Menu}}\n'
+        output += '{{Menu.QA}}\n'
+        output += '\n'
+        table = []
+        if nameList == 'MostCCBugs':
+            headers = ['Id', 'Summary', 'Component', 'Version', 'isRegression', 'isBisected',
+                           'isEasyHack', 'haveBackTrace', 'Reported', 'Total CC']
+
+            output += '{} bugs have 10 or more emails in the CC list. (sorted in alphabetical order by number of users)\n'.format(
+                    len(statList['MostCCBugs']))
+        else:
+            headers = ['Id', 'Summary', 'Component', 'Version', 'isRegression', 'isBisected',
+                           'isEasyHack', 'haveBackTrace', 'Total Duplicates']
+
+            output += '{} bugs have 10 or more duplicates. (sorted in alphabetical order by number of duplicates)\n'.format(
+                    len(statList['MostDuplicatedBugs']))
+
+        for k,v in statList[nameList].items():
+            row = []
+            row.append('[' + urlShowBug + str(k) + ' #tdf' + str(k) + ']')
+            row.append(v['summary'])
+            row.append(v['component'])
+            row.append(v['version'])
+            if 'regression' in v['keywords']:
+                row.append('True')
+            else:
+                row.append('False')
+            if 'bisected' in v['keywords']:
+                row.append('True')
+            else:
+                row.append('False')
+            if 'easyHack' in v['keywords']:
+                row.append('True')
+            else:
+                row.append('False')
+            if 'haveBacktrace' in v['keywords']:
+                row.append('True')
+            else:
+                row.append('False')
+            row.append(v['creationDate'].strftime("%Y-%m-%d %H:%M:%S"))
+            row.append(v['count'])
+            table.append(row)
+
+        output += tabulate(sorted(table, key = lambda x: x[9], reverse=True), headers, tablefmt='mediawiki')
+        output += "\n"
+        output +='Generated on {}.'.format(cfg['todayDate'])
+        output += "\n"
+        output += '[[Category:EN]]\n'
+        output += '[[Category:QA/Stats]]'
+
+        fp = open('/tmp/table_' + nameList + '.txt', 'w', encoding='utf-8')
+        print(output.replace('wikitable', 'wikitable sortable'), file=fp)
+        fp.close()
+
 def create_wikimedia_table_by_target(cfg, statList):
-    from tabulate import tabulate
     for kT,vT in sorted(statList['targets'].items()):
         print('Creating wikimedia table for release ' + kT)
         output = ""
@@ -914,18 +988,18 @@ def create_wikimedia_table_by_target(cfg, statList):
                 name = statList['people'][kP]['email'].split('@')[0]
 
             if not name == 'libreoffice-commits':
-                arrow = []
-                arrow.append(name)
-                arrow.append(vP['created'])
-                arrow.append(vP['comments'])
-                arrow.append(vP['status_changed'])
-                arrow.append(vP['keyword_added'])
-                arrow.append(vP['keyword_removed'])
-                arrow.append(vP['severity_changed'])
-                arrow.append(vP['priority_changed'])
-                arrow.append(vP['system_changed'])
-                arrow.append(len(set(vP['bugs'])))
-                table.append(arrow)
+                row = []
+                row.append(name)
+                row.append(vP['created'])
+                row.append(vP['comments'])
+                row.append(vP['status_changed'])
+                row.append(vP['keyword_added'])
+                row.append(vP['keyword_removed'])
+                row.append(vP['severity_changed'])
+                row.append(vP['priority_changed'])
+                row.append(vP['system_changed'])
+                row.append(len(set(vP['bugs'])))
+                table.append(row)
 
         output += tabulate(sorted(table, key = lambda x: x[0]), headers, tablefmt='mediawiki')
         output += "\n"
@@ -939,7 +1013,6 @@ def create_wikimedia_table_by_target(cfg, statList):
         fp.close()
 
 def create_wikimedia_table_by_period(cfg, statList):
-    from tabulate import tabulate
     for kT,vT in sorted(statList['period'].items()):
         print('Creating wikimedia table for actions done in the last {} days.'.format(kT[:-1]))
         output = ""
@@ -962,18 +1035,18 @@ def create_wikimedia_table_by_period(cfg, statList):
                 name = statList['people'][kP]['email'].split('@')[0]
 
             if not name == 'libreoffice-commits':
-                arrow = []
-                arrow.append(name)
-                arrow.append(vP['created'])
-                arrow.append(vP['comments'])
-                arrow.append(vP['status_changed'])
-                arrow.append(vP['keyword_added'])
-                arrow.append(vP['keyword_removed'])
-                arrow.append(vP['severity_changed'])
-                arrow.append(vP['priority_changed'])
-                arrow.append(vP['system_changed'])
-                arrow.append(len(set(vP['bugs'])))
-                table.append(arrow)
+                row = []
+                row.append(name)
+                row.append(vP['created'])
+                row.append(vP['comments'])
+                row.append(vP['status_changed'])
+                row.append(vP['keyword_added'])
+                row.append(vP['keyword_removed'])
+                row.append(vP['severity_changed'])
+                row.append(vP['priority_changed'])
+                row.append(vP['system_changed'])
+                row.append(len(set(vP['bugs'])))
+                table.append(row)
 
         output += tabulate(sorted(table, key = lambda x: x[0]), headers, tablefmt='mediawiki')
         output += "\n"
@@ -1073,7 +1146,7 @@ def crashes_Report(statList) :
             print(file=fp)
             print('* ' + key + '.', file=fp)
             for i in value:
-                print('\t - ' + i[1] + ' - https://bugs.documentfoundation.org/show_bug.cgi?id=' + str(i[0]), file=fp)
+                print('\t - ' + i[1] + ' - ' + urlShowBug + str(i[0]), file=fp)
     fp.close()
 
 def Blog_Report(statList) :
@@ -1263,6 +1336,8 @@ if __name__ == '__main__':
             create_wikimedia_table_by_target(cfg, statList)
         elif sys.argv[1] == 'period':
             create_wikimedia_table_by_period(cfg, statList)
+        elif sys.argv[1] == 'stats':
+            create_wikimedia_table_mostCCBugs(cfg, statList)
         elif sys.argv[1] == 'user':
             users_Report(statList)
         elif sys.argv[1] == 'crash':
