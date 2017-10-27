@@ -191,6 +191,7 @@ def util_create_statList():
         'period': {p:{'count':0, 'people':{}} for p in periods_list},
         'MostCCBugs': {},
         'dupesBugs': {},
+        'MostDupeBugs': {},
         'stat': {'oldest': datetime.datetime.now(), 'newest': datetime.datetime(2001, 1, 1)}
     }
 
@@ -347,6 +348,19 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                 if rowDupeOf not in statList['dupesBugs']:
                     statList['dupesBugs'][rowDupeOf] = []
                 statList['dupesBugs'][rowDupeOf].append(rowId)
+
+                if str(rowDupeOf) in bugzillaData['bugs'] and \
+                        isOpen(bugzillaData['bugs'][str(rowDupeOf)]['status']):
+                    if rowDupeOf not in statList['MostDupeBugs']:
+                        statList['MostDupeBugs'][rowDupeOf] = util_create_bug(
+                        bugzillaData['bugs'][str(rowDupeOf)]['summary'],
+                        bugzillaData['bugs'][str(rowDupeOf)]['component'],
+                        bugzillaData['bugs'][str(rowDupeOf)]['version'],
+                        bugzillaData['bugs'][str(rowDupeOf)]['keywords'],
+                        datetime.datetime.strptime(
+                            bugzillaData['bugs'][str(rowDupeOf)]['creation_time'], "%Y-%m-%dT%H:%M:%SZ"),
+                        1)
+
 
             actionMail = None
             fixed = False
@@ -794,6 +808,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
 
     output = ''
     for k, v in statList['dupesBugs'].items():
+        if k in statList['MostDupeBugs']:
+            if len(v) >= 3:
+                statList['MostDupeBugs'][k]['count'] = len(v)
+            else:
+                del statList['MostDupeBugs'][k]
         for dupeBug in v:
             if dupeBug in statList['dupesBugs']:
                 output += '\n- Duplicates of ' + str(k)
@@ -924,7 +943,7 @@ def util_print_QA_line_created(fp, dValue ):
         print('      {}: {}'.format(k, v), file=fp)
 
 def create_wikimedia_table_mostCCBugs(cfg, statList):
-    for nameList in ['MostCCBugs']:
+    for nameList in ['MostCCBugs', 'MostDupeBugs']:
         print('Creating wikimedia table for ' + nameList)
         output = ""
 
@@ -943,8 +962,8 @@ def create_wikimedia_table_mostCCBugs(cfg, statList):
             headers = ['Id', 'Summary', 'Component', 'Version', 'isRegression', 'isBisected',
                            'isEasyHack', 'haveBackTrace', 'Total Duplicates']
 
-            output += '{} bugs have 10 or more duplicates. (sorted in alphabetical order by number of duplicates)\n'.format(
-                    len(statList['MostDuplicatedBugs']))
+            output += '{} open bugs have 3 or more duplicates. (sorted in alphabetical order by number of duplicates)\n'.format(
+                    len(statList['MostDupeBugs']))
 
         for k,v in statList[nameList].items():
             row = []
