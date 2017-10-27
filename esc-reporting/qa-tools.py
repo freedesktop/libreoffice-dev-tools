@@ -190,6 +190,7 @@ def util_create_statList():
         'targets': {t:{'count':0, 'people':{}} for t in targets_list},
         'period': {p:{'count':0, 'people':{}} for p in periods_list},
         'MostCCBugs': {},
+        'dupesBugs': {},
         'stat': {'oldest': datetime.datetime.now(), 'newest': datetime.datetime(2001, 1, 1)}
     }
 
@@ -340,6 +341,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                 statList['MostCCBugs'][rowId] = util_create_bug(
                         row['summary'], row['component'], row['version'], keywords, creationDate, len(row['cc']))
 
+
+            rowDupeOf = row['dupe_of']
+            if rowDupeOf:
+                if rowDupeOf not in statList['dupesBugs']:
+                    statList['dupesBugs'][rowDupeOf] = []
+                statList['dupesBugs'][rowDupeOf].append(rowId)
 
             actionMail = None
             fixed = False
@@ -784,6 +791,17 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
                     lResults['emptyAlias'] = [[],[]]
                 lResults['emptyAlias'][0].append(rowId)
                 lResults['emptyAlias'][1].append('')
+
+    output = ''
+    for k, v in statList['dupesBugs'].items():
+        for dupeBug in v:
+            if dupeBug in statList['dupesBugs']:
+                output += '\n- Duplicates of ' + str(k)
+                for subDupeBug in statList['dupesBugs'][dupeBug]:
+                    output += '\n    * ' + urlShowBug + str(subDupeBug)
+    if output:
+        output = '=== DupeOfDupe ===' + output
+        print(output)
 
     for dKey, dValue in lResults.items():
         if dValue:
