@@ -59,7 +59,7 @@ import re
 
 def util_errorMail(text):
     print(text)
-    sendMail = 'mail -r mentoring@libreoffice.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-analyze FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    sendMail = 'mail -r mentoring@documentfoundation.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-analyze FAILED" mentoring@documentfoundation.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
     os.system(sendMail)
 
 
@@ -67,7 +67,7 @@ def util_errorMail(text):
 
 def util_errorMail(text):
     print(text)
-    sendMail = 'mail -r mentoring@libreoffice.org -s "' + text + '" mentoring@libreoffice.org <<EOF\nPlease have a look at vm174\nEOF\n'
+    sendMail = 'mail -r mentoring@documentfoundation.org -s "' + text + '" mentoring@documentfoundation.org <<EOF\nPlease have a look at vm174\nEOF\n'
     os.system(sendMail)
 
 

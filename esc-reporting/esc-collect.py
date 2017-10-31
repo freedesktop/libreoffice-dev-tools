@@ -43,7 +43,7 @@ from requests.auth import HTTPDigestAuth
 
 def util_errorMail(text):
     print(text)
-    sendMail = 'mail -r mentoring@libreoffice.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-collect FAILED" mentoring@libreoffice.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
+    sendMail = 'mail -r mentoring@documentfoundation.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-collect FAILED" mentoring@documentfoundation.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
     os.system(sendMail)
 
 
