@@ -514,9 +514,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         #Check for autoconfirmed bugs:
                         #Bug's status is open ( ASSIGNED, NEW or REOPENED ), moved to open by the reporter
                         #from non-open status and never confirmed by someone else.
-                        #Ignore bisected bugs
+                        #Ignore bisected bugs or some trusted authors defined in configQA.json
                         if actionDate >= cfg[reportPeriod] and not everConfirmed and actionMail == creatorMail and \
-                            isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in keywords:
+                            isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in keywords and \
+                            creatorMail not in cfg['configQA']['autoConfirmers']:
                                 autoConfirmed = True
                                 autoConfirmedMail = actionMail
 
