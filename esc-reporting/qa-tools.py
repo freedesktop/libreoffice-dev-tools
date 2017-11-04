@@ -242,7 +242,7 @@ def util_increase_user_actions(statList, bug, mail, targets, action, actionTime)
             statList['period'][period]['people'][mail][action] += 1
             statList['period'][period]['people'][mail]['bugs'].append(bug)
 
-def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
+def analyze_bugzilla(statList, bugzillaData, cfg):
     print("Analyze bugzilla\n", end="", flush=True)
     statNewDate = statList['stat']['newest']
     statOldDate = statList['stat']['oldest']
@@ -835,7 +835,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg, lIgnore):
         if statList['people'][k]['oldest'] >= cfg[newUsersPeriod]:
             statList['newUsersPeriod'][k] = statList['people'][k]
         if statList['people'][k]['oldest'] >= cfg[newUsersPeriod] and len(statList['people'][k]['bugs']) >= 3 and \
-                statList['people'][k]['email'] not in lIgnore:
+                statList['people'][k]['email'] not in cfg['configQA']['newContributors']:
             print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
             lBugs = list(statList['people'][k]['bugs'])
             for idx in range(len(lBugs)):
@@ -1116,13 +1116,13 @@ def automated_massping(statList):
         bugId = str(bugId)
         command = '{"comment" : "' + untouchedPingComment.replace('\n', '\\n') + '", "is_private" : false}'
 
-        urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['bugzilla']['api-key']
+        urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
         rGet = requests.get(urlGet)
         rawData = json.loads(rGet.text)
         rGet.close()
 
         if rawData['bugs'][bugId]['comments'][-1]['text'][:250] != untouchedPingComment[:250]:
-            urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['bugzilla']['api-key']
+            urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
             rPost = requests.post(urlPost, command)
             print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
             rPost.close()
@@ -1144,7 +1144,7 @@ def automated_tagging(statList):
         if str(comment_id) not in lAddObsolete:
             command = '{"comment_id" : ' + str(comment_id) + ', "add" : ["obsolete"]}'
             url = 'https://bugs.documentfoundation.org/rest/bug/comment/' + \
-                str(comment_id) + '/tags' + '?api_key=' + cfg['bugzilla']['api-key']
+                str(comment_id) + '/tags' + '?api_key=' + cfg['configQA']['api-key']
             r = requests.put(url, command)
             if os.path.exists(filename):
                 append_write = 'a'
@@ -1159,7 +1159,7 @@ def automated_tagging(statList):
     for comment_id in list(statList['tags']['removeObsolete']):
         command = '{"comment_id" : ' + str(comment_id) + ', "remove" : ["obsolete"]}'
         url = 'https://bugs.documentfoundation.org/rest/bug/comment/' + \
-                str(comment_id) + '/tags' + '?api_key=' + cfg['bugzilla']['api-key']
+                str(comment_id) + '/tags' + '?api_key=' + cfg['configQA']['api-key']
         r = requests.put(url, command)
         print(str(comment_id) + ' - ' +  r.text)
         r.close()
@@ -1356,15 +1356,9 @@ if __name__ == '__main__':
 
     bugzillaData = get_bugzilla()
 
-    lIgnore = []
-    if os.path.exists("ignore.txt"):
-        f = open('ignore.txt', 'r')
-        lIgnore = f.read().splitlines()
-        f.close()
-
     statList = util_create_statList()
 
-    analyze_bugzilla(statList, bugzillaData, cfg, lIgnore)
+    analyze_bugzilla(statList, bugzillaData, cfg)
 
     if len(sys.argv) > 1:
         if sys.argv[1] == 'blog':
