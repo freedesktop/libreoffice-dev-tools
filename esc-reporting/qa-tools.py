@@ -1293,7 +1293,7 @@ def weekly_Report(statList) :
 
     print('Hello,', file=fp)
     print(file=fp)
-    print('What have happened in QA in the last {} days?'.format(reportPeriod[:-1]), file=fp)
+    print('What have happened in QA in the last {} days?'.format(reportPeriodDays), file=fp)
     print(file=fp)
 
     print('  * {} bugs have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )'.format(\
