@@ -795,7 +795,15 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 lResults['backPortAdded'][0].append(rowId)
                 lResults['backPortAdded'][1].append(backPortAddedMail)
 
-            if isOpen(rowStatus) and commentMail == 'libreoffice-commits@lists.freedesktop.org' and \
+            #Check bugs where:
+            # 1. last comment is done by 'libreoffice-commits@lists.freedesktop.org'
+            # 2. Penultimate comment is done by 'libreoffice-commits@lists.freedesktop.org',
+            # last comment is not written by the commit's author and it's not a revert commit
+            if isOpen(rowStatus) and ((commentMail == 'libreoffice-commits@lists.freedesktop.org' and \
+                    'evert' not in comments[-1]['text']) or \
+                    (len(comments) >= 2 and comments[-2]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and \
+                    comments[-2]['text'].split(' committed a patch related')[0] != statList['people'][comments[-1]['creator']]['name'] and \
+                    'evert' not in comments[-2]['text'])) and \
                     commentDate < cfg['fixBugPingPeriod'] and commentDate >= cfg['fixBugPingDiff'] and \
                     'easyHack' not in row['keywords']:
                 if 'fixBugPing' not in lResults:
