@@ -38,7 +38,7 @@ case "$1" in
     ;;
     sw_rtfimport)
         # Writer RTF import
-        coverage writerfilter source/rtftok '*' sw 'CppunitTest_sw_rtfimport CppunitTest_sw_rtfexport'
+        coverage writerfilter source/rtftok '*' sw 'CppunitTest_sw_rtfimport CppunitTest_sw_rtfexport CppunitTest_sw_rtfexport2 CppunitTest_sw_rtfexport3'
     ;;
     sw_rtfpaste)
         # Writer RTF paste
@@ -46,7 +46,7 @@ case "$1" in
     ;;
     sw_rtfexport)
         # Writer RTF export
-        coverage sw source/filter/ww8 'rtf*' sw 'CppunitTest_sw_rtfexport CppunitTest_sw_uiwriter'
+        coverage sw source/filter/ww8 'rtf*' sw 'CppunitTest_sw_rtfexport CppunitTest_sw_rtfexport2 CppunitTest_sw_rtfexport3 CppunitTest_sw_uiwriter'
     ;;
     sw_epubexport)
         # Writer EPUB export
