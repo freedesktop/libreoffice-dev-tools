@@ -522,7 +522,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         #Ignore bisected bugs or some trusted authors defined in configQA.json
                         if actionDate >= cfg['reportPeriod'] and not everConfirmed and actionMail == creatorMail and \
                             isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in keywords and \
-                            creatorMail not in cfg['configQA']['autoConfirmers']:
+                            creatorMail not in cfg['configQA']['ignore']['autoConfirmed']:
                                 autoConfirmed = True
                                 autoConfirmedMail = actionMail
 
@@ -811,10 +811,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 lResults['fixBugPing'][0].append(rowId)
                 lResults['fixBugPing'][1].append('')
 
-            #Ignore tdf#89903
             if rowStatus == 'ASSIGNED' and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssignedPeriod'] and \
-                    'easyHack' not in row['keywords'] and rowId != 89903:
+                    'easyHack' not in row['keywords'] and \
+                    rowId not in cfg['configQA']['ignore']['inactiveAssigned']:
                 if 'inactiveAssigned' not in lResults:
                     lResults['inactiveAssigned'] = [[],[]]
                 lResults['inactiveAssigned'][0].append(rowId)
@@ -857,7 +857,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
         if statList['people'][k]['oldest'] >= cfg['newUserPeriod']:
             statList['newUsersPeriod'][k] = statList['people'][k]
         if statList['people'][k]['oldest'] >= cfg['newUserPeriod'] and len(statList['people'][k]['bugs']) >= 3 and \
-                statList['people'][k]['email'] not in cfg['configQA']['newContributors']:
+                statList['people'][k]['email'] not in cfg['configQA']['ignore']['newContributors']:
             print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
             lBugs = list(statList['people'][k]['bugs'])
             for idx in range(len(lBugs)):
