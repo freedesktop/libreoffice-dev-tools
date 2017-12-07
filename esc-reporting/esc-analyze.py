@@ -860,9 +860,9 @@ def runLoadCSV():
       # check consistency
       for i in statList['aliases']:
         if i in licencePersonalData:
-          raise Exception('alias ' + i + ' in aliases is licensed')
+          print('alias ' + i + ' in aliases is licensed')
         elif statList['aliases'][i] not in licencePersonalData:
-          raise Exception('target ' + statList['aliases'][i] + ' for alias ' + i + ' in aliases is NOT licensed')
+          print('target ' + statList['aliases'][i] + ' for alias ' + i + ' in aliases is NOT licensed')
 
       # create base people info
       for id, row in licencePersonalData.items():
