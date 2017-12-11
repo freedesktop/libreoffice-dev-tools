@@ -631,7 +631,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         newSystem = change['added']
                         util_increase_user_actions(statList, rowId, actionMail, bugTargets, 'system_changed', actionDate)
 
-                        if actionDate >= cfg['reportPeriod'] and newSystem not in row['op_sys']:
+                        if actionDate >= cfg['reportPeriod'] and newSystem in row['op_sys']:
                             statList['weeklyReport']['system_changed'][newSystem]['id'].append(rowId)
                             statList['weeklyReport']['system_changed'][newSystem]['author'].append(actionMail)
 
