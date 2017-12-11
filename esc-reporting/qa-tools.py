@@ -872,7 +872,15 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
 def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
 
-    for key, value in dValue.items():
+    #Replace metabugs keys by aliases
+    if isMetabug:
+        dValueAux = {}
+        for key, value in dValue.items():
+            if int(key) in statList['bugs']['metabugAlias']:
+                dValueAux[statList['bugs']['metabugAlias'][int(key)][0]] = dValue[key]
+        dValue = dValueAux
+
+    for key, value in sorted(dValue.items()):
         if value['id']:
             nBugs = len(value['id'])
             if nBugs == 1:
@@ -883,8 +891,6 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
                 aux2 = 'bugs'
 
             if action == 'added' or action == 'removed':
-                if isMetabug and int(key) in statList['bugs']['metabugAlias']:
-                    key = statList['bugs']['metabugAlias'][int(key)][0]
                 aux3 = 'to'
                 if action == 'removed':
                     aux3 = 'from'
