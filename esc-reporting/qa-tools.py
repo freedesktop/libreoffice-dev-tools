@@ -395,6 +395,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             isReopened = False
             closeDate = None
             reopenerEmail = ""
+            isConfirmed = False
 
             for action in row['history']:
                 actionMail = action['who']
@@ -435,10 +436,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 statList['bugs']['confirmed']['id'].append(rowId)
                                 statList['bugs']['confirmed']['author'].append(actionMail)
                                 statList['bugs']['confirmed']['status'][rowStatus] += 1
-                            else:
+                                isConfirmed = True
+                            elif isConfirmed:
                                 statList['bugs']['confirmed']['id'].pop()
                                 statList['bugs']['confirmed']['author'].pop()
                                 statList['bugs']['confirmed']['status'][rowStatus] -= 1
+                                isConfirmed = False
 
                     if change['field_name'] == 'version':
                         if actionDate >= cfg['reportPeriod'] and (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
