@@ -529,7 +529,7 @@ def report_ui():
       print('          {} made {} changes in 1 month, and {} changes in 1 year'.format(
             top10list[i]['name'], top10list[i]['month'], top10list[i]['year']), file=fp)
     fp.close()
-    return {'title': 'ESC UI report', 'mail': 'tietze.heiko@gmail.com', 'file': '/tmp/esc_ui_report.txt'}
+    return None
 
 
 
