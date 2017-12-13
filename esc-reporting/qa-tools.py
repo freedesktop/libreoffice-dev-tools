@@ -24,13 +24,13 @@ newUserPeriodDays = 30
 
 fixBugPingPeriodDays = 30
 
-untouchedUnconfirmedPeriodDays = 30
+retestPeriodDays = 60
 
 untouchedPeriodDays = 365
 
 inactiveAssignedPeriodDays = 90
 
-targets_list = ['5.3.6', '5.4.1']
+targets_list = ['5.3.7', '5.4.3', '6.0.0']
 
 periods_list = [30, 60, 90, 180]
 
@@ -714,13 +714,25 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['massping']['untouched'].append(rowId)
 
-                if len(comments) and rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
-                            datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedUnconfirmedPeriod'] and \
-                            datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") >= cfg['untouchedUnconfirmedDiff']:
+                if rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
+                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
                         if 'untouchedUnconfirmed' not in lResults:
                             lResults['untouchedUnconfirmed'] = [[],[]]
                         lResults['untouchedUnconfirmed'][0].append(rowId)
                         lResults['untouchedUnconfirmed'][1].append(comments[-1]['creator'])
+                elif rowStatus == 'NEEDINFO' and comments[-1]['creator'] == creatorMail and \
+                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
+                        if 'NeedInfoProvided' not in lResults:
+                            lResults['NeedInfoProvided'] = [[],[]]
+                        lResults['NeedInfoProvided'][0].append(rowId)
+                        lResults['NeedInfoProvided'][1].append(comments[-1]['creator'])
+            else:
+                if rowStatus == 'UNCONFIRMED' and \
+                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
+                        if 'Unconfirmed1Comment' not in lResults:
+                            lResults['Unconfirmed1Comment'] = [[],[]]
+                        lResults['Unconfirmed1Comment'][0].append(rowId)
+                        lResults['Unconfirmed1Comment'][1].append(creatorMail)
 
             for person in row['cc_detail']:
                 email = person['email']
@@ -1370,8 +1382,7 @@ def runCfg(homeDir):
     cfg['fixBugPingPeriod'] = util_convert_days_to_datetime(cfg, fixBugPingPeriodDays)
     cfg['fixBugPingDiff'] = util_convert_days_to_datetime(cfg, fixBugPingPeriodDays + reportPeriodDays)
     cfg['untouchedPeriod'] = util_convert_days_to_datetime(cfg, untouchedPeriodDays)
-    cfg['untouchedUnconfirmedPeriod'] = util_convert_days_to_datetime(cfg, untouchedUnconfirmedPeriodDays)
-    cfg['untouchedUnconfirmedDiff'] = util_convert_days_to_datetime(cfg, untouchedUnconfirmedPeriodDays + reportPeriodDays)
+    cfg['retestPeriod'] = util_convert_days_to_datetime(cfg, retestPeriodDays)
     cfg['inactiveAssignedPeriod'] = util_convert_days_to_datetime(cfg, inactiveAssignedPeriodDays)
 
     for period in periods_list:
