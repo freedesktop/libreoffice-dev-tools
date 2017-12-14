@@ -16,7 +16,11 @@ import re
 import requests
 from tabulate import tabulate
 
-homeDir = '/home/xisco/dev-tools/esc-reporting/'
+#Path where bugzilla_dump.py is
+dataDir = '/home/xisco/dev-tools/esc-reporting/dump/'
+
+#Path where configQA.json and addObsolete.txt are
+configDir = '/home/xisco/dev-tools/esc-reporting/'
 
 reportPeriodDays = 7
 
@@ -217,11 +221,11 @@ def util_check_bugzilla_mail(statList, mail, name, date=None, bug=None):
        statList['people'][mail]['bugs'].add(bug)
 
 def get_bugzilla():
-    fileName = homeDir + 'dump/bugzilla_dump.json'
+    fileName = dataDir + 'bugzilla_dump.json'
     return util_load_file(fileName)
 
 def get_config():
-    fileName = homeDir + 'configQA.json'
+    fileName = configDir + 'configQA.json'
     return util_load_file(fileName)
 
 def isOpen(status):
@@ -732,10 +736,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             else:
                 if rowStatus == 'UNCONFIRMED' and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
-                        if 'Unconfirmed1Comment' not in lResults:
-                            lResults['Unconfirmed1Comment'] = [[],[]]
-                        lResults['Unconfirmed1Comment'][0].append(rowId)
-                        lResults['Unconfirmed1Comment'][1].append(creatorMail)
+                    if 'Unconfirmed1Comment' not in lResults:
+                        lResults['Unconfirmed1Comment'] = [[],[]]
+                    lResults['Unconfirmed1Comment'][0].append(rowId)
+                    lResults['Unconfirmed1Comment'][1].append(creatorMail)
 
             for person in row['cc_detail']:
                 email = person['email']
@@ -1177,7 +1181,7 @@ def automated_tagging(statList):
 
     print('== Obsolete comments ==')
     lAddObsolete = []
-    filename = "addObsolete.txt"
+    filename = configDir + "addObsolete.txt"
     if os.path.exists(filename):
         f = open(filename, 'r')
         lAddObsolete = f.read().splitlines()
@@ -1376,9 +1380,8 @@ def weekly_Report(statList) :
     print('Regards', file=fp)
     fp.close()
 
-def runCfg(homeDir):
+def runCfg():
     cfg = get_config()
-    cfg['homedir'] = homeDir
     cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
     cfg['reportPeriod'] = util_convert_days_to_datetime(cfg, reportPeriodDays)
     cfg['newUserPeriod'] = util_convert_days_to_datetime(cfg, newUserPeriodDays)
@@ -1394,9 +1397,9 @@ def runCfg(homeDir):
     return cfg
 
 if __name__ == '__main__':
-    print("Reading and writing data to " + homeDir)
+    print("Reading and writing data to " + dataDir)
 
-    cfg = runCfg(homeDir)
+    cfg = runCfg()
 
     bugzillaData = get_bugzilla()
 
