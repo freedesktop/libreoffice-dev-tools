@@ -71,10 +71,13 @@ def util_errorMail(text):
     os.system(sendMail)
 
 
-def util_load_file(fileName):
+def util_load_file(fileName, isJson=True):
     try:
       fp = open(fileName, encoding='utf-8')
-      rawData = json.load(fp)
+      if(isJson):
+        rawData = json.load(fp)
+      else:
+        rawData = fp.readlines()
       fp.close()
     except Exception as e:
       print('Error load file ' + fileName + ' due to ' + str(e))
@@ -592,6 +595,20 @@ def analyze_esc():
     statList['data']['esc']['crashreport'] = crashData['crashreport']['versions']
 
 
+def util_is_company_license(email):
+    domainMap = util_load_file(cfg['homedir'] + 'gitdm-config/domain-map', False)
+    for line in domainMap:
+      line = line[:-1]
+      if line.startswith('#') or line.startswith(' ') or len(line) == 0:
+        continue
+      domain = line
+      if '\t' in domain:
+        domain = line[:line.index('\t')]
+      else:
+        domain = line[:line.index(' ')]
+      if email.endswith(domain):
+        return True
+    return False
 
 def analyze_reports():
     global cfg, statList, openhubData, bugzillaData, gerritData, gitData, automateData
@@ -624,7 +641,10 @@ def analyze_reports():
 
     for id, row in statList['people'].items():
       entry = {'name': row['name'], 'email': id, 'license': row['licenseText']}
-      if row['newestCommit'] > mailedDate and row['newestCommit'] < cfg['3monthDate'] and id not in automateData['reminder']:
+      if row['newestCommit'] > mailedDate\
+      and row['newestCommit'] < cfg['3monthDate']\
+      and id not in automateData['reminder']\
+      and not util_is_company_license(entry['email']):
         automateList['mail']['we_miss_you_email'][entry['email']] = entry['name']
         automateData['reminder'][id] = automateNow
       x = row['commits']['1month']['owner']
