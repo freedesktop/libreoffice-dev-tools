@@ -308,7 +308,7 @@ def analyze_mentoring():
       statList['people'][mail]['gerrit']['reviewName'] = '{} <{}>'.format(row['name'],row['email'])
       statList['people'][mail]['isCommitter'] = True
       statList['people'][mail]['isContributor'] = True
-    x1 = statList['people']['admin@shinnok.com']
+    x1 = statList['people']['mentoring@documentfoundation.org']
     statNewDate = cfg['1yearDate']
     statOldDate = cfg['nowDate']
     for key, row in gerritData['patch'].items():
@@ -735,7 +735,7 @@ def analyze_reports():
           else:
             for comment in row['comments']:
               email = util_check_mail('', comment['creator'])
-              if not email == 'anistenis@gmail.com' and not email == 'admin@shinnok.com' and 'reviewName' in statList['people'][ownerEmail]['gerrit']:
+              if not email == 'anistenis@gmail.com' and not email == 'mentoring@docmentfoundation.org' and 'reviewName' in statList['people'][ownerEmail]['gerrit']:
                 reviewEmail = email
                 break
         except Exception as e:
