@@ -608,6 +608,9 @@ def util_is_company_license(email):
         domain = line[:line.index(' ')]
       if email.endswith(domain):
         return True
+    for domain in cfg['companies']:
+      if email.endswith(domain):
+        return True
     return False
 
 def analyze_reports():
@@ -687,7 +690,9 @@ def analyze_reports():
           entry['email'] = ownerEmail
           entry['license'] = 'GERRIT NO LICENSE'
           statList['reportList']['missing_license'].append(entry)
-        elif not statList['people'][ownerEmail]['licenseOK']:
+        elif not statList['people'][ownerEmail]['licenseOK']\
+          and not util_is_company_license(ownerEmail):
+          print(ownerEmail)
           entry['license'] = 'GERRIT: ' + statList['people'][ownerEmail]['licenseText']
           statList['reportList']['missing_license'].append(entry)
 
