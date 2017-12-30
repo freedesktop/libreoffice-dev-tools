@@ -595,7 +595,7 @@ def analyze_esc():
     statList['data']['esc']['crashreport'] = crashData['crashreport']['versions']
 
 
-def util_is_company_license(email):
+def is_domain_mapped(email):
     domainMap = util_load_file(cfg['homedir'] + 'gitdm-config/domain-map', False)
     for line in domainMap:
       line = line[:-1]
@@ -647,7 +647,7 @@ def analyze_reports():
       if row['newestCommit'] > mailedDate\
       and row['newestCommit'] < cfg['3monthDate']\
       and id not in automateData['reminder']\
-      and not util_is_company_license(entry['email']):
+      and not is_domain_mapped(entry['email']):
         automateList['mail']['we_miss_you_email'][entry['email']] = entry['name']
         automateData['reminder'][id] = automateNow
       x = row['commits']['1month']['owner']
@@ -691,7 +691,7 @@ def analyze_reports():
           entry['license'] = 'GERRIT NO LICENSE'
           statList['reportList']['missing_license'].append(entry)
         elif not statList['people'][ownerEmail]['licenseOK']\
-          and not util_is_company_license(ownerEmail):
+          and not is_domain_mapped(ownerEmail):
           print(ownerEmail)
           entry['license'] = 'GERRIT: ' + statList['people'][ownerEmail]['licenseText']
           statList['reportList']['missing_license'].append(entry)
