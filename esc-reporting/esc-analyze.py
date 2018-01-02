@@ -691,7 +691,6 @@ def analyze_reports():
           statList['reportList']['missing_license'].append(entry)
         elif not statList['people'][ownerEmail]['licenseOK']\
           and not is_domain_mapped(ownerEmail):
-          print(ownerEmail)
           entry['license'] = 'GERRIT: ' + statList['people'][ownerEmail]['licenseText']
           statList['reportList']['missing_license'].append(entry)
 
