@@ -317,10 +317,12 @@ def report_esc_prototype():
 
     txt = '     open:\n'
     for id, title in statList['escList']['MostPressingBugs']['open']['list'].items():
-        txt += '        {} "{}"\n'.format(id, title)
+        txt += '        + {}\n'.format(title)
+        txt += '            + https://bugs.documentfoundation.org/show_bug.cgi?id={}\n'.format(id)
     txt += '     closed:\n'
     for id, title in statList['escList']['MostPressingBugs']['closed']['list'].items():
-        txt += '        {} "{}"\n'.format(id, title)
+        txt += '        + {}\n'.format(title)
+        txt += '            + https://bugs.documentfoundation.org/show_bug.cgi?id={}\n'.format(id)
     escPrototype = escPrototype.replace('$<ESC_MOST_PRESSING_BUGS>', txt)
 
     txt = '    + {}({:+d}) import failure, {}({:+d}) export failures'.format(
