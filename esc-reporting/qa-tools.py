@@ -34,7 +34,7 @@ untouchedPeriodDays = 365
 
 inactiveAssignedPeriodDays = 90
 
-targets_list = ['5.3.7', '5.4.3', '6.0.0']
+targets_list = ['5.4.4', '6.0.0']
 
 periods_list = [30, 60, 90, 180]
 
@@ -724,22 +724,22 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
                         if 'untouchedUnconfirmed' not in lResults:
-                            lResults['untouchedUnconfirmed'] = [[],[]]
-                        lResults['untouchedUnconfirmed'][0].append(rowId)
-                        lResults['untouchedUnconfirmed'][1].append(comments[-1]['creator'])
+                            lResults['untouchedUnconfirmed'] = []
+                        tup = (rowId, row['last_change_time'])
+                        lResults['untouchedUnconfirmed'].append(tup)
                 elif rowStatus == 'NEEDINFO' and comments[-1]['creator'] == creatorMail and \
-                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
+                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") >= cfg['retestPeriod']:
                         if 'NeedInfoProvided' not in lResults:
-                            lResults['NeedInfoProvided'] = [[],[]]
-                        lResults['NeedInfoProvided'][0].append(rowId)
-                        lResults['NeedInfoProvided'][1].append(comments[-1]['creator'])
+                            lResults['NeedInfoProvided'] = []
+                        tup = (rowId, row['last_change_time'])
+                        lResults['NeedInfoProvided'].append(tup)
             else:
                 if rowStatus == 'UNCONFIRMED' and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
                     if 'Unconfirmed1Comment' not in lResults:
-                        lResults['Unconfirmed1Comment'] = [[],[]]
-                    lResults['Unconfirmed1Comment'][0].append(rowId)
-                    lResults['Unconfirmed1Comment'][1].append(creatorMail)
+                        lResults['Unconfirmed1Comment'] = []
+                    tup = (rowId, creatorMail)
+                    lResults['Unconfirmed1Comment'].append(tup)
 
             for person in row['cc_detail']:
                 email = person['email']
@@ -748,71 +748,71 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             if movedToFixed:
                 if 'movedToFixed' not in lResults:
-                    lResults['movedToFixed'] = [[],[]]
-                lResults['movedToFixed'][0].append(rowId)
-                lResults['movedToFixed'][1].append(movedToFixedMail)
+                    lResults['movedToFixed'] = []
+                tup = (rowId, movedToFixedMail)
+                lResults['movedToFixed'].append(tup)
 
             if autoConfirmed:
                 if 'autoConfirmed' not in lResults:
-                    lResults['autoConfirmed'] = [[],[]]
-                lResults['autoConfirmed'][0].append(rowId)
-                lResults['autoConfirmed'][1].append(autoConfirmedMail)
+                    lResults['autoConfirmed'] = []
+                tup = (rowId, autoConfirmedMail)
+                lResults['autoConfirmed'].append(tup)
 
             if newerVersion and row['version'] != 'unspecified':
                 if 'newerVersion' not in lResults:
-                    lResults['newerVersion'] =  [[],[]]
-                lResults['newerVersion'][0].append(rowId)
-                lResults['newerVersion'][1].append(newerVersionMail)
+                    lResults['newerVersion'] =  []
+                tup = (rowId, newerVersionMail)
+                lResults['newerVersion'].append(tup)
 
             if (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and patchAdded:
                 if 'patchAdded' not in lResults:
-                    lResults['patchAdded'] = [[],[]]
-                lResults['patchAdded'][0].append(rowId)
-                lResults['patchAdded'][1].append('')
+                    lResults['patchAdded'] = []
+                tup = (rowId, '')
+                lResults['patchAdded'].append(tup)
 
             if crashSignature and not crashSignature.startswith('["'):
                 if 'crashSignature' not in lResults:
-                    lResults['crashSignature'] = [[],[]]
-                lResults['crashSignature'][0].append(rowId)
-                lResults['crashSignature'][1].append('')
+                    lResults['crashSignature'] = []
+                tup = (rowId, '')
+                lResults['crashSignature'].append(tup)
 
             if isReopened:
                 if 'reopened6Months' not in lResults:
-                    lResults['reopened6Months'] = [[],[]]
-                lResults['reopened6Months'][0].append(rowId)
-                lResults['reopened6Months'][1].append(reopenerEmail)
+                    lResults['reopened6Months'] = []
+                tup = (rowId, reopenerEmail)
+                lResults['reopened6Months'].append(tup)
 
             #In case the reporter assigned the bug to himself at creation time
             if addAssigned or (creationDate >= cfg['reportPeriod'] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
                     (rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED')):
                 if 'addAssigned' not in lResults:
-                    lResults['addAssigned'] = [[],[]]
-                lResults['addAssigned'][0].append(rowId)
-                lResults['addAssigned'][1].append(addAssignedMail)
+                    lResults['addAssigned'] = []
+                tup = (rowId, addAssignedMail)
+                lResults['addAssigned'].append(tup)
 
             if removeAssigned:
                 if 'removeAssigned' not in lResults:
-                    lResults['removeAssigned'] =[[],[]]
-                lResults['removeAssigned'][0].append(rowId)
-                lResults['removeAssigned'][1].append(removeAssignedMail)
+                    lResults['removeAssigned'] = []
+                tup = (rowId, removeAssignedMail)
+                lResults['removeAssigned'].append(tup)
 
             if addAssignee:
                 if 'addAssignee' not in lResults:
-                    lResults['addAssignee'] =[[],[]]
-                lResults['addAssignee'][0].append(rowId)
-                lResults['addAssignee'][1].append(addAssigneeMail)
+                    lResults['addAssignee'] =[]
+                tup = (rowId, addAssigneeMail)
+                lResults['addAssignee'].append(tup)
 
             if removeAssignee:
                 if 'removeAssignee' not in lResults:
-                    lResults['removeAssignee'] =[[],[]]
-                lResults['removeAssignee'][0].append(rowId)
-                lResults['removeAssignee'][1].append(removeAssigneeMail)
+                    lResults['removeAssignee'] =[]
+                tup = (rowId, removeAssigneeMail)
+                lResults['removeAssignee'].append(tup)
 
             if backPortAdded:
                 if 'backPortAdded' not in lResults:
-                    lResults['backPortAdded'] = [[],[]]
-                lResults['backPortAdded'][0].append(rowId)
-                lResults['backPortAdded'][1].append(backPortAddedMail)
+                    lResults['backPortAdded'] = []
+                tup = (rowId, backPortAddedMail)
+                lResults['backPortAdded'].append(tup)
 
             #Check bugs where:
             # 1. last comment is done by 'libreoffice-commits@lists.freedesktop.org'
@@ -826,26 +826,26 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     commentDate < cfg['fixBugPingPeriod'] and commentDate >= cfg['fixBugPingDiff'] and \
                     'easyHack' not in row['keywords']:
                 if 'fixBugPing' not in lResults:
-                    lResults['fixBugPing'] = [[],[]]
-                lResults['fixBugPing'][0].append(rowId)
-                lResults['fixBugPing'][1].append('')
+                    lResults['fixBugPing'] = []
+                tup = (rowId, '')
+                lResults['fixBugPing'].append(tup)
 
             if rowStatus == 'ASSIGNED' and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssignedPeriod'] and \
                     'easyHack' not in row['keywords'] and \
                     rowId not in cfg['configQA']['ignore']['inactiveAssigned']:
                 if 'inactiveAssigned' not in lResults:
-                    lResults['inactiveAssigned'] = [[],[]]
-                lResults['inactiveAssigned'][0].append(rowId)
-                lResults['inactiveAssigned'][1].append(lastAssignedEmail)
+                    lResults['inactiveAssigned'] = []
+                tup = (rowId, lastAssignedEmail)
+                lResults['inactiveAssigned'].append(tup)
 
         elif row['summary'].lower().startswith('[meta]'):
             statList['bugs']['metabugAlias'][rowId] = row['alias']
-            if not row['alias']:
+            if not row['alias'] and isOpen(row['status']):
                 if 'emptyAlias' not in lResults:
-                    lResults['emptyAlias'] = [[],[]]
-                lResults['emptyAlias'][0].append(rowId)
-                lResults['emptyAlias'][1].append('')
+                    lResults['emptyAlias'] = []
+                tup = (rowId, '')
+                lResults['emptyAlias'].append(rowId)
 
     output = ''
     for k, v in statList['dupesBugs'].items():
@@ -866,8 +866,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
     for dKey, dValue in lResults.items():
         if dValue:
             print('\n=== ' + dKey + ' ===')
-            for idx in range(len(dValue[0])):
-                print(str(idx + 1) + ' - ' + urlShowBug + str(dValue[0][idx]) + " - " + str(dValue[1][idx]))
+            dValue = sorted(dValue, key=lambda x: x[1])
+            for idx in range(len(dValue)):
+                print(str(idx + 1) + ' - ' + urlShowBug + str(dValue[idx][0]) + " - " + str(dValue[idx][1]))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
