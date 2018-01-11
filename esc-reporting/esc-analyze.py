@@ -308,7 +308,6 @@ def analyze_mentoring():
       statList['people'][mail]['gerrit']['reviewName'] = '{} <{}>'.format(row['name'],row['email'])
       statList['people'][mail]['isCommitter'] = True
       statList['people'][mail]['isContributor'] = True
-    x1 = statList['people']['mentoring@documentfoundation.org']
     statNewDate = cfg['1yearDate']
     statOldDate = cfg['nowDate']
     for key, row in gerritData['patch'].items():

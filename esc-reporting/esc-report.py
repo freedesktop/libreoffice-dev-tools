@@ -193,13 +193,18 @@ def report_mentoring():
       if i1 == 'cleanup_comments':
         print('\n       ', end='', file=fp)
     print("\n    + top 5 contributors:", file=fp)
-    for i in range(0, 5):
+    print(statList['reportList']['top10commit'])
+    for i in range(0, len(statList['reportList']['top10commit'])):
+      if i == 5:
+          break
       print('          {} made {} patches in 1 month, and {} patches in 1 year'.format(
           statList['reportList']['top10commit'][i]['name'],
           statList['reportList']['top10commit'][i]['month'],
           statList['reportList']['top10commit'][i]['year']), file=fp)
     print("    + top 5 reviewers:", file=fp)
-    for i in range(0, 5):
+    for i in range(0, len(statList['reportList']['top10review'])):
+      if i == 5:
+          break
       print('          {} made {} review comments in 1 month, and {} in 1 year'.format(
           statList['reportList']['top10review'][i]['name'],
           statList['reportList']['top10review'][i]['month'],
