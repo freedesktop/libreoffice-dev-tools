@@ -896,7 +896,8 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
     if isMetabug:
         dValueAux = {}
         for key, value in dValue.items():
-            if int(key) in statList['bugs']['metabugAlias']:
+            if int(key) in statList['bugs']['metabugAlias'] and \
+                    statList['bugs']['metabugAlias'][int(key)]:
                 dValueAux[statList['bugs']['metabugAlias'][int(key)][0]] = dValue[key]
         dValue = dValueAux
 
@@ -1309,7 +1310,7 @@ def Blog_Report(statList) :
 
     print(file=fp)
     print('* Statuses of bugs moved to resolved', file=fp)
-    util_print_QA_line_created(fp, statList['bugs']['moveToClosed']['status'])
+    util_print_QA_line_created(fp, statList['bugs']['closed']['status'])
 
     fp.close()
 
