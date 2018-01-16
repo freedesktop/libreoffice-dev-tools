@@ -147,6 +147,7 @@ def util_create_statList():
                     'platform': {},
                     'status': {s:0 for s in statutes_list},
                     'resolution': {},
+                    'unconfirmed': []
                 },
             'closed':
                 {
@@ -168,7 +169,8 @@ def util_create_statList():
         },
         'weeklyReport':
         {
-            'comments_count': 0,
+            'newUsers': {},
+            'comments_count': {},
             'crashSignatures': {},
             'status_changed': {s: {'id':[], 'author': [] } for s in statutes_list},
             'keyword_added': {k: {'id':[], 'author': [], 'status': {s:0 for s in statutes_list}} for k in keywords_list},
@@ -195,7 +197,6 @@ def util_create_statList():
                 'removeObsolete': set()
             },
         'people': {},
-        'newUsersPeriod': {},
         'targets': {t:{'count':0, 'people':{}} for t in targets_list},
         'period': {p:{'count':0, 'people':{}} for p in periods_list},
         'MostCCBugs': {},
@@ -313,6 +314,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                 statList['bugs']['created']['id'].append(rowId)
                 statList['bugs']['created']['author'].append(creatorMail)
+
+                if rowStatus == 'UNCONFIRMED':
+                    statList['bugs']['created']['unconfirmed'].append(rowId)
 
                 week = str(creationDate.year) + '-' + str(creationDate.strftime("%V"))
                 if week not in statList['bugs']['created']['split_week']:
@@ -667,7 +671,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                 util_increase_user_actions(statList, rowId, commentMail, bugTargets, 'comments', commentDate)
                 if commentDate >= cfg['reportPeriod']:
-                    statList['weeklyReport']['comments_count'] += 1
+                    if commentMail not in statList['weeklyReport']['comments_count']:
+                        statList['weeklyReport']['comments_count'][commentMail] = 0
+                    statList['weeklyReport']['comments_count'][commentMail] += 1
 
                 #Check for duplicated comments
                 if idx > 0 and comment['text'] == comments[idx-1]['text']:
@@ -874,8 +880,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
         if not statList['people'][k]['name']:
             statList['people'][k]['name'] = statList['people'][k]['email'].split('@')[0]
 
-        if statList['people'][k]['oldest'] >= cfg['newUserPeriod']:
-            statList['newUsersPeriod'][k] = statList['people'][k]
+        if statList['people'][k]['oldest'] >= cfg['reportPeriod']:
+            statList['weeklyReport']['newUsers'][k] = statList['people'][k]
         if statList['people'][k]['oldest'] >= cfg['newUserPeriod'] and len(statList['people'][k]['bugs']) >= 3 and \
                 statList['people'][k]['email'] not in cfg['configQA']['ignore']['newContributors']:
             print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
@@ -926,7 +932,7 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
             d_view = [(v, k) for k, v in my_dict.items()]
 
             d_view.sort(reverse=True)
-            usersString = '\tDone by: '
+            usersString = '\t\t+ Done by: '
 
             for i1,i2 in d_view:
                 try:
@@ -937,14 +943,14 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
             print(usersString[:-2], file=fp)
             print(file=fp)
 
-def util_create_short_url(fp, lBugs):
+def util_create_short_url(fp, lBugs, text='Link'):
     url = "https://bugs.documentfoundation.org/buglist.cgi?bug_id="
     for bug in lBugs:
         url += str(bug) + "%2C"
 
     url = url[:-3]
     shortener = Shortener('Tinyurl', timeout=9000)
-    print('\tLink: ' + shortener.short(url), file=fp)
+    print('\t\t+ ' + text + ': ' + shortener.short(url), file=fp)
 
 def util_print_QA_line_blog(fp, statList, dValue, total_count):
 
@@ -1217,7 +1223,7 @@ def users_Report(statList):
     print('Users report from {} to {}'.format(cfg['newUserPeriod'].strftime("%Y-%m-%d"), statList['stat']['newest']))
     #fp = open('/tmp/users_report.txt', 'w', encoding='utf-8')
 
-    print('{} new users in the last {} days'.format(len(statList['newUsersPeriod']), newUsersPeriod[:-1]))
+    print('{} new users in the last {} days'.format(len(statList['newUsersPeriod']), cfg['newUserPeriod']))
 
     for v,k in statList['newUsersPeriod'].items():
         print(v)
@@ -1328,10 +1334,15 @@ def weekly_Report(statList) :
             statList['bugs']['created']['status']['UNCONFIRMED'],
             statList['bugs']['all']['status']['UNCONFIRMED']), file=fp)
 
-    util_create_short_url(fp, statList['bugs']['created']['id'])
+    util_create_short_url(fp, statList['bugs']['created']['id'], 'Created bugs')
+    util_create_short_url(fp, statList['bugs']['created']['unconfirmed'], 'Still unconfirmed bugs')
 
     print(file=fp)
-    print('  * {} comments have been written.'.format(statList['weeklyReport']['comments_count']), file=fp)
+    print('  * {} comments have been written by {} users.'.format(
+        sum(statList['weeklyReport']['comments_count'].values()), len(statList['weeklyReport']['comments_count'])), file=fp)
+    print(file=fp)
+
+    print('  * {} new users have signed up to Bugzilla.'.format(len(statList['weeklyReport']['newUsers'])), file=fp)
     print(file=fp)
 
     if statList['weeklyReport']['status_changed']:
