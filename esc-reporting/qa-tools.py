@@ -764,7 +764,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
                     if 'Unconfirmed1Comment' not in lResults:
                         lResults['Unconfirmed1Comment'] = []
-                    tup = (rowId, creatorMail)
+                    tup = (rowId, row['last_change_time'])
                     lResults['Unconfirmed1Comment'].append(tup)
 
             for person in row['cc_detail']:
