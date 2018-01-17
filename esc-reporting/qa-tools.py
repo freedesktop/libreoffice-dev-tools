@@ -389,7 +389,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
 
             actionMail = None
-            fixed = False
+            isFixed = False
             everConfirmed = False
             autoConfirmed = False
             autoConfirmMail = ""
@@ -398,8 +398,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             oldestVersion = 999999
             newerVersion = False
             newerVersionMail = ""
-            movedToFixed = False
-            movedToFixedMail = ""
+            autoFixed = False
+            autoFixedMail = ""
             addAssigned = False
             addAssignedMail = ""
             removeAssigned = False
@@ -414,10 +414,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             lastAssignedEmail = ""
             patchAdded = False
             regressionAdded = False
-            isReopened = False
+            isReopened6Months = False
             closeDate = None
-            reopenerEmail = ""
+            reopener6MonthsEmail = ""
             isConfirmed = False
+            movedToFixed = False
+            isReopened = False
+            reopenerEmail = ""
 
             for action in row['history']:
                 actionMail = action['who']
@@ -500,6 +503,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         if rowStatus == 'ASSIGNED' and addedStatus == 'ASSIGNED':
                             lastAssignedEmail = actionMail
 
+                        if addedStatus == 'REOPENED' and rowStatus == 'REOPENED' and not movedToFixed:
+                            isReopened = True
+                            reopenerEmail = actionMail
 
                         if actionDate >= cfg['reportPeriod'] and not bResolved and isClosed(addedStatus) and isClosed(row['status']):
                             bResolved = True
@@ -527,13 +533,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 statList['weeklyReport']['status_changed'][addedStatus]['author'].append(actionMail)
 
                         if actionDate >= cfg['reportPeriod'] and addedStatus == 'RESOLVED_FIXED':
-                            if fixed:
+                            if isFixed:
                                 statList['bugs']['fixed']['id'].pop()
                                 statList['bugs']['fixed']['author'].pop()
 
                             statList['bugs']['fixed']['id'].append(rowId)
                             statList['bugs']['fixed']['author'].append(actionMail)
-                            fixed = True
+                            isFixed = True
 
                         #if any other user moves it to open ( ASSIGNED, NEW or REOPENED ),
                         #the bug is no longer autoconfirmed
@@ -551,14 +557,14 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 autoConfirmed = True
                                 autoConfirmedMail = actionMail
 
-                        if movedToFixed and removedStatus == 'RESOLVED':
-                            movedToFixed = False
+                        if autoFixed and removedStatus == 'RESOLVED':
+                            autoFixed = False
 
                         if actionDate >= cfg['reportPeriod']:
                             if actionMail == creatorMail and addedStatus == 'RESOLVED_FIXED' and \
                                     rowStatus == 'RESOLVED_FIXED' and 'target:' not in row['whiteboard']:
-                                movedToFixed = True
-                                movedToFixedMail = actionMail
+                                autoFixed = True
+                                autoFixedMail = actionMail
 
                             if removedStatus == "ASSIGNED" and addedStatus == "NEW" and \
                                     rowStatus == "NEW" and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
@@ -580,12 +586,15 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                             newStatus = None
 
-                        if change['added'] == 'FIXED' and isOpen(rowStatus):
-                            closeDate = actionDate
+                        if change['added'] == 'FIXED':
+                            movedToFixed = True
+                            isReopened = False
+                            if isOpen(rowStatus):
+                                closeDate = actionDate
                         elif change['removed'] == 'FIXED' and closeDate and actionDate >= cfg['reportPeriod'] and \
                                 (actionDate - closeDate).days > 180:
-                            isReopened = True
-                            reopenerEmail = actionMail
+                            isReopened6Months = True
+                            reopener6MonthsEmail = actionMail
 
                     elif change['field_name'] == 'priority':
                         newPriority = change['added']
@@ -693,7 +702,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     statList['weeklyReport']['comments_count'][commentMail] += 1
 
                 if isOpen(rowStatus) and reopened6MonthsComment in comment['text']:
-                    isReopened = True
+                    isReopened6Months = True
 
                 #Check for duplicated comments
                 if idx > 0 and comment['text'] == comments[idx-1]['text']:
@@ -781,11 +790,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 tup = (rowId, '')
                 lResults['regressionAdded'].append(tup)
 
-            if movedToFixed:
-                if 'movedToFixed' not in lResults:
-                    lResults['movedToFixed'] = []
-                tup = (rowId, movedToFixedMail)
-                lResults['movedToFixed'].append(tup)
+            if autoFixed:
+                if 'autoFixed' not in lResults:
+                    lResults['autoFixed'] = []
+                tup = (rowId, autoFixedMail)
+                lResults['autoFixed'].append(tup)
 
             if autoConfirmed:
                 if 'autoConfirmed' not in lResults:
@@ -811,11 +820,17 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 tup = (rowId, '')
                 lResults['crashSignature'].append(tup)
 
-            if isReopened:
+            if isReopened6Months:
                 if 'reopened6Months' not in lResults:
                     lResults['reopened6Months'] = []
-                tup = (rowId, reopenerEmail)
+                tup = (rowId, reopener6MonthsEmail)
                 lResults['reopened6Months'].append(tup)
+
+            if isReopened:
+                if 'reopened' not in lResults:
+                    lResults['reopened'] = []
+                tup = (rowId, reopenerEmail)
+                lResults['reopened'].append(tup)
 
             #In case the reporter assigned the bug to himself at creation time
             if addAssigned or (creationDate >= cfg['reportPeriod'] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
