@@ -254,6 +254,19 @@ def util_increase_user_actions(statList, bug, mail, targets, action, actionTime)
             statList['period'][period]['people'][mail][action] += 1
             statList['period'][period]['people'][mail]['bugs'].append(bug)
 
+def util_check_duplicated(bugID, isFirst=True):
+    rowDupeOf = bugzillaData['bugs'][str(bugID)]['dupe_of']
+    if rowDupeOf:
+        if str(rowDupeOf) in bugzillaData['bugs']:
+            return util_check_duplicated(rowDupeOf, False)
+        else:
+            return bugID
+    else:
+        if isFirst:
+            return None
+        else:
+            return bugID
+
 def analyze_bugzilla(statList, bugzillaData, cfg):
     print("Analyze bugzilla\n", end="", flush=True)
     statNewDate = statList['stat']['newest']
@@ -357,8 +370,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 statList['MostCCBugs'][rowId] = util_create_bug(
                         row['summary'], row['component'], row['version'], keywords, creationDate, len(row['cc']))
 
-
-            rowDupeOf = row['dupe_of']
+            rowDupeOf = util_check_duplicated(rowId)
             if rowDupeOf:
                 if rowDupeOf not in statList['dupesBugs']:
                     statList['dupesBugs'][rowDupeOf] = []
@@ -373,8 +385,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         bugzillaData['bugs'][str(rowDupeOf)]['version'],
                         bugzillaData['bugs'][str(rowDupeOf)]['keywords'],
                         datetime.datetime.strptime(
-                            bugzillaData['bugs'][str(rowDupeOf)]['creation_time'], "%Y-%m-%dT%H:%M:%SZ"),
-                        1)
+                            bugzillaData['bugs'][str(rowDupeOf)]['creation_time'], "%Y-%m-%dT%H:%M:%SZ"), 1)
 
 
             actionMail = None
@@ -858,21 +869,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 tup = (rowId, '')
                 lResults['emptyAlias'].append(rowId)
 
-    output = ''
-    for k, v in statList['dupesBugs'].items():
-        if k in statList['MostDupeBugs']:
-            if len(v) >= 3:
-                statList['MostDupeBugs'][k]['count'] = len(v)
-            else:
-                del statList['MostDupeBugs'][k]
-        for dupeBug in v:
-            if dupeBug in statList['dupesBugs']:
-                output += '\n- Duplicates of ' + str(k)
-                for subDupeBug in statList['dupesBugs'][dupeBug]:
-                    output += '\n    * ' + urlShowBug + str(subDupeBug)
-    if output:
-        output = '=== DupeOfDupe ===' + output
-        print(output)
 
     for dKey, dValue in lResults.items():
         if dValue:
@@ -1003,6 +999,14 @@ def util_print_QA_line_created(fp, dValue ):
         print('      {}: {}'.format(k, v), file=fp)
 
 def create_wikimedia_table_mostCCBugs(cfg, statList):
+
+    for k, v in statList['dupesBugs'].items():
+        if k in statList['MostDupeBugs']:
+            if len(v) >= 3:
+                statList['MostDupeBugs'][k]['count'] = len(v)
+            else:
+                del statList['MostDupeBugs'][k]
+
     for nameList in ['MostCCBugs', 'MostDupeBugs']:
         print('Creating wikimedia table for ' + nameList)
         output = ""
@@ -1012,16 +1016,14 @@ def create_wikimedia_table_mostCCBugs(cfg, statList):
         output += '{{Menu.QA}}\n'
         output += '\n'
         table = []
+        headers = ['Id', 'Summary', 'Component', 'Version', 'isRegression', 'isBisected',
+                           'isEasyHack', 'haveBackTrace', 'Reported']
         if nameList == 'MostCCBugs':
-            headers = ['Id', 'Summary', 'Component', 'Version', 'isRegression', 'isBisected',
-                           'isEasyHack', 'haveBackTrace', 'Reported', 'Total CC']
-
+            headers.append('Total CC')
             output += '{} bugs have 10 or more emails in the CC list. (sorted in alphabetical order by number of users)\n'.format(
                     len(statList['MostCCBugs']))
         else:
-            headers = ['Id', 'Summary', 'Component', 'Version', 'isRegression', 'isBisected',
-                           'isEasyHack', 'haveBackTrace', 'Total Duplicates']
-
+            headers.append('Total Duplicates')
             output += '{} open bugs have 3 or more duplicates. (sorted in alphabetical order by number of duplicates)\n'.format(
                     len(statList['MostDupeBugs']))
 
