@@ -294,7 +294,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             statList['bugs']['all']['status'][rowStatus] += 1
 
-            keywords = row['keywords']
+            rowKeywords = row['keywords']
 
             creatorMail = row['creator']
 
@@ -368,7 +368,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             if isOpen(rowStatus) and len(row['cc']) >= 10:
                 statList['MostCCBugs'][rowId] = util_create_bug(
-                        row['summary'], row['component'], row['version'], keywords, creationDate, len(row['cc']))
+                        row['summary'], row['component'], row['version'], rowKeywords, creationDate, len(row['cc']))
 
             rowDupeOf = util_check_duplicated(rowId)
             if rowDupeOf:
@@ -413,6 +413,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             bResolved = False
             lastAssignedEmail = ""
             patchAdded = False
+            regressionAdded = False
             isReopened = False
             closeDate = None
             reopenerEmail = ""
@@ -545,7 +546,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         #from non-open status and never confirmed by someone else.
                         #Ignore bisected bugs or some trusted authors defined in configQA.json
                         if actionDate >= cfg['reportPeriod'] and not everConfirmed and actionMail == creatorMail and \
-                            isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in keywords and \
+                            isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in rowKeywords and \
                             creatorMail not in cfg['configQA']['ignore']['autoConfirmed']:
                                 autoConfirmed = True
                                 autoConfirmedMail = actionMail
@@ -607,7 +608,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             if keyword in keywords_list:
                                 util_increase_user_actions(statList, key, actionMail, bugTargets, 'keyword_added', actionDate)
 
-                                if actionDate >= cfg['reportPeriod'] and keyword in row['keywords']:
+                                if actionDate >= cfg['reportPeriod'] and keyword in rowKeywords:
                                     statList['weeklyReport']['keyword_added'][keyword]['id'].append(rowId)
                                     statList['weeklyReport']['keyword_added'][keyword]['author'].append(actionMail)
                                     statList['weeklyReport']['keyword_added'][keyword]['status'][rowStatus] += 1
@@ -615,12 +616,15 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                     if keyword == 'patch':
                                         patchAdded = True
 
+                                    if keyword == 'regression':
+                                        regressionAdded = True
+
                         keywordsRemoved = change['removed'].split(", ")
                         for keyword in keywordsRemoved:
                             if keyword in keywords_list:
                                 util_increase_user_actions(statList, key, actionMail, bugTargets, 'keyword_removed', actionDate)
 
-                                if actionDate >= cfg['reportPeriod'] and keyword not in row['keywords']:
+                                if actionDate >= cfg['reportPeriod'] and keyword not in rowKeywords:
                                     statList['weeklyReport']['keyword_removed'][keyword]['id'].append(rowId)
                                     statList['weeklyReport']['keyword_removed'][keyword]['author'].append(actionMail)
 
@@ -738,7 +742,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['tags']['removeObsolete'].add(comments[-1]["id"])
                 else:
                     if datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedPeriod'] and \
-                            rowStatus == 'NEW' and 'needsUXEval' not in row['keywords'] and 'easyHack' not in row['keywords'] and \
+                            rowStatus == 'NEW' and 'needsUXEval' not in rowKeywords and 'easyHack' not in rowKeywords and \
                             row['component'] != 'Documentation' and (row['product'] == 'LibreOffice' or \
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['massping']['untouched'].append(rowId)
@@ -767,6 +771,15 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 email = person['email']
                 if commentMail == email or actionMail == email:
                     util_check_bugzilla_mail(statList, email, person['real_name'])
+
+            if (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and regressionAdded and \
+                    'bibisectRequest' not in rowKeywords and 'bibisected' not in rowKeywords and \
+                    'bisected' not in rowKeywords and 'preBibisect' not in rowKeywords and \
+                    'bibisectNotNeeded' not in rowKeywords and 'notBibisectable' not in rowKeywords:
+                if 'regressionAdded' not in lResults:
+                    lResults['regressionAdded'] = []
+                tup = (rowId, '')
+                lResults['regressionAdded'].append(tup)
 
             if movedToFixed:
                 if 'movedToFixed' not in lResults:
