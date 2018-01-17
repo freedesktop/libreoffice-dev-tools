@@ -69,6 +69,8 @@ needInfoFollowUpPingComment = "Dear Bug Submitter,\n\nPlease read this message i
 
 moveToNeedInfoComment = "I have set the bug's status to 'NEEDINFO'"
 
+reopened6MonthsComment = "This bug has been in RESOLVED FIXED status for more than 6 months."
+
 def util_convert_days_to_datetime(cfg, period):
     return cfg['todayDate'] - datetime.timedelta(days= period)
 
@@ -674,6 +676,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     if commentMail not in statList['weeklyReport']['comments_count']:
                         statList['weeklyReport']['comments_count'][commentMail] = 0
                     statList['weeklyReport']['comments_count'][commentMail] += 1
+
+                if isOpen(rowStatus) and reopened6MonthsComment in comment['text']:
+                    isReopened = True
 
                 #Check for duplicated comments
                 if idx > 0 and comment['text'] == comments[idx-1]['text']:
