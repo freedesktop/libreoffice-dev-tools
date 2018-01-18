@@ -17,10 +17,11 @@ public:
     std::string m_aOldName;
     std::string m_aNewName;
 
-    RenameResult(const std::string& rScope, const std::string& rOldName, const std::string& rNewName)
-        : m_aScope(rScope),
-          m_aOldName(rOldName),
-          m_aNewName(rNewName)
+    RenameResult(const std::string& rScope, const std::string& rOldName,
+                 const std::string& rNewName)
+        : m_aScope(rScope)
+        , m_aOldName(rOldName)
+        , m_aNewName(rNewName)
     {
     }
 };
@@ -36,13 +37,15 @@ class Context
     clang::ASTContext* m_pContext;
 
 public:
-    Context(const std::string& rClassName, const std::string& rClassPrefix, const std::string& rClassExcludedPrefix, bool bPoco, bool bYaml, const std::string& rPathPrefix)
-        : m_aClassName(rClassName),
-          m_aClassPrefix(rClassPrefix),
-          m_bPoco(bPoco),
-          m_bYaml(bYaml),
-          m_aPathPrefix(rPathPrefix),
-          m_pContext(nullptr)
+    Context(const std::string& rClassName, const std::string& rClassPrefix,
+            const std::string& rClassExcludedPrefix, bool bPoco, bool bYaml,
+            const std::string& rPathPrefix)
+        : m_aClassName(rClassName)
+        , m_aClassPrefix(rClassPrefix)
+        , m_bPoco(bPoco)
+        , m_bYaml(bYaml)
+        , m_aPathPrefix(rPathPrefix)
+        , m_pContext(nullptr)
     {
         std::stringstream aStream(rClassExcludedPrefix);
         std::string aExclude;
@@ -114,10 +117,7 @@ public:
             rName.insert(0, "s_");
     }
 
-    void setASTContext(clang::ASTContext& rContext)
-    {
-        m_pContext = &rContext;
-    }
+    void setASTContext(clang::ASTContext& rContext) { m_pContext = &rContext; }
 
     bool ignoreLocation(const clang::SourceLocation& rLocation)
     {
@@ -132,17 +132,15 @@ public:
         }
         else
         {
-            const char* pName = m_pContext->getSourceManager().getPresumedLoc(aLocation).getFilename();
+            const char* pName
+                = m_pContext->getSourceManager().getPresumedLoc(aLocation).getFilename();
             bRet = std::string(pName).find(m_aPathPrefix) != 0;
         }
 
         return bRet;
     }
 
-    bool getYaml() const
-    {
-        return m_bYaml;
-    }
+    bool getYaml() const { return m_bYaml; }
 };
 
 class Visitor : public clang::RecursiveASTVisitor<Visitor>
@@ -160,15 +158,9 @@ public:
         m_rContext.setASTContext(rASTContext);
     }
 
-    const std::vector<RenameResult>& getResults()
-    {
-        return m_aResults;
-    }
+    const std::vector<RenameResult>& getResults() { return m_aResults; }
 
-    const std::set<std::string>& getFunctions()
-    {
-        return m_aFunctions;
-    }
+    const std::set<std::string>& getFunctions() { return m_aFunctions; }
 
     /*
      * class C
@@ -190,7 +182,8 @@ public:
             if (!m_rContext.checkNonStatic(aName))
             {
                 m_rContext.suggestNonStatic(aName);
-                m_aResults.push_back(RenameResult(pRecord->getQualifiedNameAsString(), pDecl->getNameAsString(), aName));
+                m_aResults.push_back(RenameResult(pRecord->getQualifiedNameAsString(),
+                                                  pDecl->getNameAsString(), aName));
             }
         }
 
@@ -220,7 +213,8 @@ public:
             if (!m_rContext.checkStatic(aName))
             {
                 m_rContext.suggestStatic(aName);
-                m_aResults.push_back(RenameResult(pRecord->getQualifiedNameAsString(), pDecl->getNameAsString(), aName));
+                m_aResults.push_back(RenameResult(pRecord->getQualifiedNameAsString(),
+                                                  pDecl->getNameAsString(), aName));
             }
         }
 
@@ -232,7 +226,8 @@ public:
         if (m_rContext.ignoreLocation(pDecl->getLocation()))
             return true;
 
-        if (clang::isa<clang::CXXConstructorDecl>(pDecl) || clang::isa<clang::CXXDestructorDecl>(pDecl))
+        if (clang::isa<clang::CXXConstructorDecl>(pDecl)
+            || clang::isa<clang::CXXDestructorDecl>(pDecl))
             return true;
 
         clang::CXXRecordDecl* pRecord = pDecl->getParent();
@@ -275,11 +270,13 @@ public:
                 {
                     if (m_rContext.getYaml())
                     {
-                        std::cerr << "- QualifiedName:  " << rResult.m_aScope << "::" << rResult.m_aOldName << std::endl;
+                        std::cerr << "- QualifiedName:  " << rResult.m_aScope
+                                  << "::" << rResult.m_aOldName << std::endl;
                         std::cerr << "  NewName:        " << rResult.m_aNewName << std::endl;
                     }
                     else
-                        std::cerr << rResult.m_aScope << "::" << rResult.m_aOldName << "," << rResult.m_aNewName << std::endl;
+                        std::cerr << rResult.m_aScope << "::" << rResult.m_aOldName << ","
+                                  << rResult.m_aNewName << std::endl;
                     bFound = true;
                 }
             }
@@ -307,10 +304,7 @@ public:
         return llvm::make_unique<ASTConsumer>(m_rContext);
     }
 #else
-    clang::ASTConsumer* newASTConsumer()
-    {
-        return new ASTConsumer(m_rContext);
-    }
+    clang::ASTConsumer* newASTConsumer() { return new ASTConsumer(m_rContext); }
 #endif
 };
 
@@ -320,28 +314,33 @@ int main(int argc, const char** argv)
     llvm::cl::opt<std::string> aClassName("class-name",
                                           llvm::cl::desc("Qualified name (namespace::Class)."),
                                           llvm::cl::cat(aCategory));
-    llvm::cl::opt<std::string> aClassPrefix("class-prefix",
-                                            llvm::cl::desc("Qualified name prefix (e.g. namespace::Cl)."),
-                                            llvm::cl::cat(aCategory));
-    llvm::cl::opt<std::string> aClassExcludedPrefix("class-excluded-prefix",
-            llvm::cl::desc("Qualified name prefix to exclude (e.g. std::), has priority over the -class-prefix include."),
-            llvm::cl::cat(aCategory));
-    llvm::cl::opt<bool> bPoco("poco",
-                              llvm::cl::desc("Expect Poco-style '_' instead of LibreOffice-style 'm_' as prefix."),
-                              llvm::cl::cat(aCategory));
+    llvm::cl::opt<std::string> aClassPrefix(
+        "class-prefix", llvm::cl::desc("Qualified name prefix (e.g. namespace::Cl)."),
+        llvm::cl::cat(aCategory));
+    llvm::cl::opt<std::string> aClassExcludedPrefix(
+        "class-excluded-prefix",
+        llvm::cl::desc("Qualified name prefix to exclude (e.g. std::), has priority over the "
+                       "-class-prefix include."),
+        llvm::cl::cat(aCategory));
+    llvm::cl::opt<bool> bPoco(
+        "poco",
+        llvm::cl::desc("Expect Poco-style '_' instead of LibreOffice-style 'm_' as prefix."),
+        llvm::cl::cat(aCategory));
     llvm::cl::opt<bool> bYaml("yaml",
                               llvm::cl::desc("Output YAML instead of CSV, for clang-rename."),
                               llvm::cl::cat(aCategory));
-    llvm::cl::opt<std::string> aPathPrefix("path-prefix",
-                                            llvm::cl::desc("If not empty, ignore all source code paths not matching this prefix."),
-                                            llvm::cl::cat(aCategory));
+    llvm::cl::opt<std::string> aPathPrefix(
+        "path-prefix",
+        llvm::cl::desc("If not empty, ignore all source code paths not matching this prefix."),
+        llvm::cl::cat(aCategory));
     clang::tooling::CommonOptionsParser aParser(argc, argv, aCategory);
 
     clang::tooling::ClangTool aTool(aParser.getCompilations(), aParser.getSourcePathList());
 
     Context aContext(aClassName, aClassPrefix, aClassExcludedPrefix, bPoco, bYaml, aPathPrefix);
     FrontendAction aAction(aContext);
-    std::unique_ptr<clang::tooling::FrontendActionFactory> pFactory = clang::tooling::newFrontendActionFactory(&aAction);
+    std::unique_ptr<clang::tooling::FrontendActionFactory> pFactory
+        = clang::tooling::newFrontendActionFactory(&aAction);
     return aTool.run(pFactory.get());
 }
 
