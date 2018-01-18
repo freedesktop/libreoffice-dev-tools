@@ -260,8 +260,8 @@ public:
         const std::vector<RenameResult>& rResults = aVisitor.getResults();
         // Ignore missing prefixes in structs without member functions.
         bool bFound = false;
-        if (m_rContext.getYaml())
-            std::cerr << "---" << std::endl;
+        // Will this be the first YAML line?
+        bool bFirst = true;
         for (const std::string& rFunction : rFunctions)
         {
             for (const RenameResult& rResult : rResults)
@@ -270,6 +270,12 @@ public:
                 {
                     if (m_rContext.getYaml())
                     {
+                        if (bFirst)
+                        {
+                            bFirst = false;
+                            if (m_rContext.getYaml())
+                                std::cerr << "---" << std::endl;
+                        }
                         std::cerr << "- QualifiedName:  " << rResult.m_aScope
                                   << "::" << rResult.m_aOldName << std::endl;
                         std::cerr << "  NewName:        " << rResult.m_aNewName << std::endl;
@@ -281,7 +287,8 @@ public:
                 }
             }
         }
-        if (m_rContext.getYaml())
+        if (!bFirst && m_rContext.getYaml())
+            // There were some YAML lines.
             std::cerr << "..." << std::endl;
         if (bFound)
             exit(1);
