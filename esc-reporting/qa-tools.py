@@ -826,7 +826,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 tup = (rowId, reopener6MonthsEmail)
                 lResults['reopened6Months'].append(tup)
 
-            if isReopened:
+            if isReopened and not autoConfirmed:
                 if 'reopened' not in lResults:
                     lResults['reopened'] = []
                 tup = (rowId, reopenerEmail)
@@ -895,7 +895,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if 'emptyAlias' not in lResults:
                     lResults['emptyAlias'] = []
                 tup = (rowId, '')
-                lResults['emptyAlias'].append(rowId)
+                lResults['emptyAlias'].append(tup)
 
 
     for dKey, dValue in lResults.items():
