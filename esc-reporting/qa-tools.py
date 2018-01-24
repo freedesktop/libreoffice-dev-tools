@@ -693,7 +693,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 commentMail = comment['creator']
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
 
-                util_check_bugzilla_mail(statList, commentMail, '', commentDate)
+                util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
 
                 util_increase_user_actions(statList, rowId, commentMail, bugTargets, 'comments', commentDate)
                 if commentDate >= cfg['reportPeriod']:
@@ -911,12 +911,16 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
         if statList['people'][k]['oldest'] >= cfg['reportPeriod']:
             statList['weeklyReport']['newUsers'][k] = statList['people'][k]
+
         if statList['people'][k]['oldest'] >= cfg['newUserPeriod'] and len(statList['people'][k]['bugs']) >= 3 and \
                 statList['people'][k]['email'] not in cfg['configQA']['ignore']['newContributors']:
             print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
             lBugs = list(statList['people'][k]['bugs'])
             for idx in range(len(lBugs)):
-                print(str(idx + 1) + ' - ' + urlShowBug + str(lBugs[idx]))
+                isEasyHack = False
+                if 'easyHack' in bugzillaData['bugs'][str(lBugs[idx])]['keywords']:
+                        isEasyHack = True
+                print(str(idx + 1) + ' - ' + urlShowBug + str(lBugs[idx]) + ' - easyHack: ' + str(isEasyHack))
         statList['people'][k]['oldest'] = statList['people'][k]['oldest'].strftime("%Y-%m-%d")
         statList['people'][k]['newest'] = statList['people'][k]['newest'].strftime("%Y-%m-%d")
 
