@@ -419,6 +419,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             reopener6MonthsEmail = ""
             isConfirmed = False
             movedToFixed = False
+            movedToNeedInfo = False
+            movedToNeedInfomail = ""
             isReopened = False
             reopenerEmail = ""
 
@@ -507,6 +509,14 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             isReopened = True
                             reopenerEmail = actionMail
 
+                        if actionDate >= cfg['reportPeriod'] and addedStatus == 'NEEDINFO' and \
+                                rowStatus == 'NEEDINFO' and isOpen(removedStatus):
+                            movedToNeedInfo = True
+                            movedToNeedInfoMail = actionMail
+
+                        if movedToNeedInfo and removedStatus == 'NEEDINFO':
+                            movedToNeedInfo = False
+
                         if actionDate >= cfg['reportPeriod'] and not bResolved and isClosed(addedStatus) and isClosed(row['status']):
                             bResolved = True
                             week = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
@@ -543,7 +553,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                         #if any other user moves it to open ( ASSIGNED, NEW or REOPENED ),
                         #the bug is no longer autoconfirmed
-                        if not everConfirmed and isOpen(rowStatus) and isOpen(addedStatus) and actionMail != creatorMail:
+                        if not everConfirmed and isOpen(addedStatus) and actionMail != creatorMail:
                                 everConfirmed = True
                                 autoConfirmed = False
 
@@ -845,6 +855,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     lResults['removeAssigned'] = []
                 tup = (rowId, removeAssignedMail)
                 lResults['removeAssigned'].append(tup)
+
+            if movedToNeedInfo and everConfirmed:
+                if 'movedToNeedInfo' not in lResults:
+                    lResults['movedToNeedInfo'] = []
+                tup = (rowId, movedToNeedInfoMail)
+                lResults['movedToNeedInfo'].append(tup)
 
             if addAssignee:
                 if 'addAssignee' not in lResults:
