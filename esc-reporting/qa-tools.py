@@ -161,11 +161,13 @@ def util_create_statList():
                     'id': [],
                     'author': [],
                     'status': {s:0 for s in statutes_list},
+                    'difftime': []
                 },
             'fixed':
                 {
                     'id': [],
                     'author': [],
+                    'difftime': []
                 },
             'metabugAlias': {}
         },
@@ -464,11 +466,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 statList['bugs']['confirmed']['author'].append(actionMail)
                                 statList['bugs']['confirmed']['status'][rowStatus] += 1
                                 isConfirmed = True
+                                statList['bugs']['confirmed']['difftime'].append((actionDate - creationDate).days)
                             elif isConfirmed:
                                 statList['bugs']['confirmed']['id'].pop()
                                 statList['bugs']['confirmed']['author'].pop()
                                 statList['bugs']['confirmed']['status'][rowStatus] -= 1
                                 isConfirmed = False
+                                statList['bugs']['confirmed']['difftime'].pop()
 
                     if change['field_name'] == 'version':
                         if actionDate >= cfg['reportPeriod'] and (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
@@ -542,13 +546,16 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 statList['weeklyReport']['status_changed'][addedStatus]['id'].append(rowId)
                                 statList['weeklyReport']['status_changed'][addedStatus]['author'].append(actionMail)
 
-                        if actionDate >= cfg['reportPeriod'] and addedStatus == 'RESOLVED_FIXED':
+                        if actionDate >= cfg['reportPeriod'] and addedStatus == 'RESOLVED_FIXED' and \
+                                removedStatus != 'REOPENED' and row['resolution'] == 'FIXED':
                             if isFixed:
                                 statList['bugs']['fixed']['id'].pop()
                                 statList['bugs']['fixed']['author'].pop()
+                                statList['bugs']['fixed']['difftime'].pop()
 
                             statList['bugs']['fixed']['id'].append(rowId)
                             statList['bugs']['fixed']['author'].append(actionMail)
+                            statList['bugs']['fixed']['difftime'].append((actionDate - creationDate).days)
                             isFixed = True
 
                         #if any other user moves it to open ( ASSIGNED, NEW or REOPENED ),
@@ -1038,6 +1045,38 @@ def util_print_QA_line_blog(fp, statList, dValue, total_count):
             print('      ' + str(k) + ' : ' + str(v), file=fp)
 
     print(file=fp)
+
+    if 'difftime' in dValue:
+        sortList = sorted(dValue['difftime'])
+        rangeList = sortList[-1] - sortList[0]
+        subLists = {}
+        for i in sortList:
+            timePeriod = ''
+            if i < 1:
+                timePeriod = '0001day'
+            elif i < 3:
+                timePeriod = '0003days'
+            elif i < 7:
+                timePeriod = '0007days'
+            elif i < 30:
+                timePeriod = '0030days'
+            elif i < 90:
+                timePeriod = '0090days'
+            elif i < 180:
+                timePeriod = '0180days'
+            elif i < 365:
+                timePeriod = '0365days'
+            elif i < 1095:
+                timePeriod = '1095days'
+            else:
+                timePeriod = 'older'
+            if timePeriod not in subLists:
+                subLists[timePeriod] = []
+            subLists[timePeriod].append(i)
+
+        print('  * Times: ', file=fp)
+        for k,v in sorted(subLists.items()):
+            print('      ' + str(k) + ' : ' + str(len(v)), file=fp)
 
 def util_print_QA_line_created(fp, dValue ):
     others = 0
