@@ -275,7 +275,9 @@ def do_ESC_MAB_UPDATE(bz):
     url = bz + '&f1=version&o1=regexp&priority=highest&v1=^'
     rawList = {}
 
-    series = {'5.3' : '5.3',
+    series = {'6.0' : '6.0',
+              '5.4' : '5.4',
+              '5.3' : '5.3',
               '5.2' : '5.2',
               '5.1' : '5.1',
               '5.0' : '5.0',
@@ -682,7 +684,7 @@ def get_crash(cfg):
     dirList = util_load_url('http://dev-builds.libreoffice.org/crashtest/?C=M&O=D', useRaw=True)
     # find newest entry by using sort - in nginx' fancyindex first row is parent-directory
     # the second ones is most recent dir that was created. Only regular entries have a title
-    # attribute though, so use that as a shortcut, skip 
+    # attribute though, so use that as a shortcut, skip
     inx = dirList.find('title="', 0)
     if inx == -1:
        print("ERROR: http://dev-builds.libreoffice.org/crashtest/?C=M&O=D not showing DIR list")
