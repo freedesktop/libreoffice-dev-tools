@@ -8,12 +8,15 @@ ifneq ($(GCOV),)
 CLANGFLAGS += --coverage
 endif
 
-all: bin/rename bin/find-unprefixed-members
+all: bin/rename bin/find-unprefixed-members bin/find-harmful-auto
 
 bin/rename: rename.cxx Makefile
 	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
 
 bin/find-unprefixed-members: find-unprefixed-members.cxx Makefile
+	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
+
+bin/find-harmful-auto: find-harmful-auto.cxx Makefile
 	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
 
 test: test.cxx test.hxx Makefile
