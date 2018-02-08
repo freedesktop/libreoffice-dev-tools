@@ -12,7 +12,6 @@ import os
 import datetime
 import json
 from pyshorteners import Shortener
-import re
 import requests
 from tabulate import tabulate
 
@@ -20,19 +19,11 @@ from tabulate import tabulate
 dataDir = '/home/xisco/dev-tools/esc-reporting/dump/'
 
 #Path where configQA.json and addObsolete.txt are
-configDir = '/home/xisco/dev-tools/esc-reporting/'
+configDir = '/home/xisco/dev-tools/qa/'
 
 reportPeriodDays = 7
 
-newUserPeriodDays = 30
-
-fixBugPingPeriodDays = 30
-
-retestPeriodDays = 60
-
 untouchedPeriodDays = 365
-
-inactiveAssignedPeriodDays = 90
 
 targets_list = ['5.4.4', '6.0.0']
 
@@ -276,7 +267,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
-    lResults = {}
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
 
@@ -390,41 +380,9 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             bugzillaData['bugs'][str(rowDupeOf)]['creation_time'], "%Y-%m-%dT%H:%M:%SZ"), 1)
 
 
-            actionMail = None
             isFixed = False
-            everConfirmed = False
-            autoConfirmed = False
-            autoConfirmMail = ""
-            versionChanged = False
-            versionChangedMail = ""
-            oldestVersion = 999999
-            newerVersion = False
-            newerVersionMail = ""
-            autoFixed = False
-            autoFixedMail = ""
-            addAssigned = False
-            addAssignedMail = ""
-            removeAssigned = False
-            removeAssignedMail = ""
-            addAssignee = False
-            addAssigneeMail = ""
-            removeAssignee = False
-            removeAssigneeMail = ""
-            backPortAdded = False
-            backPortAddedMail = ""
             bResolved = False
-            lastAssignedEmail = ""
-            patchAdded = False
-            regressionAdded = False
-            isReopened6Months = False
-            closeDate = None
-            reopener6MonthsEmail = ""
             isConfirmed = False
-            movedToFixed = False
-            movedToNeedInfo = False
-            movedToNeedInfomail = ""
-            isReopened = False
-            reopenerEmail = ""
 
             for action in row['history']:
                 actionMail = action['who']
@@ -474,52 +432,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 isConfirmed = False
                                 statList['bugs']['confirmed']['difftime'].pop()
 
-                    if change['field_name'] == 'version':
-                        if actionDate >= cfg['reportPeriod'] and (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
-                            addedVersion = change['added']
-                            removedVersion = change['removed']
-                            if addedVersion == 'unspecified':
-                                addedVersion = 999999
-                            elif addedVersion == 'Inherited From OOo':
-                                addedVersion = 0
-                            else:
-                                addedVersion = int(''.join([s for s in re.split('\.|\s',addedVersion) if s.isdigit()]).ljust(3, '0')[:3] )
-
-                            if removedVersion == 'unspecified':
-                                removedVersion = 999999
-                            elif removedVersion == 'Inherited From OOo':
-                                removedVersion = 0
-                            else:
-                                removedVersion = int(''.join([s for s in re.split('\.|\s',removedVersion) if s.isdigit()]).ljust(3, '0')[:3] )
-
-                            if removedVersion < oldestVersion:
-                                oldestVersion = removedVersion
-
-                            if addedVersion <= oldestVersion:
-                                oldestVersion = addedVersion
-                                newerVersion = False
-                            else:
-                                newerVersion = True
-                                newerVersionMail = actionMail
-
                     if change['field_name'] == 'status':
                         addedStatus = change['added']
                         removedStatus = change['removed']
 
                         if rowStatus == 'ASSIGNED' and addedStatus == 'ASSIGNED':
                             lastAssignedEmail = actionMail
-
-                        if addedStatus == 'REOPENED' and rowStatus == 'REOPENED' and not movedToFixed:
-                            isReopened = True
-                            reopenerEmail = actionMail
-
-                        if actionDate >= cfg['reportPeriod'] and addedStatus == 'NEEDINFO' and \
-                                rowStatus == 'NEEDINFO' and isOpen(removedStatus):
-                            movedToNeedInfo = True
-                            movedToNeedInfoMail = actionMail
-
-                        if movedToNeedInfo and removedStatus == 'NEEDINFO':
-                            movedToNeedInfo = False
 
                         if actionDate >= cfg['reportPeriod'] and not bResolved and isClosed(addedStatus) and isClosed(row['status']):
                             bResolved = True
@@ -558,40 +476,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['bugs']['fixed']['difftime'].append((actionDate - creationDate).days)
                             isFixed = True
 
-                        #if any other user moves it to open ( ASSIGNED, NEW or REOPENED ),
-                        #the bug is no longer autoconfirmed
-                        if not everConfirmed and isOpen(addedStatus) and actionMail != creatorMail:
-                                everConfirmed = True
-                                autoConfirmed = False
-
-                        #Check for autoconfirmed bugs:
-                        #Bug's status is open ( ASSIGNED, NEW or REOPENED ), moved to open by the reporter
-                        #from non-open status and never confirmed by someone else.
-                        #Ignore bisected bugs or some trusted authors defined in configQA.json
-                        if actionDate >= cfg['reportPeriod'] and not everConfirmed and actionMail == creatorMail and \
-                            isOpen(rowStatus) and isOpen(addedStatus) and 'bisected' not in rowKeywords and \
-                            creatorMail not in cfg['configQA']['ignore']['autoConfirmed']:
-                                autoConfirmed = True
-                                autoConfirmedMail = actionMail
-
-                        if autoFixed and removedStatus == 'RESOLVED':
-                            autoFixed = False
-
-                        if actionDate >= cfg['reportPeriod']:
-                            if actionMail == creatorMail and addedStatus == 'RESOLVED_FIXED' and \
-                                    rowStatus == 'RESOLVED_FIXED' and 'target:' not in row['whiteboard']:
-                                autoFixed = True
-                                autoFixedMail = actionMail
-
-                            if removedStatus == "ASSIGNED" and addedStatus == "NEW" and \
-                                    rowStatus == "NEW" and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
-                                removeAssignee = True
-                                removeAssigneeMail = actionMail
-                            elif addedStatus == "ASSIGNED" and rowStatus == "ASSIGNED" and \
-                                    row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org':
-                                addAssignee = True
-                                addAssigneeMail = actionMail
-
                     elif change['field_name'] == 'resolution':
                         if newStatus:
                             addedStatus = newStatus + "_" + change['added']
@@ -602,16 +486,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                                 statList['weeklyReport']['status_changed'][addedStatus]['author'].append(actionMail)
 
                             newStatus = None
-
-                        if change['added'] == 'FIXED':
-                            movedToFixed = True
-                            isReopened = False
-                            if isOpen(rowStatus):
-                                closeDate = actionDate
-                        elif change['removed'] == 'FIXED' and closeDate and actionDate >= cfg['reportPeriod'] and \
-                                (actionDate - closeDate).days > 180:
-                            isReopened6Months = True
-                            reopener6MonthsEmail = actionMail
 
                     elif change['field_name'] == 'priority':
                         newPriority = change['added']
@@ -773,160 +647,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['massping']['untouched'].append(rowId)
 
-                if rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
-                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
-                        if 'untouchedUnconfirmed' not in lResults:
-                            lResults['untouchedUnconfirmed'] = []
-                        tup = (rowId, row['last_change_time'])
-                        lResults['untouchedUnconfirmed'].append(tup)
-                elif rowStatus == 'NEEDINFO' and comments[-1]['creator'] == creatorMail and \
-                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") >= cfg['retestPeriod']:
-                        if 'NeedInfoProvided' not in lResults:
-                            lResults['NeedInfoProvided'] = []
-                        tup = (rowId, row['last_change_time'])
-                        lResults['NeedInfoProvided'].append(tup)
-            else:
-                if rowStatus == 'UNCONFIRMED' and \
-                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestPeriod']:
-                    if 'Unconfirmed1Comment' not in lResults:
-                        lResults['Unconfirmed1Comment'] = []
-                    tup = (rowId, row['last_change_time'])
-                    lResults['Unconfirmed1Comment'].append(tup)
-
             for person in row['cc_detail']:
                 email = person['email']
                 if commentMail == email or actionMail == email:
                     util_check_bugzilla_mail(statList, email, person['real_name'])
 
-            if (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and regressionAdded and \
-                    'bibisectRequest' not in rowKeywords and 'bibisected' not in rowKeywords and \
-                    'bisected' not in rowKeywords and 'preBibisect' not in rowKeywords and \
-                    'bibisectNotNeeded' not in rowKeywords and 'notBibisectable' not in rowKeywords:
-                if 'regressionAdded' not in lResults:
-                    lResults['regressionAdded'] = []
-                tup = (rowId, '')
-                lResults['regressionAdded'].append(tup)
-
-            if autoFixed:
-                if 'autoFixed' not in lResults:
-                    lResults['autoFixed'] = []
-                tup = (rowId, autoFixedMail)
-                lResults['autoFixed'].append(tup)
-
-            if autoConfirmed:
-                if 'autoConfirmed' not in lResults:
-                    lResults['autoConfirmed'] = []
-                tup = (rowId, autoConfirmedMail)
-                lResults['autoConfirmed'].append(tup)
-
-            if newerVersion and row['version'] != 'unspecified':
-                if 'newerVersion' not in lResults:
-                    lResults['newerVersion'] =  []
-                tup = (rowId, newerVersionMail)
-                lResults['newerVersion'].append(tup)
-
-            if (isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and patchAdded:
-                if 'patchAdded' not in lResults:
-                    lResults['patchAdded'] = []
-                tup = (rowId, '')
-                lResults['patchAdded'].append(tup)
-
-            if crashSignature and not crashSignature.startswith('["'):
-                if 'crashSignature' not in lResults:
-                    lResults['crashSignature'] = []
-                tup = (rowId, '')
-                lResults['crashSignature'].append(tup)
-
-            if isReopened6Months:
-                if 'reopened6Months' not in lResults:
-                    lResults['reopened6Months'] = []
-                tup = (rowId, reopener6MonthsEmail)
-                lResults['reopened6Months'].append(tup)
-
-            if isReopened and not autoConfirmed:
-                if 'reopened' not in lResults:
-                    lResults['reopened'] = []
-                tup = (rowId, reopenerEmail)
-                lResults['reopened'].append(tup)
-
-            #In case the reporter assigned the bug to himself at creation time
-            if addAssigned or (creationDate >= cfg['reportPeriod'] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
-                    (rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED')):
-                if 'addAssigned' not in lResults:
-                    lResults['addAssigned'] = []
-                tup = (rowId, addAssignedMail)
-                lResults['addAssigned'].append(tup)
-
-            if removeAssigned:
-                if 'removeAssigned' not in lResults:
-                    lResults['removeAssigned'] = []
-                tup = (rowId, removeAssignedMail)
-                lResults['removeAssigned'].append(tup)
-
-            if movedToNeedInfo and everConfirmed:
-                if 'movedToNeedInfo' not in lResults:
-                    lResults['movedToNeedInfo'] = []
-                tup = (rowId, movedToNeedInfoMail)
-                lResults['movedToNeedInfo'].append(tup)
-
-            if addAssignee:
-                if 'addAssignee' not in lResults:
-                    lResults['addAssignee'] =[]
-                tup = (rowId, addAssigneeMail)
-                lResults['addAssignee'].append(tup)
-
-            if removeAssignee:
-                if 'removeAssignee' not in lResults:
-                    lResults['removeAssignee'] =[]
-                tup = (rowId, removeAssigneeMail)
-                lResults['removeAssignee'].append(tup)
-
-            if backPortAdded:
-                if 'backPortAdded' not in lResults:
-                    lResults['backPortAdded'] = []
-                tup = (rowId, backPortAddedMail)
-                lResults['backPortAdded'].append(tup)
-
-            #Check bugs where:
-            # 1. last comment is done by 'libreoffice-commits@lists.freedesktop.org'
-            # 2. Penultimate comment is done by 'libreoffice-commits@lists.freedesktop.org',
-            # last comment is not written by the commit's author and it's not a revert commit
-            if isOpen(rowStatus) and ((commentMail == 'libreoffice-commits@lists.freedesktop.org' and \
-                    'evert' not in comments[-1]['text']) or \
-                    (len(comments) >= 2 and comments[-2]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and \
-                    comments[-2]['text'].split(' committed a patch related')[0] != statList['people'][comments[-1]['creator']]['name'] and \
-                    'evert' not in comments[-2]['text'])) and \
-                    commentDate < cfg['fixBugPingPeriod'] and commentDate >= cfg['fixBugPingDiff'] and \
-                    'easyHack' not in row['keywords']:
-                if 'fixBugPing' not in lResults:
-                    lResults['fixBugPing'] = []
-                tup = (rowId, '')
-                lResults['fixBugPing'].append(tup)
-
-            if rowStatus == 'ASSIGNED' and \
-                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssignedPeriod'] and \
-                    'easyHack' not in row['keywords'] and \
-                    rowId not in cfg['configQA']['ignore']['inactiveAssigned']:
-                if 'inactiveAssigned' not in lResults:
-                    lResults['inactiveAssigned'] = []
-                tup = (rowId, lastAssignedEmail)
-                lResults['inactiveAssigned'].append(tup)
-
         elif row['summary'].lower().startswith('[meta]'):
             statList['bugs']['metabugAlias'][rowId] = row['alias']
-            if not row['alias'] and isOpen(row['status']):
-                if 'emptyAlias' not in lResults:
-                    lResults['emptyAlias'] = []
-                tup = (rowId, '')
-                lResults['emptyAlias'].append(tup)
-
-
-    for dKey, dValue in lResults.items():
-        if dValue:
-            print('\n=== ' + dKey + ' ===')
-            dValue = sorted(dValue, key=lambda x: x[1])
-            for idx in range(len(dValue)):
-                print(str(idx + 1) + ' - ' + urlShowBug + str(dValue[idx][0]) + " - " + str(dValue[idx][1]))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
@@ -935,15 +662,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
         if statList['people'][k]['oldest'] >= cfg['reportPeriod']:
             statList['weeklyReport']['newUsers'][k] = statList['people'][k]
 
-        if statList['people'][k]['oldest'] >= cfg['newUserPeriod'] and len(statList['people'][k]['bugs']) >= 3 and \
-                statList['people'][k]['email'] not in cfg['configQA']['ignore']['newContributors']:
-            print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
-            lBugs = list(statList['people'][k]['bugs'])
-            for idx in range(len(lBugs)):
-                isEasyHack = False
-                if 'easyHack' in bugzillaData['bugs'][str(lBugs[idx])]['keywords']:
-                        isEasyHack = True
-                print(str(idx + 1) + ' - ' + urlShowBug + str(lBugs[idx]) + ' - easyHack: ' + str(isEasyHack))
         statList['people'][k]['oldest'] = statList['people'][k]['oldest'].strftime("%Y-%m-%d")
         statList['people'][k]['newest'] = statList['people'][k]['newest'].strftime("%Y-%m-%d")
 
@@ -1491,12 +1209,7 @@ def runCfg():
     cfg = get_config()
     cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
     cfg['reportPeriod'] = util_convert_days_to_datetime(cfg, reportPeriodDays)
-    cfg['newUserPeriod'] = util_convert_days_to_datetime(cfg, newUserPeriodDays)
-    cfg['fixBugPingPeriod'] = util_convert_days_to_datetime(cfg, fixBugPingPeriodDays)
-    cfg['fixBugPingDiff'] = util_convert_days_to_datetime(cfg, fixBugPingPeriodDays + reportPeriodDays)
     cfg['untouchedPeriod'] = util_convert_days_to_datetime(cfg, untouchedPeriodDays)
-    cfg['retestPeriod'] = util_convert_days_to_datetime(cfg, retestPeriodDays)
-    cfg['inactiveAssignedPeriod'] = util_convert_days_to_datetime(cfg, inactiveAssignedPeriodDays)
 
     for period in periods_list:
         cfg[period] = util_convert_days_to_datetime(cfg, period)
