@@ -121,7 +121,6 @@ def util_create_bug(summary, component, version, keywords, creationDate, count_c
         }
 def util_create_statList():
     return {
-        'crashSignatures': {},
         'bugs':
         {
             'all':
@@ -320,12 +319,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     statList['bugs']['created']['split_month'][month] = 0
                 statList['bugs']['created']['split_month'][month] += 1
 
-            crashSignature = row['cf_crashreport']
-
-            if crashSignature:
-                if crashSignature not in statList['crashSignatures']:
-                    statList['crashSignatures'][crashSignature] = []
-                statList['crashSignatures'][crashSignature].append([rowId, rowStatus])
 
             whiteboard_list = row['whiteboard'].split(' ')
             bugTargets = []
@@ -949,18 +942,6 @@ def users_Report(statList):
     for v,k in statList['newUsersPeriod'].items():
         print(v)
 
-def crashes_Report(statList) :
-    fp = open('/tmp/crashes_report.txt', 'w', encoding='utf-8')
-
-    print('* Report from {} to {}'.format(cfg['reportPeriod'].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
-
-    for key, value in sorted(statList['crashSignatures'].items()):
-        if len(value) > 1:
-            print(file=fp)
-            print('* ' + key + '.', file=fp)
-            for i in value:
-                print('\t - ' + i[1] + ' - ' + urlShowBug + str(i[0]), file=fp)
-    fp.close()
 
 def Blog_Report(statList) :
     fp = open('/tmp/blog_report.txt', 'w', encoding='utf-8')
@@ -1074,15 +1055,13 @@ if __name__ == '__main__':
             create_wikimedia_table_mostCCBugs(cfg, statList)
         elif sys.argv[1] == 'user':
             users_Report(statList)
-        elif sys.argv[1] == 'crash':
-            crashes_Report(statList)
         elif sys.argv[1] == 'massping':
             massping_Report(statList)
         elif sys.argv[1] == 'automate':
             automated_tagging(statList)
             automated_massping(statList)
         else:
-            print("You must use 'blog', 'target', 'period', 'users', 'crash', 'massping', 'automate' or 'weekly' as parameter.")
+            print("You must use 'blog', 'target', 'period', 'users', 'massping', 'automate' as parameter.")
             sys.exit(1)
 
     print('End of report')
