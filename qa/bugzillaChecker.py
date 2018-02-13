@@ -79,7 +79,9 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             removeAssignee = False
             removeAssigneeMail = ""
             backPortAdded = False
-            backPortAddedMail = ""
+            backPortAddedEmail = ""
+            targetRemoved = False
+            targetRemovedEmail = ""
             lastAssignedEmail = ""
             patchAdded = False
             regressionAdded = False
@@ -205,23 +207,28 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
 
                     elif change['field_name'] == 'keywords':
-                        keywordsAdded = change['added'].split(", ")
-                        for keyword in keywordsAdded:
-                            if keyword in common.keywords_list:
-                                if actionDate >= cfg['reportPeriod'] and keyword in rowKeywords:
-                                    if keyword == 'patch':
-                                        patchAdded = True
+                        if actionDate >= cfg['reportPeriod']:
+                            keywordsAdded = change['added'].split(", ")
+                            for keyword in keywordsAdded:
+                                if keyword in common.keywords_list and keyword in rowKeywords:
+                                        if keyword == 'patch':
+                                            patchAdded = True
 
-                                    if keyword == 'regression':
-                                        regressionAdded = True
+                                        if keyword == 'regression':
+                                            regressionAdded = True
 
                     elif change['field_name'] == 'whiteboard':
-                        for whiteboard in change['added'].split(' '):
-                            if 'backportrequest' in whiteboard.lower():
+                        if actionDate >= cfg['reportPeriod']:
+                            for whiteboard in change['added'].split(' '):
+                                if 'backportrequest' in whiteboard.lower() and \
+                                        whiteboard in row['whiteboard'] and common.isOpen(rowStatus):
+                                    backPortAdded = True
+                                    backPortAddedMail = actionMail
 
-                                if actionDate >= cfg['reportPeriod'] and whiteboard in row['whiteboard']:
-                                    if common.isOpen(rowStatus):
-                                        backPortAdded = True
+                            for whiteboard in change['removed'].split(' '):
+                                if 'target' in whiteboard.lower() and whiteboard.split(":")[1] not in row["whiteboard"]:
+                                    targetRemoved = True
+                                    targetRemovedMail = actionMail
 
                     elif change['field_name'] == 'assigned_to':
                         if actionDate >= cfg['reportPeriod']:
@@ -364,6 +371,12 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     lResults['backPortAdded'] = []
                 tup = (rowId, backPortAddedMail)
                 lResults['backPortAdded'].append(tup)
+
+            if targetRemoved:
+                if 'targetRemoved' not in lResults:
+                    lResults['targetRemoved'] = []
+                tup = (rowId, targetRemovedMail)
+                lResults['targetRemoved'].append(tup)
 
             #Check bugs where:
             # 1. last comment is done by 'libreoffice-commits@lists.freedesktop.org'
