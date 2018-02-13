@@ -8,13 +8,7 @@
 #
 
 import common
-import sys
-import os
 import datetime
-import json
-from pyshorteners import Shortener
-import requests
-from tabulate import tabulate
 
 reportPeriodDays = 7
 
