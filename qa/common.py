@@ -11,9 +11,8 @@ import sys
 import os
 import datetime
 import json
-from pyshorteners import Shortener
 import requests
-from tabulate import tabulate
+from pyshorteners import Shortener
 
 #Path where bugzilla_dump.py is
 dataDir = '/home/xisco/dev-tools/esc-reporting/dump/'
@@ -24,10 +23,6 @@ configDir = '/home/xisco/dev-tools/qa/'
 reportPeriodDays = 7
 
 untouchedPeriodDays = 365
-
-targets_list = ['5.4.4', '6.0.0']
-
-periods_list = [30, 60, 90, 180]
 
 priorities_list = ['highest','high','medium','low','lowest']
 
@@ -94,31 +89,7 @@ def util_create_person_bugzilla(email, name):
              'bugs': set()
         }
 
-def util_create_detailed_person(email):
-    return { 'email': email,
-             'bugs': [],
-             'created': 0,
-             'comments':0,
-             'status_changed': 0,
-             'keyword_added': 0,
-             'keyword_removed': 0,
-             'whiteboard_added': 0,
-             'whiteboard_removed': 0,
-             'severity_changed': 0,
-             'priority_changed': 0,
-             'system_changed': 0,
-             'metabug_added': 0,
-             'metabug_removed': 0
-         }
 
-def util_create_bug(summary, component, version, keywords, creationDate, count_cc):
-    return { 'summary': summary,
-             'component': component,
-             'version': version,
-             'keywords': keywords,
-             'creationDate': creationDate,
-             'count': count_cc
-        }
 def util_create_statList():
     return {
         'bugs':
@@ -160,7 +131,6 @@ def util_create_statList():
                     'author': [],
                     'difftime': []
                 },
-            'metabugAlias': {}
         },
         'massping':
             {
@@ -176,11 +146,6 @@ def util_create_statList():
                 'removeObsolete': set()
             },
         'people': {},
-        'targets': {t:{'count':0, 'people':{}} for t in targets_list},
-        'period': {p:{'count':0, 'people':{}} for p in periods_list},
-        'MostCCBugs': {},
-        'dupesBugs': {},
-        'MostDupeBugs': {},
         'stat': {'oldest': datetime.datetime.now(), 'newest': datetime.datetime(2001, 1, 1)}
     }
 
@@ -214,35 +179,6 @@ def isOpen(status):
 def isClosed(status):
     #Use row['status'], not rowStatus
     return status == 'VERIFIED' or status == 'RESOLVED' or status == 'CLOSED'
-
-def util_increase_user_actions(statList, bug, mail, targets, action, actionTime):
-    for target in targets:
-        if mail not in statList['targets'][target]['people']:
-            statList['targets'][target]['people'][mail] = util_create_detailed_person(mail)
-
-        statList['targets'][target]['people'][mail][action] += 1
-        statList['targets'][target]['people'][mail]['bugs'].append(bug)
-
-    for period in periods_list:
-        if actionTime >= cfg[period]:
-            if mail not in statList['period'][period]['people']:
-                statList['period'][period]['people'][mail] = util_create_detailed_person(mail)
-
-            statList['period'][period]['people'][mail][action] += 1
-            statList['period'][period]['people'][mail]['bugs'].append(bug)
-
-def util_check_duplicated(bugID, isFirst=True):
-    rowDupeOf = bugzillaData['bugs'][str(bugID)]['dupe_of']
-    if rowDupeOf:
-        if str(rowDupeOf) in bugzillaData['bugs']:
-            return util_check_duplicated(rowDupeOf, False)
-        else:
-            return bugID
-    else:
-        if isFirst:
-            return None
-        else:
-            return bugID
 
 def analyze_bugzilla(statList, bugzillaData, cfg):
     print("Analyze bugzilla\n", end="", flush=True)
@@ -334,29 +270,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     statList['period'][period]['count'] += 1
 
             util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
-            util_increase_user_actions(statList, key, creatorMail, bugTargets, 'created', creationDate)
 
             if isOpen(rowStatus) and len(row['cc']) >= 10:
                 statList['MostCCBugs'][rowId] = util_create_bug(
                         row['summary'], row['component'], row['version'], rowKeywords, creationDate, len(row['cc']))
-
-            rowDupeOf = util_check_duplicated(rowId)
-            if rowDupeOf:
-                if rowDupeOf not in statList['dupesBugs']:
-                    statList['dupesBugs'][rowDupeOf] = []
-                statList['dupesBugs'][rowDupeOf].append(rowId)
-
-                if str(rowDupeOf) in bugzillaData['bugs'] and \
-                        isOpen(bugzillaData['bugs'][str(rowDupeOf)]['status']):
-                    if rowDupeOf not in statList['MostDupeBugs']:
-                        statList['MostDupeBugs'][rowDupeOf] = util_create_bug(
-                        bugzillaData['bugs'][str(rowDupeOf)]['summary'],
-                        bugzillaData['bugs'][str(rowDupeOf)]['component'],
-                        bugzillaData['bugs'][str(rowDupeOf)]['version'],
-                        bugzillaData['bugs'][str(rowDupeOf)]['keywords'],
-                        datetime.datetime.strptime(
-                            bugzillaData['bugs'][str(rowDupeOf)]['creation_time'], "%Y-%m-%dT%H:%M:%SZ"), 1)
-
 
             isFixed = False
             bResolved = False
@@ -370,19 +287,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 # Use this variable in case the status is set before the resolution
                 newStatus = None
                 for change in action['changes']:
-                    if change['field_name'] == 'blocks':
-                        if change['added']:
-                            for metabug in change['added'].split(', '):
-                                continue
-                                #TODO
-                                #util_increase_user_actions(statList, key, actionMail, bugTargets, 'metabug_added', actionDate)
-
-                        if change['removed']:
-                            for metabug in change['removed'].split(', '):
-                                continue
-                                #TODO
-                                #util_increase_user_actions(statList, key, actionMail, bugTargets, 'metabug_added', actionDate)
-
                     if change['field_name'] == 'is_confirmed':
                         if actionDate >= cfg['reportPeriod']:
                             if change['added'] == "1":
@@ -402,9 +306,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         addedStatus = change['added']
                         removedStatus = change['removed']
 
-                        if rowStatus == 'ASSIGNED' and addedStatus == 'ASSIGNED':
-                            lastAssignedEmail = actionMail
-
                         if actionDate >= cfg['reportPeriod'] and not bResolved and isClosed(addedStatus) and isClosed(row['status']):
                             bResolved = True
                             week = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
@@ -417,11 +318,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         if  addedStatus == 'RESOLVED' or addedStatus == 'VERIFIED':
                             if(rowResolution):
                                 addedStatus = addedStatus + "_" + rowResolution
-                                util_increase_user_actions(statList, key, actionMail, bugTargets, 'status_changed', actionDate)
                             else:
                                 newStatus = addedStatus
-                        else:
-                            util_increase_user_actions(statList, key, actionMail, bugTargets, 'status_changed', actionDate)
 
                         if actionDate >= cfg['reportPeriod'] and addedStatus == 'RESOLVED_FIXED' and \
                                 removedStatus != 'REOPENED' and row['resolution'] == 'FIXED':
@@ -438,57 +336,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     elif change['field_name'] == 'resolution':
                         if newStatus:
                             addedStatus = newStatus + "_" + change['added']
-                            util_increase_user_actions(statList, key, actionMail, bugTargets, 'status_changed', actionDate)
 
                             newStatus = None
-
-                    elif change['field_name'] == 'priority':
-                        newPriority = change['added']
-                        util_increase_user_actions(statList, key, actionMail, bugTargets, 'priority_changed', actionDate)
-
-                    elif change['field_name'] == 'severity':
-                        newSeverity = change['added']
-                        util_increase_user_actions(statList, key, actionMail, bugTargets, 'severity_changed', actionDate)
-
-                    elif change['field_name'] == 'keywords':
-                        keywordsAdded = change['added'].split(", ")
-                        for keyword in keywordsAdded:
-                            if keyword in keywords_list:
-                                util_increase_user_actions(statList, key, actionMail, bugTargets, 'keyword_added', actionDate)
-
-                        keywordsRemoved = change['removed'].split(", ")
-                        for keyword in keywordsRemoved:
-                            if keyword in keywords_list:
-                                util_increase_user_actions(statList, key, actionMail, bugTargets, 'keyword_removed', actionDate)
-
-
-                    elif change['field_name'] == 'whiteboard':
-                        for whiteboard in change['added'].split(' '):
-                            if 'backportrequest' in whiteboard.lower():
-                                util_increase_user_actions(statList, rowId, actionMail, bugTargets, 'whiteboard_added', actionDate)
-
-                        for whiteboard in change['removed'].split(' '):
-                            if 'backportrequest' in whiteboard.lower():
-                                util_increase_user_actions(statList, rowId, actionMail, bugTargets, 'whiteboard_removed', actionDate)
-
-                    elif change['field_name'] == 'op_sys':
-                        newSystem = change['added']
-                        util_increase_user_actions(statList, rowId, actionMail, bugTargets, 'system_changed', actionDate)
-
-                    elif change['field_name'] == 'assigned_to':
-                        if actionDate >= cfg['reportPeriod']:
-                            removedAssignee = change['removed']
-                            addedAssignee = change['added']
-                            if  removedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
-                                    row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
-                                    ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
-                                addAssigned = True
-                                addAssignedMail = actionMail
-                            if addedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
-                                    row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org' and \
-                                    rowStatus == 'ASSIGNED':
-                                removeAssigned = True
-                                removeAssignedMail = actionMail
 
             commentMail = None
             comments = row['comments'][1:]
@@ -497,8 +346,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
 
                 util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
-
-                util_increase_user_actions(statList, rowId, commentMail, bugTargets, 'comments', commentDate)
 
                 #Check for duplicated comments
                 if idx > 0 and comment['text'] == comments[idx-1]['text']:
@@ -557,9 +404,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if commentMail == email or actionMail == email:
                     util_check_bugzilla_mail(statList, email, person['real_name'])
 
-        elif row['summary'].lower().startswith('[meta]'):
-            statList['bugs']['metabugAlias'][rowId] = row['alias']
-
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
             statList['people'][k]['name'] = statList['people'][k]['email'].split('@')[0]
@@ -571,53 +415,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
     statList['stat']['newest'] = statNewDate.strftime("%Y-%m-%d")
     statList['stat']['oldest'] = statOldDate.strftime("%Y-%m-%d")
     print(" from " + statList['stat']['oldest'] + " to " + statList['stat']['newest'])
-
-def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
-
-    #Replace metabugs keys by aliases
-    if isMetabug:
-        dValueAux = {}
-        for key, value in dValue.items():
-            if int(key) in statList['bugs']['metabugAlias'] and \
-                    statList['bugs']['metabugAlias'][int(key)]:
-                dValueAux[statList['bugs']['metabugAlias'][int(key)][0]] = dValue[key]
-        dValue = dValueAux
-
-    for key, value in sorted(dValue.items()):
-        if value['id']:
-            nBugs = len(value['id'])
-            if nBugs == 1:
-                aux1 = 'bug has'
-                aux2 = 'bug'
-            else:
-                aux1 = "bugs have"
-                aux2 = 'bugs'
-
-            if action == 'added' or action == 'removed':
-                aux3 = 'to'
-                if action == 'removed':
-                    aux3 = 'from'
-                print(('  * \'{}\' has been {} {} {} {}.').format(key, action, aux3, nBugs, aux2), file=fp)
-            else:
-                print(('  * {} {} been changed to \'{}\'.').format(nBugs, aux1, key.replace('_', ' ')), file=fp)
-
-            util_create_short_url(fp, value['id'])
-            #Count the number of reps
-            my_dict = {i: value['author'].count(i) for i in value['author']}
-
-            d_view = [(v, k) for k, v in my_dict.items()]
-
-            d_view.sort(reverse=True)
-            usersString = '\t\t+ Done by: '
-
-            for i1,i2 in d_view:
-                try:
-                    usersString += statList['people'][i2]['name'] + ' ( ' + str(i1) + ' ), '
-                except:
-                    continue
-
-            print(usersString[:-2], file=fp)
-            print(file=fp)
 
 def util_create_short_url(fp, lBugs, text='Link'):
     url = "https://bugs.documentfoundation.org/buglist.cgi?bug_id="
@@ -704,166 +501,6 @@ def util_print_QA_line_created(fp, dValue ):
     total = 0
     for k, v in s:
         print('      {}: {}'.format(k, v), file=fp)
-
-def create_wikimedia_table_mostCCBugs(cfg, statList):
-
-    for k, v in statList['dupesBugs'].items():
-        if k in statList['MostDupeBugs']:
-            if len(v) >= 3:
-                statList['MostDupeBugs'][k]['count'] = len(v)
-            else:
-                del statList['MostDupeBugs'][k]
-
-    for nameList in ['MostCCBugs', 'MostDupeBugs']:
-        print('Creating wikimedia table for ' + nameList)
-        output = ""
-
-        output += '{{TopMenu}}\n'
-        output += '{{Menu}}\n'
-        output += '{{Menu.QA}}\n'
-        output += '\n'
-        table = []
-        headers = ['Id', 'Summary', 'Component', 'Version', 'isRegression', 'isBisected',
-                           'isEasyHack', 'haveBackTrace', 'Reported']
-        if nameList == 'MostCCBugs':
-            headers.append('Total CC')
-            output += '{} bugs have 10 or more emails in the CC list. (sorted in alphabetical order by number of users)\n'.format(
-                    len(statList['MostCCBugs']))
-        else:
-            headers.append('Total Duplicates')
-            output += '{} open bugs have 3 or more duplicates. (sorted in alphabetical order by number of duplicates)\n'.format(
-                    len(statList['MostDupeBugs']))
-
-        for k,v in statList[nameList].items():
-            row = []
-            row.append('[' + urlShowBug + str(k) + ' #tdf' + str(k) + ']')
-            row.append(v['summary'])
-            row.append(v['component'])
-            row.append(v['version'])
-            if 'regression' in v['keywords']:
-                row.append('True')
-            else:
-                row.append('False')
-            if 'bisected' in v['keywords']:
-                row.append('True')
-            else:
-                row.append('False')
-            if 'easyHack' in v['keywords']:
-                row.append('True')
-            else:
-                row.append('False')
-            if 'haveBacktrace' in v['keywords']:
-                row.append('True')
-            else:
-                row.append('False')
-            row.append(v['creationDate'].strftime("%Y-%m-%d %H:%M:%S"))
-            row.append(v['count'])
-            table.append(row)
-
-        output += tabulate(sorted(table, key = lambda x: x[9], reverse=True), headers, tablefmt='mediawiki')
-        output += "\n"
-        output +='Generated on {}.'.format(cfg['todayDate'])
-        output += "\n"
-        output += '[[Category:EN]]\n'
-        output += '[[Category:QA/Stats]]'
-
-        fp = open('/tmp/table_' + nameList + '.txt', 'w', encoding='utf-8')
-        print(output.replace('wikitable', 'wikitable sortable'), file=fp)
-        fp.close()
-
-def create_wikimedia_table_by_target(cfg, statList):
-    for kT,vT in sorted(statList['targets'].items()):
-        print('Creating wikimedia table for release ' + kT)
-        output = ""
-
-        output += '{{TopMenu}}\n'
-        output += '{{Menu}}\n'
-        output += '{{Menu.QA}}\n'
-        output += '\n'
-
-        output += '{} people helped to triage {} bugs tagged with target:{}. (sorted in alphabetical order by user\'s name)\n'.format(
-            len(vT['people']), vT['count'], kT)
-        output += '\n'
-        table = []
-        headers = ['Name', 'Created', 'Comments', 'Status Changed', 'Keyword Added', 'Keyword Removed',
-                   'Severity Changed', 'Priority Changed', 'System Changed', 'Total Bugs']
-
-        for kP, vP in vT['people'].items():
-            name = statList['people'][kP]['name']
-            if not name:
-                name = statList['people'][kP]['email'].split('@')[0]
-
-            if not name == 'libreoffice-commits':
-                row = []
-                row.append(name)
-                row.append(vP['created'])
-                row.append(vP['comments'])
-                row.append(vP['status_changed'])
-                row.append(vP['keyword_added'])
-                row.append(vP['keyword_removed'])
-                row.append(vP['severity_changed'])
-                row.append(vP['priority_changed'])
-                row.append(vP['system_changed'])
-                row.append(len(set(vP['bugs'])))
-                table.append(row)
-
-        output += tabulate(sorted(table, key = lambda x: x[0]), headers, tablefmt='mediawiki')
-        output += "\n"
-        output +='Generated on {}.'.format(cfg['todayDate'])
-        output += "\n"
-        output += '[[Category:EN]]\n'
-        output += '[[Category:QA/Stats]]'
-
-        fp = open('/tmp/table_' + kT + '.txt', 'w', encoding='utf-8')
-        print(output.replace('wikitable', 'wikitable sortable'), file=fp)
-        fp.close()
-
-def create_wikimedia_table_by_period(cfg, statList):
-    for kT,vT in sorted(statList['period'].items()):
-        print('Creating wikimedia table for actions done in the last {} days.'.format(kT[:-1]))
-        output = ""
-
-        output += '{{TopMenu}}\n'
-        output += '{{Menu}}\n'
-        output += '{{Menu.QA}}\n'
-        output += '\n'
-
-        output += '{} people helped to triage {} bugs in the last {} days. (sorted in alphabetical order by user\'s name)\n'.format(
-            len(vT['people']), vT['count'], kT[:-1])
-        output += '\n'
-        table = []
-        headers = ['Name', 'Created', 'Comments', 'Status Changed', 'Keyword Added', 'Keyword Removed',
-                   'Severity Changed', 'Priority Changed', 'System Changed', 'Total Bugs']
-
-        for kP, vP in vT['people'].items():
-            name = statList['people'][kP]['name']
-            if not name:
-                name = statList['people'][kP]['email'].split('@')[0]
-
-            if not name == 'libreoffice-commits':
-                row = []
-                row.append(name)
-                row.append(vP['created'])
-                row.append(vP['comments'])
-                row.append(vP['status_changed'])
-                row.append(vP['keyword_added'])
-                row.append(vP['keyword_removed'])
-                row.append(vP['severity_changed'])
-                row.append(vP['priority_changed'])
-                row.append(vP['system_changed'])
-                row.append(len(set(vP['bugs'])))
-                table.append(row)
-
-        output += tabulate(sorted(table, key = lambda x: x[0]), headers, tablefmt='mediawiki')
-        output += "\n"
-        output += 'Generated on {}.'.format(cfg['todayDate'])
-        output += "\n"
-        output += '[[Category:EN]]\n'
-        output += '[[Category:QA/Stats]]'
-
-        fp = open('/tmp/period_' + kT + '.txt', 'w', encoding='utf-8')
-        print(output.replace('wikitable', 'wikitable sortable'), file=fp)
-        fp.close()
 
 def massping_Report(statList):
     fp = open('/tmp/massping_report.txt', 'w', encoding='utf-8')
@@ -1047,12 +684,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         if sys.argv[1] == 'blog':
             Blog_Report(statList)
-        elif sys.argv[1] == 'target':
-            create_wikimedia_table_by_target(cfg, statList)
-        elif sys.argv[1] == 'period':
-            create_wikimedia_table_by_period(cfg, statList)
-        elif sys.argv[1] == 'stats':
-            create_wikimedia_table_mostCCBugs(cfg, statList)
         elif sys.argv[1] == 'user':
             users_Report(statList)
         elif sys.argv[1] == 'massping':
