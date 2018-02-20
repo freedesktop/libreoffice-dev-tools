@@ -17,7 +17,11 @@ newUserPeriodDays = 30
 newUserBugs = 3
 
 memberPeriodDays = 365
-memberBugs = 100
+memberBugs = 50
+
+oldUserPeriodDays = 180
+oldUserPeriod2Days = 365
+oldUserBugs = 20
 
 fixBugPingPeriodDays = 30
 
@@ -433,9 +437,20 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         isEasyHack = True
                 print(str(idx + 1) + ' - ' + common.urlShowBug + str(lBugs[idx]) + ' - easyHack: ' + str(isEasyHack))
 
-        if statList['people'][k]['oldest'] >= cfg['memberPeriod'] and len(statList['people'][k]['bugs']) >= memberBugs and \
-                statList['people'][k]['email'] not in cfg['configQA']['ignore']['members']:
-            print('\n=== New member: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
+        if statList['people'][k]['oldest'] >= cfg['memberPeriod'] and statList['people'][k]['newest'] >= cfg['reportPeriod'] and \
+                len(statList['people'][k]['bugs']) >= memberBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['members']:
+            print('\nNew member: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
+            print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"))
+            print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"))
+            print('\tTotal: ' + str(len(statList['people'][k]['bugs'])))
+
+        if statList['people'][k]['newest'] < cfg['oldUserPeriod'] and statList['people'][k]['newest'] >= cfg['oldUserPeriod2'] and \
+                len(statList['people'][k]['bugs']) >= oldUserBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['oldContributors']:
+            print('\nOld Contributor: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
+            print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"))
+            print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"))
+            print('\tTotal: ' + str(len(statList['people'][k]['bugs'])))
+
         statList['people'][k]['oldest'] = statList['people'][k]['oldest'].strftime("%Y-%m-%d")
         statList['people'][k]['newest'] = statList['people'][k]['newest'].strftime("%Y-%m-%d")
 
@@ -444,6 +459,8 @@ def runCfg():
     cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
     cfg['reportPeriod'] = common.util_convert_days_to_datetime(cfg, reportPeriodDays)
     cfg['newUserPeriod'] = common.util_convert_days_to_datetime(cfg, newUserPeriodDays)
+    cfg['oldUserPeriod'] = common.util_convert_days_to_datetime(cfg, oldUserPeriodDays)
+    cfg['oldUserPeriod2'] = common.util_convert_days_to_datetime(cfg, oldUserPeriod2Days)
     cfg['memberPeriod'] = common.util_convert_days_to_datetime(cfg, memberPeriodDays)
     cfg['fixBugPingPeriod'] = common.util_convert_days_to_datetime(cfg, fixBugPingPeriodDays)
     cfg['fixBugPingDiff'] = common.util_convert_days_to_datetime(cfg, fixBugPingPeriodDays + reportPeriodDays)
