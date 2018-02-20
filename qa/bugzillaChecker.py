@@ -29,6 +29,7 @@ untouchedPeriodDays = 365
 
 inactiveAssignedPeriodDays = 90
 
+reopened6MonthsComment = "This bug has been in RESOLVED FIXED status for more than 6 months."
 
 def util_create_statList_checkers():
     return {
@@ -253,7 +254,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
                 common.util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
 
-                if common.isOpen(rowStatus) and common.reopened6MonthsComment in comment['text']:
+                if common.isOpen(rowStatus) and reopened6MonthsComment in comment['text']:
                     isReopened6Months = True
 
             if len(comments) > 0:
