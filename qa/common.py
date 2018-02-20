@@ -20,8 +20,6 @@ dataDir = '/home/xisco/dev-tools/esc-reporting/dump/'
 #Path where configQA.json and addObsolete.txt are
 configDir = '/home/xisco/dev-tools/qa/'
 
-reportPeriodDays = 7
-
 untouchedPeriodDays = 365
 
 priorities_list = ['highest','high','medium','low','lowest']
@@ -96,14 +94,6 @@ def util_create_person_bugzilla(email, name):
 
 def util_create_statList():
     return {
-        'massping':
-            {
-                'needinfo': [],
-                'untouched': [],
-                '1year': [],
-                '2years': [],
-                '3years': []
-            },
         'tags':
             {
                 'addObsolete': set(),
@@ -176,16 +166,8 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             rowKeywords = row['keywords']
 
-            creatorMail = row['creator']
-
-            commentMail = None
             comments = row['comments'][1:]
             for idx, comment in enumerate(comments):
-                commentMail = comment['creator']
-                commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
-
-                util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
-
                 #Check for duplicated comments
                 if idx > 0 and comment['text'] == comments[idx-1]['text']:
                         statList['tags']['addObsolete'].add(comment["id"])
@@ -202,23 +184,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
             if len(comments) > 0:
                 if comments[-1]["text"].startswith(untouchedPingComment[:250]):
 
-                    if len(comments) > 1 and comments[-2]["text"].startswith(untouchedPingComment[:250]):
-                        if len(comments) > 2 and comments[-3]["text"].startswith(untouchedPingComment[:250]):
-                            statList['massping']['3years'].append(rowId)
-                        else:
-                            statList['massping']['2years'].append(rowId)
-                    else:
-                        statList['massping']['1year'].append(rowId)
-
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
                             statList['tags']['addObsolete'].remove(comments[-1]["id"])
                         else:
                             statList['tags']['removeObsolete'].add(comments[-1]["id"])
                 elif comments[-1]["text"].startswith(needInfoPingComment):
-                    if rowStatus == 'NEEDINFO':
-                        statList['massping']['needinfo'].append(rowId)
-                    else:
+                    if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
                             statList['tags']['addObsolete'].remove(comments[-1]["id"])
                         else:
@@ -241,20 +213,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
     statList['stat']['newest'] = statNewDate.strftime("%Y-%m-%d")
     statList['stat']['oldest'] = statOldDate.strftime("%Y-%m-%d")
     print(" from " + statList['stat']['oldest'] + " to " + statList['stat']['newest'])
-
-
-def massping_Report(statList):
-    fp = open('/tmp/massping_report.txt', 'w', encoding='utf-8')
-
-    print('* Massping Report from {} to {}'.format(cfg['reportPeriod'].strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp )
-    for key, value in sorted(statList['massping'].items()):
-        print(file=fp)
-        print('* ' + key + ' - ' + str(len(value)) + ' bugs.', file=fp)
-        for i in range(0, len(value), 400):
-            subList = value[i:i + 400]
-            util_create_short_url(fp, subList)
-
-    fp.close()
 
 def automated_massping(statList):
 
@@ -313,7 +271,6 @@ def automated_tagging(statList):
 
 def runCfg():
     cfg = get_config()
-    cfg['reportPeriod'] = util_convert_days_to_datetime(cfg, reportPeriodDays)
     cfg['untouchedPeriod'] = util_convert_days_to_datetime(cfg, untouchedPeriodDays)
 
     return cfg
@@ -330,9 +287,7 @@ if __name__ == '__main__':
     analyze_bugzilla(statList, bugzillaData, cfg)
 
     if len(sys.argv) > 1:
-        if sys.argv[1] == 'massping':
-            massping_Report(statList)
-        elif sys.argv[1] == 'automate':
+        if sys.argv[1] == 'automate':
             automated_tagging(statList)
             automated_massping(statList)
         else:
