@@ -23,7 +23,7 @@ exec 2>&1
 
 die()
 {
-    MESSAGE="$@"
+    MESSAGE="$*"
     echo "Error: ${MESSAGE?}" >&2
     mail_failure "${MESSAGE?}"
     exit -1;
@@ -119,7 +119,7 @@ A new cppcheck report is available at : http://dev-builds.libreoffice.org/cppche
 
 Note:
     The script generating this report was run at :
-        `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
+        $(date "+%Y-%d-%m %H:%M:%S") with user $(whoami) at host $(cat /etc/hostname) as $MY_NAME $MY_ARGS
 
     It can be found and improved here:
         https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=cppcheck/cppcheck-report.sh
@@ -133,12 +133,12 @@ EOF
 
 mail_failure()
 {
-    MESSAGE="$@"
+    MESSAGE="$*"
 
     if [ -f /tmp/cppcheck-report.log ] ; then
-        cp -f /tmp/cppcheck-report.log ~/cppcheck-report.log
-        rm -f ~/cppcheck-report.log.gz
-        gzip ~/cppcheck-report.log
+        cp -f /tmp/cppcheck-report.log "$HOME"/cppcheck-report.log
+        rm -f "$HOME"/cppcheck-report.log.gz
+        gzip "$HOME"/cppcheck-report.log
     fi
 
 cat > "$EMAIL_BODY" <<EOF
@@ -148,7 +148,7 @@ The cppcheck job failed with message: "${MESSAGE?}"
 
 Note:
     The script generating this report was run at :
-        `date +%Y-%d-%m_%H:%M:%S` with user `whoami` at host `cat /etc/hostname` as $MY_NAME $MY_ARGS
+        $(date "+%Y-%d-%m %H:%M:%S") with user $(whoami) at host $(cat /etc/hostname) as $MY_NAME $MY_ARGS
 
     It can be found and improved here:
         https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=cppcheck/cppcheck-report.sh
@@ -180,21 +180,21 @@ if [ "$#" = "0" ] ; then
 fi
 
 # Set some defaults here
-LO_SRC_DIR=~/source/libo-core
-HTML_DIR=~/tmp/www
-CPPCHECK_DIR=~/source/cppcheck
-DATA_DIR=~/tmp
+LO_SRC_DIR="$HOME"/source/libo-core
+HTML_DIR="$HOME"/tmp/www
+CPPCHECK_DIR="$HOME"/source/cppcheck
+DATA_DIR="$HOME"/tmp
 CPPCHECK_GIT_URL="git://github.com/danmar/cppcheck.git"
 LO_GIT_URL="git://anongit.freedesktop.org/libreoffice/core.git"
 UPLOAD_DIR=/srv/www/dev-builds.libreoffice.org/cppcheck_reports/master
 MAILTO=libreoffice@lists.freedesktop.org
 MAILFROM=cppcheck.libreoffice@gmail.com
-MY_NAME=`readlink -f $0`
-MY_ARGS=$@
+MY_NAME=$(readlink -f "$0")
+MY_ARGS="$*"
 MESSAGE=
-SENDEMAIL=~/source/buildbot/bin/sendEmail
-EMAIL_BODY=~/tmp/email_body
-# Dont forget to set SMTP_PWD in your ~/.cppcheckrc !
+SENDEMAIL="$HOME"/source/buildbot/bin/sendEmail
+EMAIL_BODY="$HOME"/tmp/email_body
+# Dont forget to set SMTP_PWD in your "$HOME"/.cppcheckrc !
 SMTP_PWD=
 export PYTHONIOENCODING=UTF-8
 
@@ -213,11 +213,11 @@ export LC_MEASUREMENT="en_US.UTF-8"
 export LC_IDENTIFICATION="en_US.UTF-8"
 export LC_ALL=en_US.UTF-8
 
-if [ -f ~/.cppcheckrc ]; then
-    # override all default vars with entries in ~/.cppcheckrc
-    source ~/.cppcheckrc
+if [ -f "$HOME"/.cppcheckrc ]; then
+    # override all default vars with entries in "$HOME"/.cppcheckrc
+    source "$HOME"/.cppcheckrc
 else
-    die "Failed to locate ~/.cppcheckrc"
+    die "Failed to locate $HOME/.cppcheckrc"
 fi
 
 
