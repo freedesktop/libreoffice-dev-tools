@@ -90,6 +90,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             lastAssignedEmail = ""
             patchAdded = False
             regressionAdded = False
+            possibleRegressionAdded = False
             isReopened6Months = False
             closeDate = None
             reopener6MonthsEmail = ""
@@ -222,6 +223,9 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                         if keyword == 'regression':
                                             regressionAdded = True
 
+                                        if keyword == 'possibleRegression':
+                                            possibleRegressionAdded = True
+
                     elif change['field_name'] == 'whiteboard':
                         if actionDate >= cfg['reportPeriod']:
                             for whiteboard in change['added'].split(' '):
@@ -295,6 +299,12 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     lResults['regressionAdded'] = []
                 tup = (rowId, '')
                 lResults['regressionAdded'].append(tup)
+
+            if possibleRegressionAdded and 'possibleRegression' in rowKeywords:
+                if 'possibleRegressionAdded' not in lResults:
+                    lResults['possibleRegressionAdded'] = []
+                tup = (rowId, '')
+                lResults['possibleRegressionAdded'].append(tup)
 
             if autoFixed:
                 if 'autoFixed' not in lResults:
