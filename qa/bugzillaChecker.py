@@ -40,6 +40,12 @@ def util_create_statList_checkers():
         'people': {}
         }
 
+def util_add_to_result(lResults, key, value):
+    if  key not in lResults:
+        lResults[key] = []
+    lResults[key].append(value)
+
+
 def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
     print("Analyzing bugzilla chekers\n", end="", flush=True)
 
@@ -64,46 +70,32 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
             common.util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
 
-            actionMail = None
             everConfirmed = False
             autoConfirmed = False
-            autoConfirmMail = ""
+            autoConfirmedValue = None
             versionChanged = False
-            versionChangedMail = ""
+            versionChangedValue = None
             oldestVersion = 999999
             newerVersion = False
-            newerVersionMail = ""
+            newerVersionValue = None
             autoFixed = False
-            autoFixedMail = ""
-            addAssigned = False
-            addAssignedMail = ""
-            removeAssigned = False
-            removeAssignedMail = ""
-            addAssignee = False
-            addAssigneeMail = ""
-            removeAssignee = False
-            removeAssigneeMail = ""
-            backPortAdded = False
-            backPortAddedEmail = ""
-            targetRemoved = False
-            targetRemovedEmail = ""
-            lastAssignedEmail = ""
-            patchAdded = False
-            regressionAdded = False
-            possibleRegressionAdded = False
-            isReopened6Months = False
+            autoFixedValue = None
+            lastAssignedValue = None
             closeDate = None
-            reopener6MonthsEmail = ""
             movedToFixed = False
             movedToNeedInfo = False
-            movedToNeedInfomail = ""
+            movedToNeedInfoValue = None
             isReopened = False
-            reopenerEmail = ""
+            reopenValue = None
+            addAssigned = False
+            addassignedValue = None
 
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
                 common.util_check_bugzilla_mail(statList, actionMail, '', actionDate, rowId)
+
+                resultValue = [ rowId, actionDate, actionMail ]
 
                 # Use this variable in case the status is set before the resolution
                 newStatus = None
@@ -135,23 +127,23 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                 newerVersion = False
                             else:
                                 newerVersion = True
-                                newerVersionMail = actionMail
+                                newerVersionValue = resultValue
 
                     elif change['field_name'] == 'status':
                         addedStatus = change['added']
                         removedStatus = change['removed']
 
                         if rowStatus == 'ASSIGNED' and addedStatus == 'ASSIGNED':
-                            lastAssignedEmail = actionMail
+                            lastAssignedValue = resultValue
 
                         if addedStatus == 'REOPENED' and rowStatus == 'REOPENED' and not movedToFixed:
                             isReopened = True
-                            reopenerEmail = actionMail
+                            reopenValue = resultValue
 
                         if actionDate >= cfg['reportPeriod'] and addedStatus == 'NEEDINFO' and \
                                 rowStatus == 'NEEDINFO' and common.isOpen(removedStatus):
                             movedToNeedInfo = True
-                            movedToNeedInfoMail = actionMail
+                            movedToNeedInfoValue = resultValue
 
                         if movedToNeedInfo and removedStatus == 'NEEDINFO':
                             movedToNeedInfo = False
@@ -165,8 +157,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         #if any other user moves it to open ( ASSIGNED, NEW or REOPENED ),
                         #the bug is no longer autoconfirmed
                         if not everConfirmed and common.isOpen(addedStatus) and actionMail != creatorMail:
-                                everConfirmed = True
-                                autoConfirmed = False
+                            everConfirmed = True
+                            autoConfirmed = False
 
                         #Check for autoconfirmed bugs:
                         #Bug's status is open ( ASSIGNED, NEW or REOPENED ), moved to open by the reporter
@@ -176,7 +168,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             common.isOpen(rowStatus) and common.isOpen(addedStatus) and 'bisected' not in rowKeywords and \
                             creatorMail not in cfg['configQA']['ignore']['autoConfirmed']:
                                 autoConfirmed = True
-                                autoConfirmedMail = actionMail
+                                autoConfirmedValue = resultValue
 
                         if autoFixed and removedStatus == 'RESOLVED':
                             autoFixed = False
@@ -185,16 +177,14 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             if actionMail == creatorMail and addedStatus == 'RESOLVED_FIXED' and \
                                     rowStatus == 'RESOLVED_FIXED' and 'target:' not in row['whiteboard']:
                                 autoFixed = True
-                                autoFixedMail = actionMail
+                                autoFixedValue = resultValue
 
                             if removedStatus == "ASSIGNED" and addedStatus == "NEW" and \
                                     rowStatus == "NEW" and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
-                                removeAssignee = True
-                                removeAssigneeMail = actionMail
+                                util_add_to_result(lResults, 'remove_assignee', resultValue)
                             elif addedStatus == "ASSIGNED" and rowStatus == "ASSIGNED" and \
                                     row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org':
-                                addAssignee = True
-                                addAssigneeMail = actionMail
+                                util_add_to_result(lResults, 'add_assignee', resultValue)
 
                     elif change['field_name'] == 'resolution':
                         if newStatus:
@@ -206,38 +196,42 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             isReopened = False
                             if common.isOpen(rowStatus):
                                 closeDate = actionDate
-                        elif change['removed'] == 'FIXED' and closeDate and actionDate >= cfg['reportPeriod'] and \
-                                (actionDate - closeDate).days > 180:
-                            isReopened6Months = True
-                            reopener6MonthsEmail = actionMail
-
+                        elif change['removed'] == 'FIXED' and actionDate >= cfg['reportPeriod'] and \
+                                closeDate and (actionDate - closeDate).days > 180:
+                            util_add_to_result(lResults, 'reopened_6_months', resultValue)
 
                     elif change['field_name'] == 'keywords':
                         if actionDate >= cfg['reportPeriod']:
                             keywordsAdded = change['added'].split(", ")
                             for keyword in keywordsAdded:
                                 if keyword in common.keywords_list and keyword in rowKeywords:
-                                        if keyword == 'patch':
-                                            patchAdded = True
+                                        if keyword == 'patch' and (common.isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
+                                            util_add_to_result(lResults, 'patch_added', resultValue)
 
-                                        if keyword == 'regression':
-                                            regressionAdded = True
+                                        if keyword == 'regression' and (common.isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and \
+                                                'bibisectRequest' not in rowKeywords and 'bibisected' not in rowKeywords and \
+                                                'bisected' not in rowKeywords and 'preBibisect' not in rowKeywords and \
+                                                'bibisectNotNeeded' not in rowKeywords and 'notBibisectable' not in rowKeywords:
+                                            util_add_to_result(lResults, 'regression_added', resultValue)
 
-                                        if keyword == 'possibleRegression':
-                                            possibleRegressionAdded = True
+                                        if keyword == 'possibleRegression' and 'possibleRegression' in rowKeywords:
+                                            util_add_to_result(lResults, 'possibleregression_added', resultValue)
 
                     elif change['field_name'] == 'whiteboard':
                         if actionDate >= cfg['reportPeriod']:
                             for whiteboard in change['added'].split(' '):
                                 if 'backportrequest' in whiteboard.lower() and \
                                         whiteboard in row['whiteboard'] and common.isOpen(rowStatus):
-                                    backPortAdded = True
-                                    backPortAddedMail = actionMail
+                                    util_add_to_result(lResults, 'backport_added', resultValue)
 
                             for whiteboard in change['removed'].split(' '):
-                                if 'target' in whiteboard.lower() and whiteboard.split(":")[1] not in row["whiteboard"]:
-                                    targetRemoved = True
-                                    targetRemovedMail = actionMail
+                                if 'target:' in whiteboard.lower() and whiteboard.split(":")[1] not in row["whiteboard"]:
+                                    util_add_to_result(lResults, 'target_removed', resultValue)
+
+                    elif change['field_name'] == 'cf_crashreport':
+                        crashSignature = row['cf_crashreport']
+                        if crashSignature and not crashSignature.startswith('["'):
+                            util_add_to_result(lResults, 'incorrect_crash_signature', resultValue)
 
                     elif change['field_name'] == 'assigned_to':
                         if actionDate >= cfg['reportPeriod']:
@@ -247,12 +241,10 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                     row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
                                     ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
                                 addAssigned = True
-                                addAssignedMail = actionMail
+                                addAssignedValue = resultValue
                             if addedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
-                                    row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org' and \
-                                    rowStatus == 'ASSIGNED':
-                                removeAssigned = True
-                                removeAssignedMail = actionMail
+                                    row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org' and rowStatus == 'ASSIGNED':
+                                util_add_to_result(lResults, 'remove_assigned_status', resultValue)
 
             commentMail = None
             comments = row['comments'][1:]
@@ -263,135 +255,45 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 common.util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
 
                 if common.isOpen(rowStatus) and reopened6MonthsComment in comment['text']:
-                    isReopened6Months = True
+                    util_add_to_result(lResults, 'reopened_6_months', [rowId, '', ''])
 
             if len(comments) > 0:
                 if rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
-                        if 'untouchedUnconfirmed' not in lResults:
-                            lResults['untouchedUnconfirmed'] = []
-                        tup = (rowId, row['last_change_time'])
-                        lResults['untouchedUnconfirmed'].append(tup)
+                    value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
+                    util_add_to_result(lResults, 'untouchedUnconfirmed', value)
+
                 elif rowStatus == 'NEEDINFO' and comments[-1]['creator'] == creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") >= cfg['retestNeedinfoPeriod']:
-                        if 'NeedInfoProvided' not in lResults:
-                            lResults['NeedInfoProvided'] = []
-                        tup = (rowId, row['last_change_time'])
-                        lResults['NeedInfoProvided'].append(tup)
+                    value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
+                    util_add_to_result(lResults, 'needinfo_provided', value)
+
             else:
                 if rowStatus == 'UNCONFIRMED' and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
-                    if 'Unconfirmed1Comment' not in lResults:
-                        lResults['Unconfirmed1Comment'] = []
-                    tup = (rowId, row['last_change_time'])
-                    lResults['Unconfirmed1Comment'].append(tup)
+                    value = [ rowId, row['last_change_time'], creatorMail ]
+                    util_add_to_result(lResults, 'Unconfirmed_1_comment', value)
 
-            for person in row['cc_detail']:
-                email = person['email']
-                if commentMail == email or actionMail == email:
-                    common.util_check_bugzilla_mail(statList, email, person['real_name'])
-
-            if (common.isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and regressionAdded and \
-                    'bibisectRequest' not in rowKeywords and 'bibisected' not in rowKeywords and \
-                    'bisected' not in rowKeywords and 'preBibisect' not in rowKeywords and \
-                    'bibisectNotNeeded' not in rowKeywords and 'notBibisectable' not in rowKeywords:
-                if 'regressionAdded' not in lResults:
-                    lResults['regressionAdded'] = []
-                tup = (rowId, '')
-                lResults['regressionAdded'].append(tup)
-
-            if possibleRegressionAdded and 'possibleRegression' in rowKeywords:
-                if 'possibleRegressionAdded' not in lResults:
-                    lResults['possibleRegressionAdded'] = []
-                tup = (rowId, '')
-                lResults['possibleRegressionAdded'].append(tup)
 
             if autoFixed:
-                if 'autoFixed' not in lResults:
-                    lResults['autoFixed'] = []
-                tup = (rowId, autoFixedMail)
-                lResults['autoFixed'].append(tup)
+                util_add_to_result(lResults, 'auto_fixed', autoFixedValue)
 
             if autoConfirmed:
-                if 'autoConfirmed' not in lResults:
-                    lResults['autoConfirmed'] = []
-                tup = (rowId, autoConfirmedMail)
-                lResults['autoConfirmed'].append(tup)
+                util_add_to_result(lResults, 'auto_confirmed', autoConfirmedValue)
 
             if newerVersion and row['version'] != 'unspecified':
-                if 'newerVersion' not in lResults:
-                    lResults['newerVersion'] =  []
-                tup = (rowId, newerVersionMail)
-                lResults['newerVersion'].append(tup)
-
-            if (common.isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and patchAdded:
-                if 'patchAdded' not in lResults:
-                    lResults['patchAdded'] = []
-                tup = (rowId, '')
-                lResults['patchAdded'].append(tup)
-
-            crashSignature = row['cf_crashreport']
-            if crashSignature and not crashSignature.startswith('["'):
-                if 'crashSignature' not in lResults:
-                    lResults['crashSignature'] = []
-                tup = (rowId, '')
-                lResults['crashSignature'].append(tup)
-
-            if isReopened6Months:
-                if 'reopened6Months' not in lResults:
-                    lResults['reopened6Months'] = []
-                tup = (rowId, reopener6MonthsEmail)
-                lResults['reopened6Months'].append(tup)
+                util_add_to_result(lResults, 'newer_version', newerVersionValue)
 
             if isReopened and not autoConfirmed:
-                if 'reopened' not in lResults:
-                    lResults['reopened'] = []
-                tup = (rowId, reopenerEmail)
-                lResults['reopened'].append(tup)
+                util_add_to_result(lResults, 'is_reopened', reopenValue)
 
             #In case the reporter assigned the bug to himself at creation time
             if addAssigned or (creationDate >= cfg['reportPeriod'] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
                     (rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED')):
-                if 'addAssigned' not in lResults:
-                    lResults['addAssigned'] = []
-                tup = (rowId, addAssignedMail)
-                lResults['addAssigned'].append(tup)
-
-            if removeAssigned:
-                if 'removeAssigned' not in lResults:
-                    lResults['removeAssigned'] = []
-                tup = (rowId, removeAssignedMail)
-                lResults['removeAssigned'].append(tup)
+                util_add_to_result(lResults, 'change_status_assigned', addAssignedValue)
 
             if movedToNeedInfo and everConfirmed:
-                if 'movedToNeedInfo' not in lResults:
-                    lResults['movedToNeedInfo'] = []
-                tup = (rowId, movedToNeedInfoMail)
-                lResults['movedToNeedInfo'].append(tup)
-
-            if addAssignee:
-                if 'addAssignee' not in lResults:
-                    lResults['addAssignee'] =[]
-                tup = (rowId, addAssigneeMail)
-                lResults['addAssignee'].append(tup)
-
-            if removeAssignee:
-                if 'removeAssignee' not in lResults:
-                    lResults['removeAssignee'] =[]
-                tup = (rowId, removeAssigneeMail)
-                lResults['removeAssignee'].append(tup)
-
-            if backPortAdded:
-                if 'backPortAdded' not in lResults:
-                    lResults['backPortAdded'] = []
-                tup = (rowId, backPortAddedMail)
-                lResults['backPortAdded'].append(tup)
-
-            if targetRemoved:
-                if 'targetRemoved' not in lResults:
-                    lResults['targetRemoved'] = []
-                tup = (rowId, targetRemovedMail)
-                lResults['targetRemoved'].append(tup)
+                util_add_to_result(lResults, 'moved_to_needinfo', movedToNeedInfoValue)
 
             #Check bugs where:
             # 1. last comment is done by 'libreoffice-commits@lists.freedesktop.org'
@@ -404,34 +306,29 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     'evert' not in comments[-2]['text'])) and \
                     commentDate < cfg['fixBugPingPeriod'] and commentDate >= cfg['fixBugPingDiff'] and \
                     'easyHack' not in row['keywords']:
-                if 'fixBugPing' not in lResults:
-                    lResults['fixBugPing'] = []
-                tup = (rowId, '')
-                lResults['fixBugPing'].append(tup)
+                value = [rowId, commentDate, row['assigned_to']]
+                util_add_to_result(lResults, 'ping_bug_fixed', value)
 
             if rowStatus == 'ASSIGNED' and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssignedPeriod'] and \
                     'easyHack' not in row['keywords'] and \
                     rowId not in cfg['configQA']['ignore']['inactiveAssigned']:
-                if 'inactiveAssigned' not in lResults:
-                    lResults['inactiveAssigned'] = []
-                tup = (rowId, lastAssignedEmail)
-                lResults['inactiveAssigned'].append(tup)
+                value = [rowId, row['last_change_time'], row['assigned_to']]
+                util_add_to_result(lResults, 'inactive_assignee', value)
 
         elif row['summary'].lower().startswith('[meta]'):
             if not row['alias'] and common.isOpen(row['status']):
-                if 'emptyAlias' not in lResults:
-                    lResults['emptyAlias'] = []
-                tup = (rowId, '')
-                lResults['emptyAlias'].append(tup)
-
+                value = [rowId, '', '']
+                util_add_to_result(lResults, 'empty_alias', value)
 
     for dKey, dValue in lResults.items():
         if dValue:
-            print('\n=== ' + dKey + ' ===')
+            print('\n=== ' + dKey.replace('_', ' ') + ' ===')
             dValue = sorted(dValue, key=lambda x: x[1])
             for idx in range(len(dValue)):
-                print(str(idx + 1) + ' - ' + common.urlShowBug + str(dValue[idx][0]) + " - " + str(dValue[idx][1]))
+                print(
+                    str(idx + 1) + ' - ' + common.urlShowBug + str(dValue[idx][0]) + " - " + \
+                    str(dValue[idx][1] ) + " - " + str(dValue[idx][2]))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
@@ -449,14 +346,14 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
         if statList['people'][k]['oldest'] >= cfg['memberPeriod'] and statList['people'][k]['newest'] >= cfg['reportPeriod'] and \
                 len(statList['people'][k]['bugs']) >= memberBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['members']:
-            print('\nNew member: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
+            print('\n=== New MEMBER: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
             print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"))
             print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"))
             print('\tTotal: ' + str(len(statList['people'][k]['bugs'])))
 
         if statList['people'][k]['newest'] < cfg['oldUserPeriod'] and statList['people'][k]['newest'] >= cfg['oldUserPeriod2'] and \
                 len(statList['people'][k]['bugs']) >= oldUserBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['oldContributors']:
-            print('\nOld Contributor: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
+            print('\n=== Old Contributor: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
             print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"))
             print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"))
             print('\tTotal: ' + str(len(statList['people'][k]['bugs'])))
