@@ -10,6 +10,11 @@
 import common
 import datetime
 import re
+import colorama
+from colorama import Back
+
+#Use this variable to hightlight the most recent bugs
+coloredPeriodDays = 1
 
 reportPeriodDays = 7
 
@@ -29,11 +34,12 @@ retestUnconfirmedPeriodDays = 30
 
 retestNeedinfoPeriodDays = 60
 
-untouchedPeriodDays = 365
-
 inactiveAssignedPeriodDays = 90
 
 reopened6MonthsComment = "This bug has been in RESOLVED FIXED status for more than 6 months."
+
+#tuple of versions to check whether the version has been changed at confirmation time
+versionsToCheck = ('5', '6')
 
 def util_create_statList_checkers():
     return {
@@ -68,6 +74,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
             creatorMail = row['creator']
 
+            rowVersion = row['version']
+
             common.util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
 
             everConfirmed = False
@@ -89,6 +97,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             reopenValue = None
             addAssigned = False
             addassignedValue = None
+            movedToNew = False
+            movedToNewValue = None
 
             for action in row['history']:
                 actionMail = action['who']
@@ -102,6 +112,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 for change in action['changes']:
 
                     if change['field_name'] == 'version':
+                        versionChanged = True
                         if actionDate >= cfg['reportPeriod'] and (common.isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
                             addedVersion = change['added']
                             removedVersion = change['removed']
@@ -186,6 +197,15 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                     row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org':
                                 util_add_to_result(lResults, 'add_assignee', resultValue)
 
+                            if addedStatus == 'NEW' and rowStatus == 'NEW' and row['product'] == 'LibreOffice' and \
+                                    row['severity'] != 'enhancement' and \
+                                    ('regression' not in rowKeywords and 'bisected' not in rowKeywords and \
+                                    'haveBacktrace' not in rowKeywords) and row['component'] != 'Documentation' and \
+                                    actionMail not in cfg['configQA']['ignore']['confirmer'] and \
+                                    (rowVersion.startswith(versionsToCheck) or rowVersion == 'unspecified'):
+                                movedToNew = True
+                                movedToNewValue = resultValue
+
                     elif change['field_name'] == 'resolution':
                         if newStatus:
                             addedStatus = newStatus + "_" + change['added']
@@ -261,7 +281,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 if rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
                     value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
-                    util_add_to_result(lResults, 'untouchedUnconfirmed', value)
+                    util_add_to_result(lResults, 'untouched_unconfirmed', value)
 
                 elif rowStatus == 'NEEDINFO' and comments[-1]['creator'] == creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") >= cfg['retestNeedinfoPeriod']:
@@ -272,8 +292,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 if rowStatus == 'UNCONFIRMED' and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
                     value = [ rowId, row['last_change_time'], creatorMail ]
-                    util_add_to_result(lResults, 'Unconfirmed_1_comment', value)
-
+                    util_add_to_result(lResults, 'unconfirmed_1_comment', value)
 
             if autoFixed:
                 util_add_to_result(lResults, 'auto_fixed', autoFixedValue)
@@ -281,7 +300,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             if autoConfirmed:
                 util_add_to_result(lResults, 'auto_confirmed', autoConfirmedValue)
 
-            if newerVersion and row['version'] != 'unspecified':
+            if newerVersion and rowVersion != 'unspecified':
                 util_add_to_result(lResults, 'newer_version', newerVersionValue)
 
             if isReopened and not autoConfirmed:
@@ -294,6 +313,9 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
             if movedToNeedInfo and everConfirmed:
                 util_add_to_result(lResults, 'moved_to_needinfo', movedToNeedInfoValue)
+
+            if not versionChanged and movedToNew and not autoConfirmed:
+                util_add_to_result(lResults, 'version_not_changed', movedToNewValue)
 
             #Check bugs where:
             # 1. last comment is done by 'libreoffice-commits@lists.freedesktop.org'
@@ -311,7 +333,6 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
             if rowStatus == 'ASSIGNED' and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssignedPeriod'] and \
-                    'easyHack' not in row['keywords'] and \
                     rowId not in cfg['configQA']['ignore']['inactiveAssigned']:
                 value = [rowId, row['last_change_time'], row['assigned_to']]
                 util_add_to_result(lResults, 'inactive_assignee', value)
@@ -321,14 +342,33 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 value = [rowId, '', '']
                 util_add_to_result(lResults, 'empty_alias', value)
 
+    colorama.init(autoreset=True)
     for dKey, dValue in lResults.items():
         if dValue:
             print('\n=== ' + dKey.replace('_', ' ') + ' ===')
             dValue = sorted(dValue, key=lambda x: x[1])
             for idx in range(len(dValue)):
-                print(
-                    str(idx + 1) + ' - ' + common.urlShowBug + str(dValue[idx][0]) + " - " + \
-                    str(dValue[idx][1] ) + " - " + str(dValue[idx][2]))
+                background = Back.RESET
+
+                if dValue[idx][1]:
+                    if isinstance(dValue[idx][1], str):
+                        dValue[idx][1] = datetime.datetime.strptime(dValue[idx][1], "%Y-%m-%dT%H:%M:%SZ")
+
+                    if dKey == 'inactive_assignee':
+                        if dValue[idx][1] >= cfg['coloredInactiveAssignedPeriod']:
+                            background = Back.GREEN
+                    elif dKey == 'untouched_unconfirmed' or dKey == 'unconfirmed_1_comment':
+                        if dValue[idx][1] >= cfg['coloredRetestUnconfirmedPeriod']:
+                            background = Back.GREEN
+                    elif dKey == 'ping_bug_fixed':
+                        if dValue[idx][1] >= cfg['coloredFixBugPingPeriod']:
+                            background = Back.GREEN
+                    else:
+                        if dValue[idx][1] >= cfg['coloredReportPeriod']:
+                            background = Back.GREEN
+
+                print(background + "{:<3} | {:<58} | {} | {}".format(
+                    str(idx + 1), common.urlShowBug + str(dValue[idx][0]), str(dValue[idx][1] ), str(dValue[idx][2])))
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
@@ -342,7 +382,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 isEasyHack = False
                 if 'easyHack' in bugzillaData['bugs'][str(lBugs[idx])]['keywords']:
                         isEasyHack = True
-                print(str(idx + 1) + ' - ' + common.urlShowBug + str(lBugs[idx]) + ' - easyHack: ' + str(isEasyHack))
+                print("{:<3} | {:<58} | {}".format(
+                    str(idx + 1), common.urlShowBug + str(lBugs[idx]), 'easyHack: ' + str(isEasyHack)))
 
         if statList['people'][k]['oldest'] >= cfg['memberPeriod'] and statList['people'][k]['newest'] >= cfg['reportPeriod'] and \
                 len(statList['people'][k]['bugs']) >= memberBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['members']:
@@ -365,16 +406,19 @@ def runCfg():
     cfg = common.get_config()
     cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
     cfg['reportPeriod'] = common.util_convert_days_to_datetime(cfg, reportPeriodDays)
+    cfg['coloredReportPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays)
     cfg['newUserPeriod'] = common.util_convert_days_to_datetime(cfg, newUserPeriodDays)
     cfg['oldUserPeriod'] = common.util_convert_days_to_datetime(cfg, oldUserPeriodDays)
     cfg['oldUserPeriod2'] = common.util_convert_days_to_datetime(cfg, oldUserPeriod2Days)
     cfg['memberPeriod'] = common.util_convert_days_to_datetime(cfg, memberPeriodDays)
     cfg['fixBugPingPeriod'] = common.util_convert_days_to_datetime(cfg, fixBugPingPeriodDays)
     cfg['fixBugPingDiff'] = common.util_convert_days_to_datetime(cfg, fixBugPingPeriodDays + reportPeriodDays)
-    cfg['untouchedPeriod'] = common.util_convert_days_to_datetime(cfg, untouchedPeriodDays)
+    cfg['coloredFixBugPingPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + fixBugPingPeriodDays)
     cfg['retestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(cfg, retestUnconfirmedPeriodDays)
+    cfg['coloredRetestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + retestUnconfirmedPeriodDays)
     cfg['retestNeedinfoPeriod'] = common.util_convert_days_to_datetime(cfg, retestNeedinfoPeriodDays)
     cfg['inactiveAssignedPeriod'] = common.util_convert_days_to_datetime(cfg, inactiveAssignedPeriodDays)
+    cfg['coloredInactiveAssignedPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + inactiveAssignedPeriodDays)
     return cfg
 
 if __name__ == '__main__':
