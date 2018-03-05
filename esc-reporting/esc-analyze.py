@@ -44,7 +44,7 @@
 #
 
 
-
+import common
 import sys
 import csv
 import io
@@ -55,20 +55,6 @@ import json
 import xmltodict
 import re
 
-
-
-def util_errorMail(text):
-    print(text)
-    sendMail = 'mail -r mentoring@documentfoundation.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-analyze FAILED" mentoring@documentfoundation.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
-    os.system(sendMail)
-
-
-
-
-def util_errorMail(text):
-    print(text)
-    sendMail = 'mail -r mentoring@documentfoundation.org -s "' + text + '" mentoring@documentfoundation.org <<EOF\nPlease have a look at vm174\nEOF\n'
-    os.system(sendMail)
 
 
 def util_load_file(fileName, isJson=True):
@@ -249,7 +235,13 @@ def util_create_statList():
 def util_check_mail(name, xmail):
     global statList
 
-    mail = xmail.lower()
+    match = re.search(r'[\w\.-]+@[\w\.-]+', xmail.lower())
+    if match:
+      mail = match.group(0)
+    else:
+      # Return a fake email in order to not break the script
+      mail = 'fake-email@fake-email-script-esc.com'
+      common.sendMail(cfg, 'xiscofauli@libreoffice.org', 'Error parsing email', 'ERROR parsing' + str(xmail))
     if mail in statList['aliases']:
       mail = statList['aliases'][mail]
     if not mail in statList['people']:
@@ -942,42 +934,42 @@ def runAnalyze():
     try:
       runLoadCSV()
     except Exception as e:
-      util_errorMail('ERROR: runLoadCSV failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: runLoadCSV failed with ' + str(e))
       pass
     try:
       analyze_mentoring()
     except Exception as e:
-      util_errorMail('ERROR: analyze_mentoring failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: analyze_mentoring failed with ' + str(e))
       pass
     try:
       analyze_ui()
     except Exception as e:
-      util_errorMail('ERROR: analyze_ui failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: analyze_ui failed with ' + str(e))
       pass
     try:
       analyze_qa()
     except Exception as e:
-      util_errorMail('ERROR: analyze_qa failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: analyze_qa failed with ' + str(e))
       pass
     try:
       analyze_esc()
     except Exception as e:
-      util_errorMail('ERROR: analyze_esc failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: analyze_esc failed with ' + str(e))
       pass
     try:
       analyze_myfunc()
     except Exception as e:
-      util_errorMail('ERROR: analyze_myfunc failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: analyze_myfunc failed with ' + str(e))
       pass
     try:
       analyze_reports()
     except Exception as e:
-      util_errorMail('ERROR: analyze_reports failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: analyze_reports failed with ' + str(e))
       pass
     try:
       analyze_final()
     except Exception as e:
-      util_errorMail('ERROR: analyze_final failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: analyze_final failed with ' + str(e))
       pass
 
 

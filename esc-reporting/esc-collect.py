@@ -28,6 +28,7 @@
 # For analysis and reporting see the 2 other programs available.
 #
 
+import common
 import sys
 import csv
 import io
@@ -39,12 +40,6 @@ import xmltodict
 import requests
 from requests.auth import HTTPDigestAuth
 
-
-
-def util_errorMail(text):
-    print(text)
-    sendMail = 'mail -r mentoring@documentfoundation.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-collect FAILED" mentoring@documentfoundation.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
-    os.system(sendMail)
 
 
 def util_load_file(fileName):
@@ -726,32 +721,32 @@ def runBuild(cfg):
     try:
       gerritData = get_gerrit(cfg)
     except Exception as e:
-      util_errorMail('ERROR: get_gerrit failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: get_gerrit failed with ' + str(e))
       pass
     try:
       crashData = get_crash(cfg)
     except Exception as e:
-      util_errorMail('ERROR: get_crash failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: get_crash failed with ' + str(e))
       pass
     try:
       openhubData = get_openhub(cfg)
     except Exception as e:
-      util_errorMail('ERROR: get_openhub failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: get_openhub failed with ' + str(e))
       pass
     try:
       bugzillaData = get_bugzilla(cfg)
     except Exception as e:
-      util_errorMail('ERROR: get_bugzilla failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: get_bugzilla failed with ' + str(e))
       pass
     try:
       ESCData = get_esc_bugzilla(cfg)
     except Exception as e:
-      util_errorMail('ERROR: get_esc_bugzilla failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: get_esc_bugzilla failed with ' + str(e))
       pass
     try:
       gitData = get_git(cfg)
     except Exception as e:
-      util_errorMail('ERROR: get_git failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: get_git failed with ' + str(e))
       pass
 
 

@@ -20,23 +20,13 @@
 #
 
 
-
+import common
 import sys
 import os
 import datetime
 import json
 import requests
 from requests.auth import HTTPDigestAuth
-
-
-
-
-
-def util_errorMail(text):
-    print(text)
-    sendMail = 'mail -r mentoring@documentfoundation.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-automate FAILED" mentoring@documentfoundation.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
-    os.system(sendMail)
-
 
 
 def util_load_data_file(fileName):
@@ -94,18 +84,10 @@ def doGerrit(id, command):
       raise Exception('error: ' + cmd + ' failed')
 
 
-
-def doMail(mail, subject, content, attach=None):
-    if attach:
-      attach = '-a ' + attach + ' '
-    else:
-      attach = ''
-    sendMail = 'mail -r mentoring@documentfoundation.org ' + cfg['mail']['bcc'] + ' -s "' + subject + '" ' + attach + mail + ' <<EOF\n' + content + '\nEOF\n'
-    r = os.system(sendMail)
-    if r != 0:
-      raise Exception('mail failed')
-
-
+def doMail(mail, subject, content, attachFile=None):
+    error = common.sendMail(cfg, mail, subject, content, attachFile)
+    if error:
+        raise Exception('mail failed')
 
 def handle_gerrit_abandon(id, patchset):
     pid = str(id) + ',' + str(patchset)
@@ -186,7 +168,8 @@ def handle_mail_pdf(email, name):
       raise Exception('pdf generation failed ')
 
     text = cfg['automate']['1st award']['content'].format(name)
-    doMail(email, cfg['automate']['1st award']['subject'], text, attach=filePdf)
+
+    doMail(email, cfg['automate']['1st award']['subject'], text, attachFile=filePdf)
 
 
 
@@ -205,7 +188,7 @@ def executeLoop(func, xType, xName):
       for id in autoList[xType][xName]:
         func(id, autoList[xType][xName][id])
     except Exception as e:
-      util_errorMail('ERROR: ' + str(func) + ' failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: ' + str(func) + ' failed with ' + str(e))
       return
 
     del autoList[xType][xName]

@@ -30,6 +30,7 @@
 
 
 
+import common
 import sys
 import csv
 import io
@@ -39,13 +40,6 @@ import datetime
 import json
 import xmltodict
 
-
-
-
-def util_errorMail(text):
-    print(text)
-    sendMail = 'mail -r mentoring@documentfoundation.org ' + cfg['mail']['bcc'] + ' -s "ERROR: esc-report FAILED" mentoring@documentfoundation.org <<EOF\n' + text + '\nPlease have a look at vm174\nEOF\n'
-    os.system(sendMail)
 
 
 
@@ -783,49 +777,49 @@ def runReport():
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      util_errorMail('ERROR: report_bug_metrics failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: report_bug_metrics failed with ' + str(e))
       pass
     try:
       x = report_day_mentoring()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      util_errorMail('ERROR: report_day_mentoring failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: report_day_mentoring failed with ' + str(e))
       pass
     try:
       x = report_mentoring()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      util_errorMail('ERROR: report_mentoring failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: report_mentoring failed with ' + str(e))
       pass
     try:
       x = report_ui()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      util_errorMail('ERROR: report_ui failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: report_ui failed with ' + str(e))
       pass
     try:
       x = report_qa()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      util_errorMail('ERROR: report_qa failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: report_qa failed with ' + str(e))
       pass
     try:
       x = report_myfunc()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      util_errorMail('ERROR: report_myfunc failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: report_myfunc failed with ' + str(e))
       pass
     try:
       x = report_esc_prototype()
       if not x is None:
         xMail.append(x)
     except Exception as e:
-      util_errorMail('ERROR: report_esc_prototype failed with ' + str(e))
+      common.util_errorMail(cfg, 'ERROR: report_esc_prototype failed with ' + str(e))
       pass
 
     for i in xMail:
@@ -835,7 +829,7 @@ def runReport():
         attach = ''
       r = os.system("mail -r mentoring@documentfoundation.org " + cfg['mail']['bcc'] + " -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'])
       if r != 0:
-        util_errorMail('ERROR: mailing failed with ' + str(e))
+        common.util_errorMail(cfg, 'ERROR: mailing failed with ' + str(e))
 
 
 if __name__ == '__main__':
