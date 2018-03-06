@@ -188,7 +188,7 @@ def executeLoop(func, xType, xName):
       for id in autoList[xType][xName]:
         func(id, autoList[xType][xName][id])
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: ' + str(func) + ' failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-automate', 'ERROR: ' + str(func) + ' failed with ' + str(e))
       return
 
     del autoList[xType][xName]

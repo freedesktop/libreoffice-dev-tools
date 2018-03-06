@@ -938,42 +938,42 @@ def runAnalyze():
     try:
       runLoadCSV()
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: runLoadCSV failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-analyze', 'ERROR: runLoadCSV failed with ' + str(e))
       pass
     try:
       analyze_mentoring()
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: analyze_mentoring failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-analyze', 'ERROR: analyze_mentoring failed with ' + str(e))
       pass
     try:
       analyze_ui()
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: analyze_ui failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-analyze', 'ERROR: analyze_ui failed with ' + str(e))
       pass
     try:
       analyze_qa()
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: analyze_qa failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-analyze', 'ERROR: analyze_qa failed with ' + str(e))
       pass
     try:
       analyze_esc()
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: analyze_esc failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-analyze', 'ERROR: analyze_esc failed with ' + str(e))
       pass
     try:
       analyze_myfunc()
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: analyze_myfunc failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-analyze', 'ERROR: analyze_myfunc failed with ' + str(e))
       pass
     try:
       analyze_reports()
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: analyze_reports failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-analyze', 'ERROR: analyze_reports failed with ' + str(e))
       pass
     try:
       analyze_final()
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: analyze_final failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-analyze', 'ERROR: analyze_final failed with ' + str(e))
       pass
 
 

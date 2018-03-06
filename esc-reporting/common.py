@@ -36,8 +36,8 @@ def sendMail(cfg, mail, subject, content, attachFile=None):
     output, error = p.communicate(msg.as_string().encode('ascii'))
     return error
 
-def util_errorMail(cfg, text):
+def util_errorMail(cfg, fileName, text):
     print(text)
-    subject = "ERROR: esc-automate FAILED"
+    subject = "ERROR: " + fileName + " FAILED"
     message = text + '\nPlease have a look at vm174'
     sendMail(cfg, 'mentoring@documentfoundation.org', subject, message)

@@ -721,32 +721,32 @@ def runBuild(cfg):
     try:
       gerritData = get_gerrit(cfg)
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: get_gerrit failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-collect', 'ERROR: get_gerrit failed with ' + str(e))
       pass
     try:
       crashData = get_crash(cfg)
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: get_crash failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-collect', 'ERROR: get_crash failed with ' + str(e))
       pass
     try:
       openhubData = get_openhub(cfg)
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: get_openhub failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-collect', 'ERROR: get_openhub failed with ' + str(e))
       pass
     try:
       bugzillaData = get_bugzilla(cfg)
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: get_bugzilla failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-collect', 'ERROR: get_bugzilla failed with ' + str(e))
       pass
     try:
       ESCData = get_esc_bugzilla(cfg)
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: get_esc_bugzilla failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-collect', 'ERROR: get_esc_bugzilla failed with ' + str(e))
       pass
     try:
       gitData = get_git(cfg)
     except Exception as e:
-      common.util_errorMail(cfg, 'ERROR: get_git failed with ' + str(e))
+      common.util_errorMail(cfg, 'esc-collect', 'ERROR: get_git failed with ' + str(e))
       pass
 
 
