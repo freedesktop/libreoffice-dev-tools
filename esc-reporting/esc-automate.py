@@ -84,7 +84,7 @@ def doGerrit(id, command):
       raise Exception('error: ' + cmd + ' failed')
 
 
-def doMail(mail, subject, content, attachFile=None):
+def doMail(cfg, mail, subject, content, attachFile=None):
     error = common.sendMail(cfg, mail, subject, content, attachFile)
     if error:
         raise Exception('mail failed')
@@ -163,13 +163,14 @@ def handle_mail_pdf(email, name):
 
     filePdf = '/tmp/award.pdf'
     pdfGen = 'pdftk ' + cfg['homedir'] + 'AcknowledgmentForm.pdf fill_form ' + fileFdf + ' output ' + filePdf
+    attachFile= {'path': filePdf, 'name': 'award.pdf', 'extension': 'pdf'}
     r = os.system(pdfGen)
     if r != 0:
       raise Exception('pdf generation failed ')
 
     text = cfg['automate']['1st award']['content'].format(name)
 
-    doMail(email, cfg['automate']['1st award']['subject'], text, attachFile=filePdf)
+    doMail(cfg, email, cfg['automate']['1st award']['subject'], text, attachFile)
 
 
 
@@ -177,7 +178,7 @@ def handle_mail_miss_you(email, name):
     global cfg
 
     text = cfg['automate']['we miss you']['content'].format(name)
-    doMail(email, cfg['automate']['we miss you']['subject'], text)
+    doMail(cfg, email, cfg['automate']['we miss you']['subject'], text)
 
 
 

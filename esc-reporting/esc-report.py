@@ -446,11 +446,12 @@ def report_bug_metrics():
       # only generate un tuesdays
       return
 
-    filename = cfg['homedir'] + 'bug-metrics/bug-metrics.ods'
+    fileName = 'bug-metrics/bug-metrics.ods'
+    filePath = cfg['homedir'] + fileName
     fileContent = '/tmp/bugs/content.xml'
 
     os.system('rm -rf /tmp/bugs')
-    os.system('unzip -d /tmp/bugs ' + filename)
+    os.system('unzip -d /tmp/bugs ' + filePath)
     fp = open(fileContent, encoding='utf-8')
     text = fp.read()
     fp.close()
@@ -485,7 +486,7 @@ def report_bug_metrics():
     fp = open(fileContent, 'w', encoding='utf-8')
     print(text, file=fp)
     fp.close()
-    os.system('cd /tmp/bugs; zip ' + filename + ' *')
+    os.system('cd /tmp/bugs; zip ' + filePath + ' *')
     os.system('cd ' + cfg['homedir'] + 'bug-metrics; git add *; git commit -m \'new version ' + statList['addDate'] + '\'')
 
     fileBody='/tmp/esc_odf.txt'
@@ -494,7 +495,8 @@ def report_bug_metrics():
     fp.close()
 
     data = 'ESC bug_metric.fods, based on stats.json from '+statList['addDate']
-    return {'title': data, 'mail': 'mentoring@documentfoundation.org', 'attach': filename, 'file' : fileBody}
+    return {'title': data, 'mail': 'mentoring@documentfoundation.org',
+            'attach': {'name': fileName, 'path': filePath, 'extension': 'ods'}, 'file' : fileBody}
 
 
 
@@ -823,12 +825,14 @@ def runReport():
       pass
 
     for i in xMail:
-      if 'attach' in i:
-        attach = '-a ' + i['attach'] + ' '
-      else:
-        attach = ''
-      r = os.system("mail -r mentoring@documentfoundation.org " + cfg['mail']['bcc'] + " -s '" + i['title'] + "' " + attach + i['mail'] + " <  " + i['file'])
-      if r != 0:
+      with open(i['file'], 'r') as content_file:
+        text = content_file.read()
+
+      if 'attach' not in i:
+        i['attach'] = None
+
+      error = common.sendMail(cfg, i['mail'], i['title'], text, i['attach'])
+      if error:
         common.util_errorMail(cfg, 'esc-report', 'ERROR: mailing failed with ' + str(e))
 
 

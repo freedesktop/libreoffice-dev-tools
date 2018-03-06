@@ -26,10 +26,10 @@ def sendMail(cfg, mail, subject, content, attachFile=None):
     msg.attach(MIMEText(content))
 
     if attachFile:
-        fp = open(attachFile, 'rb')
-        attach = MIMEApplication(fp.read(), 'pdf')
+        fp = open(attachFile['path'], 'rb')
+        attach = MIMEApplication(fp.read(), attachFile['extension'])
         fp.close()
-        attach.add_header('Content-Disposition', "attachment'; filename=award.pdf")
+        attach.add_header('Content-Disposition','attachment; filename="{}"'.format(attachFile['name']))
         msg.attach(attach)
 
     p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
