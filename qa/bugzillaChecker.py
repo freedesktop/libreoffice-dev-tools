@@ -99,6 +99,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             addassignedValue = None
             movedToNew = False
             movedToNewValue = None
+            addAssigned = False
 
             for action in row['history']:
                 actionMail = action['who']
@@ -260,6 +261,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             if  removedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
                                     row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
                                     ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
+                                addAssigned = True
                                 util_add_to_result(lResults, 'change_status_assigned', resultValue)
                             if addedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
                                     row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org' and rowStatus == 'ASSIGNED':
@@ -306,8 +308,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 util_add_to_result(lResults, 'is_reopened', reopenValue)
 
             #In case the reporter assigned the bug to himself at creation time
-            if creationDate >= cfg['reportPeriod'] and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
-                    (rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
+            if not addAssigned and creationDate >= cfg['reportPeriod'] and \
+                    row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and (rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
                 value = [ rowId, row['creation_time'], row['assigned_to'] ]
                 util_add_to_result(lResults, 'change_status_assigned', value)
 
