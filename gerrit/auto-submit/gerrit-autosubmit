@@ -20,7 +20,7 @@ server = get_config("gerrit.host")
 project = get_config("gerrit.project")
 branch = get_config("gerrit.defaultbranch")
 
-sock = subprocess.Popen(["ssh", server, "gerrit", "stream-events"], stdout=subprocess.PIPE, bufsize=1)
+sock = subprocess.Popen(["ssh", "-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"], stdout=subprocess.PIPE, bufsize=1)
 
 try:
     for line in iter(sock.stdout.readline, b''):
