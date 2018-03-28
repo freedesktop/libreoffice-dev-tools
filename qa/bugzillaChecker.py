@@ -207,6 +207,10 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                 movedToNew = True
                                 movedToNewValue = resultValue
 
+                            if addedStatus == 'RESOLVED_FIXED' and rowStatus == 'RESOLVED_FIXED' and 'regression' in rowKeywords \
+                                    and 'bisected' in rowKeywords:
+                                util_add_to_result(lResults, 'verify_fix', resultValue)
+
                     elif change['field_name'] == 'resolution':
                         if newStatus:
                             addedStatus = newStatus + "_" + change['added']
