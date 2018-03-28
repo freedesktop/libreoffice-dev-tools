@@ -229,13 +229,14 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                         if keyword == 'patch' and (common.isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
                                             util_add_to_result(lResults, 'patch_added', resultValue)
 
-                                        if keyword == 'regression' and (common.isOpen(rowStatus) or rowStatus == 'UNCONFIRMED') and \
+                                        if keyword == 'regression' and row['status'] != 'RESOLVED' and \
                                                 'bibisectRequest' not in rowKeywords and 'bibisected' not in rowKeywords and \
                                                 'bisected' not in rowKeywords and 'preBibisect' not in rowKeywords and \
                                                 'bibisectNotNeeded' not in rowKeywords and 'notBibisectable' not in rowKeywords:
                                             util_add_to_result(lResults, 'regression_added', resultValue)
 
-                                        if keyword == 'possibleRegression' and 'possibleRegression' in rowKeywords:
+                                        if keyword == 'possibleRegression' and 'possibleRegression' in rowKeywords and \
+                                                row['status'] != 'RESOLVED':
                                             util_add_to_result(lResults, 'possibleregression_added', resultValue)
 
                     elif change['field_name'] == 'whiteboard':
