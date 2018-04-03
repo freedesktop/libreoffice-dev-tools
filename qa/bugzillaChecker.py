@@ -315,7 +315,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             #In case the reporter assigned the bug to himself at creation time
             if not addAssigned and creationDate >= cfg['reportPeriod'] and \
                     row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and (rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
-                value = [ rowId, row['creation_time'], row['assigned_to'] ]
+                value = [ rowId, creationDate, row['assigned_to'] ]
                 util_add_to_result(lResults, 'change_status_assigned', value)
 
             if movedToNeedInfo and everConfirmed:
