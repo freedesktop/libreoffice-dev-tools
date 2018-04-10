@@ -244,7 +244,6 @@ def util_check_mail(name, xmail):
         else:
           # Return a fake email in order to not break the script
           mail = 'fake-email@fake-email-script-esc.com'
-          common.sendMail(cfg, 'xiscofauli@libreoffice.org', 'Error parsing email', 'ERROR parsing' + str(xmail))
 
     if mail in statList['aliases']:
       mail = statList['aliases'][mail]
