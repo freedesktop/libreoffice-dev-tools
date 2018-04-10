@@ -8,6 +8,7 @@
 #
 
 import common
+import sys
 import datetime
 import re
 import colorama
@@ -430,6 +431,12 @@ def runCfg():
 
 if __name__ == '__main__':
     print("Reading and writing data to " + common.dataDir)
+
+    if len(sys.argv) > 1:
+        try:
+            coloredPeriodDays = int(sys.argv[1])
+        except ValueError:
+            print("The argument is not an int. Ignoring it...")
 
     cfg = runCfg()
 
