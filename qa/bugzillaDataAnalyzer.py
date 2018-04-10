@@ -200,7 +200,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                         addedStatus = change['added']
                         removedStatus = change['removed']
 
-                        if actionDate >= cfg['reportPeriod'] and common.isOpen(removedStatus) and \
+                        if actionDate >= cfg['reportPeriod'] and not common.isClosed(removedStatus) and \
                                 common.isClosed(addedStatus) and common.isClosed(row['status']):
                             if isClosed:
                                 util_decrease_action(statList[kindOfTicket]['closed'], rowId, creatorMail, rowStatus, rowProduct,
