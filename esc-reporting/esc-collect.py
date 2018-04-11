@@ -239,7 +239,10 @@ def do_ESC_QA_STATS_UPDATE():
           stopCellIndex = tmp.find('<', startIndex)
           x = tmp[startIndex:stopCellIndex].replace('\n', '')
           if '0' <= x[0] <= '9' or x[0] == '+' or x[0] == '-':
-            x = int(x)
+            try:
+              x = int(x)
+            except ValueError:
+              pass
           tmpList.append(x)
         if len(tmpList):
           if curTopIndex == 0:
