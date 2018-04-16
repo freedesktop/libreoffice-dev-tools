@@ -202,7 +202,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             if addedStatus == 'NEW' and rowStatus == 'NEW' and row['product'] == 'LibreOffice' and \
                                     row['severity'] != 'enhancement' and \
                                     ('regression' not in rowKeywords and 'bisected' not in rowKeywords and \
-                                    'haveBacktrace' not in rowKeywords) and row['component'] != 'Documentation' and \
+                                    'easyHack' not in rowKeywords) and row['component'] != 'Documentation' and \
                                     actionMail not in cfg['configQA']['ignore']['confirmer'] and \
                                     (rowVersion.startswith(versionsToCheck) or rowVersion == 'unspecified'):
                                 movedToNew = True
