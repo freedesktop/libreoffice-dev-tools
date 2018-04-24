@@ -13,8 +13,6 @@ import datetime
 import os
 import json
 
-moveToNeedInfoComment = "I have set the bug's status to 'NEEDINFO'"
-
 needInfoFollowUpPingComment = "Dear Bug Submitter,\n\nPlease read this message in its entirety before proceeding."
 
 untouchedPeriodDays = 365
@@ -56,7 +54,6 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if rowStatus != 'NEEDINFO' and \
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
                         (comment["text"].startswith(common.untouchedPingComment[:250]) or \
-                        moveToNeedInfoComment in comment["text"] or \
                         comment["text"].startswith("A polite ping, still working on this bug") or \
                         comment["text"].startswith(common.needInfoPingComment) or \
                         comment["text"].startswith(needInfoFollowUpPingComment)):
@@ -77,8 +74,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         else:
                             statList['tags']['removeObsolete'].add(comments[-1]["id"])
                 elif comments[-1]["text"].startswith(needInfoFollowUpPingComment) or \
-                        comments[-1]["text"].startswith("A polite ping, still working on this bug") or \
-                        moveToNeedInfoComment in comments[-1]["text"]:
+                        comments[-1]["text"].startswith("A polite ping, still working on this bug"):
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
                             statList['tags']['addObsolete'].remove(comments[-1]["id"])
