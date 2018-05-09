@@ -199,12 +199,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                     row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org':
                                 util_add_to_result(lResults, 'add_assignee', resultValue)
 
-                            if addedStatus == 'NEW' and rowStatus == 'NEW' and row['product'] == 'LibreOffice' and \
-                                    row['severity'] != 'enhancement' and \
-                                    ('regression' not in rowKeywords and 'bisected' not in rowKeywords and \
-                                    'easyHack' not in rowKeywords) and row['component'] != 'Documentation' and \
-                                    actionMail not in cfg['configQA']['ignore']['confirmer'] and \
-                                    (rowVersion.startswith(versionsToCheck) or rowVersion == 'unspecified'):
+                            if addedStatus == 'NEW' and rowStatus == 'NEW' and row['product'] == 'LibreOffice':
                                 movedToNew = True
                                 movedToNewValue = resultValue
 
@@ -322,7 +317,14 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             if movedToNeedInfo and everConfirmed:
                 util_add_to_result(lResults, 'moved_to_needinfo', movedToNeedInfoValue)
 
-            if not versionChanged and movedToNew and not autoConfirmed:
+            if movedToNew and not row['blocks']:
+                util_add_to_result(lResults, 'metabug_not_added', movedToNewValue)
+
+            if not versionChanged and movedToNew and not autoConfirmed and row['severity'] != 'enhancement' and \
+                    ('regression' not in rowKeywords and 'bisected' not in rowKeywords and \
+                    'easyHack' not in rowKeywords) and row['component'] != 'Documentation' and \
+                    movedToNewValue[2] not in cfg['configQA']['ignore']['confirmer'] and \
+                    (rowVersion.startswith(versionsToCheck) or rowVersion == 'unspecified'):
                 util_add_to_result(lResults, 'version_not_changed', movedToNewValue)
 
             #Check bugs where:
