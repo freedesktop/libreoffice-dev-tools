@@ -37,8 +37,6 @@ retestNeedinfoPeriodDays = 60
 
 inactiveAssignedPeriodDays = 90
 
-reopened6MonthsComment = "This bug has been in RESOLVED FIXED status for more than 6 months."
-
 #tuple of versions to check whether the version has been changed at confirmation time
 versionsToCheck = ('5', '6')
 
@@ -275,9 +273,6 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
 
                 common.util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
-
-                if common.isOpen(rowStatus) and reopened6MonthsComment in comment['text']:
-                    util_add_to_result(lResults, 'reopened_6_months', [rowId, '', ''])
 
             if len(comments) > 0:
                 if rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
