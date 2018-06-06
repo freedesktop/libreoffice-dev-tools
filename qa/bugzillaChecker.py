@@ -26,7 +26,6 @@ memberPeriodDays = 365
 memberBugs = 50
 
 oldUserPeriodDays = 180
-oldUserPeriod2Days = 365
 oldUserBugs = 20
 
 fixBugPingPeriodDays = 30
@@ -414,7 +413,7 @@ def runCfg():
     cfg['coloredReportPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays)
     cfg['newUserPeriod'] = common.util_convert_days_to_datetime(cfg, newUserPeriodDays)
     cfg['oldUserPeriod'] = common.util_convert_days_to_datetime(cfg, oldUserPeriodDays)
-    cfg['oldUserPeriod2'] = common.util_convert_days_to_datetime(cfg, oldUserPeriod2Days)
+    cfg['oldUserPeriod2'] = common.util_convert_days_to_datetime(cfg, oldUserPeriodDays + reportPeriodDays)
     cfg['memberPeriod'] = common.util_convert_days_to_datetime(cfg, memberPeriodDays)
     cfg['fixBugPingPeriod'] = common.util_convert_days_to_datetime(cfg, fixBugPingPeriodDays)
     cfg['fixBugPingDiff'] = common.util_convert_days_to_datetime(cfg, fixBugPingPeriodDays + reportPeriodDays)
