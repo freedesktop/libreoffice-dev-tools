@@ -243,10 +243,6 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                         whiteboard in row['whiteboard'] and common.isOpen(rowStatus):
                                     util_add_to_result(lResults, 'backport_added', resultValue)
 
-                            for whiteboard in change['removed'].split(' '):
-                                if 'target:' in whiteboard.lower() and whiteboard.split(":")[1] not in row["whiteboard"]:
-                                    util_add_to_result(lResults, 'target_removed', resultValue)
-
                     elif change['field_name'] == 'cf_crashreport':
                         crashSignature = row['cf_crashreport']
                         if crashSignature and not crashSignature.startswith('["'):
