@@ -263,11 +263,20 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
             commentMail = None
             comments = row['comments'][1:]
+            bSameAuthor = True
             for idx, comment in enumerate(comments):
                 commentMail = comment['creator']
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
 
                 common.util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
+
+                if bSameAuthor and commentMail != creatorMail:
+                    bSameAuthor = False
+
+            if bSameAuthor and rowStatus == 'UNCONFIRMED' and \
+                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
+                value = [ rowId, row['last_change_time'], creatorMail ]
+                util_add_to_result(lResults, 'unconfirmed_not_triaged', value)
 
             if len(comments) > 0:
                 if rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
@@ -279,12 +288,6 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") >= cfg['retestNeedinfoPeriod']:
                     value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
                     util_add_to_result(lResults, 'needinfo_provided', value)
-
-            else:
-                if rowStatus == 'UNCONFIRMED' and \
-                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
-                    value = [ rowId, row['last_change_time'], creatorMail ]
-                    util_add_to_result(lResults, 'unconfirmed_1_comment', value)
 
             if autoFixed:
                 util_add_to_result(lResults, 'auto_fixed', autoFixedValue)
@@ -357,7 +360,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     if dKey == 'inactive_assignee':
                         if dValue[idx][1] >= cfg['coloredInactiveAssignedPeriod']:
                             background = Back.GREEN
-                    elif dKey == 'untouched_unconfirmed' or dKey == 'unconfirmed_1_comment':
+                    elif dKey == 'untouched_unconfirmed' or dKey == 'unconfirmed_not_triaged':
                         if dValue[idx][1] >= cfg['coloredRetestUnconfirmedPeriod']:
                             background = Back.GREEN
                     elif dKey == 'ping_bug_fixed':
