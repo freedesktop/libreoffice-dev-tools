@@ -13,6 +13,7 @@ import datetime
 import re
 import colorama
 from colorama import Back
+import ast
 
 #Use this variable to hightlight the most recent bugs
 coloredPeriodDays = 1
@@ -38,6 +39,8 @@ inactiveAssignedPeriodDays = 90
 
 #tuple of versions to check whether the version has been changed at confirmation time
 versionsToCheck = ('5', '6')
+
+crashReportDomain = "https://crashreport.libreoffice.org/stats/signature/"
 
 def util_create_statList_checkers():
     return {
@@ -75,6 +78,20 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             rowVersion = row['version']
 
             common.util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
+
+            crashSignature = row['cf_crashreport']
+            if crashSignature:
+                resultValue = [ rowId, creationDate, '']
+                if not crashSignature.startswith('["'):
+                    util_add_to_result(lResults, 'incorrect_crash_signature', resultValue)
+                else:
+                    if common.isOpen(rowStatus):
+                        lcrashSignature = ast.literal_eval(crashSignature)
+                        for i in lcrashSignature:
+                            crashReportUrl = crashReportDomain + str(i).replace(' ', '%20').replace('`', '%60')
+                            #Link should be shorter than 255, otherwise Bugzilla returns an error
+                            if crashReportUrl not in row['see_also'] and len(crashReportUrl) < 255:
+                                util_add_to_result(lResults, 'add_crashReport_to_seeAlso', resultValue)
 
             everConfirmed = False
             autoConfirmed = False
@@ -243,10 +260,6 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                         whiteboard in row['whiteboard'] and common.isOpen(rowStatus):
                                     util_add_to_result(lResults, 'backport_added', resultValue)
 
-                    elif change['field_name'] == 'cf_crashreport':
-                        crashSignature = row['cf_crashreport']
-                        if crashSignature and not crashSignature.startswith('["'):
-                            util_add_to_result(lResults, 'incorrect_crash_signature', resultValue)
 
                     elif change['field_name'] == 'assigned_to':
                         if actionDate >= cfg['reportPeriod']:
