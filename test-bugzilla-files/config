@@ -1,3 +1,4 @@
 export CRASHTESTDATA=/srv/crashtestdata
+export SRCDIR=/home/buildslave/source/libo-core
 export INSTDIR=/home/buildslave/build/instdir
 export USERDIR=/home/buildslave/.config

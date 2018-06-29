@@ -431,12 +431,28 @@ class ExportFileTest:
         if self.enable_validation == False:
             return None
 
-        validationCommand = { "calc8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
-                            "writer8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
-                            "impress8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
-                            "draw8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
-                            "math8" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
-                            "StarOffice XML (Base)" : "java -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl -jar /home/buildslave/source/bin/odfvalidator.jar -e",
+        # use libreoffice extension schemas from core repo
+        # invoke without -e so that we know when something new is written
+        # in loext namespace that isn't yet in the custom schema
+        SRCDIR = os.environ["SRCDIR"]
+        odfvalidator = ("java"
+            + " -Djavax.xml.validation.SchemaFactory:http://relaxng.org/ns/structure/1.0=org.iso_relax.verifier.jaxp.validation.RELAXNGSchemaFactoryImpl"
+            + " -Dorg.iso_relax.verifier.VerifierFactoryLoader=com.sun.msv.verifier.jarv.FactoryLoaderImpl"
+            + " -jar /home/buildslave/source/bin/odfvalidator.jar "
+            + " -M "
+            + os.path.join(SRCDIR, "schema/libreoffice/OpenDocument-manifest-schema-v1.3+libreoffice.rng")
+            + " -D "
+            + os.path.join(SRCDIR, "schema/libreoffice/OpenDocument-dsig-schema-v1.3+libreoffice.rng")
+            + " -O "
+            + os.path.join(SRCDIR, "schema/libreoffice/OpenDocument-schema-v1.3+libreoffice.rng")
+            + " -m "
+            + os.path.join(SRCDIR, "schema/mathml2/mathml2.xsd"))
+        validationCommand = { "calc8" : odfvalidator,
+                              "writer8" : odfvalidator,
+                              "impress8" : odfvalidator,
+                              "draw8" : odfvalidator,
+                              "math8" : odfvalidator,
+                              "StarOffice XML (Base)" : odfvalidator,
                                 "Calc Office Open XML": "java -jar /home/buildslave/source/bin/officeotron.jar",
                                 "Office Open XML Text": "java -jar /home/buildslave/source/bin/officeotron.jar",
                                 "Impress Office Open XML": "java -jar /home/buildslave/source/bin/officeotron.jar"
