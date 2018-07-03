@@ -383,7 +383,7 @@ def exportDoc(xDoc, filterName, validationCommand, filename, connection, timer):
         validationCommandWithURL = validationCommand + " " + fileURL[7:]
         print(validationCommandWithURL)
         try:
-            output = str(subprocess.check_output(validationCommandWithURL, shell=True), encoding='utf-8')
+            output = str(subprocess.check_output(validationCommandWithURL, shell=True, timeout=600), encoding='utf-8')
             print(output)
             if ("Error" in output) or ("error" in output):
                 print("Error validating file")
