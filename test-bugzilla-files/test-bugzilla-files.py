@@ -353,7 +353,7 @@ def exportDoc(xDoc, filterName, validationCommand, filename, connection, timer):
     base = os.path.splitext(filename)[0]
     filename = base + extensions[filterName]
     # note: avoid empty path segments in the url!
-    fileURL = "file://" + os.path.normpath(os.environ["CRASHTESTDATA"] + "/" + filename)
+    fileURL = "file://" + os.path.normpath(os.environ["CRASHTESTDATA"] + "/current/" + filename)
     t = None
     try:
         args = [connection]
