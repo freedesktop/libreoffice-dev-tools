@@ -232,8 +232,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             if common.isOpen(rowStatus):
                                 closeDate = actionDate
                         elif change['removed'] == 'FIXED' and actionDate >= cfg['reportPeriod'] and \
-                                closeDate and (actionDate - closeDate).days > 180:
-                            util_add_to_result(lResults, 'reopened_6_months', resultValue)
+                                closeDate and (actionDate - closeDate).days > 30:
+                            util_add_to_result(lResults, 'reopened_after_1_months', resultValue)
 
                     elif change['field_name'] == 'keywords':
                         if actionDate >= cfg['reportPeriod']:
