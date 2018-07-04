@@ -89,6 +89,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         lcrashSignature = ast.literal_eval(crashSignature)
                         for i in lcrashSignature:
                             crashReportUrl = crashReportDomain + str(i).replace(' ', '%20').replace('`', '%60')
+                            crashReportUrl = crashReportUrl.replace('<', '%3C').replace('>', '%3E')
                             #Link should be shorter than 255, otherwise Bugzilla returns an error
                             if crashReportUrl not in row['see_also'] and len(crashReportUrl) < 255:
                                 util_add_to_result(lResults, 'add_crashReport_to_seeAlso', resultValue)
