@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# A version of 'git cherry' that works with change-ids, so it can pair patches
+# even if their patch id changed.
+#
+# Required parameters: vendor, old-branch, new-branch.
+#
+
+vendor=${1}
+old=${2}
+new=${3}
+
+: > /tmp/newchanges
+newhashes=$(git rev-list ${old}-branch-point..origin/distro/${vendor}/${new})
+for hash in ${newhashes}
+do
+        git cat-file commit $hash |grep Change-Id: >> /tmp/newchanges
+done
+
+oldhashes=$(git rev-list ${old}-branch-point..origin/distro/${vendor}/${old})
+for hash in ${oldhashes}
+do
+        if ! grep -q "$(git cat-file commit $hash |grep Change-Id:)" /tmp/newchanges; then
+                git log -1 --pretty=oneline $hash
+        fi
+done
+
+rm -f /tmp/newchanges
+
+# vim:set shiftwidth=4 softtabstop=4 expandtab:
