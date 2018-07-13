@@ -14,7 +14,6 @@ if [ "$(id -u -n )" != "logerrit" ] ; then
        echo "*** The reference for this repo is gerrit. do not push directly to fdo" >&2
        exit 1
 fi
-from="$(git show -s --pretty=format:'%an <%ae>' $3^{})"
 
 project=$(cat $GIT_DIR/description)
 recipients="libreoffice-commits@lists.freedesktop.org"
@@ -121,7 +120,7 @@ else
 	esac
 	bytes=0
 	IFS="$(echo)"
-	git-rev-list "$3" "^$base" | while read rev; do git-show $rev; done | sed 's#\\#\\\\#g' |
+	git-rev-list "$3" "^$base" | while read rev; do git-show -M --pretty=fuller $rev; done | sed 's#\\#\\\\#g' |
 		while read line
 		do
 			if [ "$bytes" -ge "0" ] ; then
@@ -136,5 +135,5 @@ else
 		done
 fi |
 mail -s "$subject" -a "X-Git-Repository: git://anongit.freedesktop.org/git/libreoffice/libexttextcat.git" \
-     -a "List-Post: <mailto:libreoffice@lists.freedesktop.org>" -a "From: $from" $recipients
+     -a "List-Post: <mailto:libreoffice@lists.freedesktop.org>" $recipients
 exit 0
