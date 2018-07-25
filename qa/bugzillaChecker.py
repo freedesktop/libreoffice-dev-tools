@@ -363,9 +363,9 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 util_add_to_result(lResults, 'empty_alias', value)
 
     colorama.init(autoreset=True)
-    for dKey, dValue in lResults.items():
+    for dKey, dValue in sorted(lResults.items()):
         if dValue:
-            print('\n=== ' + dKey.replace('_', ' ') + ' ===')
+            print('\n=== ' + dKey.replace('_', ' ').upper() + ' ===')
             dValue = sorted(dValue, key=lambda x: x[1])
             for idx in range(len(dValue)):
                 background = Back.RESET
