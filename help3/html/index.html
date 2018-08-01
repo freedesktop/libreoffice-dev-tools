@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>LibreOffice Documentation XHP Editor</title>
+<link rel="stylesheet" href="lib/codemirror.css">
+<link rel="stylesheet" href="addon/hint/show-hint.css">
+<script src="lib/codemirror.js"></script>
+<script src="addon/hint/show-hint.js"></script>
+<script src="addon/hint/xml-hint.js"></script>
+<script src="mode/xml/xml.js"></script>
+</head>
+
+<body style="font-family:sans-serif;">
+
+<h2>LibreOffice Documentation XHP Editor</h2>
+<form style="border:1px solid grey;"><textarea id="xhpeditor">
+</textarea>
+</form>
+
+<br />
+
+<div><div style="display:inline-block;width:5em;">Actions:</div>
+<button onclick="editor.undo()">Undo</button>
+<button onclick="editor.redo()">Redo</button>
+<button onclick="alert('Not yet implemented...')">Save changes</button>
+<button onclick="startNewXHPDoc()">Start new XHP document</button>
+</div>
+
+<div style="margin-top:10px;"><div style="display:inline-block;width:5em;">Snippets:</div>
+<button onclick="snippet1()" style="margin-top:5px;">DocHeading</button>
+<button onclick="snippet2()" style="margin-top:5px;">Icon Table</button>
+<button onclick="snippet3()" style="margin-top:5px;">Table Cell</button>
+<button onclick="snippet4()" style="margin-top:5px;">Related Topics</button>
+<button onclick="snippet5()" style="margin-top:5px;">TableFull</button>
+<button onclick="snippet6()" style="margin-top:5px;">TableRow</button>
+<button onclick="snippet7()" style="margin-top:5px;">ahelp</button>
+<button onclick="snippet8()" style="margin-top:5px;">bascode-div</button>
+<button onclick="snippet9()" style="margin-top:5px;">bascode-par</button>
+<button onclick="snippet10()" style="margin-top:5px;">bookmark-contents</button>
+<button onclick="snippet11()" style="margin-top:5px;">bookmark-hid</button>
+<button onclick="snippet12()" style="margin-top:5px;">bookmark-index</button>
+</div>
+
+
+  <script>
+    // Code for buttons underneath the editor
+
+    function startNewXHPDoc() {
+        if (confirm('Lose all changes and start fresh?')) {
+            editor.doc.setValue('<?xml version="1.0" encoding="UTF-8"?>\n<helpdocument version="1.0">\n<!--\n * This file is part of the LibreOffice project.\n *\n * This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this\n * file, You can obtain one at http://mozilla.org/MPL/2.0/.\n *\n-->\n\n<meta>\n  <topic id="${page_topic}" indexer="include" status="PUBLISH">\n    <title id="tit" xml-lang="en-US">${page_ttile}</title>\n    <filename>/${helpFile()}</filename>\n  </topic>\n</meta>\n<body>\n${cursor}\n</body>\n</helpdocument>');
+        }
+    }
+
+    function snippet1() {
+        editor.replaceRange('<section id="${id_name=\'section identification\'}">\n    <bookmark id="${tmp1=random(\'bm\')}" xml-lang="en-US" branch="${br=\'hid/zzzz\'}" localize="false"/>\n    <paragraph id="${tmp2=random(\'hd\')}" role="heading" level="1" xml-lang="en-US"><link href="${tmp3=helpFile()}" name="${command_name}">${command_name}</link></paragraph>\n    <paragraph id="${tmp4=random(\'par\')}" role="paragraph" xml-lang="en-US"><variable id="${variable name}"><ahelp hid="${hid path or command}">${ahelp contents}</ahelp></variable></paragraph>\n    ${cursor}\n</section>\n', editor.doc.getCursor());
+    }
+
+    function snippet2() {
+        editor.replaceRange('<table id="${random(\'tab\')}">\n    <tablerow>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" lang="en-US" localize="false">\n                <image ></image>\n            </paragraph>\n        </tablecell>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" role="paragraph" xml-lang="en-US" ></paragraph>\n        </tablecell>\n    </tablerow>\n</table>\n', editor.doc.getCursor());
+    }
+
+    function snippet3() {
+        editor.replaceRange('<tablecell>\n            <paragraph id="${random(\'par\')}" role="tablecontents" xml-lang="en-US" >${selection()}</paragraph>\n        </tablecell>\n', editor.doc.getCursor());
+    }
+
+    function snippet4() {
+        editor.replaceRange('<section id="relatedtopics">\n   \n</section>\n', editor.doc.getCursor());
+    }
+
+    function snippet5() {
+        editor.replaceRange('<table id="${random(\'tab\')}">\n    <tablerow>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" role="tablehead" xml-lang="en-US" localize="false"></paragraph>\n        </tablecell>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" role="tablehead" xml-lang="en-US" localize="false"></paragraph>\n        </tablecell>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" role="tablehead" xml-lang="en-US" localize="false"></paragraph>\n        </tablecell>\n    </tablerow>\n    <tablerow>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" role="tablecontent" xml-lang="en-US"></paragraph>\n        </tablecell>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" role="tablecontent" xml-lang="en-US"></paragraph>\n        </tablecell>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" role="tablecontent" xml-lang="en-US"></paragraph>\n        </tablecell>\n   </tablerow>\n</table>\n', editor.doc.getCursor());
+    }
+
+    function snippet6() {
+        editor.replaceRange('<tablerow>\n        <tablecell>\n            <paragraph id="${random(\'par\')}" role="tablehead" xml-lang="en-US" >Table cell contents</paragraph>\n        </tablecell>\n    </tablerow>\n', editor.doc.getCursor());
+    }
+
+    function snippet7() {
+        editor.replaceRange('<ahelp hid="${hid path}" visibility="hidden">${selection()}</ahelp>', editor.doc.getCursor());
+    }
+
+    function snippet8() {
+        editor.replaceRange('<bascode>\n   \n</bascode>\n', editor.doc.getCursor());
+    }
+
+    function snippet9() {
+        editor.replaceRange('<paragraph role="bascode" id="${random(\'par\')}" xml-lang="en-US" localize="false">${selection()}</paragraph>', editor.doc.getCursor());
+    }
+
+    function snippet10() {
+        editor.replaceRange('<bookmark xml-lang="en-US" branch="contents" id="${random(\'bm\')}">\n    <bookmark_value>${path to contents}</bookmark_value>\n</bookmark>', editor.doc.getCursor());
+    }
+
+    function snippet11() {
+        editor.replaceRange('<bookmark xml-lang="en-US" branch="${field_name=\'hid//path/to/dialog/widget\'}" id="${random(\'bm\')}" localize="false"/>\n', editor.doc.getCursor());
+    }
+
+    function snippet12() {
+        editor.replaceRange('<bookmark xml-lang="en-US" branch="index" id="${random(\'bm\')}">\n    <bookmark_value>${level1};${level2}</bookmark_value>\n</bookmark>\n', editor.doc.getCursor());
+    }
+
+    function snippet13() {
+        editor.replaceRange('', editor.doc.getCursor());
+    }
+
+    function snippet14() {
+        editor.replaceRange('', editor.doc.getCursor());
+    }
+
+    function snippet15() {
+        editor.replaceRange('', editor.doc.getCursor());
+    }
+
+    function snippet16() {
+        editor.replaceRange('', editor.doc.getCursor());
+    }
+
+    function snippet17() {
+        editor.replaceRange('', editor.doc.getCursor());
+    }
+
+    function snippet18() {
+        editor.replaceRange('', editor.doc.getCursor());
+    }
+
+    function snippet19() {
+        editor.replaceRange('', editor.doc.getCursor());
+    }
+
+    function snippet20() {
+        editor.replaceRange('', editor.doc.getCursor());
+    }
+
+      // Here we define the schema for XHP, for the auto-completion
+
+      var tags = {
+        "!top": ["helpdocument"],
+        helpdocument: {
+          children: ["meta", "body"],
+          attrs: {version: ["1.0"]},
+        },
+        meta: {
+          attrs: {localise: ["false"]},
+          children: ["topic", "history"]
+        },
+        body: {
+          attrs: {name: null},
+          children: ["section", "paragraph", "table", "comment", "bookmark", "switch", "embed", "list", "sort"]
+        },
+        section: {
+          attrs: {id: null, localise: ["false"]},
+          children: ["section", "paragraph", "table", "list", "comment", "embed", "switch", "sort"]
+        },
+      };
+
+      // And here's the code that provides the auto-completion in the editor
+
+      function completeAfter(cm, pred) {
+        var cur = cm.getCursor();
+        if (!pred || pred()) setTimeout(function() {
+          if (!cm.state.completionActive)
+            cm.showHint({completeSingle: false});
+        }, 100);
+        return CodeMirror.Pass;
+      }
+
+      function completeIfAfterLt(cm) {
+        return completeAfter(cm, function() {
+          var cur = cm.getCursor();
+          return cm.getRange(CodeMirror.Pos(cur.line, cur.ch - 1), cur) == "<";
+        });
+      }
+
+      function completeIfInTag(cm) {
+        return completeAfter(cm, function() {
+          var tok = cm.getTokenAt(cm.getCursor());
+          if (tok.type == "string" && (!/['"]/.test(tok.string.charAt(tok.string.length - 1)) || tok.string.length == 1)) return false;
+          var inner = CodeMirror.innerMode(cm.getMode(), tok.state).state;
+          return inner.tagName;
+        });
+      }
+
+    var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
+      lineNumbers: true,
+      mode: "text/html",
+      matchBrackets: true,
+      theme: "default",
+      extraKeys: {
+          "'<'": completeAfter,
+          "'/'": completeIfAfterLt,
+          "' '": completeIfInTag,
+          "'='": completeIfInTag,
+          "Ctrl-Space": "autocomplete"
+        },
+      hintOptions: {schemaInfo: tags}
+    });
+  </script>
+</body>
+</html>
