@@ -46,9 +46,10 @@ function bascode_par() {
 
 // Tables
 // simple table cell
-function tCell (){
-    return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="tablecontent" xml-lang="en-US" ></paragraph>\n       </tablecell>';
+function tCell (role){
+    return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="' + role + '" xml-lang="en-US" ></paragraph>\n       </tablecell>';
 }
+
 
 function iconTable() {
     var a1 = '<table id="' + random('tab') + '">\n    <tablerow>\n        <tablecell>\n            ';
@@ -59,20 +60,19 @@ function iconTable() {
 }
 
 function tableCell() {
-    editor.replaceRange(tCell(), editor.doc.getCursor());
+    editor.replaceRange(tCell('tablecontent'), editor.doc.getCursor());
 }
 
 function table2R3C() {
     var a1 = '<table id="' + random('tab') + '">\n';
     var a2 = '   <tablerow>\n';
-    var a3 = '       <tablecell>\n           <paragraph id="' + random('par') + '" role="tablehead" xml-lang="en-US" localize="false"></paragraph>\n       </tablecell>\n';
     var a4 = '   </tablerow>\n';
     var a5 = a4 + '\n</table>';
-    editor.replaceRange(a1 + a2 + a3 + a3 + a3 + a4 + a2 + tCell() + tCell() + tCell() + a5, editor.doc.getCursor());
+    editor.replaceRange(a1 + a2 + tCell('tablehead') + tCell('tablehead') + tCell('tablehead') + a4 + a2 + tCell('tablecontent') + tCell('tablecontent') + tCell('tablecontent') + a5, editor.doc.getCursor());
 }
 
 function tableRow() {
-    editor.replaceRange('<tablerow>\n' + tCell() + '\n    </tablerow>\n', editor.doc.getCursor());
+    editor.replaceRange('    <tablerow>\n' + tCell('tablecontent') + '\n    </tablerow>\n', editor.doc.getCursor());
 }
 
 // Sections
@@ -109,7 +109,7 @@ function bookmarkNoWidget() {
 }
 
 function bookmarkIndex() {
-    var a1 = '<bookmark xml-lang="en-US" branch="index" id="' + random('bm') + '">\n    <bookmark_value>CHANGE ME;CHANGE ME TOO</bookmark_value>\n\n</bookmark>\n';
+    var a1 = '<bookmark xml-lang="en-US" branch="index" id="' + random('bm') + '">\n<bookmark_value>CHANGE ME;CHANGE ME TOO</bookmark_value>\n\n</bookmark>\n';
     editor.replaceRange(a1, editor.doc.getCursor());
 }
 
@@ -141,27 +141,40 @@ function switchInline(type) {
     editor.replaceRange(a1 + a2 + a3 + a4, editor.doc.getCursor());
 }
 
-function snippet16() {
-    editor.replaceRange('', editor.doc.getCursor());
+// lists
+function tList(mode){
+    var a1 = '<list type="' + mode + '">\n\n</list>';
+    editor.replaceRange(a1, editor.doc.getCursor());
 }
 
-function snippet17() {
-    editor.replaceRange('', editor.doc.getCursor());
+function listItem(){
+    var a1 = '    <listitem>\n        <paragraph id="' + random('par') + '" role="listitem" xml-lang="en-US">';
+    var a2 = '</paragraph>\n    </listitem>';
+    editor.replaceSelection(a1+ editor.doc.getSelection() + a2,'');
 }
 
-function snippet18() {
-    editor.replaceRange('', editor.doc.getCursor());
+// Variables, embeds, link
+
+function tVariable() {
+    var a1 = '<variable id="CHANGE ME">';
+    var a2 = '</variable>';
+    editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
+}
+function tEmbed(){
+    var a1 = '<embed href="text/CHANGE ME(path/to/xhp/file#select id)"/>';
+    editor.replaceRange(a1, editor.doc.getCursor());
+}
+function tEmbedvar(){
+    var a1 = '<embedvar href="text/CHANGE ME(path/to/xhp/file#select id)" markup="ignore/keep"/>';
+    editor.replaceRange(a1, editor.doc.getCursor());
+}
+ function tLink(){
+     var a1 ='<link href="text/CHANGE ME(path/to/xhp/file#select id)" name="CHANGE ME">';
+     var a2 = '</link>';
+     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
 
-function snippet19() {
-    editor.replaceRange('', editor.doc.getCursor());
-}
-
-function snippet20() {
-    editor.replaceRange('', editor.doc.getCursor());
-}
-
-/* javascript code for snippets (orignially for KDE kate)*/
+/* javascript code for snippets (originally for KDE kate)*/
 function fileName() { return document.fileName(); }
 function fileUrl() { return document.url(); }
 function encoding() { return document.encoding(); }
