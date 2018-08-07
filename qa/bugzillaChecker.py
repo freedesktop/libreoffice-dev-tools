@@ -327,7 +327,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             if movedToNeedInfo and everConfirmed:
                 util_add_to_result(lResults, 'moved_to_needinfo', movedToNeedInfoValue)
 
-            if movedToNew and not row['blocks']:
+            if movedToNew and row['component'] != 'Documentation' and 'needsUXEval' not in rowKeywords\
+                    and 'regression' not in rowKeywords and not row['blocks']:
                 util_add_to_result(lResults, 'metabug_not_added', movedToNewValue)
 
             if not versionChanged and movedToNew and not autoConfirmed and row['severity'] != 'enhancement' and \
