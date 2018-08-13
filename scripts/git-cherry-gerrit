@@ -15,16 +15,22 @@ old=${2}
 new=${3}
 
 : > /tmp/newchanges
-newhashes=$(git rev-list ${old}-branch-point..origin/distro/${vendor}/${new})
+newhashes=$(git rev-list ${old}-branch-point..distro/${vendor}/${new})
 for hash in ${newhashes}
 do
         git cat-file commit $hash |grep Change-Id: >> /tmp/newchanges
 done
 
-oldhashes=$(git rev-list ${old}-branch-point..origin/distro/${vendor}/${old})
+oldhashes=$(git rev-list ${old}-branch-point..logerrit/distro/${vendor}/${old})
 for hash in ${oldhashes}
 do
-        if ! grep -q "$(git cat-file commit $hash |grep Change-Id:)" /tmp/newchanges; then
+        changeid="$(git cat-file commit $hash |grep Change-Id:)"
+        if [ -z "$changeid" ]; then
+            echo "WARNING: commit $hash has no Change-Id, assuming it has to be cherry-picked."
+            continue
+        fi
+
+        if ! grep -q "$changeid" /tmp/newchanges; then
                 git log -1 --pretty=oneline $hash
         fi
 done
