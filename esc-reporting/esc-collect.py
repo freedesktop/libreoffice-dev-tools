@@ -650,7 +650,8 @@ def get_git(cfg):
       os.system('(cd ' + basedir + repo['dir'] + ";git log --pretty=format:'" + useFormat + "') > /tmp/git.log")
       fp = open('/tmp/git.log', encoding='utf-8')
       while True:
-        x = fp.readline()
+        # Json fails if there's a backslash somewhere in the git log
+        x = fp.readline().replace("\\", "/")
         if x is None or x == '':
           break
         row = json.loads(x)
