@@ -256,6 +256,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
                                             elif keyword == 'possibleRegression' and 'possibleRegression' in rowKeywords:
                                                 util_add_to_result(lResults, 'possibleregression_added', resultValue)
+                                            elif keyword == 'needsUXEval' and 'libreoffice-ux-advise@lists.freedesktop.org' not in row['cc']:
+                                                util_add_to_result(lResults, 'needsUXEval_missing_email', resultValue)
 
                     elif change['field_name'] == 'whiteboard':
                         if actionDate >= cfg['reportPeriod']:
