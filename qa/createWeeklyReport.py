@@ -276,15 +276,23 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
             d_view = [(v, k) for k, v in my_dict.items()]
 
             d_view.sort(reverse=True)
-            usersString = '\t\t+ Done by: '
+            print('\t\t+ Done by:', file=fp)
 
+            text = "          "
             for i1,i2 in d_view:
                 try:
-                    usersString += statList['people'][i2]['name'] + ' ( ' + str(i1) + ' ), '
+                    personString = statList['people'][i2]['name'] + ' (' + str(i1) + ')'
+                    # Reduce lines to 72 characters, for some reason the emails are cut otherwise
+                    if len( text + " " + personString ) < 72:
+                        text += personString + ", "
+                    else:
+                        print(text[:-2], file=fp)
+                        text = "          "
                 except:
                     continue
+            if text is not "          ":
+                print(text[:-2], file=fp)
 
-            print(usersString[:-2], file=fp)
             print(file=fp)
 
 def create_weekly_Report(statList) :
@@ -316,7 +324,7 @@ def create_weekly_Report(statList) :
         try:
             if it >= 15:
                 break
-            print('\t\t+ ' + statList['people'][i2]['name'] + ' ( ' + str(i1) + ' )', file=fp)
+            print('\t\t+ ' + statList['people'][i2]['name'] + ' (' + str(i1) + ')', file=fp)
             it += 1
         except:
             continue
