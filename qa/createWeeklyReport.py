@@ -108,20 +108,16 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                         addedStatus = change['added']
                         removedStatus = change['removed']
 
-                        if rowStatus == 'ASSIGNED' and addedStatus == 'ASSIGNED':
-                            lastAssignedEmail = actionMail
-
                         if  addedStatus == 'RESOLVED' or addedStatus == 'VERIFIED':
-                            if(rowResolution):
+                            if rowResolution:
                                 addedStatus = addedStatus + "_" + rowResolution
-                                if actionDate >= cfg['reportPeriod'] and rowStatus == addedStatus:
+                                if actionDate >= cfg['reportPeriod']:
                                     statList['status_changed'][addedStatus]['id'].append(rowId)
                                     statList['status_changed'][addedStatus]['author'].append(actionMail)
                             else:
                                 newStatus = addedStatus
                         else:
-
-                            if actionDate >= cfg['reportPeriod'] and rowStatus == addedStatus:
+                            if actionDate >= cfg['reportPeriod']:
                                 statList['status_changed'][addedStatus]['id'].append(rowId)
                                 statList['status_changed'][addedStatus]['author'].append(actionMail)
 
@@ -129,7 +125,7 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                         if newStatus:
                             addedStatus = newStatus + "_" + change['added']
 
-                            if actionDate >= cfg['reportPeriod'] and rowStatus == addedStatus:
+                            if actionDate >= cfg['reportPeriod']:
                                 statList['status_changed'][addedStatus]['id'].append(rowId)
                                 statList['status_changed'][addedStatus]['author'].append(actionMail)
 
@@ -194,21 +190,6 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                         if actionDate >= cfg['reportPeriod'] and newSystem in row['op_sys']:
                             statList['system_changed'][newSystem]['id'].append(rowId)
                             statList['system_changed'][newSystem]['author'].append(actionMail)
-
-                    elif change['field_name'] == 'assigned_to':
-                        if actionDate >= cfg['reportPeriod']:
-                            removedAssignee = change['removed']
-                            addedAssignee = change['added']
-                            if  removedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
-                                    row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
-                                    ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
-                                addAssigned = True
-                                addAssignedMail = actionMail
-                            if addedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
-                                    row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org' and \
-                                    rowStatus == 'ASSIGNED':
-                                removeAssigned = True
-                                removeAssignedMail = actionMail
 
             commentMail = None
             comments = row['comments'][1:]
