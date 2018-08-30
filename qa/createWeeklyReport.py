@@ -14,7 +14,7 @@ reportPeriodDays = 7
 
 def util_create_statList_weeklyReport():
     return {
-        'created': [],
+        'created': {'id': [], 'author': []},
         'still_unconfirmed': [],
         'unconfirmed': [],
         'newUsers': {},
@@ -61,18 +61,19 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
             if rowStatus == 'UNCONFIRMED':
                 statList['unconfirmed'].append(rowId)
 
+            creatorMail = row['creator']
+
+            common.util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
+
             if creationDate >= cfg['reportPeriod']:
-                statList['created'].append(rowId)
+                statList['created']['id'].append(rowId)
+                statList['created']['author'].append(creatorMail)
                 if rowStatus == 'UNCONFIRMED':
                     statList['still_unconfirmed'].append(rowId)
 
             rowKeywords = row['keywords']
 
-            creatorMail = row['creator']
-
             crashSignature = row['cf_crashreport']
-
-            common.util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
 
             for action in row['history']:
                 actionMail = action['who']
@@ -295,20 +296,48 @@ def create_weekly_Report(statList) :
     print('What have happened in QA in the last {} days?'.format(reportPeriodDays), file=fp)
     print(file=fp)
 
-    print('  * {} bugs have been created, of which, {} are still unconfirmed ( Total Unconfirmed bugs: {} )'.format(\
-            len(statList['created']),
-            len(statList['still_unconfirmed']),
-            len(statList['unconfirmed'])), file=fp)
+    #Count the number of reps
+    my_dict = {i: statList['created']['author'].count(i) for i in statList['created']['author']}
 
-    common.util_create_short_url(fp, statList['created'], 'Created bugs')
-    common.util_create_short_url(fp, statList['still_unconfirmed'], 'Still unconfirmed bugs')
+    d_view = [(v, k) for k, v in my_dict.items()]
+
+    print('  * {} bugs have been reported by {} people.'.format(\
+            len(statList['created']['id']),
+            len(d_view)), file=fp)
+
+    common.util_create_short_url(fp, statList['created']['id'])
+    print(file=fp)
+
+    d_view.sort(reverse=True)
+    print('  * Top 15 reporters:', file=fp)
+
+    it = 0
+    for i1,i2 in d_view:
+        try:
+            if it >= 15:
+                break
+            print('\t\t+ ' + statList['people'][i2]['name'] + ' ( ' + str(i1) + ' )', file=fp)
+            it += 1
+        except:
+            continue
 
     print(file=fp)
-    print('  * {} comments have been written by {} users.'.format(
+
+    print("  * {} bugs reported haven't been triaged yet.".format(\
+            len(statList['still_unconfirmed'])), file=fp)
+
+    common.util_create_short_url(fp, statList['still_unconfirmed'])
+    print(file=fp)
+
+    print("  * Total number of unconfirmed bugs: {}".format(\
+            len(statList['unconfirmed'])), file=fp)
+    print(file=fp)
+
+    print('  * {} comments have been written by {} people.'.format(
         sum(statList['comments_count'].values()), len(statList['comments_count'])), file=fp)
     print(file=fp)
 
-    print('  * {} new users have signed up to Bugzilla.'.format(len(statList['newUsers'])), file=fp)
+    print('  * {} new people have signed up to Bugzilla.'.format(len(statList['newUsers'])), file=fp)
     print(file=fp)
 
     if statList['status_changed']:
