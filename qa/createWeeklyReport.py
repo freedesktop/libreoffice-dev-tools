@@ -19,8 +19,8 @@ def util_create_statList_weeklyReport():
         'unconfirmed': [],
         'newUsers': {},
         'comments_count': {},
-        'status_changed': {s: {'id':[], 'author': [] } for s in common.statutes_list},
-        'keyword_added': {k: {'id':[], 'author': [], 'status': {s:0 for s in common.statutes_list}} for k in common.keywords_list},
+        'status_changed': {},
+        'keyword_added': {k: {'id':[], 'author': []} for k in common.keywords_list},
         'keyword_removed': {k: {'id':[], 'author': []} for k in common.keywords_list},
         'whiteboard_added': {},
         'whiteboard_removed': {},
@@ -53,10 +53,6 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                 statNewDate = creationDate
 
             rowStatus = row['status']
-            rowResolution = row['resolution']
-
-            if rowStatus == 'VERIFIED' or rowStatus == 'RESOLVED':
-                rowStatus += "_" + rowResolution
 
             if rowStatus == 'UNCONFIRMED':
                 statList['unconfirmed'].append(rowId)
@@ -80,8 +76,11 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
                 common.util_check_bugzilla_mail(statList, actionMail, '', actionDate, rowId)
 
-                # Use this variable in case the status is set before the resolution
+                # Use these variables in case the status is set before the resolution or viceversa
                 newStatus = None
+                newResolution = None
+                oldStatus = None
+                oldResolution = None
                 for change in action['changes']:
                     if change['field_name'] == 'blocks':
                         if change['added']:
@@ -108,28 +107,57 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                         addedStatus = change['added']
                         removedStatus = change['removed']
 
+                        if removedStatus == 'RESOLVED' or removedStatus == 'VERIFIED':
+                            if oldResolution:
+                                removedStatus = removedStatus + "_" + removedResolution
+                                oldResolution = None
+                            else:
+                                oldStatus = removedStatus
+
                         if  addedStatus == 'RESOLVED' or addedStatus == 'VERIFIED':
-                            if rowResolution:
-                                addedStatus = addedStatus + "_" + rowResolution
+                            if newResolution:
+                                addedStatus = addedStatus + "_" + newResolution
                                 if actionDate >= cfg['reportPeriod']:
-                                    statList['status_changed'][addedStatus]['id'].append(rowId)
-                                    statList['status_changed'][addedStatus]['author'].append(actionMail)
+                                    keyValue = removedStatus + '-' + addedStatus
+                                    if keyValue not in statList['status_changed']:
+                                        statList['status_changed'][keyValue] = {'id':[], 'author':[]}
+                                    statList['status_changed'][keyValue]['id'].append(rowId)
+                                    statList['status_changed'][keyValue]['author'].append(actionMail)
+
+                                newResolution = None
                             else:
                                 newStatus = addedStatus
                         else:
                             if actionDate >= cfg['reportPeriod']:
-                                statList['status_changed'][addedStatus]['id'].append(rowId)
-                                statList['status_changed'][addedStatus]['author'].append(actionMail)
+                                keyValue = removedStatus + '-' + addedStatus
+                                if keyValue not in statList['status_changed']:
+                                    statList['status_changed'][keyValue] = {'id':[], 'author':[]}
+                                statList['status_changed'][keyValue]['id'].append(rowId)
+                                statList['status_changed'][keyValue]['author'].append(actionMail)
 
                     elif change['field_name'] == 'resolution':
+                        addedResolution = change['added']
+                        removedResolution = change['removed']
+
+                        if oldStatus:
+                            removedStatus = oldStatus + "_" + removedResolution
+                            oldStatus = None
+                        else:
+                            oldResolution = removedResolution
+
                         if newStatus:
-                            addedStatus = newStatus + "_" + change['added']
+                            addedStatus = newStatus + "_" + addedResolution
 
                             if actionDate >= cfg['reportPeriod']:
-                                statList['status_changed'][addedStatus]['id'].append(rowId)
-                                statList['status_changed'][addedStatus]['author'].append(actionMail)
+                                keyValue = removedStatus + '-' + addedStatus
+                                if keyValue not in statList['status_changed']:
+                                    statList['status_changed'][keyValue] = {'id':[], 'author':[]}
+                                statList['status_changed'][keyValue]['id'].append(rowId)
+                                statList['status_changed'][keyValue]['author'].append(actionMail)
 
                             newStatus = None
+                        else:
+                            newResolution = addedResolution
 
                     elif change['field_name'] == 'priority':
                         newPriority = change['added']
@@ -152,7 +180,6 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                                 if actionDate >= cfg['reportPeriod'] and keyword in rowKeywords:
                                     statList['keyword_added'][keyword]['id'].append(rowId)
                                     statList['keyword_added'][keyword]['author'].append(actionMail)
-                                    statList['keyword_added'][keyword]['status'][rowStatus] += 1
 
                         keywordsRemoved = change['removed'].split(", ")
                         for keyword in keywordsRemoved:
@@ -247,6 +274,9 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
                 if action == 'removed':
                     aux3 = 'from'
                 print(('  * \'{}\' has been {} {} {} {}.').format(key, action, aux3, nBugs, aux2), file=fp)
+            elif action == 'changedStatus':
+                statuses = key.replace('_', ' ').split('-')
+                print(('  * {} {} been changed from \'{}\' to \'{}\'.').format(nBugs, aux1, statuses[0], statuses[1]), file=fp)
             else:
                 print(('  * {} {} been changed to \'{}\'.').format(nBugs, aux1, key.replace('_', ' ')), file=fp)
 
@@ -331,7 +361,7 @@ def create_weekly_Report(statList) :
 
     if statList['status_changed']:
         print("== STATUSES CHANGED ==", file=fp)
-        util_print_QA_line_weekly(fp, statList, statList['status_changed'], 'changed')
+        util_print_QA_line_weekly(fp, statList, statList['status_changed'], 'changedStatus')
 
     if statList['keyword_added']:
         print("== KEYWORDS ADDED ==", file=fp)
