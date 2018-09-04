@@ -47,7 +47,7 @@ function bascode_par() {
 // Tables
 // simple table cell
 function tCell (role){
-    return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="' + role + '" xml-lang="en-US" ></paragraph>\n       </tablecell>';
+    return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="' + role + '" xml-lang="en-US" ></paragraph>\n       </tablecell>\n';
 }
 
 
@@ -67,7 +67,7 @@ function table2R3C() {
     var a1 = '<table id="' + random('tab') + '">\n';
     var a2 = '   <tablerow>\n';
     var a4 = '   </tablerow>\n';
-    var a5 = a4 + '\n</table>';
+    var a5 = a4 + '\n</table>\n';
     editor.replaceRange(a1 + a2 + tCell('tablehead') + tCell('tablehead') + tCell('tablehead') + a4 + a2 + tCell('tablecontent') + tCell('tablecontent') + tCell('tablecontent') + a5, editor.doc.getCursor());
 }
 
@@ -149,7 +149,7 @@ function tList(mode){
 
 function listItem(){
     var a1 = '    <listitem>\n        <paragraph id="' + random('par') + '" role="listitem" xml-lang="en-US">';
-    var a2 = '</paragraph>\n    </listitem>';
+    var a2 = '</paragraph>\n    </listitem>\n';
     editor.replaceSelection(a1+ editor.doc.getSelection() + a2,'');
 }
 
@@ -161,7 +161,7 @@ function tVariable() {
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
 function tEmbed(){
-    var a1 = '<embed href="text/CHANGE ME(path/to/xhp/file#select id)"/>';
+    var a1 = '<embed href="text/CHANGE ME(path/to/xhp/file#select id)"/>\n';
     editor.replaceRange(a1, editor.doc.getCursor());
 }
 function tEmbedvar(){

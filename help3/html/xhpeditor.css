@@ -19,3 +19,20 @@
     display:inline-block;
     width:5em;
 }
+/*
+.leftside{
+    top: 0%;
+    left:0%;
+    right:50%
+    position:absolute;
+    background: yellow;
+    display:block;
+}
+.rightside{
+    top: 0%;
+    right:0%;
+    left: 50%;
+    position:absolute;
+    background: cyan;
+}
+*/
