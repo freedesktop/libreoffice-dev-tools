@@ -12,9 +12,9 @@
 "use strict";
 
 var htmlConfig = {
-  autoSelfClosers: {'area': true, 'base': true, 'br': true, 'col': true, 'command': true,
-                    'embed': true, 'frame': true, 'hr': true, 'img': true, 'input': true,
-                    'keygen': true, 'link': true, 'meta': true, 'param': true, 'source': true,
+  autoSelfClosers: {'area': true, 'base': true, 'col': true, 'command': true,
+                    'frame': true, 'hr': true, 'img': true, 'input': true,
+                    'keygen': true, 'param': true, 'source': true,
                     'track': true, 'wbr': true, 'menuitem': true},
   implicitlyClosed: {'dd': true, 'li': true, 'optgroup': true, 'option': true, 'p': true,
                      'rp': true, 'rt': true, 'tbody': true, 'td': true, 'tfoot': true,
