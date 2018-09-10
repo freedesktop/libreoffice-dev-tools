@@ -337,6 +337,10 @@ if __name__ == '__main__':
             " argument and the ending date as second argument")
     args=parser.parse_args()
 
+    if args.Date[0] >= args.Date[1]:
+        print('Argument 1 must be older than argument 2... Closing!!')
+        exit()
+
     print("Reading and writing data from " + common.dataDir)
 
     bugzillaData = common.get_bugzilla()
