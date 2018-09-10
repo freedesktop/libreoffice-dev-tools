@@ -160,7 +160,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     authorVerified = actionMail
                                     isVerified = True
 
-                                elif removedStatus == 'VERIFIED' and isVerified:
+                                elif removedStatus == 'VERIFIED' and isVerified and common.isOpen(addedStatus):
                                     util_decrease_action(statList['verified'], authorVerified, dayVerified)
                                     isVerified = False
 
