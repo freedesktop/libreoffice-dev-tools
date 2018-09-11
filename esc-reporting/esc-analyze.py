@@ -786,7 +786,7 @@ def analyze_reports():
                 break
     tmpRlist = sorted(statList['people'], key=lambda k: (statList['people'][k]['gerrit']['1month']['reviewer']),reverse=True)
     for i in tmpRlist:
-        if i != 'ci@libreoffice.org':
+        if i != 'ci@libreoffice.org' and i != 'fake-email@fake-email-script-esc.com' and i != '*dummy*':
             x = {'mail': i, 'name': statList['people'][i]['name'],
                  'month': statList['people'][i]['gerrit']['1month']['reviewer'],
                  'year': statList['people'][i]['gerrit']['1year']['reviewer']}
