@@ -29,7 +29,7 @@ memberBugs = 50
 oldUserPeriodDays = 180
 oldUserBugs = 20
 
-fixBugPingPeriodDays = 30
+pingFixedBugPeriodDays = 30
 
 retestUnconfirmedPeriodDays = 30
 
@@ -340,19 +340,41 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     (rowVersion.startswith(versionsToCheck) or rowVersion == 'unspecified'):
                 util_add_to_result(lResults, 'version_not_changed', movedToNewValue)
 
-            #Check bugs where:
-            # 1. last comment is done by 'libreoffice-commits@lists.freedesktop.org'
-            # 2. Penultimate comment is done by 'libreoffice-commits@lists.freedesktop.org',
-            # last comment is not written by the commit's author and it's not a revert commit
-            if common.isOpen(rowStatus) and ((commentMail == 'libreoffice-commits@lists.freedesktop.org' and \
-                    'evert' not in comments[-1]['text']) or \
-                    (len(comments) >= 2 and comments[-2]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and \
-                    comments[-2]['text'].split(' committed a patch related')[0] != statList['people'][comments[-1]['creator']]['name'] and \
-                    'evert' not in comments[-2]['text'])) and \
-                    commentDate < cfg['fixBugPingPeriod'] and commentDate >= cfg['fixBugPingDiff'] and \
-                    'easyHack' not in row['keywords']:
-                value = [rowId, commentDate, row['assigned_to']]
-                util_add_to_result(lResults, 'ping_bug_fixed', value)
+
+            if common.isOpen(rowStatus) and 'target:' in row['whiteboard'] and 'easyHack' not in row['keywords']:
+
+                it = 1
+                #Check the last 3 comments
+                totalComments = 3
+                while it <= totalComments:
+                    negIt = it * -1
+                    if len(comments) >= it:
+                        commentMail = comments[negIt]['creator']
+                        commentText = comments[negIt]['text']
+                        commentDate = datetime.datetime.strptime(comments[negIt]['time'], "%Y-%m-%dT%H:%M:%SZ")
+                        if commentDate < cfg['PingFixedBugPeriod'] and commentDate >= cfg['pingFixedBugDiff']:
+                            if it == 1 and  'Is this bug fixed?' in commentText and commentMail == 'xiscofauli@libreoffice.org':
+                                value = [rowId, commentDate, row['assigned_to']]
+                                util_add_to_result(lResults, 'take_action_fixed_bug', value)
+                                break
+
+                            elif commentMail == 'libreoffice-commits@lists.freedesktop.org':
+                                # Check the commit hasn't been reverted
+                                if 'evert' in commentText:
+                                    break
+                                else:
+                                    value = [rowId, commentDate, row['assigned_to']]
+                                    util_add_to_result(lResults, 'ping_bug_fixed', value)
+                                    break
+
+                            # Ignore duplicated comments
+                            elif 'has been marked as a duplicate of this bug' in commentText:
+                                totalComments += 1
+                            it += 1
+                        else:
+                            break
+                    else:
+                        break
 
             if rowStatus == 'ASSIGNED' and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssignedPeriod'] and \
@@ -434,9 +456,9 @@ def runCfg():
     cfg['oldUserPeriod'] = common.util_convert_days_to_datetime(cfg, oldUserPeriodDays)
     cfg['oldUserPeriod2'] = common.util_convert_days_to_datetime(cfg, oldUserPeriodDays + reportPeriodDays)
     cfg['memberPeriod'] = common.util_convert_days_to_datetime(cfg, memberPeriodDays)
-    cfg['fixBugPingPeriod'] = common.util_convert_days_to_datetime(cfg, fixBugPingPeriodDays)
-    cfg['fixBugPingDiff'] = common.util_convert_days_to_datetime(cfg, fixBugPingPeriodDays + reportPeriodDays)
-    cfg['coloredFixBugPingPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + fixBugPingPeriodDays)
+    cfg['PingFixedBugPeriod'] = common.util_convert_days_to_datetime(cfg, pingFixedBugPeriodDays)
+    cfg['pingFixedBugDiff'] = common.util_convert_days_to_datetime(cfg, pingFixedBugPeriodDays + reportPeriodDays)
+    cfg['coloredFixBugPingPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + pingFixedBugPeriodDays)
     cfg['retestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(cfg, retestUnconfirmedPeriodDays)
     cfg['coloredRetestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + retestUnconfirmedPeriodDays)
     cfg['retestNeedinfoPeriod'] = common.util_convert_days_to_datetime(cfg, retestNeedinfoPeriodDays)
