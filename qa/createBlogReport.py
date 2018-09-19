@@ -334,7 +334,7 @@ def mkdate(datestr):
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('Date',type=mkdate, nargs=2, help="Introduce the starting date as first" + \
-            " argument and the ending date as second argument")
+            " argument and the ending date as second argument. FORMAT: YYYY-MM-DD")
     args=parser.parse_args()
 
     if args.Date[0] >= args.Date[1]:
