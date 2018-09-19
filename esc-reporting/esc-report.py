@@ -186,23 +186,19 @@ def report_mentoring():
       print(i1 + ' ' + util_build_escNumber('easyhacks', i1) + '   ', end="", file=fp)
       if i1 == 'cleanup_comments':
         print('\n       ', end='', file=fp)
-    print("\n    + top 5 contributors:", file=fp)
+    print("\n    + top 10 contributors:", file=fp)
     print(statList['reportList']['top10commit'])
-    for i in range(0, len(statList['reportList']['top10commit'])):
-      if i == 5:
-          break
+    for contributor in statList['reportList']['top10commit']:
       print('          {} made {} patches in 1 month, and {} patches in 1 year'.format(
-          statList['reportList']['top10commit'][i]['name'],
-          statList['reportList']['top10commit'][i]['month'],
-          statList['reportList']['top10commit'][i]['year']), file=fp)
-    print("    + top 5 reviewers:", file=fp)
-    for i in range(0, len(statList['reportList']['top10review'])):
-      if i == 5:
-          break
+          contributor['name'],
+          contributor['month'],
+          contributor['year']), file=fp)
+    print("    + top 10 reviewers:", file=fp)
+    for reviewer in statList['reportList']['top10review']:
       print('          {} made {} review comments in 1 month, and {} in 1 year'.format(
-          statList['reportList']['top10review'][i]['name'],
-          statList['reportList']['top10review'][i]['month'],
-          statList['reportList']['top10review'][i]['year']), file=fp)
+          reviewer['name'],
+          reviewer['month'],
+          reviewer['year']), file=fp)
 
     print("    + big CONGRATULATIONS to contributors who have at least 1 merged patch, since last report:", file=fp)
     for row in statList['reportList']['award_1st_email']:
