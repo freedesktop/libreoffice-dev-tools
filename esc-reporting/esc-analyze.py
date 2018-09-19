@@ -205,7 +205,8 @@ def util_create_statList():
                                               '3month': {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0},
                                               '1month': {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0},
                                               '1week':  {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0},
-                                              'total': 0}},
+                                              'total': 0},
+                                'committersNames': []},
                      'trend' : {'committer':   {'owner':        {'1year': {}, '3month': {}, '1month': {}, '1week': {}},
                                                 'reviewMerged': {'1year': {}, '3month': {}, '1month': {}, '1week': {}}},
                                 'contributor': {'owner':        {'1year': {}, '3month': {}, '1month': {}, '1week': {}},
@@ -303,6 +304,9 @@ def analyze_mentoring():
       statList['people'][mail]['gerrit']['reviewName'] = '{} <{}>'.format(row['name'],row['email'])
       statList['people'][mail]['isCommitter'] = True
       statList['people'][mail]['isContributor'] = True
+      # Sometimes, committers change their email
+      # Add the committers names to a list to compare later
+      statList['data']['gerrit']['committersNames'].append(row['name'].lower())
     statNewDate = cfg['1yearDate']
     statOldDate = cfg['nowDate']
     for key, row in gerritData['patch'].items():
@@ -778,12 +782,19 @@ def analyze_reports():
     tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['commits']['1month']['owner']),reverse=True)
     for i in tmpClist:
         if not statList['people'][i]['isCommitter']:
-            x = {'mail': i, 'name': statList['people'][i]['name'],
-                 'month': statList['people'][i]['commits']['1month']['owner'],
-                 'year': statList['people'][i]['commits']['1year']['owner']}
-            statList['reportList']['top10commit'].append(x)
-            if len(statList['reportList']['top10commit']) >= 10:
-                break
+            #Sometimes name has the format: <surname, name>
+            auxName = statList['people'][i]['name'].lower()
+            if ',' in auxName:
+                splitName = auxName.split(',')
+                auxName = splitName[1].strip() + ' ' + splitName[0].strip()
+
+            if auxName not in statList['data']['gerrit']['committersNames']:
+                x = {'mail': i, 'name': statList['people'][i]['name'],
+                     'month': statList['people'][i]['commits']['1month']['owner'],
+                     'year': statList['people'][i]['commits']['1year']['owner']}
+                statList['reportList']['top10commit'].append(x)
+                if len(statList['reportList']['top10commit']) >= 10:
+                    break
     tmpRlist = sorted(statList['people'], key=lambda k: (statList['people'][k]['gerrit']['1month']['reviewer']),reverse=True)
     for i in tmpRlist:
         if i != 'ci@libreoffice.org' and i != 'fake-email@fake-email-script-esc.com' and i != '*dummy*':
