@@ -205,8 +205,7 @@ def util_create_statList():
                                               '3month': {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0},
                                               '1month': {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0},
                                               '1week':  {'ABANDONED': 0, 'MERGED': 0, 'NEW': 0, 'reviewed': 0},
-                                              'total': 0},
-                                'committersNames': []},
+                                              'total': 0}},
                      'trend' : {'committer':   {'owner':        {'1year': {}, '3month': {}, '1month': {}, '1week': {}},
                                                 'reviewMerged': {'1year': {}, '3month': {}, '1month': {}, '1week': {}}},
                                 'contributor': {'owner':        {'1year': {}, '3month': {}, '1month': {}, '1week': {}},
@@ -276,7 +275,7 @@ def util_build_diff(newList, oldList):
 
 
 def analyze_mentoring():
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData
+    global cfg, statList, openhubData, bugzillaData, gerritData, gitData, committersNames
 
     print("mentoring: analyze openhub", end="", flush=True)
     if 'analysis' in openhubData['project']:
@@ -306,7 +305,7 @@ def analyze_mentoring():
       statList['people'][mail]['isContributor'] = True
       # Sometimes, committers change their email
       # Add the committers names to a list to compare later
-      statList['data']['gerrit']['committersNames'].append(row['name'].lower())
+      committersNames.append(row['name'].lower())
     statNewDate = cfg['1yearDate']
     statOldDate = cfg['nowDate']
     for key, row in gerritData['patch'].items():
@@ -612,7 +611,7 @@ def is_domain_mapped(email):
     return False
 
 def analyze_reports():
-    global cfg, statList, openhubData, bugzillaData, gerritData, gitData, automateData
+    global cfg, statList, openhubData, bugzillaData, gerritData, gitData, automateData, committersNames
 
     print("reports: analyze", flush=True)
     mailedDate = cfg['3monthDate'] - datetime.timedelta(days=90)
@@ -788,7 +787,7 @@ def analyze_reports():
                 splitName = auxName.split(',')
                 auxName = splitName[1].strip() + ' ' + splitName[0].strip()
 
-            if auxName not in statList['data']['gerrit']['committersNames']:
+            if auxName not in committersNames:
                 x = {'mail': i, 'name': statList['people'][i]['name'],
                      'month': statList['people'][i]['commits']['1month']['owner'],
                      'year': statList['people'][i]['commits']['1year']['owner']}
@@ -932,7 +931,7 @@ def loadCfg(platform):
 
 def runAnalyze():
     global cfg, statList
-    global openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList, automateData
+    global openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList, automateData, committersNames
 
     x = (cfg['nowDate'] - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
     weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
@@ -945,6 +944,7 @@ def runAnalyze():
     crashData = util_load_data_file(cfg['homedir'] + 'dump/crash_dump.json')
     automateData = util_load_data_file(cfg['homedir'] + 'dump/automate.json')
     statList = util_create_statList()
+    committersNames = []
     try:
       runLoadCSV()
     except Exception as e:
