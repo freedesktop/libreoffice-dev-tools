@@ -155,7 +155,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     isConfirmed = False
 
                                 if addedStatus == 'VERIFIED':
-                                    util_increase_action(statList['verified'], rowId, creatorMail, actionDay, diffTime)
+                                    util_increase_action(statList['verified'], rowId, actionMail, actionDay, diffTime)
                                     dayVerified = actionDay
                                     authorVerified = actionMail
                                     isVerified = True
