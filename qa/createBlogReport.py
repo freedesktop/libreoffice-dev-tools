@@ -323,6 +323,10 @@ def createReport(statList):
     print('<img src="PATH_HERE/Unconfirmed_Bugs.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
     print(file=fp)
     createPlot(statList['unconfirmedCount'], "line", "Unconfirmed Bugs Per Day", "Unconfirmed Bugs", "blue")
+
+    print(makeStrong('Thank you all for making Libreoffice rock!'), file=fp)
+    print(makeStrong('Join us and help to keep LibreOffice super reliable!'), file=fp)
+    print(makeStrong('Check <a href="https://wiki.documentfoundation.org/QA/GetInvolved">the Get Involved page</a> out now!'), file=fp)
     fp.close()
 
 def mkdate(datestr):
