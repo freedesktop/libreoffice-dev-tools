@@ -775,7 +775,7 @@ def analyze_reports():
       if row['comments'][-1]['creator'] == 'libreoffice-commits@lists.freedesktop.org' and not key in cfg['bugzilla']['close_except']:
           statList['reportList']['to_be_closed'].append(key)
       cDate = datetime.datetime.strptime(row['creation_time'], "%Y-%m-%dT%H:%M:%SZ")
-      if cDate >= cfg['1weekDate'] or 'easyhack' in row['history'][-1]['changes'][0]['added']:
+      if cDate >= cfg['1weekDate'] or (len(row['history']) > 0 and 'easyhack' in row['history'][-1]['changes'][0]['added']):
         statList['reportList']['easyhacks_new'].append(key)
 
     tmpClist = sorted(statList['people'], key=lambda k: (statList['people'][k]['commits']['1month']['owner']),reverse=True)
