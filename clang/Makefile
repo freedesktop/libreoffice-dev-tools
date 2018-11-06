@@ -3,12 +3,12 @@
 CLANGDEFS=-D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -fno-rtti
 CLANGWARNS=-Werror -Wall -Wno-missing-braces -Wnon-virtual-dtor -Wendif-labels -Wextra -Wundef -Wunused-macros -Wshadow -Woverloaded-virtual
 CLANGFLAGS = $(CLANGDEFS) $(CLANGWARNS) -g -std=c++11
-CLANGLIBS = -lclangAST -lclangBasic -lclangFrontend -lclangRewrite -lclangTooling -lLLVM
+CLANGLIBS = -lclangAST -lclangBasic -lclangFrontend -lclangRewrite -lclangTooling -lclangLex -lLLVM
 ifneq ($(GCOV),)
 CLANGFLAGS += --coverage
 endif
 
-all: bin/rename bin/find-unprefixed-members bin/find-harmful-auto
+all: bin/rename bin/find-unprefixed-members bin/find-harmful-auto bin/readability-redundant-pp
 
 bin/rename: rename.cxx Makefile
 	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
@@ -17,6 +17,9 @@ bin/find-unprefixed-members: find-unprefixed-members.cxx Makefile
 	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
 
 bin/find-harmful-auto: find-harmful-auto.cxx Makefile
+	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
+
+bin/readability-redundant-pp: readability-redundant-pp.cxx Makefile
 	clang++ $(CLANGFLAGS) $(CLANGLIBS) -ldl -lpthread -o $@ $<
 
 test: test.cxx test.hxx Makefile
