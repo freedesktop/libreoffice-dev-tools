@@ -31,6 +31,7 @@ def util_create_statList():
         'confirmed': util_create_basic_schema(),
         'verified': util_create_basic_schema(),
         'fixed': util_create_basic_schema(),
+        'criticalFixed': {},
         'metabug': util_create_basic_schema(),
         'keywords': { k : util_create_basic_schema() for k in lKeywords},
         'people' : {},
@@ -210,6 +211,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             diffTime = (commentDate - creationDate).days
                             commentDay = commentDate.strftime("%Y-%m-%d")
                             util_increase_action(statList['fixed'], rowId, author, commentDay, diffTime)
+                            if 'crash' in row['summary'].lower() or row['priority'] == "highest":
+                                statList['criticalFixed'][rowId]= {'summary': row['summary'], 'author': author}
 
 
             for person in row['cc_detail']:
@@ -254,6 +257,9 @@ def makeLI(text):
 
 def makeH2(text):
     return "<h2>" + str(text) + "</h2>"
+
+def makeLink(url, text):
+    return '<a href="' + url + '">' + text + '</a>'
 
 def createPlot(valueDict, plotType, plotTitle, plotLabel, plotColor):
 
@@ -307,6 +313,15 @@ def createSection(fp, value, sectionName, action, actionPerson, plotColor):
 
     createPlot(value['day'], "bar", sectionName + " Per Day", sectionName, plotColor)
 
+def createList(fp, value, listName):
+    urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
+    print(makeStrong(listName), file=fp)
+    print("<ol>", file=fp)
+    for k, v in value.items():
+        print(makeLI("{} {} ( Thanks to {} )".format(makeLink(urlPath + str(k), str(k)), v['summary'], v['author'])), file=fp)
+    print("</ol>", file=fp)
+    print(file=fp)
+
 def createReport(statList):
     fileName = '/tmp/blogReport.txt'
     fp = open(fileName, 'w', encoding='utf-8')
@@ -314,6 +329,7 @@ def createReport(statList):
     createSection(fp, statList['created'], "Reported Bugs", "reported", "Reporters", "red")
     createSection(fp, statList['confirmed'], "Triaged Bugs", "triaged", "Triagers", "gold")
     createSection(fp, statList['fixed'], "Fixed Bugs", "fixed", "Fixers", "darksalmon")
+    createList(fp, statList['criticalFixed'], "List of critical bugs fixed")
     createSection(fp, statList['verified'], "Verified Bugs", "verified", "Verifiers", "palegreen")
     createSection(fp, statList['metabug'], "Categorized Bugs", "categorized with a metabug", "Categorizers", "lightpink")
     createSection(fp, statList['keywords']['bisected'], "Bisected Bugs", "bisected", "Bisecters", "orange")
