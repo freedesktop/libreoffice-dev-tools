@@ -330,7 +330,7 @@ def createReport(statList):
     createSection(fp, statList['confirmed'], "Triaged Bugs", "triaged", "Triagers", "gold")
     createSection(fp, statList['fixed'], "Fixed Bugs", "fixed", "Fixers", "darksalmon")
     createList(fp, statList['criticalFixed'], "List of critical bugs fixed")
-    createSection(fp, statList['verified'], "Verified Bugs", "verified", "Verifiers", "palegreen")
+    createSection(fp, statList['verified'], "Verified bug fixes", "verified", "Verifiers", "palegreen")
     createSection(fp, statList['metabug'], "Categorized Bugs", "categorized with a metabug", "Categorizers", "lightpink")
     createSection(fp, statList['keywords']['bisected'], "Bisected Bugs", "bisected", "Bisecters", "orange")
 
