@@ -36,12 +36,13 @@ for hash in ${from_hashes}
 do
         changeid="$(git cat-file commit $hash |grep Change-Id:)"
         if [ -z "$changeid" ]; then
-            echo "WARNING: commit $hash has no Change-Id, assuming it has to be cherry-picked."
+            pretty=`git --no-pager log -1 --pretty=oneline $hash`
+            echo "WARNING: commit '$pretty' has no Change-Id, assuming it has to be cherry-picked."
             continue
         fi
 
         if ! grep -q "$changeid" /tmp/tohashes; then
-                git log -1 --pretty=oneline $hash
+                git --no-pager log -1 --pretty=oneline $hash
         fi
 done
 
