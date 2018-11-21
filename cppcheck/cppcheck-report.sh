@@ -122,7 +122,7 @@ Note:
         $(date "+%Y-%d-%m %H:%M:%S") with user $(whoami) at host $(cat /etc/hostname) as $MY_NAME $MY_ARGS
 
     It can be found and improved here:
-        https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=cppcheck/cppcheck-report.sh
+        https://gerrit.libreoffice.org/plugins/gitiles/dev-tools/+/master/cppcheck/cppcheck-report.sh
 
 EOF
 
@@ -151,7 +151,7 @@ Note:
         $(date "+%Y-%d-%m %H:%M:%S") with user $(whoami) at host $(cat /etc/hostname) as $MY_NAME $MY_ARGS
 
     It can be found and improved here:
-        https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=cppcheck/cppcheck-report.sh
+        https://gerrit.libreoffice.org/plugins/gitiles/dev-tools/+/master/cppcheck/cppcheck-report.sh
 
 EOF
 
