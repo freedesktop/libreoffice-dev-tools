@@ -226,7 +226,10 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
 
                 common.util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
 
-                if commentDate >= cfg['reportPeriod']:
+                if commentDate >= cfg['reportPeriod'] and \
+                       commentMail != "libreoffice-commits@lists.freedesktop.org" and\
+                       commentMail != "qa-admin@libreoffice.org" and\
+                       comment['text'] != 'A polite ping, still working on this bug?':
                     if commentMail not in statList['comments_count']:
                         statList['comments_count'][commentMail] = 0
                     statList['comments_count'][commentMail] += 1
@@ -298,7 +301,7 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
                 else:
                     print(text, file=fp)
                     text = "          " + personString + ", "
-            if text is not "          ":
+            if text != "          ":
                 print(text[:-2], file=fp)
 
             print(file=fp)
@@ -325,20 +328,29 @@ def create_weekly_Report(statList) :
     print(file=fp)
 
     d_view.sort(reverse=True)
-    print('  * Top 15 reporters:', file=fp)
+    print('  * Top 10 reporters:', file=fp)
 
     it = 0
     for i1,i2 in d_view:
-        try:
-            if it >= 15:
-                break
-            print('\t\t+ ' + statList['people'][i2]['name'] + ' (' + str(i1) + ')', file=fp)
-            it += 1
-        except:
-            continue
+        if it >= 10:
+            break
+        print('\t\t+ ' + statList['people'][i2]['name'] + ' (' + str(i1) + ')', file=fp)
+        it += 1
 
     print(file=fp)
 
+    d_view = sorted(statList['comments_count'].items(), key=lambda kv: kv[1], reverse=True)
+
+    print('  * Top 10 commenters:', file=fp)
+
+    it = 0
+    for i in d_view:
+        if it >= 10:
+            break
+        print('\t\t+ ' + statList['people'][i[0]]['name'] + ' (' + str(i[1]) + ')', file=fp)
+        it += 1
+
+    print(file=fp)
     print("  * {} bugs reported haven't been triaged yet.".format(\
             len(statList['still_unconfirmed'])), file=fp)
 
