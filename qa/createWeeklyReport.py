@@ -291,16 +291,13 @@ def util_print_QA_line_weekly(fp, statList, dValue, action, isMetabug=False):
 
             text = "          "
             for i1,i2 in d_view:
-                try:
-                    personString = statList['people'][i2]['name'] + ' (' + str(i1) + ')'
-                    # Reduce lines to 72 characters, for some reason the emails are cut otherwise
-                    if len( text + " " + personString ) < 72:
-                        text += personString + ", "
-                    else:
-                        print(text[:-2], file=fp)
-                        text = "          "
-                except:
-                    continue
+                personString = statList['people'][i2]['name'] + ' (' + str(i1) + ')'
+                # Reduce lines to 72 characters, for some reason the emails are cut otherwise
+                if len( text + " " + personString ) < 72:
+                    text += personString + ", "
+                else:
+                    print(text, file=fp)
+                    text = "          " + personString + ", "
             if text is not "          ":
                 print(text[:-2], file=fp)
 
