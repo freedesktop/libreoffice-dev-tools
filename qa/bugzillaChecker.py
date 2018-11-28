@@ -29,15 +29,23 @@ memberBugs = 50
 oldUserPeriodDays = 180
 oldUserBugs = 20
 
+# bugs which last comment is from the Commit Notification
 pingFixedBugPeriodDays = 30
 
+# Unconfirmed bugs which last comment is not written by the reporter
+# or not comments at all
 retestUnconfirmedPeriodDays = 30
 
+# Unconfirmed bugs which last comment is written by the reporter
+inactiveUnconfirmedPeriodDays = 180
+
+# Needinfo bugs which last comment is written by the reporter
 retestNeedinfoPeriodDays = 60
 
+# Assigned bugs without activity
 inactiveAssignedPeriodDays = 90
 
-#tuple of versions to check whether the version has been changed at confirmation time
+# tuple of versions to check whether the version has been changed at confirmation time
 versionsToCheck = ('5', '6')
 
 crashReportDomain = "https://crashreport.libreoffice.org/stats/signature/"
@@ -295,13 +303,18 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             if bSameAuthor and rowStatus == 'UNCONFIRMED' and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
                 value = [ rowId, row['last_change_time'], creatorMail ]
-                util_add_to_result(lResults, 'unconfirmed_not_triaged', value)
+                util_add_to_result(lResults, 'unconfirmed_without_comments', value)
 
             if len(comments) > 0:
-                if rowStatus == 'UNCONFIRMED' and comments[-1]['creator'] != creatorMail and \
+                if rowStatus == 'UNCONFIRMED':
+                    if comments[-1]['creator'] != creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
-                    value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
-                    util_add_to_result(lResults, 'untouched_unconfirmed', value)
+                        value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
+                        util_add_to_result(lResults, 'unconfirmed_last_comment_not_from_reporter', value)
+                    elif comments[-1]['creator'] == creatorMail and \
+                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveUnconfirmedPeriod']:
+                        value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
+                        util_add_to_result(lResults, 'unconfirmed_last_comment_from_reporter', value)
 
                 elif rowStatus == 'NEEDINFO' and comments[-1]['creator'] == creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") >= cfg['retestNeedinfoPeriod']:
@@ -402,8 +415,11 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     if dKey == 'inactive_assignee':
                         if dValue[idx][1] >= cfg['coloredInactiveAssignedPeriod']:
                             background = Back.GREEN
-                    elif dKey == 'untouched_unconfirmed' or dKey == 'unconfirmed_not_triaged':
+                    elif dKey == 'unconfirmed_last_comment_not_from_reporter' or dKey == 'unconfirmed_without_comments':
                         if dValue[idx][1] >= cfg['coloredRetestUnconfirmedPeriod']:
+                            background = Back.GREEN
+                    elif dKey == 'unconfirmed_last_comment_from_reporter':
+                        if dValue[idx][1] >= cfg['coloredInactiveUnconfirmedPeriod']:
                             background = Back.GREEN
                     elif dKey == 'ping_bug_fixed':
                         if dValue[idx][1] >= cfg['coloredFixBugPingPeriod']:
@@ -460,6 +476,8 @@ def runCfg():
     cfg['pingFixedBugDiff'] = common.util_convert_days_to_datetime(cfg, pingFixedBugPeriodDays + reportPeriodDays)
     cfg['coloredFixBugPingPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + pingFixedBugPeriodDays)
     cfg['retestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(cfg, retestUnconfirmedPeriodDays)
+    cfg['coloredInactiveUnconfirmedPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + inactiveUnconfirmedPeriodDays)
+    cfg['inactiveUnconfirmedPeriod'] = common.util_convert_days_to_datetime(cfg, inactiveUnconfirmedPeriodDays)
     cfg['coloredRetestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(cfg, coloredPeriodDays + retestUnconfirmedPeriodDays)
     cfg['retestNeedinfoPeriod'] = common.util_convert_days_to_datetime(cfg, retestNeedinfoPeriodDays)
     cfg['inactiveAssignedPeriod'] = common.util_convert_days_to_datetime(cfg, inactiveAssignedPeriodDays)
