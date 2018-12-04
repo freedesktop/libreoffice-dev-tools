@@ -79,6 +79,7 @@ def util_create_person_bugzilla(email, name):
              'email': email,
              'oldest': datetime.datetime.now(),
              'newest': datetime.datetime(2001, 1, 1),
+             'newestName': datetime.datetime(2001, 1, 1),
              'bugs': set()
         }
 
@@ -86,8 +87,16 @@ def util_check_bugzilla_mail(statList, mail, name, date=None, bug=None):
     if mail not in statList['people']:
         statList['people'][mail] = util_create_person_bugzilla(mail, name)
 
-    if name and not statList['people'][mail]['name']:
-        statList['people'][mail]['name'] = name
+    if name:
+        if not statList['people'][mail]['name']:
+            statList['people'][mail]['name'] = name
+            if date:
+                statList['people'][mail]['newestName'] = date
+        else:
+            if name != statList['people'][mail]['name'] and date and \
+                    date > statList['people'][mail]['newestName']:
+                statList['people'][mail]['name'] = name
+                statList['people'][mail]['newestName'] = date
 
     if date:
         if date < statList['people'][mail]['oldest']:

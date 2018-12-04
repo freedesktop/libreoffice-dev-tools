@@ -234,6 +234,11 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                         statList['comments_count'][commentMail] = 0
                     statList['comments_count'][commentMail] += 1
 
+            for person in row['cc_detail']:
+                email = person['email']
+                if commentMail == email or actionMail == email:
+                    common.util_check_bugzilla_mail(statList, email, person['real_name'])
+
         elif row['summary'].lower().startswith('[meta]'):
             statList['metabugAlias'][rowId] = row['alias']
 
