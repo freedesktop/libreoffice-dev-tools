@@ -39,8 +39,6 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
     statNewDate = statList['stat']['newest']
     statOldDate = statList['stat']['oldest']
 
-    statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
-
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
 
@@ -416,7 +414,7 @@ def create_weekly_Report(statList) :
     print('Thank you all for making Libreoffice rock!', file=fp)
     print(file=fp)
     print('Generated on {} based on stats from {}. Note: Metabugs are ignored.'.format(
-        datetime.datetime.now().strftime("%Y-%m-%d"), statList['addDate']), file=fp)
+        datetime.datetime.now().strftime("%Y-%m-%d"), statList['stat']['newest']), file=fp)
     print(file=fp)
     print('Regards', file=fp)
     fp.close()
