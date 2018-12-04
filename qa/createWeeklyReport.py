@@ -107,7 +107,7 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
 
                         if removedStatus == 'RESOLVED' or removedStatus == 'VERIFIED':
                             if oldResolution:
-                                removedStatus = removedStatus + "_" + removedResolution
+                                removedStatus = removedStatus + "_" + oldResolution
                                 oldResolution = None
                             else:
                                 oldStatus = removedStatus
@@ -126,12 +126,15 @@ def analyze_bugzilla_weeklyReport(statList, bugzillaData, cfg):
                             else:
                                 newStatus = addedStatus
                         else:
-                            if actionDate >= cfg['reportPeriod']:
-                                keyValue = removedStatus + '-' + addedStatus
-                                if keyValue not in statList['status_changed']:
-                                    statList['status_changed'][keyValue] = {'id':[], 'author':[]}
-                                statList['status_changed'][keyValue]['id'].append(rowId)
-                                statList['status_changed'][keyValue]['author'].append(actionMail)
+                            if removedStatus == 'RESOLVED' or removedStatus == 'VERIFIED':
+                                newStatus = addedStatus
+                            else:
+                                if actionDate >= cfg['reportPeriod']:
+                                    keyValue = removedStatus + '-' + addedStatus
+                                    if keyValue not in statList['status_changed']:
+                                        statList['status_changed'][keyValue] = {'id':[], 'author':[]}
+                                    statList['status_changed'][keyValue]['id'].append(rowId)
+                                    statList['status_changed'][keyValue]['author'].append(actionMail)
 
                     elif change['field_name'] == 'resolution':
                         addedResolution = change['added']
