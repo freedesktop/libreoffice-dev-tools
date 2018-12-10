@@ -546,9 +546,6 @@ class LoadFileTest:
                 connection.tearDown()
                 connection.setUp()
             print("...done with: " + self.file)
-            cores = glob.glob("core*")
-            for core in cores:
-                os.remove(core)
 
 class NormalTimer:
     def __init__(self):
