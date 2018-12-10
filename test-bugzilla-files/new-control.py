@@ -82,9 +82,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     task_size = 100
-    workers = 20
+    workers = 30
     if asan == 1:
-        workers = 32
+        workers = 64
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_task = {executor.submit(execute_task, task_file, asan): task_file for task_file in get_tasks(directory, task_size)}
