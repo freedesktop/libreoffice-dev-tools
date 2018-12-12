@@ -347,8 +347,9 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 util_add_to_result(lResults, 'metabug_not_added', movedToNewValue)
 
             if not versionChanged and movedToNew and not autoConfirmed and row['severity'] != 'enhancement' and \
-                    ('regression' not in rowKeywords and 'bisected' not in rowKeywords and \
-                    'easyHack' not in rowKeywords) and row['component'] != 'Documentation' and \
+                    'regression' not in rowKeywords and 'bisected' not in rowKeywords and \
+                    'easyHack' not in rowKeywords and 'needsUXEval' not in rowKeywords and \
+                    row['component'] != 'Documentation' and \
                     movedToNewValue[2] not in cfg['configQA']['ignore']['confirmer'] and \
                     (rowVersion.startswith(versionsToCheck) or rowVersion == 'unspecified'):
                 util_add_to_result(lResults, 'version_not_changed', movedToNewValue)
