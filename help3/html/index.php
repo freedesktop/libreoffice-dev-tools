@@ -14,11 +14,12 @@
     <link rel="stylesheet" href="xhpeditor.css">
     <link rel="stylesheet" href="lib/codemirror.css">
     <link rel="stylesheet" href="addon/hint/show-hint.css">
-    <script type="text/javascript" src="xhp2html.js"></script>
+
     <script type="text/javascript" src="lib/codemirror.js"></script>
     <script type="text/javascript" src="addon/hint/show-hint.js"></script>
     <script type="text/javascript" src="addon/hint/xml-hint.js"></script>
     <script type="text/javascript" src="mode/xml/xml.js"></script>
+    <script type="text/javascript" src="xhp2html.js"></script>
 </head>
 
 <body style="font-family:sans-serif;">
@@ -27,14 +28,14 @@
     <form class="form_area">
         <textarea id="xhpeditor"></textarea>
     </form>
-
     <br />
-
     <div><div class="snip_div">Actions:</div>
+        <p>File name: <input type="text" id="01" name="filename" value="test.xhp"/><button onclick="loadText(document.getElementById('01').value);">Open File</button></p>
+        <p>File name: <input type="text" id="02" name="filename" value="test.xhp"/><button onclick="alert('Not yet implemented');">Save Changes</button><button onclick="displayResult()">Render page</button></p>
+    </div>
+    <div style="margin-top:10px;"><div class="snip_div">Edit:</div>
         <button onclick="editor.undo()">Undo</button>
         <button onclick="editor.redo()">Redo</button>
-        <button onclick="alert('Not yet implemented...')">Save changes</button>
-        <button onclick="displayResult()">Render page</button>
     </div>
     <div style="margin-top:10px;"><div class="snip_div">Document:</div>
         <button onclick="startNewXHPDoc()" class="snip_buttons">Start new XHP document</button>
@@ -100,6 +101,7 @@
     <div id="renderedpage"></div>
 </div>
 </body>
+<!--<script type="text/javascript" src="xhp2html.js"></script>-->
 <script type="text/javascript" src="autocomplete.js"></script>
 <script type="text/javascript" src="snippets.js"></script>
 </html>

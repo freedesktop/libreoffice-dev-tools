@@ -19,14 +19,15 @@
     display:inline-block;
     width:5em;
 }
-/*
+
 .leftside{
     top: 0%;
     left:0%;
-    right:50%
-    position:absolute;
+    right:50%;
+    position: absolute;
     background: yellow;
     display:block;
+    border:1px solid grey;
 }
 .rightside{
     top: 0%;
@@ -34,5 +35,7 @@
     left: 50%;
     position:absolute;
     background: cyan;
+    overflow: scroll;
+    border:1px solid grey;
 }
-*/
+

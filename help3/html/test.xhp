@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<helpdocument version="1.0">
+<!--
+ * This file is part of the LibreOffice project.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+-->
+
+<meta>
+  <topic id="CHANGE ME" indexer="include" status="PUBLISH">
+    <title id="tit" xml-lang="en-US">TITLE ME</title>
+    <filename>FILE NAME ME</filename>
+  </topic>
+</meta>
+<body>
+<h1 id="hd_id471545060217269">Heading 1</h1>
+<paragraph role="paragraph" id="par_id431545082820565">This file is for test only and will be deleted later</paragraph>
+<h2 id="hd_id961545060221996">Heading 2</h2>
+<h3 id="hd_id721545060227600">Heading 3</h3>
+
+<paragraph role="paragraph" id="par_id101545060233293">Paragraph</paragraph>
+
+<h2 id="hd_id961545065221996">Table</h2>
+<table id="tab_id751545060242350">
+    <tablerow>
+        <tablecell>
+            <paragraph id="par_id381545060242351" role="tablehead" xml-lang="en-US" localize="false">AAAAA</paragraph>
+        </tablecell>
+        <tablecell>
+            <paragraph id="par_id831545060242351" role="tablehead" xml-lang="en-US" localize="false">BBBBB</paragraph>
+        </tablecell>
+        <tablecell>
+            <paragraph id="par_id251545060242352" role="tablehead" xml-lang="en-US" localize="false">CCCCC</paragraph>
+        </tablecell>
+    </tablerow>
+    <tablerow>
+        <tablecell>
+            <paragraph id="par_id311545060242352" role="paragraph" xml-lang="en-US">nononon nononon nonon nonono nonon no non nonononono  no</paragraph>
+        </tablecell>
+        <tablecell>
+            <paragraph id="par_id181545060242352" role="paragraph" xml-lang="en-US">nononon nononon nonon nonono nonon no non nonononono  no</paragraph>
+        </tablecell>
+        <tablecell>
+            <paragraph id="par_id191545060242353" role="paragraph" xml-lang="en-US">nononon nononon nonon nonono nonon no non nonononono  no</paragraph>
+        </tablecell>
+    </tablerow>
+</table>
+
+<paragraph role="note" id="par_id501545057936792" xml-lang="en-US">This is a Note</paragraph>
+<tip id="par_id501545057936792" xml-lang="en-US">This is a Tip</tip>
+<warning id="par_id501545057936792" xml-lang="en-US">This is a Warning</warning>
+
+</body>
+</helpdocument>
