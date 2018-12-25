@@ -20,6 +20,7 @@
     <script type="text/javascript" src="addon/hint/xml-hint.js"></script>
     <script type="text/javascript" src="mode/xml/xml.js"></script>
     <script type="text/javascript" src="xhp2html.js"></script>
+    <script type="text/javascript" src="/ed/hc2/help3xsl/help2.js"></script>
 </head>
 
 <body style="font-family:sans-serif;">

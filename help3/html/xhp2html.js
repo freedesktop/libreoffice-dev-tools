@@ -7,6 +7,14 @@
  *
  */
 
+var helpcontent2 = "/hc2/";
+var productname = "LibreOffice";
+var productversion = "6.3";
+var root = helpcontent2 + "source/";
+var language = "en-US";
+var local = "no";
+var xhttp;
+
 function loadDoc(filename, isXML)
 {
     if (window.ActiveXObject)
@@ -55,12 +63,19 @@ function displayResult()
     {
         var xsltProcessor = new XSLTProcessor();
         xsltProcessor.importStylesheet(xsl);
+        xsltProcessor.setParameter("", "root", root)
+        xsltProcessor.setParameter("", "local", local)
+        xsltProcessor.setParameter("", "language", language)
+        xsltProcessor.setParameter("", "productname", productname)
+        xsltProcessor.setParameter("", "productversion", productversion)
+//         document.getElementById("renderedpage").innerHTML('<link  type="text/css" href="/ed/hc2/help3xsl/default.css" rel="Stylesheet" />"');
         var resultDocument = xsltProcessor.transformToFragment(xml, document);
-        document.getElementById("renderedpage").appendChild(resultDocument);
+
+        document.getElementById("renderedpage").appendChild(resultDocument.getElementById("DisplayArea"));
     }
 }
 function loadText(filename){
-    var text = loadDoc(filename,false);
+    var text = loadDoc(helpcontent2 + filename,false);
     editor.doc.setValue(text);
 }
 function saveFile(){

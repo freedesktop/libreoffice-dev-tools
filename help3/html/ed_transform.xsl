@@ -21,8 +21,8 @@
 
 <xsl:output indent="yes" method="html" doctype-system= "about:legacy-compat"/>
 
-<xsl:include href="localized.xsl"/>
-<xsl:include href="links.txt.xsl"/>
+<xsl:include href="hc2/help3xsl/localized.xsl"/>
+<xsl:include href="hc2/help3xsl/links.txt.xsl"/>
 <!--
 ############################
 # Variables and Parameters #
@@ -36,7 +36,7 @@
 <xsl:param name="productversion"/>
 
 <xsl:param name="System" select="'WIN'"/>
-<xsl:param name="imgtheme" select="''"/>
+<xsl:param name="imgtheme" select="'colibre_svg'"/>
 <xsl:param name="Id" />
 
 <!-- General Usage -->
@@ -57,16 +57,12 @@
 
 <!-- Installation -->
 <xsl:variable name="online" select="$local!='yes'"/>
-<xsl:variable name="target" select="'ed/'"/>
+<xsl:variable name="target" select="'/ed/'"/>
+<xsl:variable name="source" select="'/hc2/'"/>
 
 <!-- meta data variables from the help file -->
 <xsl:variable name="filename" select="/helpdocument/meta/topic/filename"/>
 <xsl:variable name="title" select="/helpdocument/meta/topic/title"/>
-
-<!-- Module and the corresponding switching values-->
-<xsl:param name="Database" select="'swriter'"/>
-<xsl:variable name="module" select="$Database"/>
-<xsl:variable name="appl"/>
 
 <!-- the other parameters given by the help caller -->
 
@@ -84,7 +80,7 @@
 
   <!-- parts of help and image urls -->
 
-<xsl:variable name="img_url_prefix" select="concat($target,'media',$imgtheme,'/')"/>
+<xsl:variable name="img_url_prefix" select="concat($target,'core/icon-themes/',$imgtheme,'/')"/>
 
 <xsl:variable name="urlpost" select="concat('?Language=',$lang,$am,'System=',$System,$am,'UseDB=no')"/>
 
@@ -94,9 +90,9 @@
 <xsl:variable name="linkpostfix" select="''"/>
 
 <!-- images for notes, tips and warnings -->
-<xsl:variable name="note_img" select="concat($img_url_prefix,'icon-themes/help/note.svg')"/>
-<xsl:variable name="tip_img" select="concat($img_url_prefix,'icon-themes/help/tip.svg')"/>
-<xsl:variable name="warning_img" select="concat($img_url_prefix,'icon-themes/help/warning.svg')"/>
+<xsl:variable name="note_img" select="concat($img_url_prefix,'help/note.svg')"/>
+<xsl:variable name="tip_img" select="concat($img_url_prefix,'help/tip.svg')"/>
+<xsl:variable name="warning_img" select="concat($img_url_prefix,'help/warning.svg')"/>
 
 <!-- Strings for the help UI page -->
 <xsl:variable name="tmp_href_ui"><xsl:value-of select="concat($urlpre,'text/shared/help/browserhelp.xhp')"/></xsl:variable>
@@ -139,32 +135,21 @@
 <html lang="{$lang}">
     <head>
         <base href="{$install}"/>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-        <xsl:if test="$online">
-            <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' piwik.documentfoundation.org *.google.com *.googleapis.com"/>
-        </xsl:if>
-        <title><xsl:value-of select="$titleL10N"/></title>
-        <link rel="shortcut icon" href="{$target}media/navigation/favicon.ico" />
-        <link  type="text/css" href="{$target}normalize.css" rel="Stylesheet" />
-        <link  type="text/css" href="{$target}default.css" rel="Stylesheet" />
-        <link  type="text/css" href="{$target}prism.css" rel="Stylesheet" />
-        <script type="text/javascript" src="{$target}help2.js"></script>
-        <script type="text/javascript" src="{$target}languages.js"></script>
-        <script type="text/javascript" src="{$target}{$lang}/langnames.js"></script>
-        <script type="text/javascript" src="{$target}fuzzysort.js"></script>
-        <script type="text/javascript" src="{$target}paginathing.js"></script>
-        <script type="text/javascript" src="{$target}prism.js"></script>
+        <link rel="shortcut icon" href="{$source}media/navigation/favicon.ico" />
+        <link  type="text/css" href="{$source}help3xsl/normalize.css" rel="Stylesheet" />
+        <link  type="text/css" href="{$source}help3xsl/default.css" rel="Stylesheet" />
+        <link  type="text/css" href="{$source}help3xsl/prism.css" rel="Stylesheet" />
+        <script type="text/javascript" src="{$source}help3xsl/help2.js"></script>
+
+        <script type="text/javascript" src="{$source}help3xsl/fuzzysort.js"></script>
+        <script type="text/javascript" src="{$source}help3xsl/paginathing.js"></script>
+        <script type="text/javascript" src="{$source}help3xsl/prism.js"></script>
         <meta name="viewport" content="width=device-width,initial-scale=1"/>
     </head>
     <body itemscope="true" itemtype="http://schema.org/TechArticle">
-    <xsl:if test="$online">
-        <meta itemprop="version" content="{$productversion}"/>
-        <meta itemprop="inLanguage" content="{$lang}"/>
-        <meta itemprop="datePublished" content="2017"/>
-        <meta itemprop="headline" content="{$titleL10N}"/>
-    </xsl:if>
     <div id="DisplayArea" itemprop="articleBody">
         <xsl:apply-templates select="/helpdocument/body"/>
+
         <footer>
             <xsl:if test="$online">
                 <div class="donation">
@@ -1051,16 +1036,16 @@
                         <xsl:variable name="tmp1" select="substring-after(@src, '/ui/')"/>
                         <xsl:variable name="tmp2" select="substring-before($tmp1,'/')"/>
                         <xsl:variable name="tmp3" select="substring-after($tmp1,'/')"/>
-                        <xsl:value-of select="concat($target,$tmp0,'/ui/', $tmp2, '/',$lang,'/',$tmp3)"/>
+                        <xsl:value-of select="concat($source,'source/',$tmp0,'/ui/', $tmp2, '/',$lang,'/',$tmp3)"/>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:value-of select="concat($target,@src)"/>
+                        <xsl:value-of select="concat($source,'source/',@src)"/>
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:when>
             <!-- generic media file -->
             <xsl:when test="starts-with(@src,'media/')">
-                <xsl:value-of select="concat($target,@src)"/>
+                <xsl:value-of select="concat($source,'/source/',@src)"/>
             </xsl:when>
             <!-- handle icons -->
             <xsl:when test="not(starts-with(@src,'media/'))">
