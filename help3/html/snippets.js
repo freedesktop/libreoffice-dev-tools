@@ -27,19 +27,37 @@ function docHeading() {
 
 // Paragraph
 function paragraph(role) {
-    var a0 = '<paragraph role="'+ role + '" id="' + random('par') + '" xml-lang="en-US">'
+    var a0 = '<paragraph role="'+ role + '" id="' + random('par') + '">'
     var a1 = '</paragraph>\n';
+    editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
+}
+
+function note() {
+    var a0 = '<note id="' + random('par') + '">'
+    var a1 = '</note>\n';
+    editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
+}
+
+function tip() {
+    var a0 = '<tip id="' + random('par') + '">'
+    var a1 = '</tip>\n';
+    editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
+}
+
+function warning() {
+    var a0 = '<warning id="' + random('par') + '">'
+    var a1 = '</warning>\n';
     editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
 }
 
 function heading(level) {
-    var a0 = '<paragraph level="'+ level +'" role="heading" id="' + random('hd') + '" xml-lang="en-US">'
-    var a1 = '</paragraph>\n';
+    var a0 = '<h'+ level +' id="' + random('hd') + '">'
+    var a1 = '</h' + level+'>\n';
     editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
 }
 
 function bascode_par() {
-    var a1 = '<paragraph role="bascode" id="' + random('bas') + '" xml-lang="en-US">';
+    var a1 = '<paragraph role="bascode" id="' + random('bas') + '">';
     var a2 = '</paragraph>\n';
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
@@ -47,13 +65,13 @@ function bascode_par() {
 // Tables
 // simple table cell
 function tCell (role){
-    return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="' + role + '" xml-lang="en-US" ></paragraph>\n       </tablecell>\n';
+    return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="' + role + '"></paragraph>\n       </tablecell>\n';
 }
 
 
 function iconTable() {
     var a1 = '<table id="' + random('tab') + '">\n    <tablerow>\n        <tablecell>\n            ';
-    var a2 = '<paragraph id=" ' + random('par')+ '" lang="en-US" localize="false">\n                ';
+    var a2 = '<paragraph id=" ' + random('par')+ '" localize="false">\n                ';
     var a3 = '<image >CHANGE ME</image>\n            </paragraph>\n        </tablecell>\n' + tCell();
     var a4 = '\n    </tablerow>\n</table>\n';
     editor.replaceRange(a1 + a2 + a3 + a4, editor.doc.getCursor());
@@ -88,6 +106,13 @@ function bascode_div() {
     editor.replaceRange('<bascode>\n   \n</bascode>\n', editor.doc.getCursor());
 }
 
+function pycode_div() {
+    editor.replaceRange('<pycode>\n   \n</pycode>\n', editor.doc.getCursor());
+}
+
+function section_div() {
+    editor.replaceRange('<section id="CHANGE ME">\n   \n</section>\n', editor.doc.getCursor());
+}
 // Bookmarks
 function aHelp() {
     editor.replaceRange('<ahelp hid="HID PATH ME" visibility="hidden">'+ editor.doc.getSelection() +'</ahelp>', editor.doc.getCursor());
@@ -123,6 +148,21 @@ function item(type) {
     editor.replaceSelection('<item type="'+ type + '">'+ editor.doc.getSelection() +'</item>','');
 }
 
+function c_menuitem() {
+    editor.replaceSelection('<menuitem>'+ editor.doc.getSelection() +'</menuitem> ','');
+}
+function _literal() {
+    editor.replaceSelection('<literal>'+ editor.doc.getSelection() +'</literal>','');
+}
+function _keystroke() {
+    editor.replaceSelection('<keystroke>'+ editor.doc.getSelection() +'</keystroke>','');
+}
+function _input() {
+    editor.replaceSelection('<input>'+ editor.doc.getSelection() +'</input>','');
+}
+function _widget() {
+    editor.replaceSelection('<widget>'+ editor.doc.getSelection() +'</widget>','');
+}
 // switches
 
 function switchXHP(type) {

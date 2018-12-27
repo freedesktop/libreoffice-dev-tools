@@ -135,15 +135,6 @@
 <html lang="{$lang}">
     <head>
         <base href="{$install}"/>
-        <link rel="shortcut icon" href="{$source}media/navigation/favicon.ico" />
-        <link  type="text/css" href="{$source}help3xsl/normalize.css" rel="Stylesheet" />
-        <link  type="text/css" href="{$source}help3xsl/default.css" rel="Stylesheet" />
-        <link  type="text/css" href="{$source}help3xsl/prism.css" rel="Stylesheet" />
-        <script type="text/javascript" src="{$source}help3xsl/help2.js"></script>
-
-        <script type="text/javascript" src="{$source}help3xsl/fuzzysort.js"></script>
-        <script type="text/javascript" src="{$source}help3xsl/paginathing.js"></script>
-        <script type="text/javascript" src="{$source}help3xsl/prism.js"></script>
         <meta name="viewport" content="width=device-width,initial-scale=1"/>
     </head>
     <body itemscope="true" itemtype="http://schema.org/TechArticle">
@@ -169,7 +160,6 @@
             </div>
         </footer>
     </div>
-    <script type="text/javascript" src="{$target}help.js"/>
     <xsl:choose>
         <xsl:when test="$online">
             <script type="text/javascript">
@@ -371,35 +361,35 @@
 
 <!-- LIST -->
 <xsl:template match="list">
-	<xsl:choose>
-		<xsl:when test="@type='ordered'">
-			<ol>
-				<xsl:if test="@startwith">
-					<xsl:attribute name="start"><xsl:value-of select="@startwith"/></xsl:attribute>
-				</xsl:if>
-				<xsl:apply-templates />
-			</ol>
-		</xsl:when>
-		<xsl:otherwise>
-			<ul><xsl:apply-templates /></ul>
-		</xsl:otherwise>
-	</xsl:choose>
+    <xsl:choose>
+        <xsl:when test="@type='ordered'">
+            <ol>
+                <xsl:if test="@startwith">
+                    <xsl:attribute name="start"><xsl:value-of select="@startwith"/></xsl:attribute>
+                </xsl:if>
+                <xsl:apply-templates />
+            </ol>
+        </xsl:when>
+        <xsl:otherwise>
+            <ul><xsl:apply-templates /></ul>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <xsl:template match="list" mode="embedded">
-	<xsl:choose>
-		<xsl:when test="@type='ordered'">
-			<ol>
-				<xsl:if test="@startwith">
-					<xsl:attribute name="start"><xsl:value-of select="@startwith"/></xsl:attribute>
-				</xsl:if>
-				<xsl:apply-templates mode="embedded"/>
-			</ol>
-		</xsl:when>
-		<xsl:otherwise>
-			<ul><xsl:apply-templates mode="embedded"/></ul>
-		</xsl:otherwise>
-	</xsl:choose>
+    <xsl:choose>
+        <xsl:when test="@type='ordered'">
+            <ol>
+                <xsl:if test="@startwith">
+                    <xsl:attribute name="start"><xsl:value-of select="@startwith"/></xsl:attribute>
+                </xsl:if>
+                <xsl:apply-templates mode="embedded"/>
+            </ol>
+        </xsl:when>
+        <xsl:otherwise>
+            <ul><xsl:apply-templates mode="embedded"/></ul>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- LISTITEM -->
@@ -436,7 +426,7 @@
             </xsl:call-template>
         </xsl:when>
 
-        <xsl:when test="contains(' note warning tip ',@role)">
+        <xsl:when test="@role='note' or @role='tip' or @role='warning'">
             <xsl:call-template name="insertnote">
                 <xsl:with-param name="type" select="@role" />
             </xsl:call-template>
@@ -448,6 +438,10 @@
 
         <xsl:when test="@role='bascode' or @role='pycode'">
             <xsl:value-of select="." />
+        </xsl:when>
+
+        <xsl:when test="@role='smathcode'">
+            <p id="{@id}" class="smathcode"><span class="input" data-tooltip="{$ui_copyclip}"><xsl:apply-templates /></span></p>
         </xsl:when>
 
         <xsl:when test="@role='logocode'">
@@ -477,7 +471,7 @@
             </xsl:call-template>
         </xsl:when>
 
-        <xsl:when test="contains(' note warning tip ',@role)">
+        <xsl:when test="@role='note' or @role='tip' or @role='warning'">
             <xsl:call-template name="insertnote">
                 <xsl:with-param name="type" select="@role" />
             </xsl:call-template>
@@ -485,6 +479,14 @@
 
         <xsl:when test="contains(descendant::embedvar/@href,'/00/00000004.xhp#wie')"> <!-- special treatment of howtoget links -->
             <xsl:apply-templates />
+        </xsl:when>
+
+        <xsl:when test="@role='bascode' or @role='pycode'">
+            <xsl:value-of select="." />
+        </xsl:when>
+
+        <xsl:when test="@role='smathcode'">
+            <p id="{@id}" class="smathcode"><span class="input" data-tooltip="{$ui_copyclip}"><xsl:apply-templates /></span></p>
         </xsl:when>
 
         <xsl:otherwise>
