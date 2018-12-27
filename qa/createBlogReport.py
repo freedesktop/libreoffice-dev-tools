@@ -308,7 +308,12 @@ def createSection(fp, value, sectionName, action, actionPerson, plotColor):
         else:
             print(makeLI("{} ( {} )".format(statList['people'][item[0]]['name'], item[1])), file=fp)
         itCount += 1
+
     print("</ol>", file=fp)
+
+    while itCount <= 10:
+        print("&nbsp;",file=fp)
+        itCount += 1
 
     createPlot(value['day'], "bar", sectionName + " Per Day", sectionName, plotColor)
 
