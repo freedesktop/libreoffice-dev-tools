@@ -294,6 +294,9 @@ def createSection(fp, value, sectionName, action, actionPerson, plotColor):
 
     print(file=fp)
     print(makeStrong("Top 10 " + actionPerson), file=fp)
+    print('<a href="PATH_HERE/' + sectionName.replace(' ', '_') + \
+            '.png" rel="noopener"><img class="alignright" src="PATH_HERE/' + sectionName.replace(' ', '_') + \
+            '.png" alt="" width="300" height="225" /></a>', file=fp)
     print("<ol>", file=fp)
     sortedList = sorted(value["author"].items(), key=lambda x: x[1], reverse=True)
     itCount = 1
@@ -306,10 +309,6 @@ def createSection(fp, value, sectionName, action, actionPerson, plotColor):
             print(makeLI("{} ( {} )".format(statList['people'][item[0]]['name'], item[1])), file=fp)
         itCount += 1
     print("</ol>", file=fp)
-    print(file=fp)
-    print('<img src="PATH_HERE/' + sectionName.replace(' ', '_') + \
-            '.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
-    print(file=fp)
 
     createPlot(value['day'], "bar", sectionName + " Per Day", sectionName, plotColor)
 
