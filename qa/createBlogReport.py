@@ -448,7 +448,7 @@ def createReport(statList):
 
     print(makeH2("Evolution of Most Pressing Bugs"), file=fp)
     print(file=fp)
-    print('<img src="PATH_HERE/Most_Mressing_Bugs.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
+    print('<img src="PATH_HERE/Most_Pressing_Bugs.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
     print(file=fp)
     createPlot(statList['MPBCount'], "line", "Most Pressing Bugs Per Day", "Most Pressing Bugs", "orange")
 
