@@ -317,7 +317,8 @@ def createList(fp, value, listName):
     print(makeStrong(listName), file=fp)
     print("<ol>", file=fp)
     for k, v in value.items():
-        print(makeLI("{} {} ( Thanks to {} )".format(makeLink(urlPath + str(k), str(k)), v['summary'], v['author'])), file=fp)
+        print(makeLI("{} {} ( Thanks to {} )".format(makeLink(urlPath + str(k), "tdf#" +  str(k)),
+            v['summary'], v['author'])), file=fp)
     print("</ol>", file=fp)
     print(file=fp)
 
