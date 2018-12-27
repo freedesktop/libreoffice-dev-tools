@@ -37,6 +37,7 @@ def util_create_statList():
         'people' : {},
         'unconfirmedCount' : {},
         'regressionCount' : {},
+        'MPBCount' : {},
         'stat': {'oldest': datetime.now(), 'newest': datetime(2001, 1, 1)}
     }
 
@@ -77,6 +78,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
     unconfirmedCountPerDay = {}
     regressionsCountPerDay = {}
+    MPBCountPerDay = {}
     fixedBugs = []
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
@@ -118,6 +120,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             authorVerified = None
             isRegression = False
             isRegressionClosed = False
+            isMPB = False
+            isMPBClosed = False
 
             for action in row['history']:
                 actionMail = action['who']
@@ -130,6 +134,24 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 diffTime = (actionDate - creationDate).days
 
                 for change in action['changes']:
+                        if change['field_name'] == 'priority':
+                            addedPriority = change['added']
+                            removedPriority = change['removed']
+
+                            if not isMPBClosed:
+                                if not isMPB and addedPriority == "highest":
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in MPBCountPerDay:
+                                        MPBCountPerDay[strDay] = 0
+                                    MPBCountPerDay[strDay] += 1
+                                    isMPB = True
+
+                                if isMPB and removedPriority == "highest":
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in MPBCountPerDay:
+                                        MPBCountPerDay[strDay] = 0
+                                    MPBCountPerDay[strDay] -= 1
+                                    isMPB = False
 
                         if change['field_name'] == 'status':
                             addedStatus = change['added']
@@ -166,6 +188,22 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     regressionsCountPerDay[strDay] -= 1
                                     isRegressionClosed = True
 
+                            if isMPB:
+                                # the MPB is being reopened
+                                if isMPBClosed and common.isOpen(addedStatus):
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in MPBCountPerDay:
+                                        MPBCountPerDay[strDay] = 0
+                                    MPBCountPerDay[strDay] += 1
+                                    isMPBClosed = False
+
+                                # the MPB is being closed
+                                if not isMPBClosed and common.isClosed(addedStatus):
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in MPBCountPerDay:
+                                        MPBCountPerDay[strDay] = 0
+                                    MPBCountPerDay[strDay] -= 1
+                                    isMPBClosed = True
 
                             if check_date(actionDate, cfg):
                                 if removedStatus == "UNCONFIRMED":
@@ -297,6 +335,14 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
         statList['regressionCount'][single_day] = totalCount2
 
+        totalCount3 = 0
+        for k, v in MPBCountPerDay.items():
+            xDay = datetime.strptime( k, "%Y-%m-%d")
+            if xDay < single_date:
+                totalCount3 += v
+
+        statList['MPBCount'][single_day] = totalCount3
+
 def makeStrong(text):
     return "<strong>" + str(text) + "</strong>"
 
@@ -399,6 +445,12 @@ def createReport(statList):
     print('<img src="PATH_HERE/open_regressions.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
     print(file=fp)
     createPlot(statList['regressionCount'], "line", "Open regressions Per Day", "open regressions", "green")
+
+    print(makeH2("Evolution of Most Pressing Bugs"), file=fp)
+    print(file=fp)
+    print('<img src="PATH_HERE/Most_Mressing_Bugs.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
+    print(file=fp)
+    createPlot(statList['MPBCount'], "line", "Most Pressing Bugs Per Day", "Most Pressing Bugs", "orange")
 
     print(makeStrong('Thank you all for making Libreoffice rock!'), file=fp)
     print(makeStrong('Join us and help to keep LibreOffice super reliable!'), file=fp)
