@@ -36,6 +36,7 @@ def util_create_statList():
         'keywords': { k : util_create_basic_schema() for k in lKeywords},
         'people' : {},
         'unconfirmedCount' : {},
+        'regressionCount' : {},
         'stat': {'oldest': datetime.now(), 'newest': datetime(2001, 1, 1)}
     }
 
@@ -75,6 +76,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
 
     unconfirmedCountPerDay = {}
+    regressionsCountPerDay = {}
     fixedBugs = []
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
@@ -114,6 +116,9 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             dayVerified = None
             authorConfirmed = None
             authorVerified = None
+            isRegression = False
+            isRegressionClosed = False
+
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
@@ -143,6 +148,24 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     if strDay not in unconfirmedCountPerDay:
                                         unconfirmedCountPerDay[strDay] = 0
                                     unconfirmedCountPerDay[strDay] += 1
+
+                            if isRegression:
+                                # the regression is being reopened
+                                if isRegressionClosed and common.isOpen(addedStatus):
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in regressionsCountPerDay:
+                                        regressionsCountPerDay[strDay] = 0
+                                    regressionsCountPerDay[strDay] += 1
+                                    isRegressionClosed = False
+
+                                # the regression is being closed
+                                if not isRegressionClosed and common.isClosed(addedStatus):
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in regressionsCountPerDay:
+                                        regressionsCountPerDay[strDay] = 0
+                                    regressionsCountPerDay[strDay] -= 1
+                                    isRegressionClosed = True
+
 
                             if check_date(actionDate, cfg):
                                 if removedStatus == "UNCONFIRMED":
@@ -178,12 +201,29 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     isFixed = False
 
                         elif change['field_name'] == 'keywords':
+                            keywordsAdded = change['added'].split(", ")
+                            keywordsRemoved = change['removed'].split(", ")
+
                             if check_date(actionDate, cfg):
-                                keywordsAdded = change['added'].split(", ")
                                 for keyword in keywordsAdded:
                                     if keyword in lKeywords:
-                                        if keyword in rowKeywords:
-                                            util_increase_action(statList['keywords'][keyword], rowId, actionMail, actionDay, diffTime)
+                                        util_increase_action(statList['keywords'][keyword], rowId, actionMail, actionDay, diffTime)
+
+                            if not isRegressionClosed:
+                                if not isRegression and 'regression' in keywordsAdded:
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in regressionsCountPerDay:
+                                        regressionsCountPerDay[strDay] = 0
+                                    regressionsCountPerDay[strDay] += 1
+                                    isRegression = True
+
+                                if isRegression and 'regression' in keywordsRemoved:
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in regressionsCountPerDay:
+                                        regressionsCountPerDay[strDay] = 0
+                                    regressionsCountPerDay[strDay] -= 1
+                                    isRegression = False
+
 
                         elif change['field_name'] == 'blocks':
                             if check_date(actionDate, cfg):
@@ -241,13 +281,21 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                     if single_day not in statList[k0]['day']:
                         statList[k0]['day'][single_day] = 0
 
-        totalCount = 0
+        totalCount1 = 0
         for k, v in unconfirmedCountPerDay.items():
             xDay = datetime.strptime( k, "%Y-%m-%d")
             if xDay < single_date:
-                totalCount += v
+                totalCount1 += v
 
-        statList['unconfirmedCount'][single_day] = totalCount
+        statList['unconfirmedCount'][single_day] = totalCount1
+
+        totalCount2 = 0
+        for k, v in regressionsCountPerDay.items():
+            xDay = datetime.strptime( k, "%Y-%m-%d")
+            if xDay < single_date:
+                totalCount2 += v
+
+        statList['regressionCount'][single_day] = totalCount2
 
 def makeStrong(text):
     return "<strong>" + str(text) + "</strong>"
@@ -345,6 +393,12 @@ def createReport(statList):
     print('<img src="PATH_HERE/Unconfirmed_Bugs.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
     print(file=fp)
     createPlot(statList['unconfirmedCount'], "line", "Unconfirmed Bugs Per Day", "Unconfirmed Bugs", "blue")
+
+    print(makeH2("Evolution of Open Regressions"), file=fp)
+    print(file=fp)
+    print('<img src="PATH_HERE/open_regressions.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
+    print(file=fp)
+    createPlot(statList['regressionCount'], "line", "Open regressions Per Day", "open regressions", "green")
 
     print(makeStrong('Thank you all for making Libreoffice rock!'), file=fp)
     print(makeStrong('Join us and help to keep LibreOffice super reliable!'), file=fp)
