@@ -332,6 +332,7 @@ def createReport(statList):
     createList(fp, statList['criticalFixed'], "List of critical bugs fixed")
     createSection(fp, statList['verified'], "Verified bug fixes", "verified", "Verifiers", "palegreen")
     createSection(fp, statList['metabug'], "Categorized Bugs", "categorized with a metabug", "Categorizers", "lightpink")
+    createSection(fp, statList['keywords']['regression'], "Regression Bugs", "set as regressions", "", "mediumpurple")
     createSection(fp, statList['keywords']['bisected'], "Bisected Bugs", "bisected", "Bisecters", "orange")
 
     print(makeH2("Evolution of Unconfirmed Bugs"), file=fp)
