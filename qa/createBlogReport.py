@@ -37,7 +37,7 @@ def util_create_statList():
         'people' : {},
         'unconfirmedCount' : {},
         'regressionCount' : {},
-        'MPBCount' : {},
+        'highestCount' : {},
         'stat': {'oldest': datetime.now(), 'newest': datetime(2001, 1, 1)}
     }
 
@@ -78,7 +78,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
     unconfirmedCountPerDay = {}
     regressionsCountPerDay = {}
-    MPBCountPerDay = {}
+    highestCountPerDay = {}
     fixedBugs = []
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
@@ -120,8 +120,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             authorVerified = None
             isRegression = False
             isRegressionClosed = False
-            isMPB = False
-            isMPBClosed = False
+            isHighest = False
+            isHighestClosed = False
 
             for action in row['history']:
                 actionMail = action['who']
@@ -138,20 +138,20 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             addedPriority = change['added']
                             removedPriority = change['removed']
 
-                            if not isMPBClosed:
-                                if not isMPB and addedPriority == "highest":
+                            if not isHighestClosed:
+                                if not isHighest and addedPriority == "highest":
                                     strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in MPBCountPerDay:
-                                        MPBCountPerDay[strDay] = 0
-                                    MPBCountPerDay[strDay] += 1
-                                    isMPB = True
+                                    if strDay not in highestCountPerDay:
+                                        highestCountPerDay[strDay] = 0
+                                    highestCountPerDay[strDay] += 1
+                                    isHighest = True
 
-                                if isMPB and removedPriority == "highest":
+                                if isHighest and removedPriority == "highest":
                                     strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in MPBCountPerDay:
-                                        MPBCountPerDay[strDay] = 0
-                                    MPBCountPerDay[strDay] -= 1
-                                    isMPB = False
+                                    if strDay not in highestCountPerDay:
+                                        highestCountPerDay[strDay] = 0
+                                    highestCountPerDay[strDay] -= 1
+                                    isHighest = False
 
                         if change['field_name'] == 'status':
                             addedStatus = change['added']
@@ -188,22 +188,22 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     regressionsCountPerDay[strDay] -= 1
                                     isRegressionClosed = True
 
-                            if isMPB:
-                                # the MPB is being reopened
-                                if isMPBClosed and common.isOpen(addedStatus):
+                            if isHighest:
+                                # the Highest is being reopened
+                                if isHighestClosed and common.isOpen(addedStatus):
                                     strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in MPBCountPerDay:
-                                        MPBCountPerDay[strDay] = 0
-                                    MPBCountPerDay[strDay] += 1
-                                    isMPBClosed = False
+                                    if strDay not in highestCountPerDay:
+                                        highestCountPerDay[strDay] = 0
+                                    highestCountPerDay[strDay] += 1
+                                    isHighestClosed = False
 
-                                # the MPB is being closed
-                                if not isMPBClosed and common.isClosed(addedStatus):
+                                # the Highest is being closed
+                                if not isHighestClosed and common.isClosed(addedStatus):
                                     strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in MPBCountPerDay:
-                                        MPBCountPerDay[strDay] = 0
-                                    MPBCountPerDay[strDay] -= 1
-                                    isMPBClosed = True
+                                    if strDay not in highestCountPerDay:
+                                        highestCountPerDay[strDay] = 0
+                                    highestCountPerDay[strDay] -= 1
+                                    isHighestClosed = True
 
                             if check_date(actionDate, cfg):
                                 if removedStatus == "UNCONFIRMED":
@@ -336,12 +336,12 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
         statList['regressionCount'][single_day] = totalCount2
 
         totalCount3 = 0
-        for k, v in MPBCountPerDay.items():
+        for k, v in highestCountPerDay.items():
             xDay = datetime.strptime( k, "%Y-%m-%d")
             if xDay < single_date:
                 totalCount3 += v
 
-        statList['MPBCount'][single_day] = totalCount3
+        statList['highestCount'][single_day] = totalCount3
 
 def makeStrong(text):
     return "<strong>" + str(text) + "</strong>"
@@ -450,7 +450,7 @@ def createReport(statList):
         fp, statList['regressionCount'], "Open Regressions",
         "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&keywords=regression%2C &keywords_type=allwords&query_format=advanced&resolution=---", "green")
     createEvolutionSection(
-        fp, statList['MPBCount'], "Most Pressing Bugs",
+        fp, statList['highestCount'], "Highest Priority Bugs",
         "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&priority=highest&query_format=advanced&resolution=---", "sandybrown")
 
     print(makeStrong('Thank you all for making Libreoffice rock!'), file=fp)
