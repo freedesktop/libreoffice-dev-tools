@@ -411,6 +411,15 @@ def createSection(fp, value, sectionName, action, actionPerson, plotColor):
 
     createPlot(value['day'], "bar", sectionName + " Per Day", sectionName, plotColor)
 
+def createEvolutionSection(fp, value, sectionName, urlParam, color):
+    urlPath = "https://bugs.documentfoundation.org/buglist.cgi?"
+    print(makeH2("Evolution of {}".format(sectionName)), file=fp)
+    print("Check the current list of {} {}".format(sectionName.lower(), makeLink(urlPath + urlParam, "here")), file=fp)
+    print('<img src="PATH_HERE/{}.png" alt="" width="640" height="480" class="alignnone size-full" />'.format(
+        sectionName.replace(" ", "_")), file=fp)
+    createPlot(value, "line", sectionName + " Per Day", sectionName, color)
+
+
 def createList(fp, value, listName):
     urlPath = "https://bugs.documentfoundation.org/show_bug.cgi?id="
     print(makeStrong(listName), file=fp)
@@ -434,23 +443,15 @@ def createReport(statList):
     createSection(fp, statList['keywords']['regression'], "Regression Bugs", "set as regressions", "", "mediumpurple")
     createSection(fp, statList['keywords']['bisected'], "Bisected Bugs", "bisected", "Bisecters", "orange")
 
-    print(makeH2("Evolution of Unconfirmed Bugs"), file=fp)
-    print(file=fp)
-    print('<img src="PATH_HERE/Unconfirmed_Bugs.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
-    print(file=fp)
-    createPlot(statList['unconfirmedCount'], "line", "Unconfirmed Bugs Per Day", "Unconfirmed Bugs", "blue")
-
-    print(makeH2("Evolution of Open Regressions"), file=fp)
-    print(file=fp)
-    print('<img src="PATH_HERE/open_regressions.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
-    print(file=fp)
-    createPlot(statList['regressionCount'], "line", "Open regressions Per Day", "open regressions", "green")
-
-    print(makeH2("Evolution of Most Pressing Bugs"), file=fp)
-    print(file=fp)
-    print('<img src="PATH_HERE/Most_Pressing_Bugs.png" alt="" width="640" height="480" class="alignnone size-full" />', file=fp)
-    print(file=fp)
-    createPlot(statList['MPBCount'], "line", "Most Pressing Bugs Per Day", "Most Pressing Bugs", "orange")
+    createEvolutionSection(
+        fp, statList['unconfirmedCount'], "Unconfirmed Bugs",
+        "bug_status=UNCONFIRMED&query_format=advanced&resolution=---", "blue")
+    createEvolutionSection(
+        fp, statList['regressionCount'], "Open Regressions",
+        "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&keywords=regression%2C &keywords_type=allwords&query_format=advanced&resolution=---", "green")
+    createEvolutionSection(
+        fp, statList['MPBCount'], "Most Pressing Bugs",
+        "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&priority=highest&query_format=advanced&resolution=---", "sandybrown")
 
     print(makeStrong('Thank you all for making Libreoffice rock!'), file=fp)
     print(makeStrong('Join us and help to keep LibreOffice super reliable!'), file=fp)
