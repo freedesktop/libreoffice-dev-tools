@@ -38,6 +38,7 @@ def util_create_statList():
         'unconfirmedCount' : {},
         'regressionCount' : {},
         'highestCount' : {},
+        'highCount' : {},
         'stat': {'oldest': datetime.now(), 'newest': datetime(2001, 1, 1)}
     }
 
@@ -79,6 +80,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
     unconfirmedCountPerDay = {}
     regressionsCountPerDay = {}
     highestCountPerDay = {}
+    highCountPerDay = {}
     fixedBugs = []
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
@@ -122,6 +124,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             isRegressionClosed = False
             isHighest = False
             isHighestClosed = False
+            isHigh = False
+            isHighClosed = False
 
             for action in row['history']:
                 actionMail = action['who']
@@ -152,6 +156,21 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                         highestCountPerDay[strDay] = 0
                                     highestCountPerDay[strDay] -= 1
                                     isHighest = False
+
+                            if not isHighClosed:
+                                if not isHigh and addedPriority == "high":
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in highCountPerDay:
+                                        highCountPerDay[strDay] = 0
+                                    highCountPerDay[strDay] += 1
+                                    isHigh = True
+
+                                if isHigh and removedPriority == "high":
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in highCountPerDay:
+                                        highCountPerDay[strDay] = 0
+                                    highCountPerDay[strDay] -= 1
+                                    isHigh = False
 
                         if change['field_name'] == 'status':
                             addedStatus = change['added']
@@ -189,7 +208,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     isRegressionClosed = True
 
                             if isHighest:
-                                # the Highest is being reopened
+                                # the Highest priority bug is being reopened
                                 if isHighestClosed and common.isOpen(addedStatus):
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in highestCountPerDay:
@@ -197,13 +216,30 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     highestCountPerDay[strDay] += 1
                                     isHighestClosed = False
 
-                                # the Highest is being closed
+                                # the Highest priority bug is being closed
                                 if not isHighestClosed and common.isClosed(addedStatus):
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in highestCountPerDay:
                                         highestCountPerDay[strDay] = 0
                                     highestCountPerDay[strDay] -= 1
                                     isHighestClosed = True
+
+                            if isHigh:
+                                # the High priority bug is being reopened
+                                if isHighClosed and common.isOpen(addedStatus):
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in highCountPerDay:
+                                        highCountPerDay[strDay] = 0
+                                    highCountPerDay[strDay] += 1
+                                    isHighClosed = False
+
+                                # the High priority bug is being closed
+                                if not isHighClosed and common.isClosed(addedStatus):
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in highCountPerDay:
+                                        highCountPerDay[strDay] = 0
+                                    highCountPerDay[strDay] -= 1
+                                    isHighClosed = True
 
                             if check_date(actionDate, cfg):
                                 if removedStatus == "UNCONFIRMED":
@@ -343,6 +379,14 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
         statList['highestCount'][single_day] = totalCount3
 
+        totalCount4 = 0
+        for k, v in highCountPerDay.items():
+            xDay = datetime.strptime( k, "%Y-%m-%d")
+            if xDay < single_date:
+                totalCount4 += v
+
+        statList['highCount'][single_day] = totalCount4
+
 def makeStrong(text):
     return "<strong>" + str(text) + "</strong>"
 
@@ -452,6 +496,9 @@ def createReport(statList):
     createEvolutionSection(
         fp, statList['highestCount'], "Highest Priority Bugs",
         "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&priority=highest&query_format=advanced&resolution=---", "sandybrown")
+    createEvolutionSection(
+        fp, statList['highCount'], "High Priority Bugs",
+        "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&priority=high&query_format=advanced&resolution=---", "indianred")
 
     print(makeStrong('Thank you all for making Libreoffice rock!'), file=fp)
     print(makeStrong('Join us and help to keep LibreOffice super reliable!'), file=fp)
