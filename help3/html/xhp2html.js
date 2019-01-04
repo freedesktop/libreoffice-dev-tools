@@ -56,7 +56,7 @@ function displayResult()
     if (window.ActiveXObject || xhttp.responseType == "msxml-document")
     {
         ex = xml.transformNode(xsl);
-        document.getElementById("renderedpage").innerHTML = ex;
+        document.getElementById("renderedpage").appendChild(ex.getElementById("DisplayArea"));
     }
     // code for Chrome, Firefox, Opera, etc.
     else if (document.implementation && document.implementation.createDocument)
@@ -68,9 +68,7 @@ function displayResult()
         xsltProcessor.setParameter("", "language", language)
         xsltProcessor.setParameter("", "productname", productname)
         xsltProcessor.setParameter("", "productversion", productversion)
-//         document.getElementById("renderedpage").innerHTML('<link  type="text/css" href="/ed/hc2/help3xsl/default.css" rel="Stylesheet" />"');
         var resultDocument = xsltProcessor.transformToFragment(xml, document);
-
         document.getElementById("renderedpage").appendChild(resultDocument.getElementById("DisplayArea"));
     }
 }

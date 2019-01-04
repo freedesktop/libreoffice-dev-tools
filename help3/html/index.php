@@ -109,7 +109,6 @@
 </div>
 </body>
 <script type="text/javascript" src="/ed/hc2/help3xsl/help.js"></script>
-<!--<script type="text/javascript" src="xhp2html.js"></script>-->
 <script type="text/javascript" src="autocomplete.js"></script>
 <script type="text/javascript" src="snippets.js"></script>
 </html>

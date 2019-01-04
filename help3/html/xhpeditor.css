@@ -28,7 +28,7 @@
     left:0%;
     right:50%;
     position: absolute;
-    background: yellow;
+    background: Beige;
     display:block;
     border:1px solid grey;
 }
@@ -37,7 +37,7 @@
     right:0%;
     left: 50%;
     position:absolute;
-    background: cyan;
+    background: AliceBlue;
     overflow: scroll;
     border:1px solid grey;
 }
@@ -302,7 +302,7 @@ icontable {
 .debug {
     border: 1px solid black;
     padding: 3px;
-    display: none;
+    display: block;
     background-color: #222;
     color: red;
     text-align: left;
