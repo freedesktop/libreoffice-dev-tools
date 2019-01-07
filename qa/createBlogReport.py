@@ -10,6 +10,7 @@
 import common
 from datetime import datetime, timedelta
 import argparse
+import math
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -414,10 +415,14 @@ def createPlot(valueDict, plotType, plotTitle, plotLabel, plotColor):
     plt.legend();
     ax = plt.gca()
     ax.grid(axis="y", linestyle='--')
-    #Remove even labels
-    for count, i in enumerate(ax.get_xticklabels()):
-        if count % 2 == 1:
-            i.set_visible(False)
+    #Remove labels depending on number of elements
+    total = math.ceil( len(ax.get_xticklabels()) / 20 )
+    for idx, val in enumerate(ax.get_xticklabels()):
+        #Hide all tick labels by default, otherwise it doesn't work
+        val.set_visible(False)
+        if idx % total == 0:
+            val.set_visible(True)
+
     #plt.show()
     filePath = "/tmp/" + plotLabel.replace(" ", "_") + ".png"
     print("Saving plot " + plotLabel + " to " + filePath)
