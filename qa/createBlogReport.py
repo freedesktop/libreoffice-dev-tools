@@ -82,7 +82,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
     regressionsCountPerDay = {}
     highestCountPerDay = {}
     highCountPerDay = {}
-    fixedBugs = []
+    fixedBugs = {}
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
 
@@ -267,12 +267,12 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             if check_date(actionDate, cfg):
                                 addedResolution = change['added']
                                 removedResolution = change['removed']
-                                if addedResolution == 'FIXED' and not removedResolution:
-                                    fixedBugs.append(rowId)
+                                if addedResolution == 'FIXED':
+                                    fixedBugs[rowId] = actionDate
                                     isFixed = True
 
-                                elif removedResolution == 'FIXED' and isFixed and not addedResolution:
-                                    fixedBugs.pop()
+                                elif removedResolution == 'FIXED' and isFixed:
+                                    del fixedBugs[rowId]
                                     isFixed = False
 
                         elif change['field_name'] == 'keywords':
@@ -309,7 +309,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
             commentMail = None
             comments = row['comments'][1:]
-            bugFixers = set()
+            bugFixers = []
+            commitNoticiation=False
             for idx, comment in enumerate(comments):
                 commentMail = comment['creator']
                 commentDate = datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
@@ -317,18 +318,24 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 common.util_check_bugzilla_mail(
                         statList, commentMail, '', commentDate, rowId)
 
-                if check_date(commentDate, cfg) and rowId in fixedBugs:
+                if rowId in fixedBugs:
                     if commentMail == "libreoffice-commits@lists.freedesktop.org":
                         commentText = comment['text']
                         author =  commentText.split(' committed a patch related')[0]
                         if author not in bugFixers:
-                            bugFixers.add(author)
+                            bugFixers.append(author)
                             diffTime = (commentDate - creationDate).days
                             commentDay = commentDate.strftime("%Y-%m-%d")
                             util_increase_action(statList['fixed'], rowId, author, commentDay, diffTime)
+                            commitNoticiation=True
                             if 'crash' in row['summary'].lower() or row['priority'] == "highest":
                                 statList['criticalFixed'][rowId]= {'summary': row['summary'], 'author': author}
 
+            if rowId in fixedBugs and not commitNoticiation:
+                actionDate = fixedBugs[rowId]
+                actionDay = actionDate.strftime("%Y-%m-%d")
+                diffTime = (actionDate - creationDate).days
+                util_increase_action(statList['fixed'], rowId, 'UNKNOWN', actionDay, diffTime)
 
             for person in row['cc_detail']:
                 email = person['email']
@@ -447,6 +454,8 @@ def createSection(fp, value, sectionName, action, actionPerson, plotColor):
         if itCount > 10:
             break
         if action == 'fixed':
+            if item[0] == 'UNKNOWN':
+                continue
             print(makeLI("{} ( {} )".format(item[0], item[1])), file=fp)
         else:
             print(makeLI("{} ( {} )".format(statList['people'][item[0]]['name'], item[1])), file=fp)
