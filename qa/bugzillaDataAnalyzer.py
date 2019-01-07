@@ -232,7 +232,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                             newStatus = None
 
-                        if actionDate >= cfg['reportPeriod']:
+                        if actionDate >= cfg['reportPeriod'] and row['resolution'] == 'FIXED':
                             if addedResolution == 'FIXED':
                                 fixedBugs[rowId] = actionDate
                                 isFixed = True
