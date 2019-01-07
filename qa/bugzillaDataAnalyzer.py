@@ -173,9 +173,32 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 # Use this variable in case the status is set before the resolution
                 newStatus = None
                 for change in action['changes']:
-                    if change['field_name'] == 'is_confirmed':
-                        if actionDate >= cfg['reportPeriod'] and row['is_confirmed']:
-                            if change['added'] == "1":
+                    if change['field_name'] == 'status':
+                        addedStatus = change['added']
+                        removedStatus = change['removed']
+
+                        if actionDate >= cfg['reportPeriod']:
+                            if not common.isClosed(removedStatus) and \
+                                common.isClosed(addedStatus) and common.isClosed(row['status']):
+                                if isClosed:
+                                    util_decrease_action(statList[kindOfTicket]['closed'], rowId, creatorMail, rowStatus, rowProduct,
+                                        rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed)
+
+                                    util_decrease_action(statList['all']['closed'], rowId, creatorMail, rowStatus, rowProduct,
+                                        rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed)
+
+                                weekClosed = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
+                                monthClosed = str(actionDate.year) + '-' + str(actionDate.strftime("%m"))
+                                difftimeClosed = (actionDate - creationDate).days
+                                util_increase_action(statList[kindOfTicket]['closed'], rowId, actionMail, rowStatus, rowProduct,
+                                    rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed, difftimeClosed)
+
+                                util_increase_action(statList['all']['closed'], rowId, actionMail, rowStatus, rowProduct,
+                                    rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed, difftimeClosed)
+
+                                isClosed = True
+
+                            if removedStatus == "UNCONFIRMED":
                                 weekConfirmed = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
                                 monthConfirmed = str(actionDate.year) + '-' + str(actionDate.strftime("%m"))
                                 difftimeConfirmed = (actionDate - creationDate).days
@@ -184,41 +207,16 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                                 util_increase_action(statList['all']['confirmed'], rowId, actionMail, rowStatus, rowProduct,
                                     rowComponent, rowResolution, rowPlatform, rowSystem, weekConfirmed, monthConfirmed, difftimeConfirmed)
-
                                 isConfirmed = True
 
-                            elif isConfirmed:
+                            elif addedStatus == 'UNCONFIRMED' and isConfirmed:
                                 util_decrease_action(statList[kindOfTicket]['confirmed'], rowId, creatorMail, rowStatus, rowProduct,
                                     rowComponent, rowResolution, rowPlatform, rowSystem, weekConfirmed, monthConfirmed)
 
                                 util_decrease_action(statList['all']['confirmed'], rowId, creatorMail, rowStatus, rowProduct,
                                     rowComponent, rowResolution, rowPlatform, rowSystem, weekConfirmed, monthConfirmed)
-
                                 isConfirmed = False
 
-                    if change['field_name'] == 'status':
-                        addedStatus = change['added']
-                        removedStatus = change['removed']
-
-                        if actionDate >= cfg['reportPeriod'] and not common.isClosed(removedStatus) and \
-                                common.isClosed(addedStatus) and common.isClosed(row['status']):
-                            if isClosed:
-                                util_decrease_action(statList[kindOfTicket]['closed'], rowId, creatorMail, rowStatus, rowProduct,
-                                    rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed)
-
-                                util_decrease_action(statList['all']['closed'], rowId, creatorMail, rowStatus, rowProduct,
-                                    rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed)
-
-                            weekClosed = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
-                            monthClosed = str(actionDate.year) + '-' + str(actionDate.strftime("%m"))
-                            difftimeClosed = (actionDate - creationDate).days
-                            util_increase_action(statList[kindOfTicket]['closed'], rowId, actionMail, rowStatus, rowProduct,
-                                rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed, difftimeClosed)
-
-                            util_increase_action(statList['all']['closed'], rowId, actionMail, rowStatus, rowProduct,
-                                rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed, difftimeClosed)
-
-                            isClosed = True
 
                         if  addedStatus == 'RESOLVED' or addedStatus == 'VERIFIED':
                             if(rowResolution):
