@@ -114,9 +114,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
-    fixedBugs = []
+    fixedBugs = {}
     for key, row in bugzillaData['bugs'].items():
-        rowId = row['id']
 
         #Ignore META bugs and deletionrequest bugs.
         if not row['summary'].lower().startswith('[meta]') and row['component'].lower() != 'deletionrequest':
@@ -126,6 +125,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             if creationDate > statNewDate:
                 statNewDate = creationDate
 
+            rowId = row['id']
             rowStatus = row['status']
             rowResolution = row['resolution']
 
@@ -179,8 +179,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                         removedStatus = change['removed']
 
                         if actionDate >= cfg['reportPeriod']:
-                            if not common.isClosed(removedStatus) and \
-                                common.isClosed(addedStatus) and common.isClosed(row['status']):
+                            if common.isClosed(addedStatus) and common.isClosed(row['status']):
                                 if isClosed:
                                     util_decrease_action(statList[kindOfTicket]['closed'], rowId, creatorMail, rowStatus, rowProduct,
                                         rowComponent, rowResolution, rowPlatform, rowSystem, weekClosed, monthClosed)
@@ -235,11 +234,11 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                         if actionDate >= cfg['reportPeriod']:
                             if addedResolution == 'FIXED':
-                                fixedBugs.append(rowId)
+                                fixedBugs[rowId] = actionDate
                                 isFixed = True
 
                             elif removedResolution == 'FIXED' and isFixed:
-                                fixedBugs.pop()
+                                del fixedBugs[rowId]
                                 isFixed = False
 
                     elif change['field_name'] == 'keywords':
@@ -258,7 +257,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
             commentMail = None
             comments = row['comments'][1:]
-            bugFixers = set()
+            bugFixers = []
+            commitNoticiation=False
             for idx, comment in enumerate(comments):
                 commentMail = comment['creator']
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
@@ -266,12 +266,12 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 common.util_check_bugzilla_mail(
                         statList, commentMail, '', commentDate, rowId)
 
-                if commentDate >= cfg['reportPeriod'] and rowId in fixedBugs:
+                if rowId in fixedBugs:
                     if commentMail == "libreoffice-commits@lists.freedesktop.org":
                         commentText = comment['text']
                         author =  commentText.split(' committed a patch related')[0]
                         if author not in bugFixers:
-                            bugFixers.add(author)
+                            bugFixers.append(author)
                             difftimeFixed = (commentDate - creationDate).days
                             weekFixed = str(commentDate.year) + '-' + str(commentDate.strftime("%V"))
                             monthFixed = str(commentDate.year) + '-' + str(commentDate.strftime("%m"))
@@ -280,6 +280,18 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                             util_increase_action(statList['all']['fixed'], rowId, author, rowStatus, rowProduct,
                                 rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed, difftimeFixed)
+                            commitNoticiation=True
+
+            if rowId in fixedBugs and not commitNoticiation:
+                actionDate = fixedBugs[rowId]
+                difftimeFixed = (actionDate - creationDate).days
+                weekFixed = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
+                monthFixed = str(actionDate.year) + '-' + str(actionDate.strftime("%m"))
+                util_increase_action(statList[kindOfTicket]['fixed'], rowId, "UNKNOWN", rowStatus, rowProduct,
+                    rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed, difftimeFixed)
+
+                util_increase_action(statList['all']['fixed'], rowId, "UNKNOWN", rowStatus, rowProduct,
+                    rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed, difftimeFixed)
 
             for person in row['cc_detail']:
                 email = person['email']
@@ -318,13 +330,15 @@ def util_print_QA_line_data(statList, dValue, kind, action, total_count):
     count = 0
     for i1,i2 in d_view:
         try:
-            count += 1
             if count <= total_count:
                 usersString += statList['people'][i2]['name'] + ' ( ' + str(i1) + ' ) \n'
             else:
                 break
         except:
+            if i2 == 'UNKNOWN':
+                continue
             usersString += i2 + ' ( ' + str(i1) + ' ) \n'
+        count += 1
 
     print(usersString[:-2], file=fp)
 
