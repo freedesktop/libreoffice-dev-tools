@@ -21,7 +21,6 @@
 
 <xsl:output indent="yes" method="html" doctype-system= "about:legacy-compat"/>
 
-<xsl:include href="hc2/help3xsl/localized.xsl"/>
 <xsl:include href="hc2/help3xsl/links.txt.xsl"/>
 <!--
 ############################
@@ -1064,7 +1063,7 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                <xsl:value-of select="concat($target,'media/icon-themes/',$aux00)"/>
+                <xsl:value-of select="concat($img_url_prefix,$aux00)"/>
             </xsl:when>
             <xsl:otherwise>
                 <xsl:value-of select="concat($target,@src)"/>

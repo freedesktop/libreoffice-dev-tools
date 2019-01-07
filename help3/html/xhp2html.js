@@ -7,6 +7,9 @@
  *
  */
 
+/* change these parameters to fit your installation */
+
+var prefixURL="http://localhost/ed/"
 var helpcontent2 = "/hc2/";
 var productname = "LibreOffice";
 var productversion = "6.3";
@@ -32,11 +35,13 @@ function loadDoc(filename, isXML)
 //         }
 //     };
 
-    xhttp.open("GET", filename, false);
+    xhttp.open("GET", prefixURL + filename, false);
     try {xhttp.responseType = "msxml-document"} catch(err) {} // Helping IE11
 //     if isXML=true return XML otherwise return a text string
     xhttp.send(null);
-    return (isXML) ? xhttp.responseXML : xhttp.responseText;
+    var response =  (isXML) ? xhttp.responseXML : xhttp.responseText;
+    delete xhttp;
+    return response
 }
 
 function displayResult()
@@ -49,8 +54,10 @@ function displayResult()
     var oParser = new DOMParser();
     // Parse XML contents
     var xml = oParser.parseFromString( editor.doc.getValue(), "application/xml");
-    // Load XSLT
-    var xsl = loadDoc("/ed/ed_transform.xsl", true);
+    // Load XSLT as TXT because XML it has issues
+    var xsl1 = loadDoc("ed_transform.xsl", false);
+    var oParser2 = new DOMParser();
+    var xsl = oParser2.parseFromString( xsl1, "application/xml");
     // Process transformation & display in 'renderedpage'
     // code for IE
     if (window.ActiveXObject || xhttp.responseType == "msxml-document")
@@ -63,11 +70,11 @@ function displayResult()
     {
         var xsltProcessor = new XSLTProcessor();
         xsltProcessor.importStylesheet(xsl);
-        xsltProcessor.setParameter("", "root", root)
-        xsltProcessor.setParameter("", "local", local)
-        xsltProcessor.setParameter("", "language", language)
-        xsltProcessor.setParameter("", "productname", productname)
-        xsltProcessor.setParameter("", "productversion", productversion)
+        xsltProcessor.setParameter("", "root", root);
+        xsltProcessor.setParameter("", "local", local);
+        xsltProcessor.setParameter("", "language", language);
+        xsltProcessor.setParameter("", "productname", productname);
+        xsltProcessor.setParameter("", "productversion", productversion);
         var resultDocument = xsltProcessor.transformToFragment(xml, document);
         document.getElementById("renderedpage").appendChild(resultDocument.getElementById("DisplayArea"));
     }
