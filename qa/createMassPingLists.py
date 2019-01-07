@@ -22,7 +22,7 @@ def analyze_bugzilla(statList, bugzillaData):
 
     for key, row in bugzillaData['bugs'].items():
         #Ignore META bugs and deletionrequest bugs.
-        if not row['summary'].lower().startswith('[meta]') and row['component'] != 'deletionrequest':
+        if not row['summary'].lower().startswith('[meta]') and row['component'].lower() != 'deletionrequest':
             rowId = row['id']
 
             comments = row['comments'][1:]

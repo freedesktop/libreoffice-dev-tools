@@ -36,7 +36,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
         rowId = row['id']
 
         #Ignore META bugs and deletionrequest bugs.
-        if not row['summary'].lower().startswith('[meta]') and row['component'] != 'deletionrequest':
+        if not row['summary'].lower().startswith('[meta]') and row['component'].lower() != 'deletionrequest':
             rowStatus = row['status']
             rowResolution = row['resolution']
 
