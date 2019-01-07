@@ -114,6 +114,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
     statList['addDate'] = datetime.date.today().strftime('%Y-%m-%d')
 
+    fixedBugs = []
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
 
@@ -224,31 +225,22 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             else:
                                 newStatus = addedStatus
 
-                        if actionDate >= cfg['reportPeriod'] and addedStatus == 'RESOLVED_FIXED' and \
-                                removedStatus != 'REOPENED' and row['resolution'] == 'FIXED':
-                            if isFixed:
-                                util_decrease_action(statList[kindOfTicket]['fixed'], rowId, creatorMail, rowStatus, rowProduct,
-                                    rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed)
-
-                                util_decrease_action(statList['all']['fixed'], rowId, creatorMail, rowStatus, rowProduct,
-                                    rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed)
-
-                            weekFixed = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
-                            monthFixed = str(actionDate.year) + '-' + str(actionDate.strftime("%m"))
-                            difftimeFixed = (actionDate - creationDate).days
-                            util_increase_action(statList[kindOfTicket]['fixed'], rowId, actionMail, rowStatus, rowProduct,
-                                rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed, difftimeFixed)
-
-                            util_increase_action(statList['all']['fixed'], rowId, actionMail, rowStatus, rowProduct,
-                                rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed, difftimeFixed)
-
-                            isFixed = True
-
                     elif change['field_name'] == 'resolution':
+                        addedResolution = change['added']
+                        removedResolution = change['removed']
                         if newStatus:
-                            addedStatus = newStatus + "_" + change['added']
+                            addedStatus = newStatus + "_" + addedResolution
 
                             newStatus = None
+
+                        if actionDate >= cfg['reportPeriod']:
+                            if addedResolution == 'FIXED':
+                                fixedBugs.append(rowId)
+                                isFixed = True
+
+                            elif removedResolution == 'FIXED' and isFixed:
+                                fixedBugs.pop()
+                                isFixed = False
 
                     elif change['field_name'] == 'keywords':
                         keywordsAdded = change['added'].split(", ")
@@ -266,12 +258,28 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
             commentMail = None
             comments = row['comments'][1:]
+            bugFixers = set()
             for idx, comment in enumerate(comments):
                 commentMail = comment['creator']
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
 
                 common.util_check_bugzilla_mail(
                         statList, commentMail, '', commentDate, rowId)
+
+                if commentDate >= cfg['reportPeriod'] and rowId in fixedBugs:
+                    if commentMail == "libreoffice-commits@lists.freedesktop.org":
+                        commentText = comment['text']
+                        author =  commentText.split(' committed a patch related')[0]
+                        if author not in bugFixers:
+                            bugFixers.add(author)
+                            difftimeFixed = (commentDate - creationDate).days
+                            weekFixed = str(commentDate.year) + '-' + str(commentDate.strftime("%V"))
+                            monthFixed = str(commentDate.year) + '-' + str(commentDate.strftime("%m"))
+                            util_increase_action(statList[kindOfTicket]['fixed'], rowId, author, rowStatus, rowProduct,
+                                rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed, difftimeFixed)
+
+                            util_increase_action(statList['all']['fixed'], rowId, author, rowStatus, rowProduct,
+                                rowComponent, rowResolution, rowPlatform, rowSystem, weekFixed, monthFixed, difftimeFixed)
 
             for person in row['cc_detail']:
                 email = person['email']
@@ -316,7 +324,7 @@ def util_print_QA_line_data(statList, dValue, kind, action, total_count):
             else:
                 break
         except:
-            continue
+            usersString += i2 + ' ( ' + str(i1) + ' ) \n'
 
     print(usersString[:-2], file=fp)
 
