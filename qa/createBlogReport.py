@@ -15,7 +15,7 @@ import math
 import matplotlib
 import matplotlib.pyplot as plt
 
-lKeywords = ['haveBacktrace', 'regression', 'bisected']
+lKeywords = ['havebacktrace', 'regression', 'bisected']
 
 
 def util_create_basic_schema():
@@ -38,6 +38,7 @@ def util_create_statList():
         'people' : {},
         'unconfirmedCount' : {},
         'regressionCount' : {},
+        'bibisectRequestCount' : {},
         'highestCount' : {},
         'highCount' : {},
         'stat': {'oldest': datetime.now(), 'newest': datetime(2001, 1, 1)}
@@ -80,9 +81,11 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
     unconfirmedCountPerDay = {}
     regressionsCountPerDay = {}
+    bibisectRequestCountPerDay = {}
     highestCountPerDay = {}
     highCountPerDay = {}
     fixedBugs = {}
+
     for key, row in bugzillaData['bugs'].items():
         rowId = row['id']
 
@@ -123,10 +126,13 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             authorVerified = None
             isRegression = False
             isRegressionClosed = False
+            isBibisectRequest = False
+            isBibisectRequestClosed = False
             isHighest = False
             isHighestClosed = False
             isHigh = False
             isHighClosed = False
+            isThisBugClosed = False
 
             for action in row['history']:
                 actionMail = action['who']
@@ -143,7 +149,9 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             addedPriority = change['added']
                             removedPriority = change['removed']
 
-                            if not isHighestClosed:
+                            # Sometimes the priority is increased to highest after the bug is fixed
+                            # Ignore those cases
+                            if not isThisBugClosed and not isHighestClosed:
                                 if not isHighest and addedPriority == "highest":
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in highestCountPerDay:
@@ -158,6 +166,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     highestCountPerDay[strDay] -= 1
                                     isHighest = False
 
+                            # TODO: IsThisBugClosed should be check here, but the result is not accurate
                             if not isHighClosed:
                                 if not isHigh and addedPriority == "high":
                                     strDay = actionDate.strftime("%Y-%m-%d")
@@ -177,6 +186,11 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             addedStatus = change['added']
                             removedStatus = change['removed']
 
+                            if common.isOpen(addedStatus):
+                                isThisBugClosed = False
+                            else:
+                                isThisBugClosed = True
+
                             #See above
                             if rowId >= 89589:
                                 if removedStatus == "UNCONFIRMED":
@@ -193,7 +207,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                             if isRegression:
                                 # the regression is being reopened
-                                if isRegressionClosed and common.isOpen(addedStatus):
+                                if isRegressionClosed and not isThisBugClosed:
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in regressionsCountPerDay:
                                         regressionsCountPerDay[strDay] = 0
@@ -201,16 +215,33 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     isRegressionClosed = False
 
                                 # the regression is being closed
-                                if not isRegressionClosed and common.isClosed(addedStatus):
+                                if not isRegressionClosed and isThisBugClosed:
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in regressionsCountPerDay:
                                         regressionsCountPerDay[strDay] = 0
                                     regressionsCountPerDay[strDay] -= 1
                                     isRegressionClosed = True
 
+                            if isBibisectRequest:
+                                # the bibisectRequest is being reopened
+                                if isBibisectRequestClosed and not isThisBugClosed:
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in bibisectRequestCountPerDay:
+                                        bibisectRequestCountPerDay[strDay] = 0
+                                    bibisectRequestCountPerDay[strDay] += 1
+                                    isBibisectRequestClosed = False
+
+                                # the bibisectRequest is being closed
+                                if not isBibisectRequestClosed and isThisBugClosed:
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in bibisectRequestCountPerDay:
+                                        bibisectRequestCountPerDay[strDay] = 0
+                                    bibisectRequestCountPerDay[strDay] -= 1
+                                    isBibisectRequestClosed = True
+
                             if isHighest:
                                 # the Highest priority bug is being reopened
-                                if isHighestClosed and common.isOpen(addedStatus):
+                                if isHighestClosed and not isThisBugClosed:
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in highestCountPerDay:
                                         highestCountPerDay[strDay] = 0
@@ -218,7 +249,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     isHighestClosed = False
 
                                 # the Highest priority bug is being closed
-                                if not isHighestClosed and common.isClosed(addedStatus):
+                                if not isHighestClosed and isThisBugClosed:
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in highestCountPerDay:
                                         highestCountPerDay[strDay] = 0
@@ -227,7 +258,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                             if isHigh:
                                 # the High priority bug is being reopened
-                                if isHighClosed and common.isOpen(addedStatus):
+                                if isHighClosed and not isThisBugClosed:
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in highCountPerDay:
                                         highCountPerDay[strDay] = 0
@@ -235,7 +266,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     isHighClosed = False
 
                                 # the High priority bug is being closed
-                                if not isHighClosed and common.isClosed(addedStatus):
+                                if not isHighClosed and isThisBugClosed:
                                     strDay = actionDate.strftime("%Y-%m-%d")
                                     if strDay not in highCountPerDay:
                                         highCountPerDay[strDay] = 0
@@ -276,14 +307,15 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     isFixed = False
 
                         elif change['field_name'] == 'keywords':
-                            keywordsAdded = change['added'].split(", ")
-                            keywordsRemoved = change['removed'].split(", ")
+                            keywordsAdded = change['added'].lower().split(", ")
+                            keywordsRemoved = change['removed'].lower().split(", ")
 
                             if check_date(actionDate, cfg):
                                 for keyword in keywordsAdded:
                                     if keyword in lKeywords:
                                         util_increase_action(statList['keywords'][keyword], rowId, actionMail, actionDay, diffTime)
 
+                            # TODO: IsThisBugClosed should be check here, but the result is not accurate
                             if not isRegressionClosed:
                                 if not isRegression and 'regression' in keywordsAdded:
                                     strDay = actionDate.strftime("%Y-%m-%d")
@@ -299,6 +331,22 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                     regressionsCountPerDay[strDay] -= 1
                                     isRegression = False
 
+                            # In the past, 'bibisectRequest' was added after the bug got fixed
+                            # to find the commit fixing it. Ignore them
+                            if not isThisBugClosed and not isBibisectRequestClosed:
+                                if not isBibisectRequest and 'bibisectrequest' in keywordsAdded:
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in bibisectRequestCountPerDay:
+                                        bibisectRequestCountPerDay[strDay] = 0
+                                    bibisectRequestCountPerDay[strDay] += 1
+                                    isBibisectRequest = True
+
+                                if isBibisectRequest and 'bibisectrequest' in keywordsRemoved:
+                                    strDay = actionDate.strftime("%Y-%m-%d")
+                                    if strDay not in bibisectRequestCountPerDay:
+                                        bibisectRequestCountPerDay[strDay] = 0
+                                    bibisectRequestCountPerDay[strDay] -= 1
+                                    isBibisectRequest = False
 
                         elif change['field_name'] == 'blocks':
                             if check_date(actionDate, cfg):
@@ -394,6 +442,14 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 totalCount4 += v
 
         statList['highCount'][single_day] = totalCount4
+
+        totalCount5 = 0
+        for k, v in bibisectRequestCountPerDay.items():
+            xDay = datetime.strptime( k, "%Y-%m-%d")
+            if xDay < single_date:
+                totalCount5 += v
+
+        statList['bibisectRequestCount'][single_day] = totalCount5
 
 def makeStrong(text):
     return "<strong>" + str(text) + "</strong>"
@@ -507,6 +563,9 @@ def createReport(statList):
     createEvolutionSection(
         fp, statList['regressionCount'], "Open Regressions",
         "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&keywords=regression%2C &keywords_type=allwords&query_format=advanced&resolution=---", "green")
+    createEvolutionSection(
+        fp, statList['bibisectRequestCount'], "Open bibisectRequests",
+        "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&keywords=bibisectRequest%2C &keywords_type=allwords&query_format=advanced&resolution=---", "lightpink")
     createEvolutionSection(
         fp, statList['highestCount'], "Highest Priority Bugs",
         "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&priority=highest&query_format=advanced&resolution=---", "sandybrown")
