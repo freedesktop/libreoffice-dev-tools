@@ -25,15 +25,18 @@
 
 .leftside{
     top: 0%;
+    bottom:0%;
     left:0%;
     right:50%;
     position: absolute;
     background: Beige;
     display:block;
     border:1px solid grey;
+    overflow: scroll;
 }
 .rightside{
     top: 0%;
+    bottom:0%;
     right:0%;
     left: 50%;
     position:absolute;
