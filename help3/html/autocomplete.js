@@ -166,9 +166,10 @@ function completeIfInTag(cm) {
 
 var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
     lineNumbers: true,
-    mode: "text/html",
+    mode: "xml",
     matchBrackets: true,
     theme: "default",
+    lineWrapping: true,
     extraKeys: {
         "'<'": completeAfter,
         "'/'": completeIfAfterLt,
