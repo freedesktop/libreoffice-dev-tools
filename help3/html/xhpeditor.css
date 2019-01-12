@@ -299,6 +299,10 @@ icontable {
 #DisplayArea footer p {
     font-size: 0.98rem;
 }
+.embedded {
+    background-color: #eeeeee;
+    border:solid 1px black;
+}
 .bug {
     color: red;
 }

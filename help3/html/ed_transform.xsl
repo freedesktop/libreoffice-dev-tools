@@ -56,7 +56,7 @@
 
 <!-- Installation -->
 <xsl:variable name="online" select="$local!='yes'"/>
-<xsl:variable name="target" select="'/ed/'"/>
+<xsl:variable name="target" select="'/help_editor/'"/>
 <xsl:variable name="source" select="'/hc2/'"/>
 
 <!-- meta data variables from the help file -->
@@ -1081,6 +1081,7 @@
             <xsl:call-template name="convert2px"><xsl:with-param name="value" select="@height"/></xsl:call-template>
         </xsl:if>
     </xsl:variable>
+    <p class="bug">image href: <xsl:value-of select="$src2"/></p>
     <img src="{$src2}" alt="{$alt}" title="{$alt}" height="{$height}" width="{$width}">
         <xsl:if test="ancestor::tablecell">
             <xsl:attribute name="class"><xsl:value-of select="'imageicon'"/></xsl:attribute>
@@ -1261,6 +1262,7 @@
             <xsl:with-param name="doc" select="$docum" />
             <xsl:with-param name="anchor" select="$anc" />
         </xsl:call-template>
+        <p class="bug">Embed href: <xsl:value-of select="$href"/>#<xsl:value-of select="$anc"/></p>
     </div>
 </xsl:template>
 
