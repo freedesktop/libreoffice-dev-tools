@@ -20,8 +20,8 @@ function startNewXHPDoc() {
 }
 function docHeading() {
     var a1 = '<section id="CHANGE ME">\n    <bookmark id="' + random('bm') + '" xml-lang="en-US" branch="hid/CHANGE ME" localize="false"/>\n';
-    var a2 = '    <paragraph id="' + random('hd') + '" role="heading" level="1" xml-lang="en-US"><link href="HELP FILE URL" name="CHANGE ME">CHANGE ME</link></paragraph>\n';
-    var a3 = '    <paragraph id="' + random('par') + '" role="paragraph" xml-lang="en-US"><variable id="CHANGE ME"><ahelp hid="CHANGE ME">CHANGE ME</ahelp></variable></paragraph>\n\n</section>\n';
+    var a2 = '    <h1 id="' + random('hd') + '><link href="HELP FILE URL" name="CHANGE ME">CHANGE ME</link></h1>\n';
+    var a3 = '    <paragraph id="' + random('par') + '" role="paragraph"><variable id="CHANGE ME"><ahelp hid="CHANGE ME">CHANGE ME</ahelp></variable></paragraph>\n\n</section>\n';
     editor.replaceRange(a1 + a2 + a3 , editor.doc.getCursor());
 }
 
@@ -58,6 +58,11 @@ function heading(level) {
 
 function bascode_par() {
     var a1 = '<paragraph role="bascode" id="' + random('bas') + '">';
+    var a2 = '</paragraph>\n';
+    editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
+}
+function pycode_par() {
+    var a1 = '<paragraph role="pycode" id="' + random('bas') + '">';
     var a2 = '</paragraph>\n';
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
@@ -188,7 +193,7 @@ function tList(mode){
 }
 
 function listItem(){
-    var a1 = '    <listitem>\n        <paragraph id="' + random('par') + '" role="listitem" xml-lang="en-US">';
+    var a1 = '    <listitem>\n        <paragraph id="' + random('par') + '" role="listitem">';
     var a2 = '</paragraph>\n    </listitem>\n';
     editor.replaceSelection(a1+ editor.doc.getSelection() + a2,'');
 }

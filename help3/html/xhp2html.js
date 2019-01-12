@@ -9,11 +9,11 @@
 
 /* change these parameters to fit your installation */
 
-var prefixURL="http://localhost/ed/"
-var helpcontent2 = "/hc2/";
+var prefixURL="/help_editor/"
+var helpcontent2 = "hc2/";
 var productname = "LibreOffice";
 var productversion = "6.3";
-var root = helpcontent2 + "source/";
+var root = prefixURL + helpcontent2 + "source/";
 var language = "en-US";
 var local = "no";
 var xhttp;
@@ -34,13 +34,11 @@ function loadDoc(filename, isXML)
 //             // Typical action to be performed when the document is ready:
 //         }
 //     };
-
     xhttp.open("GET", prefixURL + filename, false);
     try {xhttp.responseType = "msxml-document"} catch(err) {} // Helping IE11
 //     if isXML=true return XML otherwise return a text string
     xhttp.send(null);
     var response =  (isXML) ? xhttp.responseXML : xhttp.responseText;
-    delete xhttp;
     return response
 }
 
@@ -52,8 +50,12 @@ function displayResult()
     editor.changeGeneration();
     // create a DOM parser for textarea contents
     var oParser = new DOMParser();
-    // Parse XML contents
-    var xml = oParser.parseFromString( editor.doc.getValue(), "application/xml");
+    // Parse XML contents, check if XML error.
+    var xml = oParser.parseFromString( editor.doc.getValue(), "text/xml");
+	if (xml.documentElement.nodeName == "parsererror")
+	{
+		alert ("Error while parsing XHP");
+	}
     // Load XSLT as TXT because XML it has issues
     var xsl1 = loadDoc("ed_transform.xsl", false);
     var oParser2 = new DOMParser();
