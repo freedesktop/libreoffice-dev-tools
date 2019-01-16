@@ -429,8 +429,12 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         if dValue[idx][1] >= cfg['coloredReportPeriod']:
                             background = Back.GREEN
 
+                count = idx + 1
                 print(background + "{:<3} | {:<58} | {} | {}".format(
-                    str(idx + 1), common.urlShowBug + str(dValue[idx][0]), str(dValue[idx][1] ), str(dValue[idx][2])))
+                    str(count), common.urlShowBug + str(dValue[idx][0]), str(dValue[idx][1] ), str(dValue[idx][2])))
+
+                if count != len(dValue) and count % 10 == 0:
+                    print('=' * 100)
 
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
