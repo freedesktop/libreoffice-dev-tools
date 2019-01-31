@@ -8,6 +8,7 @@
 import json
 import os
 import subprocess
+import time
 
 
 def get_config(key):
@@ -20,33 +21,38 @@ server = get_config("gerrit.host")
 project = get_config("gerrit.project")
 branch = get_config("gerrit.defaultbranch")
 
-sock = subprocess.Popen(["ssh", "-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"], stdout=subprocess.PIPE, bufsize=1)
+while True:
+    sock = subprocess.Popen(["ssh", "-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"], stdout=subprocess.PIPE, bufsize=1)
 
-try:
-    for line in iter(sock.stdout.readline, b''):
-        event = json.loads(line)
+    try:
+        for line in iter(sock.stdout.readline, b''):
+            event = json.loads(line)
 
-        if event['type'] != "comment-added":
-            continue
-        if 'username' not in event['change']['owner'].keys():
-            continue
-        if event['change']['owner']['username'] != os.environ['USER']:
-            continue
-        if event['change']['project'] != project:
-            continue
-        if event['change']['branch'] != branch:
-            continue
-        if 'approvals' not in event.keys():
-            continue
-        if len([approval for approval in event['approvals'] if approval['type'] == "Verified" and approval['value'] == "1"]) != 1:
-            continue
+            if event['type'] != "comment-added":
+                continue
+            if 'username' not in event['change']['owner'].keys():
+                continue
+            if event['change']['owner']['username'] != os.environ['USER']:
+                continue
+            if event['change']['project'] != project:
+                continue
+            if event['change']['branch'] != branch:
+                continue
+            if 'approvals' not in event.keys():
+                continue
+            if len([approval for approval in event['approvals'] if approval['type'] == "Verified" and approval['value'] == "1"]) != 1:
+                continue
 
-        rev = event['patchSet']['revision']
-        cmd = "ssh " + server + " gerrit review -s " + rev
-        print(cmd)
-        os.system(cmd)
-except KeyboardInterrupt:
-    print("Interrupted!")
+            rev = event['patchSet']['revision']
+            cmd = "ssh " + server + " gerrit review -s " + rev
+            print(cmd)
+            os.system(cmd)
+    except KeyboardInterrupt:
+        print("Interrupted.")
+        break
+
+    print("Socket closed, reconnecting.")
+    time.sleep(1)
 
 sock.communicate()
 
