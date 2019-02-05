@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 
 lKeywords = ['havebacktrace', 'regression', 'bisected']
 
+oldBugsYears = 4
 
 def util_create_basic_schema():
     return {
@@ -33,6 +34,8 @@ def util_create_statList():
         'verified': util_create_basic_schema(),
         'fixed': util_create_basic_schema(),
         'criticalFixed': {},
+        'crashFixed': {},
+        'oldBugsFixed': {},
         'metabug': util_create_basic_schema(),
         'keywords': { k : util_create_basic_schema() for k in lKeywords},
         'people' : {},
@@ -376,8 +379,12 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             commentDay = commentDate.strftime("%Y-%m-%d")
                             util_increase_action(statList['fixed'], rowId, author, commentDay, diffTime)
                             commitNoticiation=True
-                            if 'crash' in row['summary'].lower() or row['priority'] == "highest":
+                            if row['priority'] == "highest":
                                 statList['criticalFixed'][rowId]= {'summary': row['summary'], 'author': author}
+                            elif 'crash' in row['summary'].lower():
+                                statList['crashFixed'][rowId]= {'summary': row['summary'], 'author': author}
+                            elif creationDate < common.util_convert_days_to_datetime(oldBugsYears * 365):
+                                statList['oldBugsFixed'][rowId]= {'summary': row['summary'], 'author': author}
 
             if rowId in fixedBugs and not commitNoticiation:
                 actionDate = fixedBugs[rowId]
@@ -552,6 +559,8 @@ def createReport(statList):
     createSection(fp, statList['confirmed'], "Triaged Bugs", "triaged", "Triagers", "gold")
     createSection(fp, statList['fixed'], "Fixed Bugs", "fixed", "Fixers", "darksalmon")
     createList(fp, statList['criticalFixed'], "List of critical bugs fixed")
+    createList(fp, statList['crashFixed'], "List of crashes fixed")
+    createList(fp, statList['oldBugsFixed'], "List of old bugs ( more than {} years old ) fixed".format(oldBugsYears))
     createSection(fp, statList['verified'], "Verified bug fixes", "verified", "Verifiers", "palegreen")
     createSection(fp, statList['metabug'], "Categorized Bugs", "categorized with a metabug", "Categorizers", "lightpink")
     createSection(fp, statList['keywords']['regression'], "Regression Bugs", "set as regressions", "", "mediumpurple")
