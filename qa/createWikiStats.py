@@ -392,7 +392,7 @@ def runCfg():
     cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
 
     for period in periods_list:
-        cfg[period] = common.util_convert_days_to_datetime(cfg, period)
+        cfg[period] = common.util_convert_days_to_datetime(period)
 
     return cfg
 

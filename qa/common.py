@@ -18,7 +18,6 @@ dataDir = '/home/xisco/dev-tools/esc-reporting/dump/'
 #Path where configQA.json and addObsolete.txt are
 configDir = '/home/xisco/dev-tools/qa/'
 
-
 priorities_list = ['highest','high','medium','low','lowest']
 
 severities_list = ['blocker', 'critical', 'major', 'normal', 'minor', 'trivial','enhancement']
@@ -49,9 +48,9 @@ untouchedPingComment = "** Please read this message in its entirety before respo
 
 needInfoPingComment = "Dear Bug Submitter,\n\nThis bug has been in NEEDINFO status with no change for at least"
 
-def util_convert_days_to_datetime(cfg, period):
-    cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
-    return cfg['todayDate'] - datetime.timedelta(days= period)
+def util_convert_days_to_datetime(period):
+    todayDate = datetime.datetime.now().replace(hour=0, minute=0,second=0)
+    return todayDate - datetime.timedelta(days= period)
 
 def util_load_file(fileName):
     try:

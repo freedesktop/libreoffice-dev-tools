@@ -427,8 +427,7 @@ def data_Report(statList) :
 
 def runCfg():
     cfg = {}
-    cfg['reportPeriod'] = common.util_convert_days_to_datetime(cfg, reportPeriodDays)
-
+    cfg['reportPeriod'] = common.util_convert_days_to_datetime(reportPeriodDays)
     return cfg
 
 if __name__ == '__main__':

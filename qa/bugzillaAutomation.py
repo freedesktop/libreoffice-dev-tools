@@ -144,7 +144,7 @@ def automated_tagging(statList):
 
 def runCfg():
     cfg = common.get_config()
-    cfg['untouchedPeriod'] = common.util_convert_days_to_datetime(cfg, untouchedPeriodDays)
+    cfg['untouchedPeriod'] = common.util_convert_days_to_datetime(untouchedPeriodDays)
 
     return cfg
 

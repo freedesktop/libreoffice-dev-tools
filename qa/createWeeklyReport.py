@@ -423,9 +423,8 @@ def create_weekly_Report(statList) :
     fp.close()
 
 def runCfg():
-    cfg = common.get_config()
-    cfg['todayDate'] = datetime.datetime.now().replace(hour=0, minute=0,second=0)
-    cfg['reportPeriod'] = common.util_convert_days_to_datetime(cfg, reportPeriodDays)
+    cfg = {}
+    cfg['reportPeriod'] = common.util_convert_days_to_datetime(reportPeriodDays)
 
     return cfg
 
