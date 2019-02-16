@@ -13,6 +13,10 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# When a commit referencing a report is merged, this script
+# - adds a comment to the report
+# - updates the whiteboard field with target information
 
 from __future__ import print_function
 
