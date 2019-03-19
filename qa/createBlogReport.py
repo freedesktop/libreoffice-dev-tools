@@ -148,202 +148,202 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 diffTime = (actionDate - creationDate).days
 
                 for change in action['changes']:
-                        if change['field_name'] == 'priority':
-                            addedPriority = change['added']
-                            removedPriority = change['removed']
+                    if change['field_name'] == 'priority':
+                        addedPriority = change['added']
+                        removedPriority = change['removed']
 
-                            # Sometimes the priority is increased to highest after the bug is fixed
-                            # Ignore those cases
-                            if not isThisBugClosed and not isHighestClosed:
-                                if not isHighest and addedPriority == "highest":
-                                    if actionDay not in highestCountPerDay:
-                                        highestCountPerDay[actionDay] = 0
-                                    highestCountPerDay[actionDay] += 1
-                                    isHighest = True
+                        # Sometimes the priority is increased to highest after the bug is fixed
+                        # Ignore those cases
+                        if not isThisBugClosed and not isHighestClosed:
+                            if not isHighest and addedPriority == "highest":
+                                if actionDay not in highestCountPerDay:
+                                    highestCountPerDay[actionDay] = 0
+                                highestCountPerDay[actionDay] += 1
+                                isHighest = True
 
-                                if isHighest and removedPriority == "highest":
-                                    if actionDay not in highestCountPerDay:
-                                        highestCountPerDay[actionDay] = 0
-                                    highestCountPerDay[actionDay] -= 1
-                                    isHighest = False
+                            if isHighest and removedPriority == "highest":
+                                if actionDay not in highestCountPerDay:
+                                    highestCountPerDay[actionDay] = 0
+                                highestCountPerDay[actionDay] -= 1
+                                isHighest = False
 
-                            # TODO: IsThisBugClosed should be check here, but the result is not accurate
-                            if not isHighClosed:
-                                if not isHigh and addedPriority == "high":
-                                    if actionDay not in highCountPerDay:
-                                        highCountPerDay[actionDay] = 0
-                                    highCountPerDay[actionDay] += 1
-                                    isHigh = True
+                        # TODO: IsThisBugClosed should be check here, but the result is not accurate
+                        if not isHighClosed:
+                            if not isHigh and addedPriority == "high":
+                                if actionDay not in highCountPerDay:
+                                    highCountPerDay[actionDay] = 0
+                                highCountPerDay[actionDay] += 1
+                                isHigh = True
 
-                                if isHigh and removedPriority == "high":
-                                    if actionDay not in highCountPerDay:
-                                        highCountPerDay[actionDay] = 0
-                                    highCountPerDay[actionDay] -= 1
-                                    isHigh = False
+                            if isHigh and removedPriority == "high":
+                                if actionDay not in highCountPerDay:
+                                    highCountPerDay[actionDay] = 0
+                                highCountPerDay[actionDay] -= 1
+                                isHigh = False
 
-                        if change['field_name'] == 'status':
-                            addedStatus = change['added']
-                            removedStatus = change['removed']
+                    if change['field_name'] == 'status':
+                        addedStatus = change['added']
+                        removedStatus = change['removed']
 
-                            if common.isOpen(addedStatus):
-                                isThisBugClosed = False
-                            else:
-                                isThisBugClosed = True
+                        if common.isOpen(addedStatus):
+                            isThisBugClosed = False
+                        else:
+                            isThisBugClosed = True
 
-                            #See above
-                            if rowId >= 89589:
-                                if removedStatus == "UNCONFIRMED":
-                                    if actionDay not in unconfirmedCountPerDay:
-                                        unconfirmedCountPerDay[actionDay] = 0
-                                    unconfirmedCountPerDay[actionDay] -= 1
+                        #See above
+                        if rowId >= 89589:
+                            if removedStatus == "UNCONFIRMED":
+                                if actionDay not in unconfirmedCountPerDay:
+                                    unconfirmedCountPerDay[actionDay] = 0
+                                unconfirmedCountPerDay[actionDay] -= 1
 
-                                elif addedStatus == 'UNCONFIRMED':
-                                    if actionDay not in unconfirmedCountPerDay:
-                                        unconfirmedCountPerDay[actionDay] = 0
-                                    unconfirmedCountPerDay[actionDay] += 1
+                            elif addedStatus == 'UNCONFIRMED':
+                                if actionDay not in unconfirmedCountPerDay:
+                                    unconfirmedCountPerDay[actionDay] = 0
+                                unconfirmedCountPerDay[actionDay] += 1
 
-                            if isRegression:
-                                # the regression is being reopened
-                                if isRegressionClosed and not isThisBugClosed:
-                                    if actionDay not in regressionsCountPerDay:
-                                        regressionsCountPerDay[actionDay] = 0
-                                    regressionsCountPerDay[actionDay] += 1
-                                    isRegressionClosed = False
+                        if isRegression:
+                            # the regression is being reopened
+                            if isRegressionClosed and not isThisBugClosed:
+                                if actionDay not in regressionsCountPerDay:
+                                    regressionsCountPerDay[actionDay] = 0
+                                regressionsCountPerDay[actionDay] += 1
+                                isRegressionClosed = False
 
-                                # the regression is being closed
-                                if not isRegressionClosed and isThisBugClosed:
-                                    if actionDay not in regressionsCountPerDay:
-                                        regressionsCountPerDay[actionDay] = 0
-                                    regressionsCountPerDay[actionDay] -= 1
-                                    isRegressionClosed = True
+                            # the regression is being closed
+                            if not isRegressionClosed and isThisBugClosed:
+                                if actionDay not in regressionsCountPerDay:
+                                    regressionsCountPerDay[actionDay] = 0
+                                regressionsCountPerDay[actionDay] -= 1
+                                isRegressionClosed = True
 
-                            if isBibisectRequest:
-                                # the bibisectRequest is being reopened
-                                if isBibisectRequestClosed and not isThisBugClosed:
-                                    if actionDay not in bibisectRequestCountPerDay:
-                                        bibisectRequestCountPerDay[actionDay] = 0
-                                    bibisectRequestCountPerDay[actionDay] += 1
-                                    isBibisectRequestClosed = False
+                        if isBibisectRequest:
+                            # the bibisectRequest is being reopened
+                            if isBibisectRequestClosed and not isThisBugClosed:
+                                if actionDay not in bibisectRequestCountPerDay:
+                                    bibisectRequestCountPerDay[actionDay] = 0
+                                bibisectRequestCountPerDay[actionDay] += 1
+                                isBibisectRequestClosed = False
 
-                                # the bibisectRequest is being closed
-                                if not isBibisectRequestClosed and isThisBugClosed:
-                                    if actionDay not in bibisectRequestCountPerDay:
-                                        bibisectRequestCountPerDay[actionDay] = 0
-                                    bibisectRequestCountPerDay[actionDay] -= 1
-                                    isBibisectRequestClosed = True
+                            # the bibisectRequest is being closed
+                            if not isBibisectRequestClosed and isThisBugClosed:
+                                if actionDay not in bibisectRequestCountPerDay:
+                                    bibisectRequestCountPerDay[actionDay] = 0
+                                bibisectRequestCountPerDay[actionDay] -= 1
+                                isBibisectRequestClosed = True
 
-                            if isHighest:
-                                # the Highest priority bug is being reopened
-                                if isHighestClosed and not isThisBugClosed:
-                                    if actionDay not in highestCountPerDay:
-                                        highestCountPerDay[actionDay] = 0
-                                    highestCountPerDay[actionDay] += 1
-                                    isHighestClosed = False
+                        if isHighest:
+                            # the Highest priority bug is being reopened
+                            if isHighestClosed and not isThisBugClosed:
+                                if actionDay not in highestCountPerDay:
+                                    highestCountPerDay[actionDay] = 0
+                                highestCountPerDay[actionDay] += 1
+                                isHighestClosed = False
 
-                                # the Highest priority bug is being closed
-                                if not isHighestClosed and isThisBugClosed:
-                                    if actionDay not in highestCountPerDay:
-                                        highestCountPerDay[actionDay] = 0
-                                    highestCountPerDay[actionDay] -= 1
-                                    isHighestClosed = True
+                            # the Highest priority bug is being closed
+                            if not isHighestClosed and isThisBugClosed:
+                                if actionDay not in highestCountPerDay:
+                                    highestCountPerDay[actionDay] = 0
+                                highestCountPerDay[actionDay] -= 1
+                                isHighestClosed = True
 
-                            if isHigh:
-                                # the High priority bug is being reopened
-                                if isHighClosed and not isThisBugClosed:
-                                    if actionDay not in highCountPerDay:
-                                        highCountPerDay[actionDay] = 0
-                                    highCountPerDay[actionDay] += 1
-                                    isHighClosed = False
+                        if isHigh:
+                            # the High priority bug is being reopened
+                            if isHighClosed and not isThisBugClosed:
+                                if actionDay not in highCountPerDay:
+                                    highCountPerDay[actionDay] = 0
+                                highCountPerDay[actionDay] += 1
+                                isHighClosed = False
 
-                                # the High priority bug is being closed
-                                if not isHighClosed and isThisBugClosed:
-                                    if actionDay not in highCountPerDay:
-                                        highCountPerDay[actionDay] = 0
-                                    highCountPerDay[actionDay] -= 1
-                                    isHighClosed = True
+                            # the High priority bug is being closed
+                            if not isHighClosed and isThisBugClosed:
+                                if actionDay not in highCountPerDay:
+                                    highCountPerDay[actionDay] = 0
+                                highCountPerDay[actionDay] -= 1
+                                isHighClosed = True
 
-                            if check_date(actionDate, cfg):
-                                if removedStatus == "UNCONFIRMED":
-                                    util_increase_action(statList['confirmed'], rowId, actionMail, actionDay, diffTime)
-                                    dayConfirmed = actionDay
-                                    authorConfirmed = actionMail
-                                    isConfirmed = True
+                        if check_date(actionDate, cfg):
+                            if removedStatus == "UNCONFIRMED":
+                                util_increase_action(statList['confirmed'], rowId, actionMail, actionDay, diffTime)
+                                dayConfirmed = actionDay
+                                authorConfirmed = actionMail
+                                isConfirmed = True
 
-                                elif addedStatus == 'UNCONFIRMED' and isConfirmed:
-                                    util_decrease_action(statList['confirmed'], authorConfirmed, dayConfirmed)
-                                    isConfirmed = False
+                            elif addedStatus == 'UNCONFIRMED' and isConfirmed:
+                                util_decrease_action(statList['confirmed'], authorConfirmed, dayConfirmed)
+                                isConfirmed = False
 
-                                if addedStatus == 'VERIFIED':
-                                    util_increase_action(statList['verified'], rowId, actionMail, actionDay, diffTime)
-                                    dayVerified = actionDay
-                                    authorVerified = actionMail
-                                    isVerified = True
+                            if addedStatus == 'VERIFIED':
+                                util_increase_action(statList['verified'], rowId, actionMail, actionDay, diffTime)
+                                dayVerified = actionDay
+                                authorVerified = actionMail
+                                isVerified = True
 
-                                elif removedStatus == 'VERIFIED' and isVerified and common.isOpen(addedStatus):
-                                    util_decrease_action(statList['verified'], authorVerified, dayVerified)
-                                    isVerified = False
+                            elif removedStatus == 'VERIFIED' and isVerified and common.isOpen(addedStatus):
+                                util_decrease_action(statList['verified'], authorVerified, dayVerified)
+                                isVerified = False
 
-                        elif change['field_name'] == 'resolution':
-                            if check_date(actionDate, cfg):
-                                addedResolution = change['added']
-                                removedResolution = change['removed']
-                                if addedResolution == 'FIXED':
-                                    fixedBugs[rowId] = actionDate
-                                    isFixed = True
+                    elif change['field_name'] == 'resolution':
+                        if check_date(actionDate, cfg):
+                            addedResolution = change['added']
+                            removedResolution = change['removed']
+                            if addedResolution == 'FIXED':
+                                fixedBugs[rowId] = actionDate
+                                isFixed = True
 
-                                elif removedResolution == 'FIXED' and isFixed:
-                                    del fixedBugs[rowId]
-                                    isFixed = False
+                            elif removedResolution == 'FIXED' and isFixed:
+                                del fixedBugs[rowId]
+                                isFixed = False
 
-                        elif change['field_name'] == 'keywords':
-                            keywordsAdded = change['added'].lower().split(", ")
-                            keywordsRemoved = change['removed'].lower().split(", ")
+                    elif change['field_name'] == 'keywords':
+                        keywordsAdded = change['added'].lower().split(", ")
+                        keywordsRemoved = change['removed'].lower().split(", ")
 
-                            if check_date(actionDate, cfg):
-                                for keyword in keywordsAdded:
-                                    if keyword in lKeywords:
-                                        util_increase_action(statList['keywords'][keyword], rowId, actionMail, actionDay, diffTime)
+                        if check_date(actionDate, cfg):
+                            for keyword in keywordsAdded:
+                                if keyword in lKeywords:
+                                    util_increase_action(statList['keywords'][keyword], rowId, actionMail, actionDay, diffTime)
 
-                            # TODO: IsThisBugClosed should be check here, but the result is not accurate
-                            if not isRegressionClosed:
-                                if not isRegression and 'regression' in keywordsAdded:
-                                    if actionDay not in regressionsCountPerDay:
-                                        regressionsCountPerDay[actionDay] = 0
-                                    regressionsCountPerDay[actionDay] += 1
-                                    isRegression = True
+                        # TODO: IsThisBugClosed should be check here, but the result is not accurate
+                        if not isRegressionClosed:
+                            if not isRegression and 'regression' in keywordsAdded:
+                                if actionDay not in regressionsCountPerDay:
+                                    regressionsCountPerDay[actionDay] = 0
+                                regressionsCountPerDay[actionDay] += 1
+                                isRegression = True
 
-                                if isRegression and 'regression' in keywordsRemoved:
-                                    if actionDay not in regressionsCountPerDay:
-                                        regressionsCountPerDay[actionDay] = 0
-                                    regressionsCountPerDay[actionDay] -= 1
-                                    isRegression = False
+                            if isRegression and 'regression' in keywordsRemoved:
+                                if actionDay not in regressionsCountPerDay:
+                                    regressionsCountPerDay[actionDay] = 0
+                                regressionsCountPerDay[actionDay] -= 1
+                                isRegression = False
 
-                            # In the past, 'bibisectRequest' was added after the bug got fixed
-                            # to find the commit fixing it. Ignore them
-                            if not isThisBugClosed and not isBibisectRequestClosed:
-                                if not isBibisectRequest and 'bibisectrequest' in keywordsAdded:
-                                    if actionDay not in bibisectRequestCountPerDay:
-                                        bibisectRequestCountPerDay[actionDay] = 0
-                                    bibisectRequestCountPerDay[actionDay] += 1
-                                    isBibisectRequest = True
+                        # In the past, 'bibisectRequest' was added after the bug got fixed
+                        # to find the commit fixing it. Ignore them
+                        if not isThisBugClosed and not isBibisectRequestClosed:
+                            if not isBibisectRequest and 'bibisectrequest' in keywordsAdded:
+                                if actionDay not in bibisectRequestCountPerDay:
+                                    bibisectRequestCountPerDay[actionDay] = 0
+                                bibisectRequestCountPerDay[actionDay] += 1
+                                isBibisectRequest = True
 
-                                if isBibisectRequest and 'bibisectrequest' in keywordsRemoved:
-                                    if actionDay not in bibisectRequestCountPerDay:
-                                        bibisectRequestCountPerDay[actionDay] = 0
-                                    bibisectRequestCountPerDay[actionDay] -= 1
-                                    isBibisectRequest = False
+                            if isBibisectRequest and 'bibisectrequest' in keywordsRemoved:
+                                if actionDay not in bibisectRequestCountPerDay:
+                                    bibisectRequestCountPerDay[actionDay] = 0
+                                bibisectRequestCountPerDay[actionDay] -= 1
+                                isBibisectRequest = False
 
-                        elif change['field_name'] == 'blocks':
-                            if check_date(actionDate, cfg):
-                                if change['added']:
-                                    for metabug in change['added'].split(', '):
-                                        if int(metabug) in row['blocks']:
-                                            util_increase_action(statList['metabug'], rowId, actionMail, actionDay, diffTime)
+                    elif change['field_name'] == 'blocks':
+                        if check_date(actionDate, cfg):
+                            if change['added']:
+                                for metabug in change['added'].split(', '):
+                                    if int(metabug) in row['blocks']:
+                                        util_increase_action(statList['metabug'], rowId, actionMail, actionDay, diffTime)
 
             commentMail = None
             comments = row['comments'][1:]
             bugFixers = []
-            commitNoticiation=False
+            commitNoticiation = False
             for idx, comment in enumerate(comments):
                 commentMail = comment['creator']
                 commentDate = datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
@@ -360,7 +360,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             diffTime = (commentDate - creationDate).days
                             commentDay = commentDate.strftime("%Y-%m-%d")
                             util_increase_action(statList['fixed'], rowId, author, commentDay, diffTime)
-                            commitNoticiation=True
+                            commitNoticiation = True
+
                             if row['priority'] == "highest":
                                 statList['criticalFixed'][rowId]= {'summary': row['summary'], 'author': author}
                             elif 'crash' in row['summary'].lower():
