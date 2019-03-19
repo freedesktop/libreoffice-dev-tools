@@ -100,10 +100,10 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             #Some old bugs were directly created as NEW, skipping the UNCONFIRMED status
             #Use the oldest bug ID in the unconfirmed list
             if rowId >= 89589:
-                strDay = creationDate.strftime("%Y-%m-%d")
-                if strDay not in unconfirmedCountPerDay:
-                    unconfirmedCountPerDay[strDay] = 0
-                unconfirmedCountPerDay[strDay] += 1
+                actionDay = creationDate.strftime("%Y-%m-%d")
+                if actionDay not in unconfirmedCountPerDay:
+                    unconfirmedCountPerDay[actionDay] = 0
+                unconfirmedCountPerDay[actionDay] += 1
 
             rowStatus = row['status']
             rowResolution = row['resolution']
@@ -156,33 +156,29 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             # Ignore those cases
                             if not isThisBugClosed and not isHighestClosed:
                                 if not isHighest and addedPriority == "highest":
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in highestCountPerDay:
-                                        highestCountPerDay[strDay] = 0
-                                    highestCountPerDay[strDay] += 1
+                                    if actionDay not in highestCountPerDay:
+                                        highestCountPerDay[actionDay] = 0
+                                    highestCountPerDay[actionDay] += 1
                                     isHighest = True
 
                                 if isHighest and removedPriority == "highest":
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in highestCountPerDay:
-                                        highestCountPerDay[strDay] = 0
-                                    highestCountPerDay[strDay] -= 1
+                                    if actionDay not in highestCountPerDay:
+                                        highestCountPerDay[actionDay] = 0
+                                    highestCountPerDay[actionDay] -= 1
                                     isHighest = False
 
                             # TODO: IsThisBugClosed should be check here, but the result is not accurate
                             if not isHighClosed:
                                 if not isHigh and addedPriority == "high":
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in highCountPerDay:
-                                        highCountPerDay[strDay] = 0
-                                    highCountPerDay[strDay] += 1
+                                    if actionDay not in highCountPerDay:
+                                        highCountPerDay[actionDay] = 0
+                                    highCountPerDay[actionDay] += 1
                                     isHigh = True
 
                                 if isHigh and removedPriority == "high":
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in highCountPerDay:
-                                        highCountPerDay[strDay] = 0
-                                    highCountPerDay[strDay] -= 1
+                                    if actionDay not in highCountPerDay:
+                                        highCountPerDay[actionDay] = 0
+                                    highCountPerDay[actionDay] -= 1
                                     isHigh = False
 
                         if change['field_name'] == 'status':
@@ -197,83 +193,73 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             #See above
                             if rowId >= 89589:
                                 if removedStatus == "UNCONFIRMED":
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in unconfirmedCountPerDay:
-                                        unconfirmedCountPerDay[strDay] = 0
-                                    unconfirmedCountPerDay[strDay] -= 1
+                                    if actionDay not in unconfirmedCountPerDay:
+                                        unconfirmedCountPerDay[actionDay] = 0
+                                    unconfirmedCountPerDay[actionDay] -= 1
 
                                 elif addedStatus == 'UNCONFIRMED':
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in unconfirmedCountPerDay:
-                                        unconfirmedCountPerDay[strDay] = 0
-                                    unconfirmedCountPerDay[strDay] += 1
+                                    if actionDay not in unconfirmedCountPerDay:
+                                        unconfirmedCountPerDay[actionDay] = 0
+                                    unconfirmedCountPerDay[actionDay] += 1
 
                             if isRegression:
                                 # the regression is being reopened
                                 if isRegressionClosed and not isThisBugClosed:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in regressionsCountPerDay:
-                                        regressionsCountPerDay[strDay] = 0
-                                    regressionsCountPerDay[strDay] += 1
+                                    if actionDay not in regressionsCountPerDay:
+                                        regressionsCountPerDay[actionDay] = 0
+                                    regressionsCountPerDay[actionDay] += 1
                                     isRegressionClosed = False
 
                                 # the regression is being closed
                                 if not isRegressionClosed and isThisBugClosed:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in regressionsCountPerDay:
-                                        regressionsCountPerDay[strDay] = 0
-                                    regressionsCountPerDay[strDay] -= 1
+                                    if actionDay not in regressionsCountPerDay:
+                                        regressionsCountPerDay[actionDay] = 0
+                                    regressionsCountPerDay[actionDay] -= 1
                                     isRegressionClosed = True
 
                             if isBibisectRequest:
                                 # the bibisectRequest is being reopened
                                 if isBibisectRequestClosed and not isThisBugClosed:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in bibisectRequestCountPerDay:
-                                        bibisectRequestCountPerDay[strDay] = 0
-                                    bibisectRequestCountPerDay[strDay] += 1
+                                    if actionDay not in bibisectRequestCountPerDay:
+                                        bibisectRequestCountPerDay[actionDay] = 0
+                                    bibisectRequestCountPerDay[actionDay] += 1
                                     isBibisectRequestClosed = False
 
                                 # the bibisectRequest is being closed
                                 if not isBibisectRequestClosed and isThisBugClosed:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in bibisectRequestCountPerDay:
-                                        bibisectRequestCountPerDay[strDay] = 0
-                                    bibisectRequestCountPerDay[strDay] -= 1
+                                    if actionDay not in bibisectRequestCountPerDay:
+                                        bibisectRequestCountPerDay[actionDay] = 0
+                                    bibisectRequestCountPerDay[actionDay] -= 1
                                     isBibisectRequestClosed = True
 
                             if isHighest:
                                 # the Highest priority bug is being reopened
                                 if isHighestClosed and not isThisBugClosed:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in highestCountPerDay:
-                                        highestCountPerDay[strDay] = 0
-                                    highestCountPerDay[strDay] += 1
+                                    if actionDay not in highestCountPerDay:
+                                        highestCountPerDay[actionDay] = 0
+                                    highestCountPerDay[actionDay] += 1
                                     isHighestClosed = False
 
                                 # the Highest priority bug is being closed
                                 if not isHighestClosed and isThisBugClosed:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in highestCountPerDay:
-                                        highestCountPerDay[strDay] = 0
-                                    highestCountPerDay[strDay] -= 1
+                                    if actionDay not in highestCountPerDay:
+                                        highestCountPerDay[actionDay] = 0
+                                    highestCountPerDay[actionDay] -= 1
                                     isHighestClosed = True
 
                             if isHigh:
                                 # the High priority bug is being reopened
                                 if isHighClosed and not isThisBugClosed:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in highCountPerDay:
-                                        highCountPerDay[strDay] = 0
-                                    highCountPerDay[strDay] += 1
+                                    if actionDay not in highCountPerDay:
+                                        highCountPerDay[actionDay] = 0
+                                    highCountPerDay[actionDay] += 1
                                     isHighClosed = False
 
                                 # the High priority bug is being closed
                                 if not isHighClosed and isThisBugClosed:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in highCountPerDay:
-                                        highCountPerDay[strDay] = 0
-                                    highCountPerDay[strDay] -= 1
+                                    if actionDay not in highCountPerDay:
+                                        highCountPerDay[actionDay] = 0
+                                    highCountPerDay[actionDay] -= 1
                                     isHighClosed = True
 
                             if check_date(actionDate, cfg):
@@ -321,34 +307,30 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             # TODO: IsThisBugClosed should be check here, but the result is not accurate
                             if not isRegressionClosed:
                                 if not isRegression and 'regression' in keywordsAdded:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in regressionsCountPerDay:
-                                        regressionsCountPerDay[strDay] = 0
-                                    regressionsCountPerDay[strDay] += 1
+                                    if actionDay not in regressionsCountPerDay:
+                                        regressionsCountPerDay[actionDay] = 0
+                                    regressionsCountPerDay[actionDay] += 1
                                     isRegression = True
 
                                 if isRegression and 'regression' in keywordsRemoved:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in regressionsCountPerDay:
-                                        regressionsCountPerDay[strDay] = 0
-                                    regressionsCountPerDay[strDay] -= 1
+                                    if actionDay not in regressionsCountPerDay:
+                                        regressionsCountPerDay[actionDay] = 0
+                                    regressionsCountPerDay[actionDay] -= 1
                                     isRegression = False
 
                             # In the past, 'bibisectRequest' was added after the bug got fixed
                             # to find the commit fixing it. Ignore them
                             if not isThisBugClosed and not isBibisectRequestClosed:
                                 if not isBibisectRequest and 'bibisectrequest' in keywordsAdded:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in bibisectRequestCountPerDay:
-                                        bibisectRequestCountPerDay[strDay] = 0
-                                    bibisectRequestCountPerDay[strDay] += 1
+                                    if actionDay not in bibisectRequestCountPerDay:
+                                        bibisectRequestCountPerDay[actionDay] = 0
+                                    bibisectRequestCountPerDay[actionDay] += 1
                                     isBibisectRequest = True
 
                                 if isBibisectRequest and 'bibisectrequest' in keywordsRemoved:
-                                    strDay = actionDate.strftime("%Y-%m-%d")
-                                    if strDay not in bibisectRequestCountPerDay:
-                                        bibisectRequestCountPerDay[strDay] = 0
-                                    bibisectRequestCountPerDay[strDay] -= 1
+                                    if actionDay not in bibisectRequestCountPerDay:
+                                        bibisectRequestCountPerDay[actionDay] = 0
+                                    bibisectRequestCountPerDay[actionDay] -= 1
                                     isBibisectRequest = False
 
                         elif change['field_name'] == 'blocks':
