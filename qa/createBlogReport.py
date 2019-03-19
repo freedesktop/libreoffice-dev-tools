@@ -32,6 +32,7 @@ def util_create_statList():
         'created': util_create_basic_schema(),
         'confirmed': util_create_basic_schema(),
         'verified': util_create_basic_schema(),
+        'wfm': util_create_basic_schema(),
         'fixed': util_create_basic_schema(),
         'criticalFixed': {},
         'crashFixed': {},
@@ -121,12 +122,15 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                     statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
 
             isFixed = False
+            isWFM = False
             isConfirmed = False
             isVerified = False
             dayConfirmed = None
             dayVerified = None
+            dayWFM = None
             authorConfirmed = None
             authorVerified = None
+            authorWFM = None
             isRegression = False
             isRegressionClosed = False
             isBibisectRequest = False
@@ -290,10 +294,18 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             if addedResolution == 'FIXED':
                                 fixedBugs[rowId] = actionDate
                                 isFixed = True
-
                             elif removedResolution == 'FIXED' and isFixed:
                                 del fixedBugs[rowId]
                                 isFixed = False
+
+                            if addedResolution == 'WORKSFORME':
+                                isWFM = True
+                                dayWFM = actionDay
+                                authorWFM = actionMail
+                                util_increase_action(statList['wfm'], rowId, actionMail, actionDay, diffTime)
+                            elif removedResolution == 'WORKSFORME' and isWFM:
+                                util_decrease_action(statList['wfm'], authorWFM, dayWFM)
+                                isWFM = False
 
                     elif change['field_name'] == 'keywords':
                         keywordsAdded = change['added'].lower().split(", ")
@@ -545,6 +557,7 @@ def createReport(statList):
     createList(fp, statList['crashFixed'], "List of crashes fixed")
     createList(fp, statList['oldBugsFixed'], "List of old bugs ( more than {} years old ) fixed".format(oldBugsYears))
     createSection(fp, statList['verified'], "Verified bug fixes", "verified", "Verifiers", "palegreen")
+    createSection(fp, statList['wfm'], "WORKSFORME bugs", "retested", "testers", "palegreen")
     createSection(fp, statList['metabug'], "Categorized Bugs", "categorized with a metabug", "Categorizers", "lightpink")
     createSection(fp, statList['keywords']['regression'], "Regression Bugs", "set as regressions", "", "mediumpurple")
     createSection(fp, statList['keywords']['bisected'], "Bisected Bugs", "bisected", "Bisecters", "orange")
