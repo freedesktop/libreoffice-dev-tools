@@ -551,7 +551,9 @@ def report_qa():
         "        + haveBackTrace: {} ({:+d})\n" \
         "        + needsDevAdvice: {} ({:+d})\n" \
         "        + documentation:  {} ({:+d})\n" \
-        "        + android:  {} ({:+d})\n".format(
+        "        + android:  {} ({:+d})\n" \
+        "        + iOS:  {} ({:+d})\n" \
+        "        + Online:  {} ({:+d})\n".format(
                     statList['data']['qa']['unconfirmed']['count'],
                     statList['diff']['qa']['unconfirmed']['count'],
                     statList['data']['qa']['unconfirmed']['enhancement'],
@@ -565,7 +567,11 @@ def report_qa():
                     statList['data']['qa']['unconfirmed']['documentation'],
                     statList['diff']['qa']['unconfirmed']['documentation'],
                     statList['data']['qa']['unconfirmed']['android'],
-                    statList['diff']['qa']['unconfirmed']['android'])
+                    statList['diff']['qa']['unconfirmed']['android'],
+                    statList['data']['qa']['unconfirmed']['ios'],
+                    statList['diff']['qa']['unconfirmed']['ios'],
+                    statList['data']['qa']['unconfirmed']['online'],
+                    statList['diff']['qa']['unconfirmed']['online'])
     print(text, file=fp)
     print(text, file=fpESC)
 
