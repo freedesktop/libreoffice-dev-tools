@@ -118,6 +118,11 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 creationDay = str(creationDate.strftime("%Y-%m-%d"))
                 util_increase_action(statList['created'], rowId, creatorMail, creationDay)
 
+                if row['severity'] == 'enhancement':
+                    if 'enhancement' not in statList['created']:
+                        statList['created']['enhancement'] = 0
+                    statList['created']['enhancement'] += 1
+
             common.util_check_bugzilla_mail(
                     statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
 
@@ -496,9 +501,14 @@ def createPlot(valueDict, plotType, plotTitle, plotLabel, plotColor):
 
 def createSection(fp, value, sectionName, action, actionPerson, plotColor):
     print(makeH2(sectionName), file=fp)
-    print("{} bugs have been {} by {} people.".format(
-        makeStrong(len(value["id"])), action,
-        makeStrong(len(value["author"]))), file=fp)
+    if 'enhancement' in value:
+        print("{} bugs, {} of which are enhancements, have been {} by {} people.".format(
+            makeStrong(len(value["id"])), makeStrong(value['enhancement']), action,
+            makeStrong(len(value["author"]))), file=fp)
+    else:
+        print("{} bugs have been {} by {} people.".format(
+            makeStrong(len(value["id"])), action,
+            makeStrong(len(value["author"]))), file=fp)
 
     print(file=fp)
     print(makeStrong("Top 10 " + actionPerson), file=fp)
@@ -557,7 +567,7 @@ def createReport(statList):
     createList(fp, statList['crashFixed'], "List of crashes fixed")
     createList(fp, statList['oldBugsFixed'], "List of old bugs ( more than {} years old ) fixed".format(oldBugsYears))
     createSection(fp, statList['verified'], "Verified bug fixes", "verified", "Verifiers", "palegreen")
-    createSection(fp, statList['wfm'], "WORKSFORME bugs", "retested", "testers", "palegreen")
+    createSection(fp, statList['wfm'], "WORKSFORME bugs", "retested", "testers", "m")
     createSection(fp, statList['metabug'], "Categorized Bugs", "categorized with a metabug", "Categorizers", "lightpink")
     createSection(fp, statList['keywords']['regression'], "Regression Bugs", "set as regressions", "", "mediumpurple")
     createSection(fp, statList['keywords']['bisected'], "Bisected Bugs", "bisected", "Bisecters", "orange")
