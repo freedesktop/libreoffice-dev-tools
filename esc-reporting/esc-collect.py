@@ -500,6 +500,15 @@ def get_esc_bugzilla(cfg):
           '&v1=filter%3A%2C perf'
     rawList['ESC_COMPONENT_UPDATE']['all']['Writer: other']['count'], \
     rawList['ESC_COMPONENT_UPDATE']['all']['Writer: other']['list'] = do_ESC_counting(bz, url)
+    rawList['ESC_COMPONENT_UPDATE']['all']['RTL'] = {}
+    url = '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&bug_status=PLEASETEST' \
+          '&keywords=regression%2C filter%3Artf%2C ' \
+          '&keywords_type=allwords'
+    rawList['ESC_COMPONENT_UPDATE']['all']['RTL']['count'], \
+    rawList['ESC_COMPONENT_UPDATE']['all']['RTL']['list'] = do_ESC_counting(bz, url)
 
     for comp in ['Calc', 'Impress', 'Base', 'Draw', 'LibreOffice', 'Writer', 'BASIC', 'Chart', 'Extensions',
                  'Formula Editor', 'Impress Remote', 'Installation', 'Linguistic', 'Printing and PDF export',
