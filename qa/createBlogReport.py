@@ -351,7 +351,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 common.util_check_bugzilla_mail(
                         statList, commentMail, '', commentDate, rowId)
 
-                if rowId in fixedBugs:
+                if check_date(commentDate, cfg) and rowId in fixedBugs:
                     if commentMail == "libreoffice-commits@lists.freedesktop.org":
                         commentText = comment['text']
                         author =  commentText.split(' committed a patch related')[0]
