@@ -27,7 +27,7 @@ import datetime
 import json
 import requests
 from requests.auth import HTTPDigestAuth
-
+import unidecode
 
 def util_load_data_file(fileName):
     try:
@@ -154,7 +154,8 @@ def handle_mail_pdf(email, name):
     global cfg, pdfFieldData
 
     xDate = cfg['nowDate'].strftime('%Y-%m-%d')
-    x = pdfFieldData.replace('/V ()', '/V (' + xDate + ')', 1).replace('/V ()', '/V (' + name + ')', 1)
+    x = pdfFieldData.replace('/V ()', '/V (' + xDate + ')', 1).replace('/V ()', '/V (' + \
+            unidecode.unidecode(name) + ')', 1)
 
     fileFdf = '/tmp/fields.fdf'
     fp = open(fileFdf, 'w')
