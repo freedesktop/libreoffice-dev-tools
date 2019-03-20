@@ -505,8 +505,7 @@ def get_esc_bugzilla(cfg):
           '&bug_status=ASSIGNED' \
           '&bug_status=REOPENED' \
           '&bug_status=PLEASETEST' \
-          '&keywords=regression%2C filter%3Artf%2C ' \
-          '&keywords_type=allwords'
+          '&keywords=regression%2C filter%3Artf%2C '
     rawList['ESC_COMPONENT_UPDATE']['all']['RTL']['count'], \
     rawList['ESC_COMPONENT_UPDATE']['all']['RTL']['list'] = do_ESC_counting(bz, url)
 
