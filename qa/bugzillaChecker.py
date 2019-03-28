@@ -27,7 +27,7 @@ memberPeriodDays = 365
 memberBugs = 50
 
 oldUserPeriodDays = 180
-oldUserBugs = 20
+oldUserBugs = 30
 
 # bugs which last comment is from the Commit Notification
 pingFixedBugPeriodDays = 30
