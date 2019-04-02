@@ -638,8 +638,6 @@ def analyze_reports():
     automateList['gerrit']['to_review'] = {}
     automateList['bugzilla']['missing_cc'] = {}
     automateList['bugzilla']['remove_cc'] = {}
-    automateList['bugzilla']['to_unassign_comment'] = {}
-    automateList['bugzilla']['to_unassign_unassign'] = {}
 
     automateNow = cfg['nowDate'].strftime("%Y-%m-%d")
 
@@ -764,14 +762,6 @@ def analyze_reports():
           statList['reportList']['needsUXEval'].append(key)
       if row['status'] == 'NEEDINFO':
           statList['reportList']['needinfo'].append(key)
-      elif row['status'] == 'ASSIGNED':
-        xDate = datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ")
-        if xDate < cfg['1monthDate']:
-          txt = row['comments'][len(row['comments'])-1]
-          if 'A polite ping' in txt:
-            automateList['bugzilla']['to_unassign_unassign'][key]= 0
-          else:
-            automateList['bugzilla']['to_unassign_comment'][key] = 0
       if len(row['comments']) >= 5:
         statList['reportList']['too_many_comments'].append(key)
       if not 'mentoring@documentfoundation.org' in row['cc']:

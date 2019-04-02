@@ -114,36 +114,6 @@ def handle_gerrit_comment(id, patchset, useText = None):
 
 
 
-def handle_bugzilla_unassign(id, text):
-    handle_bugzilla_reset_user(id, text)
-    handle_bugzilla_reset_status(id, text)
-    handle_bugzilla_comment(id, text, isPolite=False)
-
-
-
-def handle_bugzilla_comment(id, text, isPolite=True):
-    if isPolite:
-      polite = 'A polite ping, '+ cfg['automate']['bugzilla']['comment']
-    else:
-      polite = cfg['automate']['bugzilla']['unassign']
-    command = '{"comment" : "' + polite + '", "is_private" : false}'
-    doBugzilla(id, command, isComment=True)
-
-
-
-def handle_bugzilla_reset_status(id, text):
-    command = '{"status": "NEW"}'
-    doBugzilla(id, command)
-    return
-
-
-
-def handle_bugzilla_reset_user(id, text):
-    command = '{"assigned_to": "libreoffice-bugs@lists.freedesktop.org"}'
-    doBugzilla(id, command)
-
-
-
 def handle_bugzilla_cc(id, email):
     command = '{"cc": {"add": ["mentoring@documentfoundation.org"]}}'
     doBugzilla(id, command)
@@ -234,8 +204,6 @@ def runAutomate():
     executeLoop(handle_gerrit_abandon, 'gerrit', 'to_abandon_abandon')
     executeLoop(handle_gerrit_review,  'gerrit', 'to_review')
     executeLoop(handle_gerrit_comment, 'gerrit', 'to_abandon_comment')
-    executeLoop(handle_bugzilla_unassign, 'bugzilla', 'to_unassign_unassign')
-    executeLoop(handle_bugzilla_comment, 'bugzilla', 'to_unassign_comment')
     executeLoop(handle_bugzilla_cc, 'bugzilla', 'missing_cc')
     executeLoop(handle_mail_miss_you, 'mail', 'we_miss_you_email')
     executeLoop(handle_mail_pdf, 'mail', 'award_1st_email')
