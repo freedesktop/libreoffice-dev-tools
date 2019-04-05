@@ -8,9 +8,8 @@
 #
 
 import common
-from datetime import datetime, timedelta
-import argparse
 import math
+from datetime import datetime, timedelta
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -69,11 +68,6 @@ def util_decrease_action(value, creatorMail, day):
     if value['difftime']:
         value['difftime'].pop()
 
-def check_date(xDate, cfg):
-    if xDate >= cfg.Date[0] and xDate < cfg.Date[1]:
-        return True
-    else:
-        return False
 
 def daterange(cfg):
     for n in range(int ((cfg.Date[1] - cfg.Date[0]).days)):
@@ -114,7 +108,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             creatorMail = row['creator']
 
             #get information about created bugs in the period of time
-            if check_date(creationDate, cfg):
+            if common.util_check_range_time(creationDate, cfg):
                 creationDay = str(creationDate.strftime("%Y-%m-%d"))
                 util_increase_action(statList['created'], rowId, creatorMail, creationDay)
 
@@ -271,7 +265,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                 highCountPerDay[actionDay] -= 1
                                 isHighClosed = True
 
-                        if check_date(actionDate, cfg):
+                        if common.util_check_range_time(actionDate, cfg):
                             if removedStatus == "UNCONFIRMED":
                                 util_increase_action(statList['confirmed'], rowId, actionMail, actionDay, diffTime)
                                 dayConfirmed = actionDay
@@ -293,7 +287,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                 isVerified = False
 
                     elif change['field_name'] == 'resolution':
-                        if check_date(actionDate, cfg):
+                        if common.util_check_range_time(actionDate, cfg):
                             addedResolution = change['added']
                             removedResolution = change['removed']
                             if addedResolution == 'FIXED':
@@ -316,7 +310,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                         keywordsAdded = change['added'].lower().split(", ")
                         keywordsRemoved = change['removed'].lower().split(", ")
 
-                        if check_date(actionDate, cfg):
+                        if common.util_check_range_time(actionDate, cfg):
                             for keyword in keywordsAdded:
                                 if keyword in lKeywords:
                                     util_increase_action(statList['keywords'][keyword], rowId, actionMail, actionDay, diffTime)
@@ -351,7 +345,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                                 isBibisectRequest = False
 
                     elif change['field_name'] == 'blocks':
-                        if check_date(actionDate, cfg):
+                        if common.util_check_range_time(actionDate, cfg):
                             if change['added']:
                                 for metabug in change['added'].split(', '):
                                     if int(metabug) in row['blocks']:
@@ -368,7 +362,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 common.util_check_bugzilla_mail(
                         statList, commentMail, '', commentDate, rowId)
 
-                if check_date(commentDate, cfg) and rowId in fixedBugs:
+                if common.util_check_range_time(commentDate, cfg) and rowId in fixedBugs:
                     if commentMail == "libreoffice-commits@lists.freedesktop.org":
                         commentText = comment['text']
                         author =  commentText.split(' committed a patch related')[0]
@@ -593,22 +587,8 @@ def createReport(statList):
     print(makeStrong('Check <a href="https://wiki.documentfoundation.org/QA/GetInvolved">the Get Involved page</a> out now!'), file=fp)
     fp.close()
 
-def mkdate(datestr):
-      try:
-        return datetime.strptime(datestr, '%Y-%m-%d')
-      except ValueError:
-        raise argparse.ArgumentTypeError(datestr + ' is not a proper date string')
-
 if __name__ == '__main__':
-    parser=argparse.ArgumentParser()
-    parser.add_argument('Date',type=mkdate, nargs=2, help="Introduce the starting date as first" + \
-            " argument and the ending date as second argument. FORMAT: YYYY-MM-DD")
-    args=parser.parse_args()
-
-    if args.Date[0] >= args.Date[1]:
-        print('Argument 1 must be older than argument 2... Closing!!')
-        exit()
-
+    args = common.util_parse_date_args()
     print("Reading and writing data from " + common.dataDir)
 
     bugzillaData = common.get_bugzilla()

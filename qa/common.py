@@ -10,6 +10,7 @@
 import os
 import datetime
 import json
+import argparse
 from pyshorteners import Shortener
 
 #Path where bugzilla_dump.py is
@@ -114,6 +115,30 @@ def util_create_short_url(fp, lBugs, text='Link'):
     url = url[:-3]
     shortener = Shortener('Tinyurl', timeout=9000)
     print('\t\t+ ' + text + ': ' + shortener.short(url), file=fp)
+
+def mkdate(datestr):
+      try:
+        return datetime.datetime.strptime(datestr, '%Y-%m-%d')
+      except ValueError:
+        raise argparse.ArgumentTypeError(datestr + ' is not a proper date string')
+
+def util_parse_date_args():
+    parser=argparse.ArgumentParser()
+    parser.add_argument('Date',type=mkdate, nargs=2, help="Introduce the starting date as first" + \
+            " argument and the ending date as second argument. FORMAT: YYYY-MM-DD")
+    args=parser.parse_args()
+
+    if args.Date[0] >= args.Date[1]:
+        print('Argument 1 must be older than argument 2... Closing!!')
+        exit()
+
+    return parser.parse_args()
+
+def util_check_range_time(xDate, cfg):
+    if xDate >= cfg.Date[0] and xDate < cfg.Date[1]:
+        return True
+    else:
+        return False
 
 def get_bugzilla():
     fileName = dataDir + 'bugzilla_dump.json'

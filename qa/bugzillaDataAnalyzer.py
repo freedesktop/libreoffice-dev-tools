@@ -10,8 +10,6 @@
 import common
 import datetime
 
-reportPeriodDays = 365
-
 # Use enhancements, bugs, all
 kindOfData = ['enhancements', 'bugs', 'all']
 
@@ -143,7 +141,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             rowProduct = row['product']
 
             #get information about created bugs in reportPeriod
-            if creationDate >= cfg['reportPeriod']:
+            if common.util_check_range_time(creationDate, cfg):
                 week = str(creationDate.year) + '-' + str(creationDate.strftime("%V"))
                 month = str(creationDate.year) + '-' + str(creationDate.strftime("%m"))
                 util_increase_action(statList[kindOfTicket]['created'], rowId, creatorMail, rowStatus, rowProduct,
@@ -168,6 +166,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
+                if not common.util_check_range_time(actionDate, args):
+                    continue
                 common.util_check_bugzilla_mail(
                         statList, actionMail, '', actionDate, rowId)
 
@@ -178,7 +178,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                         addedStatus = change['added']
                         removedStatus = change['removed']
 
-                        if actionDate >= cfg['reportPeriod']:
+                        if common.util_check_range_time(actionDate, cfg):
                             if common.isClosed(addedStatus) and common.isClosed(row['status']):
                                 if isClosed:
                                     util_decrease_action(statList[kindOfTicket]['closed'], rowId, creatorMail, rowStatus, rowProduct,
@@ -232,7 +232,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                             newStatus = None
 
-                        if actionDate >= cfg['reportPeriod'] and row['resolution'] == 'FIXED':
+                        if common.util_check_range_time(actionDate, cfg) and \
+                                row['resolution'] == 'FIXED':
                             if addedResolution == 'FIXED':
                                 fixedBugs[rowId] = actionDate
                                 isFixed = True
@@ -245,7 +246,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                         keywordsAdded = change['added'].split(", ")
                         for keyword in keywordsAdded:
                             if keyword in lKeywords:
-                                if actionDate >= cfg['reportPeriod'] and keyword in rowKeywords:
+                                if common.util_check_range_time(actionDate, cfg) and \
+                                        keyword in rowKeywords:
                                     weekKeyword = str(actionDate.year) + '-' + str(actionDate.strftime("%V"))
                                     monthKeyword = str(actionDate.year) + '-' + str(actionDate.strftime("%m"))
                                     difftimeKeyword = (actionDate - creationDate).days
@@ -266,7 +268,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                 common.util_check_bugzilla_mail(
                         statList, commentMail, '', commentDate, rowId)
 
-                if rowId in fixedBugs:
+                if common.util_check_range_time(commentDate, cfg) and rowId in fixedBugs:
                     if commentMail == "libreoffice-commits@lists.freedesktop.org":
                         commentText = comment['text']
                         author =  commentText.split(' committed a patch related')[0]
@@ -425,21 +427,15 @@ def data_Report(statList) :
             else:
                 util_print_QA_line_data(statList, v, kind, k, 10)
 
-def runCfg():
-    cfg = {}
-    cfg['reportPeriod'] = common.util_convert_days_to_datetime(reportPeriodDays)
-    return cfg
-
 if __name__ == '__main__':
+    args = common.util_parse_date_args()
     print("Reading and writing data to " + common.dataDir)
-
-    cfg = runCfg()
 
     bugzillaData = common.get_bugzilla()
 
     statList = util_create_statList()
 
-    analyze_bugzilla_data(statList, bugzillaData, cfg)
+    analyze_bugzilla_data(statList, bugzillaData, args)
 
     data_Report(statList)
 
