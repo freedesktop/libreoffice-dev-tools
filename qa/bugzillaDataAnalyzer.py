@@ -272,7 +272,7 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                     if commentMail == "libreoffice-commits@lists.freedesktop.org":
                         commentText = comment['text']
                         author =  commentText.split(' committed a patch related')[0]
-                        if author not in bugFixers:
+                        if author not in bugFixers and 'uitest' not in commentText.lower():
                             bugFixers.append(author)
                             difftimeFixed = (commentDate - creationDate).days
                             weekFixed = str(commentDate.year) + '-' + str(commentDate.strftime("%V"))
