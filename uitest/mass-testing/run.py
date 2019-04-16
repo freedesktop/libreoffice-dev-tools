@@ -20,6 +20,12 @@ extensions = {
     'impress' : [ "odp", "ppt", "pptx" ]
     }
 
+def signal_handler(sig, frame):
+        print('Ctrl+C pressed! Killing it!')
+        sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
 class DefaultHelpParser(argparse.ArgumentParser):
     def error(self, message):
         sys.stderr.write('error: %s\n' % message)
