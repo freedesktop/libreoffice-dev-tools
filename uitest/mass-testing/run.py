@@ -12,6 +12,7 @@ import sys
 import signal
 import logging
 from shutil import copyfile
+import pickle
 
 extensions = {
     'writer' : [ "odt", "doc", "docx", "rtf" ],
@@ -66,7 +67,27 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
     totalTimeout = 0
     totalSkip = 0
 
+    sofficePath = liboPath + "instdir/program/soffice"
+    process = Popen([sofficePath, "--version"], encoding="utf-8", stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate()
+    sourceHash = stdout.split(" ")[2].strip()
+
+    #Keep track of the files run
+    filesRun = {}
+
+    if os.path.exists('run.pkl'):
+        with open('run.pkl', 'rb') as pickle_in:
+            filesRun = pickle.load(pickle_in)
+
+    if sourceHash not in filesRun:
+        filesRun[sourceHash] = []
+
     for fileName in listFiles:
+
+        if fileName in filesRun[sourceHash]:
+            print("SKIP: " + fileName)
+            continue
+
         # Replace the profile file with
         # 1. DisableMacrosExecution = True
         # 2. IgnoreProtectedArea = True
@@ -79,7 +100,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
         with Popen(["python3.5",
                     liboPath + "uitest/test_main.py",
                     "--debug",
-                    "--soffice=path:" + liboPath + "instdir/program/soffice",
+                    "--soffice=path:" + sofficePath,
                     "--userdir=file://" + profilePath,
                     "--file=" + component + ".py"], stdin=PIPE, stdout=PIPE, stderr=PIPE,
                     encoding="utf-8", preexec_fn=os.setsid) as process:
@@ -90,7 +111,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
                     if isDebug:
                         print(line)
 
-                    if 'skipped' == line.rstrip().lower():
+                    if 'skipped' == line.strip().lower():
                         logger.info("SKIP: " + fileName + " : " + importantInfo)
                         totalSkip += 1
                         break
@@ -101,9 +122,9 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
                             logger.info("PASS: " + fileName + " : " + importantInfo)
                             totalPass += 1
 
-                        importantInfo = line.rstrip().split('for ')[1]
+                        importantInfo = line.strip().split('for ')[1]
 
-                    elif importantInfo and 'error' == line.rstrip().lower() or 'fail' == line.rstrip().lower():
+                    elif importantInfo and 'error' == line.strip().lower() or 'fail' == line.strip().lower():
                         logger.info("FAIL: " + fileName + " : " + importantInfo)
                         totalFail += 1
                         importantInfo = ''
@@ -119,14 +140,22 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
 
                 os.killpg(process.pid, signal.SIGINT) # send signal to the process group
 
+        filesRun[sourceHash].append(fileName)
+
+        with open('run.pkl', 'wb') as pickle_out:
+            pickle.dump(filesRun, pickle_out)
+
     totalTests = totalPass + totalTimeout + totalSkip + totalFail
-    logger.info("")
-    logger.info("Total Tests: " + str(totalTests))
-    logger.info("\tPASS: " + str(totalPass))
-    logger.info("\tSKIP: " + str(totalSkip))
-    logger.info("\tTIMEOUT: " + str(totalTimeout))
-    logger.info("\tFAIL: " + str(totalFail))
-    logger.info("")
+    if totalTests > 0:
+        logger.info("")
+        logger.info("Total Tests: " + str(totalTests))
+        logger.info("\tPASS: " + str(totalPass))
+        logger.info("\tSKIP: " + str(totalSkip))
+        logger.info("\tTIMEOUT: " + str(totalTimeout))
+        logger.info("\tFAIL: " + str(totalFail))
+        logger.info("")
+    else:
+        print("No test run!")
 
 if __name__ == '__main__':
     parser = DefaultHelpParser()
