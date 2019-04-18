@@ -74,8 +74,8 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
     totalSkip = 0
 
     sofficePath = liboPath + "instdir/program/soffice"
-    process = Popen([sofficePath, "--version"], encoding="utf-8", stdout=PIPE, stderr=PIPE)
-    stdout, stderr = process.communicate()
+    process = Popen([sofficePath, "--version"], stdout=PIPE, stderr=PIPE)
+    stdout = process.communicate()[0].decode("utf-8")
     sourceHash = stdout.split(" ")[2].strip()
 
     #Keep track of the files run
@@ -110,9 +110,9 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
                     "--soffice=path:" + sofficePath,
                     "--userdir=file://" + profilePath,
                     "--file=" + component + ".py"], stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    encoding="utf-8", preexec_fn=os.setsid) as process:
+                    preexec_fn=os.setsid) as process:
             try:
-                outputLines = process.communicate(timeout=60)[0].splitlines()
+                outputLines = process.communicate(timeout=60)[0].decode('utf-8').splitlines()
                 importantInfo = ''
                 for line in outputLines:
                     if isDebug:
