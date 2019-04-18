@@ -34,17 +34,51 @@ class massTesting(UITestCase):
 
         try:
             xDoc = self.xUITest.getTopFocusWindow()
-            xEdit = xDoc.getChild("edit")
+            xEdit = xDoc.getChild("grid_window")
         except:
             #In case the mimetype is wrong and the file is open with another component
             handle_skip()
 
         return xEdit
 
-    def test_calc(self):
+    def test_remove_all_and_undo(self):
         xEdit = self.load_file()
         if xEdit:
-            continue
+            self.xUITest.executeCommand(".uno:SelectAll")
+            xEdit.executeAction("TYPE", mkPropertyValues({"KEYCODE":"DELETE"}))
+
+            self.xUITest.executeCommand(".uno:Undo")
+
+        self.ui_test.close_doc()
+
+    def test_insert_column_and_undo(self):
+        xEdit = self.load_file()
+        if xEdit:
+            self.xUITest.executeCommand(".uno:InsertColumnsBefore")
+            self.xUITest.executeCommand(".uno:Undo")
+
+        self.ui_test.close_doc()
+
+    def test_insert_row_and_undo(self):
+        xEdit = self.load_file()
+        if xEdit:
+            self.xUITest.executeCommand(".uno:InsertRowsBefore")
+            self.xUITest.executeCommand(".uno:Undo")
+
+        self.ui_test.close_doc()
+
+    def test_copy_all_paste_undo(self):
+        xEdit = self.load_file()
+        if xEdit:
+            self.xUITest.executeCommand(".uno:SelectAll")
+
+            self.xUITest.executeCommand(".uno:Copy")
+
+            for i in range(5):
+                self.xUITest.executeCommand(".uno:Paste")
+
+            for i in range(5):
+                self.xUITest.executeCommand(".uno:Undo")
 
         self.ui_test.close_doc()
 
