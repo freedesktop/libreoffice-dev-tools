@@ -32,12 +32,12 @@ class DefaultHelpParser(argparse.ArgumentParser):
         self.print_help()
         sys.exit(2)
 
-def start_logger():
+def start_logger(component):
     rootLogger = logging.getLogger()
     rootLogger.setLevel(os.environ.get("LOGLEVEL", "INFO"))
 
     logFormatter = logging.Formatter("%(asctime)s %(message)s")
-    fileHandler = logging.FileHandler("massTesting.log")
+    fileHandler = logging.FileHandler("./logs/" + component + ".log")
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
 
@@ -81,8 +81,9 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
     #Keep track of the files run
     filesRun = {}
 
-    if os.path.exists('run.pkl'):
-        with open('run.pkl', 'rb') as pickle_in:
+    pklFile = './logs/' + component + '.pkl'
+    if os.path.exists(pklFile):
+        with open(pklFile, 'rb') as pickle_in:
             filesRun = pickle.load(pickle_in)
 
     if sourceHash not in filesRun:
@@ -148,7 +149,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
 
         filesRun[sourceHash].append(fileName)
 
-        with open('run.pkl', 'wb') as pickle_out:
+        with open(pklFile, 'wb') as pickle_out:
             pickle.dump(filesRun, pickle_out)
 
     totalTests = totalPass + totalTimeout + totalSkip + totalFail
@@ -194,8 +195,10 @@ if __name__ == '__main__':
     os.environ["URE_BOOTSTRAP"] = "file://" + liboPath + "instdir/program/fundamentalrc"
     os.environ["SAL_USE_VCLPLUGIN"] = "gen"
 
-    logger = start_logger()
+    if not os.path.exists('./logs'):
+        os.makedirs('./logs')
 
+    logger = start_logger(component)
 
     listFiles = get_file_names(component, filesPath)
 
