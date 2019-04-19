@@ -82,4 +82,28 @@ class massTesting(UITestCase):
 
         self.ui_test.close_doc()
 
+    def test_print_preview(self):
+        xEdit = self.load_file()
+        if xEdit:
+            self.xUITest.executeCommand(".uno:PrintPreview")  #open print preview
+            self.xUITest.executeCommand(".uno:ClosePreview")  # close print preview
+
+        self.ui_test.close_doc()
+
+    def test_hide_column_and_undo(self):
+        xEdit = self.load_file()
+        if xEdit:
+            self.xUITest.executeCommand(".uno:HideColumn")
+            self.xUITest.executeCommand(".uno:Undo")
+
+        self.ui_test.close_doc()
+
+    def test_hide_row_and_undo(self):
+        xEdit = self.load_file()
+        if xEdit:
+            self.xUITest.executeCommand(".uno:HideRow")
+            self.xUITest.executeCommand(".uno:Undo")
+
+        self.ui_test.close_doc()
+
 # vim: set shiftwidth=4 softtabstop=4 expandtab:
