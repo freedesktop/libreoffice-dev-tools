@@ -108,4 +108,88 @@ class massTesting(UITestCase):
 
         self.ui_test.close_doc()
 
+    def test_copy_sheet_undo_delete_sheet(self):
+        xEdit = self.load_file()
+        if xEdit:
+            document = self.ui_test.get_component()
+            nrSheets = document.Sheets.getCount()  #number of sheets in the document
+            if nrSheets == 1:
+                #copy sheet and undo
+                self.ui_test.execute_dialog_through_command(".uno:Move")
+                xDialog = self.xUITest.getTopFocusWindow()
+                xOKBtn = xDialog.getChild("ok")
+                self.ui_test.close_dialog_through_button(xOKBtn)
+                self.assertEqual(document.Sheets.getCount(), 2)
+                self.xUITest.executeCommand(".uno:Undo")
+            else:
+                #copy sheet and undo and delete
+                #go to first sheet
+                for i in range(nrSheets - 1):
+                    self.xUITest.executeCommand(".uno:JumpToPrevTable")
+                #copy sheet; delete sheet
+                for i in range(nrSheets - 1):
+                    self.ui_test.execute_dialog_through_command(".uno:Move")
+                    xDialog = self.xUITest.getTopFocusWindow()
+                    xCopy = xDialog.getChild("copy")
+                    xCopy.executeAction("CLICK", tuple())
+                    xOKBtn = xDialog.getChild("ok")
+                    self.ui_test.close_dialog_through_button(xOKBtn)
+
+                    self.xUITest.executeCommand(".uno:Undo")
+
+                    self.ui_test.execute_dialog_through_command(".uno:Remove")  #delete sheet
+                    xDialog = self.xUITest.getTopFocusWindow()
+                    xOKButton = xDialog.getChild("yes")
+                    xOKButton.executeAction("CLICK", tuple())
+
+            self.assertEqual(document.Sheets.getCount(), 1)
+
+        self.ui_test.close_doc()
+
+    def test_change_text_formatting_and_undo(self):
+        xEdit = self.load_file()
+        if xEdit:
+            self.xUITest.executeCommand(".uno:SelectAll")
+            self.xUITest.executeCommand(".uno:Bold")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:Italic")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:Underline")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:UnderlineDouble")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:Strikeout")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:Overline")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:SuperScript")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:SubScript")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:Shadowed")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:OutlineFont")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:Grow")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:Shrink")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:ChangeCaseToUpper")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:ChangeCaseToLower")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:ChangeCaseRotateCase")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:ChangeCaseToSentenceCase")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:ChangeCaseToTitleCase")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:ChangeCaseToToggleCase")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:SmallCaps")
+            self.xUITest.executeCommand(".uno:Undo")
+            self.xUITest.executeCommand(".uno:StyleApply?Style:string=Heading%202&FamilyName:string=ParagraphStyles")
+            self.xUITest.executeCommand(".uno:Undo")
+
+        self.ui_test.close_doc()
 # vim: set shiftwidth=4 softtabstop=4 expandtab:
