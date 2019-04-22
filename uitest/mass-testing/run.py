@@ -13,6 +13,8 @@ import signal
 import logging
 from shutil import copyfile
 import pickle
+import time
+import fcntl
 
 extensions = {
     'writer' : [ "odt", "doc", "docx", "rtf" ],
@@ -68,10 +70,11 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
     if not os.path.exists(userPath):
         os.makedirs(userPath)
 
-    totalPass = 0
-    totalFail = 0
-    totalTimeout = 0
-    totalSkip = 0
+    results = {
+        'pass' : 0,
+        'fail' : 0,
+        'timeout' : 0,
+        'skip' : 0}
 
     sofficePath = liboPath + "instdir/program/soffice"
     process = Popen([sofficePath, "--version"], stdout=PIPE, stderr=PIPE)
@@ -104,62 +107,84 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
         #TODO: Find a better way to pass fileName parameter
         os.environ["TESTFILENAME"] = fileName
 
-        with Popen(["python3.5",
+        process = Popen(["python3.5",
                     liboPath + "uitest/test_main.py",
                     "--debug",
                     "--soffice=path:" + sofficePath,
                     "--userdir=file://" + profilePath,
                     "--file=" + component + ".py"], stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    preexec_fn=os.setsid) as process:
-            try:
-                outputLines = process.communicate(timeout=60)[0].decode('utf-8').splitlines()
-                importantInfo = ''
-                for line in outputLines:
-                    if isDebug:
-                        print(line)
+                    preexec_fn=os.setsid)
 
-                    if 'skipped' == line.strip().lower():
-                        logger.info("SKIP: " + fileName + " : " + importantInfo)
-                        totalSkip += 1
-                        break
+        # Do not block on process.stdout
+        fcntl.fcntl(process.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
-                    if 'Execution time' in line:
-                        # No error found between one Execution time line and the other
-                        if importantInfo:
-                            logger.info("PASS: " + fileName + " : " + importantInfo)
-                            totalPass += 1
+        # Kill the process if the test can't be executed in 20 seconds
+        timeout = time.time() + 20
+        isFailure = False
+        while True:
+            time.sleep(1)
 
-                        importantInfo = line.strip().split('for ')[1]
-
-                    elif importantInfo and 'error' == line.strip().lower() or 'fail' == line.strip().lower():
-                        logger.info("FAIL: " + fileName + " : " + importantInfo)
-                        totalFail += 1
-                        importantInfo = ''
-
-                if importantInfo:
-                    # No error found between the last Execution time line and the end
-                    logger.info("PASS: " + fileName + " : " + importantInfo)
-                    totalPass += 1
-
-            except TimeoutExpired:
+            if time.time() > timeout:
                 logger.info("TIMEOUT: " + fileName)
-                totalTimeout += 1
+                results['timeout'] += 1
 
-                os.killpg(process.pid, signal.SIGINT) # send signal to the process group
+                # kill popen process
+                os.killpg(process.pid, signal.SIGKILL)
+                break
+
+            try:
+                outputLines = process.stdout.readlines()
+
+            except IOError:
+                pass
+
+            importantInfo = ''
+
+            for line in outputLines:
+                line = line.decode("utf-8")
+
+                if isDebug:
+                    print(line)
+
+                if 'skipped' == line.strip().lower():
+                    logger.info("SKIP: " + fileName + " : " + importantInfo)
+                    results['skip'] += 1
+                    break
+
+                if 'Execution time' in line.strip():
+
+                    importantInfo = line.strip().split('for ')[1]
+
+                    #Extend timeout
+                    timeout = time.time() + 20
+
+                elif importantInfo and 'error' == line.strip().lower() or 'fail' == line.strip().lower():
+                    logger.info("FAIL: " + fileName + " : " + importantInfo)
+                    results['fail'] += 1
+                    isFailure = True
+
+            # No error found between the Execution time line and the end of stdout
+            if importantInfo and not isFailure:
+                logger.info("PASS: " + fileName + " : " + str(importantInfo))
+                results['pass'] += 1
+
+            if process.poll() is not None:
+                break
+
 
         filesRun[sourceHash].append(fileName)
 
         with open(pklFile, 'wb') as pickle_out:
             pickle.dump(filesRun, pickle_out)
 
-    totalTests = totalPass + totalTimeout + totalSkip + totalFail
+    totalTests = sum(results.values())
     if totalTests > 0:
         logger.info("")
         logger.info("Total Tests: " + str(totalTests))
-        logger.info("\tPASS: " + str(totalPass))
-        logger.info("\tSKIP: " + str(totalSkip))
-        logger.info("\tTIMEOUT: " + str(totalTimeout))
-        logger.info("\tFAIL: " + str(totalFail))
+        logger.info("\tPASS: " + str(results['pass']))
+        logger.info("\tSKIP: " + str(results['skip']))
+        logger.info("\tTIMEOUT: " + str(results['timeout']))
+        logger.info("\tFAIL: " + str(results['fail']))
         logger.info("")
     else:
         print("No test run!")
