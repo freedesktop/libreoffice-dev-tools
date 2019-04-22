@@ -143,24 +143,27 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
             importantInfo = ''
             isFailure = False
             for line in outputLines:
-                line = line.decode("utf-8")
+                line = line.decode("utf-8").strip()
+
+                if not line:
+                    continue
 
                 if isDebug:
                     print(line)
 
-                if 'skipped' == line.strip().lower():
+                if 'skipped' == line.lower():
                     logger.info("SKIP: " + fileName + " : " + importantInfo)
                     results['skip'] += 1
                     break
 
-                if 'Execution time' in line.strip():
+                if 'Execution time' in line:
 
-                    importantInfo = line.strip().split('for ')[1]
+                    importantInfo = line.split('for ')[1]
 
                     #Extend timeout
                     timeout = time.time() + timeoutTime
 
-                elif importantInfo and 'error' == line.strip().lower() or 'fail' == line.strip().lower():
+                elif importantInfo and 'error' == line.lower() or 'fail' == line.lower():
                     isFailure = True
 
             if importantInfo:
