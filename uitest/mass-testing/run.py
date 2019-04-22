@@ -120,8 +120,9 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
         # Do not block on process.stdout
         fcntl.fcntl(process.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
-        # Kill the process if the test can't be executed in 20 seconds
-        timeout = time.time() + 20
+        # Kill the process if the test can't be executed in 'timeoutTime' seconds
+        timeoutTime = 20
+        timeout = time.time() + timeoutTime
         while True:
             time.sleep(1)
 
@@ -157,7 +158,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
                     importantInfo = line.strip().split('for ')[1]
 
                     #Extend timeout
-                    timeout = time.time() + 20
+                    timeout = time.time() + timeoutTime
 
                 elif importantInfo and 'error' == line.strip().lower() or 'fail' == line.strip().lower():
                     isFailure = True
