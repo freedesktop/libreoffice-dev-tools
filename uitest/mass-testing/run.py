@@ -62,7 +62,7 @@ def get_file_names(component, filesPath):
 
     return auxNames
 
-def run_tests_and_get_results(liboPath, listFiles, isDebug):
+def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
 
     #Create directory for the user profile
     profilePath = '/tmp/libreoffice/4/'
@@ -84,19 +84,21 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
     #Keep track of the files run
     filesRun = {}
 
-    pklFile = './logs/' + component + '.pkl'
-    if os.path.exists(pklFile):
-        with open(pklFile, 'rb') as pickle_in:
-            filesRun = pickle.load(pickle_in)
+    if isResume:
+        pklFile = './logs/' + component + '.pkl'
+        if os.path.exists(pklFile):
+            with open(pklFile, 'rb') as pickle_in:
+                filesRun = pickle.load(pickle_in)
 
-    if sourceHash not in filesRun:
-        filesRun[sourceHash] = []
+        if sourceHash not in filesRun:
+            filesRun[sourceHash] = []
 
     for fileName in listFiles:
 
-        if fileName in filesRun[sourceHash]:
-            print("SKIP: " + fileName)
-            continue
+        if isResume:
+            if fileName in filesRun[sourceHash]:
+                print("SKIP: " + fileName)
+                continue
 
         # Replace the profile file with
         # 1. DisableMacrosExecution = True
@@ -124,6 +126,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
         while True:
             time.sleep(1)
 
+
             if time.time() > timeout:
                 logger.info("TIMEOUT: " + fileName)
                 results['timeout'] += 1
@@ -139,7 +142,6 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
                 pass
 
             importantInfo = ''
-
             for line in outputLines:
                 line = line.decode("utf-8")
 
@@ -171,11 +173,11 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug):
             if process.poll() is not None:
                 break
 
+        if isResume:
+            filesRun[sourceHash].append(fileName)
 
-        filesRun[sourceHash].append(fileName)
-
-        with open(pklFile, 'wb') as pickle_out:
-            pickle.dump(filesRun, pickle_out)
+            with open(pklFile, 'wb') as pickle_out:
+                pickle.dump(filesRun, pickle_out)
 
     totalTests = sum(results.values())
     if totalTests > 0:
@@ -198,6 +200,8 @@ if __name__ == '__main__':
             '--soffice', required=True, help="Path to the LibreOffice directory")
     parser.add_argument(
             '--debug', action='store_true', help="Flag to print output")
+    parser.add_argument(
+            '--resume', action='store_true', help="Flag to resume previous runs")
     parser.add_argument(
             '--component', required=True, help="The component to be used. Options: " + \
                     " ".join("[" + x + "]" for x in extensions.keys()))
@@ -227,6 +231,6 @@ if __name__ == '__main__':
 
     listFiles = get_file_names(component, filesPath)
 
-    run_tests_and_get_results(liboPath, listFiles, argument.debug)
+    run_tests_and_get_results(liboPath, listFiles, argument.debug, argument.resume)
 
 # vim: set shiftwidth=4 softtabstop=4 expandtab:
