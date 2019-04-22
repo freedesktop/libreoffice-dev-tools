@@ -122,10 +122,8 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
 
         # Kill the process if the test can't be executed in 20 seconds
         timeout = time.time() + 20
-        isFailure = False
         while True:
             time.sleep(1)
-
 
             if time.time() > timeout:
                 logger.info("TIMEOUT: " + fileName)
@@ -142,6 +140,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
                 pass
 
             importantInfo = ''
+            isFailure = False
             for line in outputLines:
                 line = line.decode("utf-8")
 
@@ -161,14 +160,16 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
                     timeout = time.time() + 20
 
                 elif importantInfo and 'error' == line.strip().lower() or 'fail' == line.strip().lower():
-                    logger.info("FAIL: " + fileName + " : " + importantInfo)
-                    results['fail'] += 1
                     isFailure = True
 
-            # No error found between the Execution time line and the end of stdout
-            if importantInfo and not isFailure:
-                logger.info("PASS: " + fileName + " : " + str(importantInfo))
-                results['pass'] += 1
+            if importantInfo:
+                if isFailure:
+                    logger.info("FAIL: " + fileName + " : " + importantInfo)
+                    results['fail'] += 1
+                else:
+                    # No error found between the Execution time line and the end of stdout
+                    logger.info("PASS: " + fileName + " : " + str(importantInfo))
+                    results['pass'] += 1
 
             if process.poll() is not None:
                 break
