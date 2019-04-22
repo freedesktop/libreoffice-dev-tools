@@ -88,6 +88,8 @@ class massTesting(UITestCase):
             self.xUITest.executeCommand(".uno:PrintPreview")  #open print preview
             self.xUITest.executeCommand(".uno:ClosePreview")  # close print preview
 
+            self.xUITest.getTopFocusWindow()
+
         self.ui_test.close_doc()
 
     def test_hide_column_and_undo(self):
