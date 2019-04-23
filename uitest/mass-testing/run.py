@@ -120,9 +120,12 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
         # Do not block on process.stdout
         fcntl.fcntl(process.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
-        # Kill the process if the test can't be executed in 'timeoutTime' seconds
-        timeoutTime = 20
-        timeout = time.time() + timeoutTime
+        # Kill the process if:
+        # 1. The file can't be loaded in 'fielInterval' seconds
+        # 2. The test can't be executed in 'testInterval' seconds
+        fileInterval = 10
+        testIternval = 20
+        timeout = time.time() + fileInterval
         while True:
             time.sleep(1)
 
@@ -136,7 +139,6 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
 
             try:
                 outputLines = process.stdout.readlines()
-
             except IOError:
                 pass
 
@@ -151,17 +153,22 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
                 if isDebug:
                     print(line)
 
-                if 'skipped' == line.lower():
-                    logger.info("SKIP: " + fileName + " : " + importantInfo)
-                    results['skip'] += 1
-                    break
+                if line.startswith("mass-uitesting:"):
+                    message = line.split(":")[1]
+                    if message == 'skipped':
+                        logger.info("SKIP: " + fileName + " : " + importantInfo)
+                        results['skip'] += 1
 
-                if 'Execution time' in line:
+                        # kill popen process
+                        os.killpg(process.pid, signal.SIGKILL)
 
+                        break
+                    elif message == 'loaded':
+                        #Extend timeout
+                        timeout += testIternval
+
+                elif 'Execution time' in line:
                     importantInfo = line.split('for ')[1]
-
-                    #Extend timeout
-                    timeout = time.time() + timeoutTime
 
                 elif importantInfo and 'error' == line.lower() or 'fail' == line.lower():
                     isFailure = True

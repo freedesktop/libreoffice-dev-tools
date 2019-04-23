@@ -10,12 +10,6 @@ from uitest.framework import UITestCase
 from libreoffice.uno.propertyvalue import mkPropertyValues
 import time
 
-
-def handle_skip():
-    #Kill the process so we don't have to open the same file for each test
-    print("skipped")
-    os.killpg(os.getpid(), signal.SIGINT)
-
 class massTesting(UITestCase):
 
     def load_file(self):
@@ -28,16 +22,21 @@ class massTesting(UITestCase):
         self.ui_test.load_file(fileName)
         document = self.ui_test.get_component()
 
+
         # Ignore read-only or protected files
         if not hasattr(document, 'isReadonly') or document.isReadonly() or document.isProtected():
-            handle_skip()
+            print("mass-uitesting:skipped", flush=True)
+            return
 
         try:
             xDoc = self.xUITest.getTopFocusWindow()
             xEdit = xDoc.getChild("grid_window")
         except:
             #In case the mimetype is wrong and the file is open with another component
-            handle_skip()
+            print("mass-uitesting:skipped", flush=True)
+            return
+
+        print("mass-uitesting:loaded", flush=True)
 
         return xEdit
 
