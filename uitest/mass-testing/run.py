@@ -126,12 +126,17 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
         fileInterval = 10
         testIternval = 20
         timeout = time.time() + fileInterval
+        notLoaded = True
         while True:
             time.sleep(1)
 
             if time.time() > timeout:
-                logger.info("TIMEOUT: " + fileName)
-                results['timeout'] += 1
+                if notLoaded:
+                    logger.info("SKIP: " + fileName)
+                    results['skip'] += 1
+                else:
+                    logger.info("TIMEOUT: " + fileName)
+                    results['timeout'] += 1
 
                 # kill popen process
                 os.killpg(process.pid, signal.SIGKILL)
@@ -164,6 +169,8 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
 
                         break
                     elif message == 'loaded':
+                        notLoaded = False
+
                         #Extend timeout
                         timeout += testIternval
 
