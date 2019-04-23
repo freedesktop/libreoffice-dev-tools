@@ -113,36 +113,36 @@ class massTesting(UITestCase):
         if xEdit:
             document = self.ui_test.get_component()
             nrSheets = document.Sheets.getCount()  #number of sheets in the document
-            if nrSheets == 1:
-                #copy sheet and undo
+            #go to first sheet
+            for i in range(nrSheets - 1):
+                self.xUITest.executeCommand(".uno:JumpToPrevTable")
+
+            ignoreSheets = 0
+            for i in range(nrSheets):
+                #copy sheet, undo and delete
                 self.ui_test.execute_dialog_through_command(".uno:Move")
                 xDialog = self.xUITest.getTopFocusWindow()
+                xCopy = xDialog.getChild("copy")
+                xCopy.executeAction("CLICK", tuple())
                 xOKBtn = xDialog.getChild("ok")
                 self.ui_test.close_dialog_through_button(xOKBtn)
-                self.assertEqual(document.Sheets.getCount(), 2)
+
                 self.xUITest.executeCommand(".uno:Undo")
-            else:
-                #copy sheet and undo and delete
-                #go to first sheet
-                for i in range(nrSheets - 1):
-                    self.xUITest.executeCommand(".uno:JumpToPrevTable")
-                #copy sheet; delete sheet
-                for i in range(nrSheets - 1):
-                    self.ui_test.execute_dialog_through_command(".uno:Move")
-                    xDialog = self.xUITest.getTopFocusWindow()
-                    xCopy = xDialog.getChild("copy")
-                    xCopy.executeAction("CLICK", tuple())
-                    xOKBtn = xDialog.getChild("ok")
-                    self.ui_test.close_dialog_through_button(xOKBtn)
 
-                    self.xUITest.executeCommand(".uno:Undo")
+                if document.Sheets[ignoreSheets].isProtected():
+                    #Do not count  the last sheet
+                    if i < nrSheets - 1:
+                        ignoreSheets += 1
+                        self.xUITest.executeCommand(".uno:JumpToNextTable")
+                else:
+                    #Do not delete the last sheet
+                    if i < nrSheets - 1:
+                        self.ui_test.execute_dialog_through_command(".uno:Remove")  #delete sheet
+                        xDialog = self.xUITest.getTopFocusWindow()
+                        xOKButton = xDialog.getChild("yes")
+                        xOKButton.executeAction("CLICK", tuple())
 
-                    self.ui_test.execute_dialog_through_command(".uno:Remove")  #delete sheet
-                    xDialog = self.xUITest.getTopFocusWindow()
-                    xOKButton = xDialog.getChild("yes")
-                    xOKButton.executeAction("CLICK", tuple())
-
-            self.assertEqual(document.Sheets.getCount(), 1)
+            self.assertEqual(document.Sheets.getCount(), 1 + ignoreSheets)
 
         self.ui_test.close_doc()
 
