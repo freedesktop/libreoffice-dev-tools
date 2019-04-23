@@ -116,6 +116,13 @@ class massTesting(UITestCase):
             for i in range(nrSheets - 1):
                 self.xUITest.executeCommand(".uno:JumpToPrevTable")
 
+                # Make sure all sheets are visible
+                self.xUITest.executeCommand(".uno:Hide")
+                self.xUITest.executeCommand(".uno:Show")
+                xDialog = self.xUITest.getTopFocusWindow()
+                xOKBtn = xDialog.getChild("ok")
+                self.ui_test.close_dialog_through_button(xOKBtn)
+
             ignoreSheets = 0
             for i in range(nrSheets):
                 #copy sheet, undo and delete
