@@ -28,8 +28,8 @@ class massTesting(UITestCase):
         self.ui_test.load_file(fileName)
         document = self.ui_test.get_component()
 
-        # Ignore read-only files
-        if not hasattr(document, 'isReadonly') or document.isReadonly():
+        # Ignore read-only or protected files
+        if not hasattr(document, 'isReadonly') or document.isReadonly() or document.isProtected():
             handle_skip()
 
         try:
