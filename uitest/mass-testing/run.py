@@ -91,12 +91,15 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
                 filesRun = pickle.load(pickle_in)
 
         if sourceHash not in filesRun:
-            filesRun[sourceHash] = []
+            filesRun[sourceHash] = {'files': []}
+
+        if 'results' in filesRun[sourceHash]:
+            results = filesRun[sourceHash]['results']
 
     for fileName in listFiles:
 
         if isResume:
-            if fileName in filesRun[sourceHash]:
+            if fileName in filesRun[sourceHash]['files']:
                 print("SKIP: " + fileName)
                 continue
 
@@ -193,7 +196,9 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
                 break
 
         if isResume:
-            filesRun[sourceHash].append(fileName)
+            filesRun[sourceHash]['files'].append(fileName)
+
+            filesRun[sourceHash]['results'] = results
 
             with open(pklFile, 'wb') as pickle_out:
                 pickle.dump(filesRun, pickle_out)
