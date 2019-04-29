@@ -50,6 +50,9 @@ class massTesting(UITestCase):
         for i in range(nrSheets - 1):
             self.xUITest.executeCommand(".uno:JumpToPrevTable")
 
+            #Just in case more than 1 sheet is selected
+            self.xUITest.executeCommand(".uno:TableDeselectAll")
+
             # Make sure all sheets are visible
             self.xUITest.executeCommand(".uno:Hide")
             self.xUITest.executeCommand(".uno:Show")
