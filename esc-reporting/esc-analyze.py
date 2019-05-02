@@ -720,12 +720,12 @@ def analyze_reports():
         if cntReview == 0 and not statList['people'][ownerEmail]['isCommitter']:
             tmpListToReview.append({'id': entry['id'], 'fullid': entry['fullid'], 'patchset': patchset})
 
-    if gerritData['patch'][rowTmp['id']]['project'] == 'online':
+    for rowTmp in tmpListToReview:
+      if gerritData['patch'][rowTmp['id']]['project'] == 'online':
         defaultEmail = util_check_mail('', cfg['automate']['gerritReviewOnlineUserEmail'])
-    else:
+      else:
         defaultEmail = util_check_mail('', cfg['automate']['gerritReviewUserEmail'])
 
-    for rowTmp in tmpListToReview:
       reviewEmail = defaultEmail
       txt = gerritData['patch'][rowTmp['id']]['subject']
       if txt.startswith('tdf#'):
