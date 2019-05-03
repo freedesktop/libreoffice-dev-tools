@@ -548,6 +548,19 @@ def get_esc_bugzilla(cfg):
           '&chfield=priority' \
           '&chfieldfrom=-8d' \
           '&chfieldto=Now' \
+          '&chfieldvalue=high' \
+          '&priority=high' \
+          '&resolution=---'
+    rawList['HighSeverityBugs'] = {}
+    rawList['HighSeverityBugs']['count'], \
+    rawList['HighSeverityBugs']['list'] = do_ESC_counting(bz, url)
+    url = '&bug_status=UNCONFIRMED' \
+          '&bug_status=NEW' \
+          '&bug_status=ASSIGNED' \
+          '&bug_status=REOPENED' \
+          '&chfield=priority' \
+          '&chfieldfrom=-8d' \
+          '&chfieldto=Now' \
           '&chfieldvalue=highest' \
           '&priority=highest' \
           '&resolution=---'

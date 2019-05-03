@@ -521,6 +521,10 @@ def analyze_esc():
        for id in bugzillaESCData['MostPressingBugs'][type]['list']:
            statList['escList']['MostPressingBugs'][type]['list'][id] = bugzillaData['bugs'][id]['summary']
 
+    statList['escList']['HighSeverityBugs'] = {}
+    for id in bugzillaESCData['HighSeverityBugs']['list']:
+      statList['escList']['HighSeverityBugs'][id] = bugzillaData['bugs'][id]['summary']
+
     bug_fixers = {}
     bug_confirmers = {}
     for id, bug in bugzillaData['bugs'].items():

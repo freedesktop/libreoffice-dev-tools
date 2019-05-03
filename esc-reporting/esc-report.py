@@ -310,15 +310,22 @@ def report_esc_prototype():
             txt += '     {:<24} - {}({:+d})\n'.format(id, row, xDiff)
     escPrototype = escPrototype.replace('$<ESC_COMPONENT_REGRESSION_ALL_UPDATE>', txt)
 
-    txt = '     open:\n'
+    txt = '     New:\n'
     for id, title in statList['escList']['MostPressingBugs']['open']['list'].items():
         txt += '        + {}\n'.format(title)
         txt += '            + https://bugs.documentfoundation.org/show_bug.cgi?id={}\n'.format(id)
-    txt += '     closed:\n'
+    txt += '     Old:\n'
+    txt += '     Fixed:\n'
     for id, title in statList['escList']['MostPressingBugs']['closed']['list'].items():
         txt += '        + {}\n'.format(title)
         txt += '            + https://bugs.documentfoundation.org/show_bug.cgi?id={}\n'.format(id)
     escPrototype = escPrototype.replace('$<ESC_MOST_PRESSING_BUGS>', txt)
+
+    txt = ''
+    for id, title in statList['escList']['HighSeverityBugs'].items():
+        txt += '        + {}\n'.format(title)
+        txt += '            + https://bugs.documentfoundation.org/show_bug.cgi?id={}\n'.format(id)
+    escPrototype = escPrototype.replace('$<ESC_HIGH_SEVERITY_BUGS>', txt)
 
     txt = '    + {}({:+d}) import failure, {}({:+d}) export failures'.format(
           statList['data']['esc']['crashtest']['import'], statList['diff']['esc']['crashtest']['import'],
