@@ -32,7 +32,9 @@ def util_create_statList():
         'confirmed': util_create_basic_schema(),
         'verified': util_create_basic_schema(),
         'wfm': util_create_basic_schema(),
+        'duplicate': util_create_basic_schema(),
         'fixed': util_create_basic_schema(),
+        'resolvedStatuses' : {},
         'criticalFixed': {},
         'crashFixed': {},
         'oldBugsFixed': {},
@@ -122,14 +124,18 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
             isFixed = False
             isWFM = False
+            isDuplicate = False
+            isResolved = False
             isConfirmed = False
             isVerified = False
             dayConfirmed = None
             dayVerified = None
             dayWFM = None
+            dayDuplicate = None
             authorConfirmed = None
             authorVerified = None
             authorWFM = None
+            authorDuplicate = None
             isRegression = False
             isRegressionClosed = False
             isBibisectRequest = False
@@ -290,6 +296,17 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                         if common.util_check_range_time(actionDate, cfg):
                             addedResolution = change['added']
                             removedResolution = change['removed']
+
+                            if addedResolution:
+                                if addedResolution not in statList['resolvedStatuses']:
+                                    statList['resolvedStatuses'][addedResolution] = 0
+                                statList['resolvedStatuses'][addedResolution] += 1
+                                isResolved = True
+
+                            if isResolved and removedResolution:
+                                statList['resolvedStatuses'][removedResolution] -= 1
+                                isResolved = False
+
                             if addedResolution == 'FIXED':
                                 fixedBugs[rowId] = actionDate
                                 isFixed = True
@@ -305,6 +322,15 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             elif removedResolution == 'WORKSFORME' and isWFM:
                                 util_decrease_action(statList['wfm'], authorWFM, dayWFM)
                                 isWFM = False
+
+                            if addedResolution == 'DUPLICATE':
+                                isDuplicate = True
+                                dayDuplicate = actionDay
+                                authorDuplicate = actionMail
+                                util_increase_action(statList['duplicate'], rowId, actionMail, actionDay, diffTime)
+                            elif removedResolution == 'DUPLICATE' and isDuplicate:
+                                util_decrease_action(statList['duplicate'], authorDuplicate, dayDuplicate)
+                                isDuplicate = False
 
                     elif change['field_name'] == 'keywords':
                         keywordsAdded = change['added'].lower().split(", ")
@@ -464,6 +490,12 @@ def makeH2(text):
 def makeLink(url, text):
     return '<a href="' + url + '">' + text + '</a>'
 
+def savePlot(plt, plotLabel):
+    filePath = "/tmp/" + plotLabel.replace(" ", "_") + ".png"
+    print("Saving plot " + plotLabel + " to " + filePath)
+    plt.savefig(filePath)
+    plt.gcf().clear()
+
 def createPlot(valueDict, plotType, plotTitle, plotLabel, plotColor):
 
     x, y = zip(*sorted(valueDict.items(), key = lambda x:datetime.strptime(x[0], '%Y-%m-%d')))
@@ -487,11 +519,41 @@ def createPlot(valueDict, plotType, plotTitle, plotLabel, plotColor):
         if idx % total == 0:
             val.set_visible(True)
 
-    #plt.show()
-    filePath = "/tmp/" + plotLabel.replace(" ", "_") + ".png"
-    print("Saving plot " + plotLabel + " to " + filePath)
-    plt.savefig(filePath)
-    plt.gcf().clear()
+    savePlot(plt, plotLabel)
+
+def createDonut(valueDict, plotTitle):
+    total = sum(valueDict.values())
+    newDict = {}
+    for k, v in valueDict.items():
+        perc = v * 100 / total
+        # Ignore values smaller than 3%
+        if perc < 3:
+            if 'OTHERS' not in newDict:
+                newDict['OTHERS'] = 0
+            newDict['OTHERS'] += perc
+        else:
+            newDict[k] = perc
+
+    names=newDict.keys()
+    size=newDict.values()
+
+    # Create a circle for the center of the plot
+    my_circle=plt.Circle( (0,0), 0.3, color='white')
+    plt.pie(size, labels=names, radius=1.3, autopct='%1.1f%%')
+    p=plt.gcf()
+    p.gca().add_artist(my_circle)
+
+    savePlot(plt, plotTitle)
+
+def createDonutSection(fp, value, sectionName):
+    print(makeH2(sectionName), file=fp)
+    total = sum(value.values())
+    print("{} bugs have been set to RESOLVED.".format(
+        makeStrong(total)), file=fp)
+    print('<img src="PATH_HERE/{}.png" alt="" width="640" height="480" class="alignnone size-full" />'.format(
+        sectionName.replace(" ", "_")), file=fp)
+    createDonut(value, sectionName)
+    print('Check the following sections for more information about bugs resolved as FIXED, WORKSFORME and DUPLICATE.', file=fp)
 
 def createSection(fp, value, sectionName, action, actionPerson, plotColor):
     print(makeH2(sectionName), file=fp)
@@ -556,12 +618,14 @@ def createReport(statList):
     print("creating Blog Report in " + fileName)
     createSection(fp, statList['created'], "Reported Bugs", "reported", "Reporters", "red")
     createSection(fp, statList['confirmed'], "Triaged Bugs", "triaged", "Triagers", "gold")
+    createDonutSection(fp, statList['resolvedStatuses'], 'Resolution of resolved bugs')
     createSection(fp, statList['fixed'], "Fixed Bugs", "fixed", "Fixers", "darksalmon")
     createList(fp, statList['criticalFixed'], "List of critical bugs fixed")
     createList(fp, statList['crashFixed'], "List of crashes fixed")
     createList(fp, statList['oldBugsFixed'], "List of old bugs ( more than {} years old ) fixed".format(oldBugsYears))
-    createSection(fp, statList['verified'], "Verified bug fixes", "verified", "Verifiers", "palegreen")
     createSection(fp, statList['wfm'], "WORKSFORME bugs", "retested", "testers", "m")
+    createSection(fp, statList['duplicate'], "DUPLICATED bugs", "duplicated", "testers", "c")
+    createSection(fp, statList['verified'], "Verified bug fixes", "verified", "Verifiers", "palegreen")
     createSection(fp, statList['metabug'], "Categorized Bugs", "categorized with a metabug", "Categorizers", "lightpink")
     createSection(fp, statList['keywords']['regression'], "Regression Bugs", "set as regressions", "", "mediumpurple")
     createSection(fp, statList['keywords']['bisected'], "Bisected Bugs", "bisected", "Bisecters", "orange")
