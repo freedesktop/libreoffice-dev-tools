@@ -7,13 +7,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
+import comments
 import common
 import requests
 import datetime
 import os
 import json
-
-needInfoFollowUpPingComment = "Dear Bug Submitter,\n\nPlease read this message in its entirety before proceeding."
 
 untouchedPeriodDays = 365
 
@@ -66,8 +65,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
                         ('MassPing-UntouchedBug' in comment["text"] or \
                         comment["text"].startswith("A polite ping, still working on this bug") or \
-                        'MassPing-NeedInfo-Ping' in comment["text"] or \
-                        comment["text"].startswith(needInfoFollowUpPingComment)):
+                        'MassPing-NeedInfo' in comment["text"]):
                     statList['tags']['addObsolete'].add(comment["id"])
 
             if len(comments) > 0:
@@ -118,12 +116,12 @@ def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment):
 def automated_needInfoPing(statList):
 
     print('== NEEDINFO Ping ==')
-    post_comments_to_bugzilla(statList, "needInfoPing", 'MassPing-NeedInfo-Ping', common.needInfoPingComment)
+    post_comments_to_bugzilla(statList, "needInfoPing", 'MassPing-NeedInfo-Ping', comments.needInfoPingComment)
 
 def automated_untouched(statList):
 
     print('== Untouched bugs ==')
-    post_comments_to_bugzilla(statList, "untouched", 'MassPing-UntouchedBug', common.untouchedPingComment)
+    post_comments_to_bugzilla(statList, "untouched", 'MassPing-UntouchedBug', comments.untouchedPingComment)
 
 def automated_tagging(statList):
     #tags are sometimes not saved in bugzilla_dump.json
