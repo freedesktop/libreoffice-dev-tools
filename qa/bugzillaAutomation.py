@@ -17,6 +17,8 @@ needInfoFollowUpPingComment = "Dear Bug Submitter,\n\nPlease read this message i
 
 untouchedPeriodDays = 365
 
+needInfoPingPeriodDays = 180
+
 #Path to addObsolete.txt
 addObsoleteDir = '/home/xisco/dev-tools/qa'
 
@@ -27,7 +29,8 @@ def util_create_statList():
                 'addObsolete': set(),
                 'removeObsolete': set()
             },
-        'untouched': []
+        'untouched': [],
+        'needInfoPing': {}
     }
 def analyze_bugzilla(statList, bugzillaData, cfg):
     print("Analyze bugzilla\n", end="", flush=True)
@@ -45,6 +48,14 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
             rowKeywords = row['keywords']
 
+            rowCreator = row['creator_detail']['real_name']
+            if not rowCreator:
+                rowCreator = row['creator_detail']['email'].split('@')[0]
+
+            if rowStatus == "NEEDINFO" and \
+                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['needInfoPingPeriod']:
+                statList['needInfoPing'][rowId] = rowCreator
+
             comments = row['comments'][1:]
             for idx, comment in enumerate(comments):
                 #Check for duplicated comments
@@ -55,7 +66,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
                         (comment["text"].startswith(common.untouchedPingComment[:250]) or \
                         comment["text"].startswith("A polite ping, still working on this bug") or \
-                        comment["text"].startswith(common.needInfoPingComment) or \
+                        'MassPing-NeedInfo-Ping' in comment["text"] or \
                         comment["text"].startswith(needInfoFollowUpPingComment)):
                     statList['tags']['addObsolete'].add(comment["id"])
 
@@ -67,7 +78,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['tags']['addObsolete'].remove(comments[-1]["id"])
                         else:
                             statList['tags']['removeObsolete'].add(comments[-1]["id"])
-                elif comments[-1]["text"].startswith(common.needInfoPingComment):
+                elif 'MassPing-NeedInfo-Ping' in comments[-1]["text"]:
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
                             statList['tags']['addObsolete'].remove(comments[-1]["id"])
@@ -87,12 +98,32 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['untouched'].append(rowId)
 
+def automated_needInfoPing(statList):
+
+    print('== NEEDINFO Ping ==')
+    for bugId, creator in statList['needInfoPing'].items():
+        bugId = str(bugId)
+
+
+        urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
+        rGet = requests.get(urlGet)
+        rawData = json.loads(rGet.text)
+        rGet.close()
+
+        if 'MassPing-NeedInfo-Ping' not in rawData['bugs'][bugId]['comments'][-1]['text']:
+
+            firstLine = "Dear " + creator + ",\\n\\n"
+            command = '{"comment" : "' + firstLine + common.needInfoPingComment.replace('\n', '\\n') + '", "is_private" : false}'
+            urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
+            rPost = requests.post(urlPost, command.encode('utf-8'))
+            print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
+            rPost.close()
+
 def automated_untouched(statList):
 
     print('== Untouched bugs ==')
     for bugId in statList['untouched']:
         bugId = str(bugId)
-        command = '{"comment" : "' + common.untouchedPingComment.replace('\n', '\\n') + '", "is_private" : false}'
 
         urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
         rGet = requests.get(urlGet)
@@ -100,6 +131,7 @@ def automated_untouched(statList):
         rGet.close()
 
         if rawData['bugs'][bugId]['comments'][-1]['text'][:250] != common.untouchedPingComment[:250]:
+            command = '{"comment" : "' + common.untouchedPingComment.replace('\n', '\\n') + '", "is_private" : false}'
             urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
             rPost = requests.post(urlPost, command)
             print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
@@ -145,6 +177,7 @@ def automated_tagging(statList):
 def runCfg():
     cfg = common.get_config()
     cfg['untouchedPeriod'] = common.util_convert_days_to_datetime(untouchedPeriodDays)
+    cfg['needInfoPingPeriod'] = common.util_convert_days_to_datetime(needInfoPingPeriodDays)
 
     return cfg
 
@@ -161,3 +194,4 @@ if __name__ == '__main__':
 
     automated_tagging(statList)
     automated_untouched(statList)
+    automated_needInfoPing(statList)

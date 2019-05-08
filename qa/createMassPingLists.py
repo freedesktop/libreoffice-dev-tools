@@ -38,7 +38,7 @@ def analyze_bugzilla(statList, bugzillaData):
                     else:
                         statList['1year'].append(rowId)
 
-                elif comments[-1]["text"].startswith(common.needInfoPingComment):
+                elif 'MassPing-NeedInfo-Ping' in comments[-1]["text"]:
                     if row['status'] == 'NEEDINFO':
                         statList['needinfo'].append(rowId)
 
