@@ -32,7 +32,8 @@ def util_create_statList():
             },
         'untouched': {},
         'needInfoPing': {},
-        'needInfoFollowUpPing': {}
+        'needInfoFollowUpPing': {},
+        'needInfoToUnconfirmed': {}
     }
 def analyze_bugzilla(statList, bugzillaData, cfg):
     print("Analyze bugzilla\n", end="", flush=True)
@@ -68,12 +69,16 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
                         ('MassPing-UntouchedBug' in comment["text"] or \
                         comment["text"].startswith("A polite ping, still working on this bug") or \
+                        '[Automated Action]' in comment["text"] or \
                         'MassPing-NeedInfo' in comment["text"]):
                     statList['tags']['addObsolete'].add(comment["id"])
 
             if len(comments) > 0:
-                if 'MassPing-UntouchedBug' in comments[-1]["text"]:
+                if rowStatus == 'NEEDINFO' and \
+                        comments[-1]['creator'] == row['creator']:
+                    statList['needInfoToUnconfirmed'][rowId] = rowCreator
 
+                if 'MassPing-UntouchedBug' in comments[-1]["text"]:
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
                             statList['tags']['addObsolete'].remove(comments[-1]["id"])
@@ -103,7 +108,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['untouched'][rowId] = rowCreator
 
-def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment, changeCommand=""):
+def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment, addFirstLine, changeCommand=""):
     for bugId, creator in statList[keyInStatList].items():
         bugId = str(bugId)
 
@@ -114,34 +119,42 @@ def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment, chang
 
         if commentId not in rawData['bugs'][bugId]['comments'][-1]['text']:
 
-            firstLine = "Dear " + creator + ",\\n\\n"
-            command = '{"comment" : "' + firstLine + comment.replace('\n', '\\n') + '", "is_private" : false}'
+            if addFirstLine:
+                firstLine = "Dear " + creator + ",\\n\\n"
+                comment = firstLine + comment
+            command = '{"comment" : "' + comment.replace('\n', '\\n') + '", "is_private" : false}'
             urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
             rPost = requests.post(urlPost, command.encode('utf-8'))
             print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
             rPost.close()
 
-            if changeStatus:
+            if changeCommand:
                 urlPut = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '?api_key=' + cfg['configQA']['api-key']
                 rPut = requests.put(urlPut, changeCommand.encode('utf-8'))
-                print('Bug: ' + bugId + ' Changed to RESOLVED INSUFFICIENTDATA')
+                print('Bug: ' + bugId + ' - ' + changeCommand)
                 rPut.close()
+
+def automated_needInfoToUnconfirmed(statList):
+
+    print('== Move NEEDINFO to UNCONFIRMED ==')
+    command = '{"status" : "UNCONFIRMED"}'
+    post_comments_to_bugzilla(statList, "needInfoToUnconfirmed", 'NeedInfo-To-Unconfirmed', comments.needInfoToUnconfirmedComment, False, command)
 
 def automated_needInfoFollowUpPing(statList):
 
     print('== NEEDINFO FollowUp Ping ==')
     command = '{"status" : "RESOLVED", "resolution" : "INSUFFICIENTDATA"}'
-    post_comments_to_bugzilla(statList, "needInfoFollowUpPing", 'MassPing-NeedInfo-FollowUp', comments.needInfoFollowUpPingComment, command)
+    post_comments_to_bugzilla(statList, "needInfoFollowUpPing", 'MassPing-NeedInfo-FollowUp', comments.needInfoFollowUpPingComment, True, command)
 
 def automated_needInfoPing(statList):
 
     print('== NEEDINFO Ping ==')
-    post_comments_to_bugzilla(statList, "needInfoPing", 'MassPing-NeedInfo-Ping', comments.needInfoPingComment)
+    post_comments_to_bugzilla(statList, "needInfoPing", 'MassPing-NeedInfo-Ping', comments.needInfoPingComment, True)
 
 def automated_untouched(statList):
 
     print('== Untouched bugs ==')
-    post_comments_to_bugzilla(statList, "untouched", 'MassPing-UntouchedBug', comments.untouchedPingComment)
+    post_comments_to_bugzilla(statList, "untouched", 'MassPing-UntouchedBug', comments.untouchedPingComment, True)
 
 def automated_tagging(statList):
     #tags are sometimes not saved in bugzilla_dump.json
@@ -203,3 +216,4 @@ if __name__ == '__main__':
     automated_untouched(statList)
     automated_needInfoPing(statList)
     automated_needInfoFollowUpPing(statList)
+    automated_needInfoToUnconfirmed(statList)
