@@ -39,9 +39,6 @@ retestUnconfirmedPeriodDays = 30
 # Unconfirmed bugs which last comment is written by the reporter
 inactiveUnconfirmedPeriodDays = 180
 
-# Needinfo bugs which last comment is written by the reporter
-retestNeedinfoPeriodDays = 60
-
 # Assigned bugs without activity
 inactiveAssignedPeriodDays = 90
 
@@ -316,11 +313,6 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
                         util_add_to_result(lResults, 'unconfirmed_last_comment_from_reporter', value)
 
-                elif rowStatus == 'NEEDINFO' and comments[-1]['creator'] == creatorMail and \
-                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") >= cfg['retestNeedinfoPeriod']:
-                    value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
-                    util_add_to_result(lResults, 'needinfo_provided', value)
-
             if autoFixed:
                 util_add_to_result(lResults, 'auto_fixed', autoFixedValue)
 
@@ -484,7 +476,6 @@ def runCfg():
     cfg['coloredInactiveUnconfirmedPeriod'] = common.util_convert_days_to_datetime(coloredPeriodDays + inactiveUnconfirmedPeriodDays)
     cfg['inactiveUnconfirmedPeriod'] = common.util_convert_days_to_datetime(inactiveUnconfirmedPeriodDays)
     cfg['coloredRetestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(coloredPeriodDays + retestUnconfirmedPeriodDays)
-    cfg['retestNeedinfoPeriod'] = common.util_convert_days_to_datetime(retestNeedinfoPeriodDays)
     cfg['inactiveAssignedPeriod'] = common.util_convert_days_to_datetime(inactiveAssignedPeriodDays)
     cfg['coloredInactiveAssignedPeriod'] = common.util_convert_days_to_datetime(coloredPeriodDays + inactiveAssignedPeriodDays)
     return cfg
