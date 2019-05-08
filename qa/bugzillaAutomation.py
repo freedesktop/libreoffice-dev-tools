@@ -29,7 +29,7 @@ def util_create_statList():
                 'addObsolete': set(),
                 'removeObsolete': set()
             },
-        'untouched': [],
+        'untouched': {},
         'needInfoPing': {}
     }
 def analyze_bugzilla(statList, bugzillaData, cfg):
@@ -64,14 +64,14 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
 
                 if rowStatus != 'NEEDINFO' and \
                         "obsolete" not in [x.lower() for x in comment["tags"]] and \
-                        (comment["text"].startswith(common.untouchedPingComment[:250]) or \
+                        ('MassPing-UntouchedBug' in comment["text"] or \
                         comment["text"].startswith("A polite ping, still working on this bug") or \
                         'MassPing-NeedInfo-Ping' in comment["text"] or \
                         comment["text"].startswith(needInfoFollowUpPingComment)):
                     statList['tags']['addObsolete'].add(comment["id"])
 
             if len(comments) > 0:
-                if comments[-1]["text"].startswith(common.untouchedPingComment[:250]):
+                if 'MassPing-UntouchedBug' in comments[-1]["text"]:
 
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
@@ -96,46 +96,34 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             rowStatus == 'NEW' and 'needsUXEval' not in rowKeywords and 'easyHack' not in rowKeywords and \
                             row['component'] != 'Documentation' and (row['product'] == 'LibreOffice' or \
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
-                        statList['untouched'].append(rowId)
+                        statList['untouched'][rowId] = rowCreator
 
-def automated_needInfoPing(statList):
-
-    print('== NEEDINFO Ping ==')
-    for bugId, creator in statList['needInfoPing'].items():
+def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment):
+    for bugId, creator in statList[keyInStatList].items():
         bugId = str(bugId)
-
-
         urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
         rGet = requests.get(urlGet)
         rawData = json.loads(rGet.text)
         rGet.close()
 
-        if 'MassPing-NeedInfo-Ping' not in rawData['bugs'][bugId]['comments'][-1]['text']:
+        if commentId not in rawData['bugs'][bugId]['comments'][-1]['text']:
 
             firstLine = "Dear " + creator + ",\\n\\n"
-            command = '{"comment" : "' + firstLine + common.needInfoPingComment.replace('\n', '\\n') + '", "is_private" : false}'
+            command = '{"comment" : "' + firstLine + comment.replace('\n', '\\n') + '", "is_private" : false}'
             urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
             rPost = requests.post(urlPost, command.encode('utf-8'))
             print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
             rPost.close()
 
+def automated_needInfoPing(statList):
+
+    print('== NEEDINFO Ping ==')
+    post_comments_to_bugzilla(statList, "needInfoPing", 'MassPing-NeedInfo-Ping', common.needInfoPingComment)
+
 def automated_untouched(statList):
 
     print('== Untouched bugs ==')
-    for bugId in statList['untouched']:
-        bugId = str(bugId)
-
-        urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
-        rGet = requests.get(urlGet)
-        rawData = json.loads(rGet.text)
-        rGet.close()
-
-        if rawData['bugs'][bugId]['comments'][-1]['text'][:250] != common.untouchedPingComment[:250]:
-            command = '{"comment" : "' + common.untouchedPingComment.replace('\n', '\\n') + '", "is_private" : false}'
-            urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
-            rPost = requests.post(urlPost, command)
-            print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
-            rPost.close()
+    post_comments_to_bugzilla(statList, "untouched", 'MassPing-UntouchedBug', common.untouchedPingComment)
 
 def automated_tagging(statList):
     #tags are sometimes not saved in bugzilla_dump.json

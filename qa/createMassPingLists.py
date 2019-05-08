@@ -28,10 +28,10 @@ def analyze_bugzilla(statList, bugzillaData):
             comments = row['comments'][1:]
 
             if len(comments) > 0:
-                if comments[-1]["text"].startswith(common.untouchedPingComment[:250]):
+                if "MassPing-UntouchedBug" in comments[-1]["text"]:
 
-                    if len(comments) > 1 and comments[-2]["text"].startswith(common.untouchedPingComment[:250]):
-                        if len(comments) > 2 and comments[-3]["text"].startswith(common.untouchedPingComment[:250]):
+                    if len(comments) > 1 and "MassPing-UntouchedBug" in comments[-2]["text"]:
+                        if len(comments) > 2 and "MassPing-UntouchedBug" in comments[-3]["text"]:
                             statList['3years'].append(rowId)
                         else:
                             statList['2years'].append(rowId)
