@@ -18,6 +18,8 @@ untouchedPeriodDays = 365
 
 needInfoPingPeriodDays = 180
 
+needInfoFollowUpPingPeriodDays = 30
+
 #Path to addObsolete.txt
 addObsoleteDir = '/home/xisco/dev-tools/qa'
 
@@ -29,7 +31,8 @@ def util_create_statList():
                 'removeObsolete': set()
             },
         'untouched': {},
-        'needInfoPing': {}
+        'needInfoPing': {},
+        'needInfoFollowUpPing': {}
     }
 def analyze_bugzilla(statList, bugzillaData, cfg):
     print("Analyze bugzilla\n", end="", flush=True)
@@ -82,7 +85,11 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             statList['tags']['addObsolete'].remove(comments[-1]["id"])
                         else:
                             statList['tags']['removeObsolete'].add(comments[-1]["id"])
-                elif comments[-1]["text"].startswith(needInfoFollowUpPingComment) or \
+                    else:
+                        if datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['needInfoFollowUpPingPeriod']:
+                            statList['needInfoFollowUpPing'][rowId] = rowCreator
+
+                elif 'MassPing-NeedInfo' in comments[-1]["text"] or \
                         comments[-1]["text"].startswith("A polite ping, still working on this bug"):
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
@@ -96,9 +103,10 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['untouched'][rowId] = rowCreator
 
-def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment):
+def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment, changeCommand=""):
     for bugId, creator in statList[keyInStatList].items():
         bugId = str(bugId)
+
         urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
         rGet = requests.get(urlGet)
         rawData = json.loads(rGet.text)
@@ -112,6 +120,18 @@ def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment):
             rPost = requests.post(urlPost, command.encode('utf-8'))
             print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
             rPost.close()
+
+            if changeStatus:
+                urlPut = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '?api_key=' + cfg['configQA']['api-key']
+                rPut = requests.put(urlPut, changeCommand.encode('utf-8'))
+                print('Bug: ' + bugId + ' Changed to RESOLVED INSUFFICIENTDATA')
+                rPut.close()
+
+def automated_needInfoFollowUpPing(statList):
+
+    print('== NEEDINFO FollowUp Ping ==')
+    command = '{"status" : "RESOLVED", "resolution" : "INSUFFICIENTDATA"}'
+    post_comments_to_bugzilla(statList, "needInfoFollowUpPing", 'MassPing-NeedInfo-FollowUp', comments.needInfoFollowUpPingComment, command)
 
 def automated_needInfoPing(statList):
 
@@ -164,6 +184,7 @@ def runCfg():
     cfg = common.get_config()
     cfg['untouchedPeriod'] = common.util_convert_days_to_datetime(untouchedPeriodDays)
     cfg['needInfoPingPeriod'] = common.util_convert_days_to_datetime(needInfoPingPeriodDays)
+    cfg['needInfoFollowUpPingPeriod'] = common.util_convert_days_to_datetime(needInfoFollowUpPingPeriodDays)
 
     return cfg
 
@@ -181,3 +202,4 @@ if __name__ == '__main__':
     automated_tagging(statList)
     automated_untouched(statList)
     automated_needInfoPing(statList)
+    automated_needInfoFollowUpPing(statList)
