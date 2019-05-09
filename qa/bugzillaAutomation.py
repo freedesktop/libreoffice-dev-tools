@@ -20,6 +20,8 @@ needInfoPingPeriodDays = 180
 
 needInfoFollowUpPingPeriodDays = 30
 
+needsCommentPeriodDays = 14
+
 #Path to addObsolete.txt
 addObsoleteDir = '/home/xisco/dev-tools/qa'
 
@@ -33,7 +35,12 @@ def util_create_statList():
         'untouched': {},
         'needInfoPing': {},
         'needInfoFollowUpPing': {},
-        'needInfoToUnconfirmed': {}
+        'needInfoToUnconfirmed': {},
+        'needsComment':
+            {
+                'add': [],
+                'remove': []
+            }
     }
 def analyze_bugzilla(statList, bugzillaData, cfg):
     print("Analyze bugzilla\n", end="", flush=True)
@@ -60,6 +67,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 statList['needInfoPing'][rowId] = rowCreator
 
             comments = row['comments'][1:]
+            bSameAuthor = True
             for idx, comment in enumerate(comments):
                 #Check for duplicated comments
                 if idx > 0 and comment['text'] == comments[idx-1]['text']:
@@ -72,6 +80,17 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         '[Automated Action]' in comment["text"] or \
                         'MassPing-NeedInfo' in comment["text"]):
                     statList['tags']['addObsolete'].add(comment["id"])
+
+                if bSameAuthor and comment['creator'] != row['creator']:
+                    bSameAuthor = False
+
+            if bSameAuthor and rowStatus == 'UNCONFIRMED' and 'QA:needsComment' not in row['whiteboard'] and \
+                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['needsCommentPeriod']:
+                statList['needsComment']['add'].append(rowId)
+
+            elif not bSameAuthor and 'QA:needsComment' in row['whiteboard']:
+                statList['needsComment']['remove'].append(rowId)
+
 
             if len(comments) > 0:
                 if rowStatus == 'NEEDINFO' and \
@@ -108,7 +127,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
                         statList['untouched'][rowId] = rowCreator
 
-def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment, addFirstLine, changeCommand=""):
+def post_comment(statList, keyInStatList, commentId, comment, addFirstLine, changeCommand=""):
     for bugId, creator in statList[keyInStatList].items():
         bugId = str(bugId)
 
@@ -134,27 +153,60 @@ def post_comments_to_bugzilla(statList, keyInStatList, commentId, comment, addFi
                 print('Bug: ' + bugId + ' - ' + changeCommand)
                 rPut.close()
 
+def update_whiteboard(statList, whiteboardTag):
+    for action, listOfBugs in statList[whiteboardTag].items():
+        for bugId in listOfBugs:
+            bugId = str(bugId)
+
+            urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '?api_key=' + cfg['configQA']['api-key']
+            rGet = requests.get(urlGet)
+            rawData = json.loads(rGet.text)
+            rGet.close()
+            whiteboard = rawData['bugs'][0]['whiteboard']
+
+            doRequest = False
+            tag = 'QA:' + whiteboardTag
+            if action == 'add':
+                if rawData['bugs'][0]['status'] == 'UNCONFIRMED' and tag not in whiteboard :
+                    doRequest = True
+                    whiteboard = whiteboard + ' ' + tag
+            elif action == 'remove':
+                if tag in whiteboard :
+                    doRequest = True
+                    whiteboard = whiteboard.replace(tag, '').strip()
+
+            if doRequest :
+                command = '{"whiteboard" : "' + whiteboard.strip() + '"}'
+                urlPut = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '?api_key=' + cfg['configQA']['api-key']
+                rPut = requests.put(urlPut, command.encode('utf-8'))
+                print('Bug: ' + bugId + ' - ' + command)
+                rPut.close()
+
+def automated_needsCommentFromQA(statList):
+    print('== Add tag to UNCONFIRMED bug that needs a comment ==')
+    update_whiteboard(statList, "needsComment")
+
 def automated_needInfoToUnconfirmed(statList):
 
     print('== Move NEEDINFO to UNCONFIRMED ==')
     command = '{"status" : "UNCONFIRMED"}'
-    post_comments_to_bugzilla(statList, "needInfoToUnconfirmed", 'NeedInfo-To-Unconfirmed', comments.needInfoToUnconfirmedComment, False, command)
+    post_comment(statList, "needInfoToUnconfirmed", 'NeedInfo-To-Unconfirmed', comments.needInfoToUnconfirmedComment, False, command)
 
 def automated_needInfoFollowUpPing(statList):
 
     print('== NEEDINFO FollowUp Ping ==')
     command = '{"status" : "RESOLVED", "resolution" : "INSUFFICIENTDATA"}'
-    post_comments_to_bugzilla(statList, "needInfoFollowUpPing", 'MassPing-NeedInfo-FollowUp', comments.needInfoFollowUpPingComment, True, command)
+    post_comment(statList, "needInfoFollowUpPing", 'MassPing-NeedInfo-FollowUp', comments.needInfoFollowUpPingComment, True, command)
 
 def automated_needInfoPing(statList):
 
     print('== NEEDINFO Ping ==')
-    post_comments_to_bugzilla(statList, "needInfoPing", 'MassPing-NeedInfo-Ping', comments.needInfoPingComment, True)
+    post_comment(statList, "needInfoPing", 'MassPing-NeedInfo-Ping', comments.needInfoPingComment, True)
 
 def automated_untouched(statList):
 
     print('== Untouched bugs ==')
-    post_comments_to_bugzilla(statList, "untouched", 'MassPing-UntouchedBug', comments.untouchedPingComment, True)
+    post_comment(statList, "untouched", 'MassPing-UntouchedBug', comments.untouchedPingComment, True)
 
 def automated_tagging(statList):
     #tags are sometimes not saved in bugzilla_dump.json
@@ -198,6 +250,7 @@ def runCfg():
     cfg['untouchedPeriod'] = common.util_convert_days_to_datetime(untouchedPeriodDays)
     cfg['needInfoPingPeriod'] = common.util_convert_days_to_datetime(needInfoPingPeriodDays)
     cfg['needInfoFollowUpPingPeriod'] = common.util_convert_days_to_datetime(needInfoFollowUpPingPeriodDays)
+    cfg['needsCommentPeriod'] = common.util_convert_days_to_datetime(needsCommentPeriodDays)
 
     return cfg
 
@@ -217,3 +270,4 @@ if __name__ == '__main__':
     automated_needInfoPing(statList)
     automated_needInfoFollowUpPing(statList)
     automated_needInfoToUnconfirmed(statList)
+    automated_needsCommentFromQA(statList)
