@@ -287,20 +287,11 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
             commentMail = None
             comments = row['comments'][1:]
-            bSameAuthor = True
             for idx, comment in enumerate(comments):
                 commentMail = comment['creator']
                 commentDate = datetime.datetime.strptime(comment['time'], "%Y-%m-%dT%H:%M:%SZ")
 
                 common.util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
-
-                if bSameAuthor and commentMail != creatorMail:
-                    bSameAuthor = False
-
-            if bSameAuthor and rowStatus == 'UNCONFIRMED' and \
-                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
-                value = [ rowId, row['last_change_time'], creatorMail ]
-                util_add_to_result(lResults, 'unconfirmed_without_comments', value)
 
             if len(comments) > 0:
                 if rowStatus == 'UNCONFIRMED':
@@ -409,7 +400,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     if dKey == 'inactive_assignee':
                         if dValue[idx][1] >= cfg['coloredInactiveAssignedPeriod']:
                             background = Back.GREEN
-                    elif dKey == 'unconfirmed_last_comment_not_from_reporter' or dKey == 'unconfirmed_without_comments':
+                    elif dKey == 'unconfirmed_last_comment_not_from_reporter':
                         if dValue[idx][1] >= cfg['coloredRetestUnconfirmedPeriod']:
                             background = Back.GREEN
                     elif dKey == 'unconfirmed_last_comment_from_reporter':
