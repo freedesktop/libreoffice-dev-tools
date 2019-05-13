@@ -137,11 +137,13 @@ def post_comment(statList, keyInStatList, commentId, comment, addFirstLine, chan
         rGet.close()
 
         if commentId not in rawData['bugs'][bugId]['comments'][-1]['text']:
-
             if addFirstLine:
                 firstLine = "Dear " + creator + ",\\n\\n"
-                comment = firstLine + comment
-            command = '{"comment" : "' + comment.replace('\n', '\\n') + '", "is_private" : false}'
+                fullComment = firstLine + comment
+            else:
+                fullComment = comment
+
+            command = '{"comment" : "' + fullComment.replace('\n', '\\n') + '", "is_private" : false}'
             urlPost = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '/comment?api_key=' + cfg['configQA']['api-key']
             rPost = requests.post(urlPost, command.encode('utf-8'))
             print('Bug: ' + bugId + ' - Comment: ' + str(json.loads(rPost.text)['id']))
