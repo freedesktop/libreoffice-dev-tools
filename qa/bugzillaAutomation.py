@@ -22,9 +22,6 @@ needInfoFollowUpPingPeriodDays = 30
 
 needsCommentPeriodDays = 14
 
-#Path to addObsolete.txt
-addObsoleteDir = '/home/xisco/dev-tools/qa'
-
 def util_create_statList():
     return {
         'tags':
@@ -217,7 +214,7 @@ def automated_tagging(statList):
 
     print('== Obsolete comments ==')
     lAddObsolete = []
-    filename = addObsoleteDir + "addObsolete.txt"
+    filename = common.configDir + "addObsolete.txt"
     if os.path.exists(filename):
         f = open(filename, 'r')
         lAddObsolete = f.read().splitlines()
