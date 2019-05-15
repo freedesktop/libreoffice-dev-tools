@@ -18,9 +18,13 @@ untouchedPeriodDays = 365
 
 needInfoPingPeriodDays = 180
 
+backportRequestPeriodDays = 180
+
 needInfoFollowUpPingPeriodDays = 30
 
 needsCommentPeriodDays = 14
+
+needsCommentTag = 'QA:needsComment'
 
 def util_create_statList():
     return {
@@ -35,8 +39,12 @@ def util_create_statList():
         'needInfoToUnconfirmed': {},
         'needsComment':
             {
-                'add': [],
-                'remove': []
+                'add': {},
+                'remove': {}
+            },
+        'backportRequest':
+            {
+                'remove': {}
             }
     }
 def analyze_bugzilla(statList, bugzillaData, cfg):
@@ -63,6 +71,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['needInfoPingPeriod']:
                 statList['needInfoPing'][rowId] = rowCreator
 
+            if common.isClosed(row['status']) and \
+                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['backportRequestPeriod']:
+                for i in row['whiteboard'].split(' '):
+                    if 'backport' in i.lower():
+                        statList['backportRequest']['remove'][rowId] = i
+
+
             comments = row['comments'][1:]
             bSameAuthor = True
             for idx, comment in enumerate(comments):
@@ -81,12 +96,12 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if bSameAuthor and comment['creator'] != row['creator']:
                     bSameAuthor = False
 
-            if bSameAuthor and rowStatus == 'UNCONFIRMED' and 'QA:needsComment' not in row['whiteboard'] and \
+            if bSameAuthor and rowStatus == 'UNCONFIRMED' and needsCommentTag not in row['whiteboard'] and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['needsCommentPeriod']:
-                statList['needsComment']['add'].append(rowId)
+                statList['needsComment']['add'][rowId] = needsCommentTag
 
-            elif not bSameAuthor and 'QA:needsComment' in row['whiteboard']:
-                statList['needsComment']['remove'].append(rowId)
+            elif not bSameAuthor and needsCommentTag in row['whiteboard']:
+                statList['needsComment']['remove'][rowId] = needsCommentTag
 
 
             if len(comments) > 0:
@@ -154,7 +169,7 @@ def post_comment(statList, keyInStatList, commentId, comment, addFirstLine, chan
 
 def update_whiteboard(statList, whiteboardTag):
     for action, listOfBugs in statList[whiteboardTag].items():
-        for bugId in listOfBugs:
+        for bugId, tag in listOfBugs.items():
             bugId = str(bugId)
 
             urlGet = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '?api_key=' + cfg['configQA']['api-key']
@@ -164,7 +179,6 @@ def update_whiteboard(statList, whiteboardTag):
             whiteboard = rawData['bugs'][0]['whiteboard']
 
             doRequest = False
-            tag = 'QA:' + whiteboardTag
             if action == 'add':
                 if rawData['bugs'][0]['status'] == 'UNCONFIRMED' and tag not in whiteboard :
                     doRequest = True
@@ -172,14 +186,18 @@ def update_whiteboard(statList, whiteboardTag):
             elif action == 'remove':
                 if tag in whiteboard :
                     doRequest = True
-                    whiteboard = whiteboard.replace(tag, '').strip()
+                    whiteboard = ' '.join(whiteboard.replace(tag, '').split())
 
-            if doRequest :
+            if doRequest:
                 command = '{"whiteboard" : "' + whiteboard.strip() + '"}'
                 urlPut = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '?api_key=' + cfg['configQA']['api-key']
                 rPut = requests.put(urlPut, command.encode('utf-8'))
                 print('Bug: ' + bugId + ' - ' + command)
                 rPut.close()
+
+def automated_cleanupBackportRequests(statList):
+    print('== Cleanup Backport Requests ==')
+    update_whiteboard(statList, "backportRequest")
 
 def automated_needsCommentFromQA(statList):
     print('== Add tag to UNCONFIRMED bug that needs a comment ==')
@@ -248,6 +266,7 @@ def runCfg():
     cfg = common.get_config()
     cfg['untouchedPeriod'] = common.util_convert_days_to_datetime(untouchedPeriodDays)
     cfg['needInfoPingPeriod'] = common.util_convert_days_to_datetime(needInfoPingPeriodDays)
+    cfg['backportRequestPeriod'] = common.util_convert_days_to_datetime(backportRequestPeriodDays)
     cfg['needInfoFollowUpPingPeriod'] = common.util_convert_days_to_datetime(needInfoFollowUpPingPeriodDays)
     cfg['needsCommentPeriod'] = common.util_convert_days_to_datetime(needsCommentPeriodDays)
 
@@ -270,3 +289,4 @@ if __name__ == '__main__':
     automated_needInfoFollowUpPing(statList)
     automated_needInfoToUnconfirmed(statList)
     automated_needsCommentFromQA(statList)
+    automated_cleanupBackportRequests(statList)
