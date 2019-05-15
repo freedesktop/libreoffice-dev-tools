@@ -45,6 +45,11 @@ def util_create_statList():
         'backportRequest':
             {
                 'remove': {}
+            },
+        'tagRegression':
+            {
+                'add': {},
+                'remove': {}
             }
     }
 def analyze_bugzilla(statList, bugzillaData, cfg):
@@ -77,6 +82,18 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                     if 'backport' in i.lower():
                         statList['backportRequest']['remove'][rowId] = i
 
+            if common.isOpen(row['status']) and 'regression' in rowKeywords and \
+                    'bibisectRequest' not in rowKeywords and 'bibisected' not in rowKeywords and \
+                    'bisected' not in rowKeywords and 'preBibisect' not in rowKeywords and \
+                    'bibisectNotNeeded' not in rowKeywords and 'notBibisectable' not in rowKeywords:
+
+                if row['severity'] is not 'enhancement':
+                    if row['op_sys'] in ["All", "Windows (All)", "Linux (All)", "Mac OS X (All)"]:
+                        statList['tagRegression']['add'][rowId] = 'bibisectRequest'
+                    else:
+                        statList['tagRegression']['add'][rowId] = 'notBibisectable'
+                else:
+                    statList['tagRegression']['remove'][rowId] = 'regression'
 
             comments = row['comments'][1:]
             bSameAuthor = True
@@ -167,7 +184,7 @@ def post_comment(statList, keyInStatList, commentId, comment, addFirstLine, chan
                 print('Bug: ' + bugId + ' - ' + changeCommand)
                 rPut.close()
 
-def update_whiteboard(statList, whiteboardTag):
+def update_field(statList, field, whiteboardTag):
     for action, listOfBugs in statList[whiteboardTag].items():
         for bugId, tag in listOfBugs.items():
             bugId = str(bugId)
@@ -176,32 +193,42 @@ def update_whiteboard(statList, whiteboardTag):
             rGet = requests.get(urlGet)
             rawData = json.loads(rGet.text)
             rGet.close()
-            whiteboard = rawData['bugs'][0]['whiteboard']
+            fieldContent = rawData['bugs'][0][field]
 
             doRequest = False
             if action == 'add':
-                if rawData['bugs'][0]['status'] == 'UNCONFIRMED' and tag not in whiteboard :
+                if tag not in fieldContent:
                     doRequest = True
-                    whiteboard = whiteboard + ' ' + tag
+                    if field == 'whiteboard':
+                        fieldContent = fieldContent + ' ' + tag
             elif action == 'remove':
-                if tag in whiteboard :
+                if tag in fieldContent:
                     doRequest = True
-                    whiteboard = ' '.join(whiteboard.replace(tag, '').split())
+                    if field == 'whiteboard':
+                        fieldContent = ' '.join(fieldContent.replace(tag, '').split())
 
             if doRequest:
-                command = '{"whiteboard" : "' + whiteboard.strip() + '"}'
+                if field == 'whiteboard':
+                    command = '{"' + field + '" : "' + fieldContent + '"}'
+                elif field == 'keywords':
+                    command = '{"' + field + '" : {"' + action + '" : ["' + tag + '"]}}'
+
                 urlPut = 'https://bugs.documentfoundation.org/rest/bug/' + bugId + '?api_key=' + cfg['configQA']['api-key']
                 rPut = requests.put(urlPut, command.encode('utf-8'))
                 print('Bug: ' + bugId + ' - ' + command)
                 rPut.close()
 
+def automated_tagRegression(statList):
+    print('== Tag Regression ==')
+    update_field(statList, "keywords", "tagRegression")
+
 def automated_cleanupBackportRequests(statList):
     print('== Cleanup Backport Requests ==')
-    update_whiteboard(statList, "backportRequest")
+    update_field(statList, "whiteboard", "backportRequest")
 
 def automated_needsCommentFromQA(statList):
     print('== Add tag to UNCONFIRMED bug that needs a comment ==')
-    update_whiteboard(statList, "needsComment")
+    update_field(statList, "whiteboard", "needsComment")
 
 def automated_needInfoToUnconfirmed(statList):
 
@@ -290,3 +317,4 @@ if __name__ == '__main__':
     automated_needInfoToUnconfirmed(statList)
     automated_needsCommentFromQA(statList)
     automated_cleanupBackportRequests(statList)
+    automated_tagRegression(statList)
