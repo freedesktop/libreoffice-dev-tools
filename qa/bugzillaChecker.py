@@ -288,7 +288,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 common.util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
 
             if len(comments) > 0:
-                if rowStatus == 'UNCONFIRMED':
+                if rowStatus == 'UNCONFIRMED' and 'needsDevAdvice' not in rowKeywords:
                     if comments[-1]['creator'] != creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
                         value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
