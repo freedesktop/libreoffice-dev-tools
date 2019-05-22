@@ -5,10 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-if git-review; then
+if git-review -R; then
     rev=$(git rev-parse HEAD)
     host=$(git config -f .gitreview gerrit.host)
-    ssh $host gerrit review --code-review=2 $rev
+    port=$(git config -f .gitreview gerrit.port)
+    ssh -p $port $host gerrit review --code-review=2 $rev
 fi
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab:
