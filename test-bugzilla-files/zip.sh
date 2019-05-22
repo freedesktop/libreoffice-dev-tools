@@ -4,10 +4,12 @@ echo $SHA
 cd /srv/crashtestdata/
 source config.cfg
 cd /srv/crashtestdata/control/
+mkdir -p /srv/crashtestdata/logs/$SHA/backtraces
+for a in */core*; do gdb ~/build/instdir/program/soffice.bin $a -ex "thread apply all backtrace full" --batch > /srv/crashtestdata/logs/$SHA/backtraces/`dirname "$a"`-`basename "$a"`.backtrace; done
 cat */crashlog.txt > /srv/crashtestdata/logs/$SHA/crashlog.txt
 cat */exportCrash.txt > /srv/crashtestdata/logs/$SHA/exportCrash.txt
 cd /srv/crashtestdata/current/srv/crashtestdata/files/
-zip -r validation.zip */*.log
+zip -r -q validation.zip */*.log
 mv validation.zip /srv/crashtestdata/logs/$SHA/.
 cd /srv/crashtestdata/logs/$SHA
 unzip validation.zip -d validation
