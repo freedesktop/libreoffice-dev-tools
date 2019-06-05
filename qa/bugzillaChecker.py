@@ -224,7 +224,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                 movedToNewValue = resultValue
 
                             if addedStatus == 'RESOLVED_FIXED' and rowStatus == 'RESOLVED_FIXED' and ('regression' in rowKeywords \
-                                    or 'crash' in row['summary'].lower()):
+                                    or 'crash' in row['summary'].lower() or 'perf' in rowKeywords):
                                 util_add_to_result(lResults, 'verify_fix', resultValue)
 
                     elif change['field_name'] == 'resolution':
