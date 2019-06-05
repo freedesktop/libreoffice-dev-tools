@@ -21,7 +21,7 @@ fi
 merge_base=$(git merge-base $cherry_from $cherry_to)
 
 if [ -z "$branch_point" ] ; then
-    branch_point=${merge_mase}
+    branch_point=${merge_base}
 fi
 
 : > /tmp/tohashes
