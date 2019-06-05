@@ -327,6 +327,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     'regression' not in rowKeywords and 'bisected' not in rowKeywords and \
                     'easyHack' not in rowKeywords and 'needsUXEval' not in rowKeywords and \
                     row['component'] != 'Documentation' and \
+                    row['component'] != 'UI' and \
                     row['component'] != 'iOS' and row['component'] != 'Android Viewer' and \
                     movedToNewValue[2] not in cfg['configQA']['ignore']['confirmer'] and \
                     (rowVersion.startswith(versionsToCheck) or rowVersion == 'unspecified'):
