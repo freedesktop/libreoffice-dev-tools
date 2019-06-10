@@ -289,7 +289,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
             if len(comments) > 0:
                 if rowStatus == 'UNCONFIRMED' and 'needsDevAdvice' not in rowKeywords:
-                    if comments[-1]['creator'] != creatorMail and \
+                    if comments[-1]['creator'] != creatorMail and '[Automated Action]' not in comments[-1]['text'] and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
                         value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
                         util_add_to_result(lResults, 'unconfirmed_last_comment_not_from_reporter', value)
