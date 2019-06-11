@@ -143,14 +143,14 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             elif addedVersion == 'Inherited From OOo':
                                 addedVersion = 0
                             else:
-                                addedVersion = int(''.join([s for s in re.split('\.|\s',addedVersion) if s.isdigit()]).ljust(3, '0')[:3] )
+                                addedVersion = int(''.join([s for s in re.split('\.|\s',addedVersion) if s.isdigit()]).ljust(3, '0')[:2] )
 
                             if removedVersion == 'unspecified':
                                 removedVersion = 999999
                             elif removedVersion == 'Inherited From OOo':
                                 removedVersion = 0
                             else:
-                                removedVersion = int(''.join([s for s in re.split('\.|\s',removedVersion) if s.isdigit()]).ljust(3, '0')[:3] )
+                                removedVersion = int(''.join([s for s in re.split('\.|\s',removedVersion) if s.isdigit()]).ljust(3, '0')[:2] )
 
                             if removedVersion < oldestVersion:
                                 oldestVersion = removedVersion
