@@ -37,8 +37,8 @@ import bugzilla
 from bugzilla import Bugzilla
 from bugzilla.base import _BugzillaToken
 
-master_target = "6.1.0"
-bug_regex = "(?:tdf|fdo)#(\d+)"
+master_target = "6.4.0"
+bug_regex = "\\b(?:bug|fdo|tdf|lo)[#:]?(\\d+)\\b"
 dry_run = False
 
 class FreedesktopBZ:
@@ -48,7 +48,7 @@ class FreedesktopBZ:
 
     def connect(self):
         config = ConfigParser.ConfigParser()
-        config.read('/home/ciabot/prod/config.cfg')
+        config.read('/srv/home/ciabot/prod/config.cfg')
         url = config.get('bugzilla', 'url')
         user = config.get('bugzilla', 'user')
         password = config.get('bugzilla', 'password')
@@ -75,10 +75,8 @@ class FreedesktopBZ:
                 new_whiteboard = old_whiteboard + "target:" + new_version
                 bug.setwhiteboard(new_whiteboard)
 
-        cgiturl = "http://cgit.freedesktop.org/libreoffice/%s/commit/?id=%s" %(repo_name, commit.hexsha)
-        if branch is not None and branch != "master":
-            cgiturl = cgiturl + "&h=" + branch
-        else:
+        cgiturl = "https://git.libreoffice.org/%s/+/%s%%5E%%21" % (repo_name, commit.hexsha)
+        if branch is None:
             branch = "master"
 
         comment_msg = """%s committed a patch related to this issue.
@@ -94,9 +92,9 @@ It has been pushed to "%s":
 It will be available in %s.
 
 The patch should be included in the daily builds available at
-http://dev-builds.libreoffice.org/daily/ in the next 24-48 hours. More
+https://dev-builds.libreoffice.org/daily/ in the next 24-48 hours. More
 information about daily builds can be found at:
-http://wiki.documentfoundation.org/Testing_Daily_Builds
+https://wiki.documentfoundation.org/Testing_Daily_Builds
 
 Affected users are encouraged to test the fix and report feedback.""" %(new_version)
 
@@ -167,7 +165,8 @@ def get_commit(repo, commit_id):
     commit = repo.commit(commit_id)
     return commit
 
-def find_bugid(commit):
+def find_bugid(repo, commit_id):
+    commit = get_commit(repo, commit_id)
     summary_line = commit.summary
     regex = re.compile(bug_regex)
     m = regex.findall(summary_line)
@@ -179,7 +178,7 @@ def find_bugid(commit):
 
 def read_repo(repo_name):
     config = ConfigParser.ConfigParser()
-    config.read('/home/ciabot/prod/config.cfg')
+    config.read('/srv/home/ciabot/prod/config.cfg')
     path = config.get(repo_name, 'location')
     repo = git.repo.base.Repo(path)
     return repo
@@ -219,9 +218,9 @@ def main(argv):
 
     target_version = find_target_version(repo, branch)
 
-    commit = get_commit(repo, commit_id)
+    bug_ids = find_bugid(repo, commit_id)
 
-    bug_ids = find_bugid(commit)
+    commit = get_commit(repo, commit_id)
 
     if target_version is None:
         print("missing target version")

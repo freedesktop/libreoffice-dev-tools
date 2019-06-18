@@ -253,10 +253,6 @@ class RequestsTransport(Transport):
         # xmlrpclib fails to escape \r
         request_body = request_body.replace(b'\r', b'&#xd;')
 
-        # Needed for python-requests < 2.0 with python3, otherwise we get
-        # Content-Type error later for the POST request
-        request_body = request_body.decode('utf-8')
-
         return self._request_helper(url, request_body)
 
 
@@ -944,8 +940,8 @@ class BugzillaBase(object):
         if self._supports_getbug_extra_fields:
             getbugdata["extra_fields"] = extra_fields
 
-        log.debug("Calling Bug.get_bugs with: %s", getbugdata)
-        r = self._proxy.Bug.get_bugs(getbugdata)
+        log.debug("Calling Bug.get with: %s", getbugdata)
+        r = self._proxy.Bug.get(getbugdata)
 
         if self.bz_ver_major >= 4:
             bugdict = dict([(b['id'], b) for b in r['bugs']])
