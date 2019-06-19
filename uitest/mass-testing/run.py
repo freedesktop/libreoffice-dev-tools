@@ -15,6 +15,7 @@ from shutil import copyfile
 import pickle
 import time
 import fcntl
+import tempfile
 
 extensions = {
     'writer' : [ "odt", "doc", "docx", "rtf" ],
@@ -64,12 +65,6 @@ def get_file_names(component, filesPath):
 
 def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
 
-    #Create directory for the user profile
-    profilePath = '/tmp/libreoffice/4/'
-    userPath = profilePath + 'user/'
-    if not os.path.exists(userPath):
-        os.makedirs(userPath)
-
     results = {
         'pass' : 0,
         'fail' : 0,
@@ -103,105 +98,112 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
                 print("SKIP: " + fileName)
                 continue
 
-        # Replace the profile file with
-        # 1. DisableMacrosExecution = True
-        # 2. IgnoreProtectedArea = True
-        # 3. AutoPilot = False
-        copyfile(os.getcwd() + '/registrymodifications.xcu', userPath + 'registrymodifications.xcu')
+        #Create temp directory for the user profile
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            profilePath = os.path.join(tmpdirname, 'libreoffice/4')
+            userPath = os.path.join(profilePath, 'user')
+            os.makedirs(userPath)
 
-        #TODO: Find a better way to pass fileName parameter
-        os.environ["TESTFILENAME"] = fileName
+            # Replace the profile file with
+            # 1. DisableMacrosExecution = True
+            # 2. IgnoreProtectedArea = True
+            # 3. AutoPilot = False
+            copyfile(os.getcwd() + '/registrymodifications.xcu', userPath + '/registrymodifications.xcu')
 
-        process = Popen(["python3.5",
-                    liboPath + "uitest/test_main.py",
-                    "--debug",
-                    "--soffice=path:" + sofficePath,
-                    "--userdir=file://" + profilePath,
-                    "--file=" + component + ".py"], stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                    preexec_fn=os.setsid)
+            #TODO: Find a better way to pass fileName parameter
+            os.environ["TESTFILENAME"] = fileName
 
-        # Do not block on process.stdout
-        fcntl.fcntl(process.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+            process = Popen(["python3.5",
+                        liboPath + "uitest/test_main.py",
+                        "--debug",
+                        "--soffice=path:" + sofficePath,
+                        "--userdir=file://" + profilePath,
+                        "--file=" + component + ".py"], stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                        preexec_fn=os.setsid)
 
-        # Kill the process if:
-        # 1. The file can't be loaded in 'fielInterval' seconds
-        # 2. The test can't be executed in 'testInterval' seconds
-        fileInterval = 10
-        testIternval = 20
-        timeout = time.time() + fileInterval
-        notLoaded = True
-        while True:
-            time.sleep(1)
+            # Do not block on process.stdout
+            fcntl.fcntl(process.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
-            if time.time() > timeout:
-                if notLoaded:
-                    logger.info("SKIP: " + fileName)
-                    results['skip'] += 1
-                else:
-                    logger.info("TIMEOUT: " + fileName)
-                    results['timeout'] += 1
+            # Kill the process if:
+            # 1. The file can't be loaded in 'fielInterval' seconds
+            # 2. The test can't be executed in 'testInterval' seconds
+            fileInterval = 10
+            testIternval = 20
+            timeout = time.time() + fileInterval
+            notLoaded = True
+            while True:
+                time.sleep(1)
 
-                # kill popen process
-                os.killpg(process.pid, signal.SIGKILL)
-                break
-
-            try:
-                outputLines = process.stdout.readlines()
-            except IOError:
-                pass
-
-            importantInfo = ''
-            isFailure = False
-            for line in outputLines:
-                line = line.decode("utf-8").strip()
-
-                if not line:
-                    continue
-
-                if isDebug:
-                    print(line)
-
-                if line.startswith("mass-uitesting:"):
-                    message = line.split(":")[1]
-                    if message == 'skipped':
-                        logger.info("SKIP: " + fileName + " : " + importantInfo)
+                if time.time() > timeout:
+                    if notLoaded:
+                        logger.info("SKIP: " + fileName)
                         results['skip'] += 1
+                    else:
+                        logger.info("TIMEOUT: " + fileName)
+                        results['timeout'] += 1
 
-                        # kill popen process
-                        os.killpg(process.pid, signal.SIGKILL)
+                    # kill popen process
+                    os.killpg(process.pid, signal.SIGKILL)
+                    break
 
-                        break
-                    elif message == 'loaded':
-                        notLoaded = False
+                try:
+                    outputLines = process.stdout.readlines()
+                except IOError:
+                    pass
 
-                        #Extend timeout
-                        timeout += testIternval
+                importantInfo = ''
+                isFailure = False
+                for line in outputLines:
+                    line = line.decode("utf-8").strip()
 
-                elif 'Execution time' in line:
-                    importantInfo = line.split('for ')[1]
+                    if not line:
+                        continue
 
-                elif importantInfo and 'error' == line.lower() or 'fail' == line.lower():
-                    isFailure = True
+                    if isDebug:
+                        print(line)
 
-            if importantInfo:
-                if isFailure:
-                    logger.info("FAIL: " + fileName + " : " + importantInfo)
-                    results['fail'] += 1
-                else:
-                    # No error found between the Execution time line and the end of stdout
-                    logger.info("PASS: " + fileName + " : " + str(importantInfo))
-                    results['pass'] += 1
+                    if line.startswith("mass-uitesting:"):
+                        message = line.split(":")[1]
+                        if message == 'skipped':
+                            logger.info("SKIP: " + fileName + " : " + importantInfo)
+                            results['skip'] += 1
 
-            if process.poll() is not None:
-                break
+                            # kill popen process
+                            os.killpg(process.pid, signal.SIGKILL)
 
-        if isResume:
-            filesRun[sourceHash]['files'].append(fileName)
+                            break
+                        elif message == 'loaded':
+                            notLoaded = False
 
-            filesRun[sourceHash]['results'] = results
+                            #Extend timeout
+                            timeout += testIternval
 
-            with open(pklFile, 'wb') as pickle_out:
-                pickle.dump(filesRun, pickle_out)
+                    elif 'Execution time' in line:
+                        importantInfo = line.split('for ')[1]
+
+                    elif importantInfo and 'error' == line.lower() or 'fail' == line.lower():
+                        isFailure = True
+
+                if importantInfo:
+                    if isFailure:
+                        logger.info("FAIL: " + fileName + " : " + importantInfo)
+                        results['fail'] += 1
+                    else:
+                        # No error found between the Execution time line and the end of stdout
+                        logger.info("PASS: " + fileName + " : " + str(importantInfo))
+                        results['pass'] += 1
+
+                if process.poll() is not None:
+                    break
+
+            if isResume:
+                filesRun[sourceHash]['files'].append(fileName)
+
+                filesRun[sourceHash]['results'] = results
+
+                with open(pklFile, 'wb') as pickle_out:
+                    pickle.dump(filesRun, pickle_out)
+
 
     totalTests = sum(results.values())
     if totalTests > 0:
@@ -254,6 +256,7 @@ if __name__ == '__main__':
     logger = start_logger(component)
 
     listFiles = get_file_names(component, filesPath)
+    listFiles.sort()
 
     run_tests_and_get_results(liboPath, listFiles, argument.debug, argument.resume)
 
