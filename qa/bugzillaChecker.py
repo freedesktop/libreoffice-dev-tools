@@ -288,7 +288,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 common.util_check_bugzilla_mail(statList, commentMail, '', commentDate, rowId)
 
             if len(comments) > 0:
-                if rowStatus == 'UNCONFIRMED' and 'needsDevAdvice' not in rowKeywords:
+                if rowStatus == 'UNCONFIRMED' and 'needsDevAdvice' not in rowKeywords and row['severity'] != 'enhancement':
                     if comments[-1]['creator'] != creatorMail and '[Automated Action]' not in comments[-1]['text'] and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
                         value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
@@ -297,6 +297,11 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveUnconfirmedPeriod']:
                         value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
                         util_add_to_result(lResults, 'unconfirmed_last_comment_from_reporter', value)
+
+            if rowStatus == 'UNCONFIRMED' and row['severity'] == 'enhancement' and 'QA:needsComment' not in row['whiteboard'] and \
+                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
+                value = [ rowId, creationDate, creatorMail ]
+                util_add_to_result(lResults, 'inactive_unconfirmed_enhacements', value)
 
             if autoFixed:
                 util_add_to_result(lResults, 'auto_fixed', autoFixedValue)
