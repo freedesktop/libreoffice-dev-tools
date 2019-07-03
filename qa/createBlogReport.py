@@ -37,6 +37,7 @@ def util_create_statList():
         'resolvedStatuses' : {},
         'criticalFixed': {},
         'crashFixed': {},
+        'perfFixed': {},
         'oldBugsFixed': {},
         'metabug': util_create_basic_schema(),
         'keywords': { k : util_create_basic_schema() for k in lKeywords},
@@ -401,9 +402,11 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                             if row['priority'] == "highest":
                                 statList['criticalFixed'][rowId]= {'summary': row['summary'], 'author': author}
-                            elif 'crash' in row['summary'].lower():
+                            if 'crash' in row['summary'].lower():
                                 statList['crashFixed'][rowId]= {'summary': row['summary'], 'author': author}
-                            elif creationDate < common.util_convert_days_to_datetime(oldBugsYears * 365):
+                            if 'perf' in row['keywords']:
+                                statList['perfFixed'][rowId]= {'summary': row['summary'], 'author': author}
+                            if creationDate < common.util_convert_days_to_datetime(oldBugsYears * 365):
                                 statList['oldBugsFixed'][rowId]= {'summary': row['summary'], 'author': author}
 
             if rowId in fixedBugs and not commitNoticiation:
@@ -622,6 +625,7 @@ def createReport(statList):
     createSection(fp, statList['fixed'], "Fixed Bugs", "fixed", "Fixers", "darksalmon")
     createList(fp, statList['criticalFixed'], "List of critical bugs fixed")
     createList(fp, statList['crashFixed'], "List of crashes fixed")
+    createList(fp, statList['perfFixed'], "List of performance issues fixed")
     createList(fp, statList['oldBugsFixed'], "List of old bugs ( more than {} years old ) fixed".format(oldBugsYears))
     createSection(fp, statList['wfm'], "WORKSFORME bugs", "retested", "testers", "m")
     createSection(fp, statList['duplicate'], "DUPLICATED bugs", "duplicated", "testers", "c")
