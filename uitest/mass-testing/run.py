@@ -125,7 +125,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
             fcntl.fcntl(process.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
             # Kill the process if:
-            # 1. The file can't be loaded in 'fielInterval' seconds
+            # 1. The file can't be loaded in 'fileInterval' seconds
             # 2. The test can't be executed in 'testInterval' seconds
             fileInterval = 10
             testIternval = 20
