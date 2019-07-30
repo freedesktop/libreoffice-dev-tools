@@ -13,8 +13,10 @@ cherry_to=${2}
 
 branch_point=${3}
 
+whitelist_file=${4}
+
 if [ -z "$cherry_from" ] ; then
-    echo "Usage: git-cherry-gerrit cherry_from cherry_to [branch_point_from]"
+    echo "Usage: git-cherry-gerrit cherry_from cherry_to [branch_point_from] [whitelist_file]"
     exit 1;
 fi
 
@@ -37,12 +39,17 @@ do
         changeid="$(git cat-file commit $hash |grep Change-Id:)"
         if [ -z "$changeid" ]; then
             pretty=`git --no-pager log -1 --format='format:%h%x09%an%x09%s%x0a' $hash`
-            echo "WARNING: commit '$pretty' has no Change-Id, assuming it has to be cherry-picked."
+            if [ -z "${whitelist_file}" ] || ! grep -q "${pretty}" "${whitelist_file}"; then
+                echo "WARNING: commit '$pretty' has no Change-Id, assuming it has to be cherry-picked."
+            fi
             continue
         fi
 
         if ! grep -q "$changeid" /tmp/tohashes; then
-                git --no-pager log -1  --format='format:%h%x09%an%x09%s%x0a' $hash
+            pretty=`git --no-pager log -1 --format='format:%h%x09%an%x09%s%x0a' $hash`
+            if [ -z "${whitelist_file}" ] || ! grep -q "${pretty}" "${whitelist_file}"; then
+                git --no-pager log -1 --format='format:%h%x09%an%x09%s%x0a' $hash
+            fi
         fi
 done
 
