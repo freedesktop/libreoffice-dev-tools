@@ -11,14 +11,13 @@ import common
 import sys
 import datetime
 import re
-import colorama
-from colorama import Back
 import ast
 
-#Use this variable to hightlight the most recent bugs
-coloredPeriodDays = 1
-
-reportPeriodDays = 7
+if datetime.date.today().weekday() == 0:
+    # Weekends
+    reportPeriodDays = 3
+else:
+    reportPeriodDays = 1
 
 newUserPeriodDays = 30
 newUserBugs = 3
@@ -385,36 +384,18 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 value = [rowId, '', '']
                 util_add_to_result(lResults, 'empty_alias', value)
 
-    colorama.init(autoreset=True)
     for dKey, dValue in sorted(lResults.items()):
         if dValue:
             print('\n=== ' + dKey.replace('_', ' ').upper() + ' ===')
             dValue = sorted(dValue, key=lambda x: x[1])
             for idx in range(len(dValue)):
-                background = Back.RESET
 
                 if dValue[idx][1]:
                     if isinstance(dValue[idx][1], str):
                         dValue[idx][1] = datetime.datetime.strptime(dValue[idx][1], "%Y-%m-%dT%H:%M:%SZ")
 
-                    if dKey == 'inactive_assignee':
-                        if dValue[idx][1] >= cfg['coloredInactiveAssignedPeriod']:
-                            background = Back.GREEN
-                    elif dKey == 'unconfirmed_last_comment_not_from_reporter':
-                        if dValue[idx][1] >= cfg['coloredRetestUnconfirmedPeriod']:
-                            background = Back.GREEN
-                    elif dKey == 'unconfirmed_last_comment_from_reporter':
-                        if dValue[idx][1] >= cfg['coloredInactiveUnconfirmedPeriod']:
-                            background = Back.GREEN
-                    elif dKey == 'ping_bug_fixed':
-                        if dValue[idx][1] >= cfg['coloredFixBugPingPeriod']:
-                            background = Back.GREEN
-                    else:
-                        if dValue[idx][1] >= cfg['coloredReportPeriod']:
-                            background = Back.GREEN
-
                 count = idx + 1
-                print(background + "{:<3} | {:<58} | {} | {}".format(
+                print("{:<3} | {:<58} | {} | {}".format(
                     str(count), common.urlShowBug + str(dValue[idx][0]), str(dValue[idx][1] ), str(dValue[idx][2])))
 
                 if count != len(dValue) and count % 10 == 0:
@@ -455,20 +436,15 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 def runCfg():
     cfg = common.get_config()
     cfg['reportPeriod'] = common.util_convert_days_to_datetime(reportPeriodDays)
-    cfg['coloredReportPeriod'] = common.util_convert_days_to_datetime(coloredPeriodDays)
     cfg['newUserPeriod'] = common.util_convert_days_to_datetime(newUserPeriodDays)
     cfg['oldUserPeriod'] = common.util_convert_days_to_datetime(oldUserPeriodDays)
     cfg['oldUserPeriod2'] = common.util_convert_days_to_datetime(oldUserPeriodDays + reportPeriodDays)
     cfg['memberPeriod'] = common.util_convert_days_to_datetime(memberPeriodDays)
     cfg['PingFixedBugPeriod'] = common.util_convert_days_to_datetime(pingFixedBugPeriodDays)
     cfg['pingFixedBugDiff'] = common.util_convert_days_to_datetime(pingFixedBugPeriodDays + reportPeriodDays)
-    cfg['coloredFixBugPingPeriod'] = common.util_convert_days_to_datetime(coloredPeriodDays + pingFixedBugPeriodDays)
     cfg['retestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(retestUnconfirmedPeriodDays)
-    cfg['coloredInactiveUnconfirmedPeriod'] = common.util_convert_days_to_datetime(coloredPeriodDays + inactiveUnconfirmedPeriodDays)
     cfg['inactiveUnconfirmedPeriod'] = common.util_convert_days_to_datetime(inactiveUnconfirmedPeriodDays)
-    cfg['coloredRetestUnconfirmedPeriod'] = common.util_convert_days_to_datetime(coloredPeriodDays + retestUnconfirmedPeriodDays)
     cfg['inactiveAssignedPeriod'] = common.util_convert_days_to_datetime(inactiveAssignedPeriodDays)
-    cfg['coloredInactiveAssignedPeriod'] = common.util_convert_days_to_datetime(coloredPeriodDays + inactiveAssignedPeriodDays)
     return cfg
 
 if __name__ == '__main__':
@@ -476,7 +452,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         try:
-            coloredPeriodDays = int(sys.argv[1])
+            reportPeriodDays = int(sys.argv[1])
         except ValueError:
             print("The argument is not an int. Ignoring it...")
 
