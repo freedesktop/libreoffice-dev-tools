@@ -426,13 +426,15 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         isEasyHack = True
                 print("{:<3} | {:<58} | {}".format(
                     str(idx + 1), common.urlShowBug + str(lBugs[idx]), 'easyHack: ' + str(isEasyHack)), file=fp)
+            cfg['configQA']['ignore']['newContributors'].append(statList['people'][k]['email'])
 
-        if statList['people'][k]['oldest'] >= cfg['memberPeriod'] and statList['people'][k]['newest'] >= cfg['reportPeriod'] and \
+        if statList['people'][k]['oldest'] >= cfg['memberPeriod'] and \
                 len(statList['people'][k]['bugs']) >= memberBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['members']:
             print('\n=== New MEMBER: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ") ===", file=fp)
             print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"), file=fp)
             print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"), file=fp)
             print('\tTotal: ' + str(len(statList['people'][k]['bugs'])), file=fp)
+            cfg['configQA']['ignore']['members'].append(statList['people'][k]['email'])
 
         if statList['people'][k]['newest'] < cfg['oldUserPeriod'] and statList['people'][k]['newest'] >= cfg['oldUserPeriod2'] and \
                 len(statList['people'][k]['bugs']) >= oldUserBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['oldContributors']:
@@ -440,11 +442,15 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"), file=fp)
             print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"), file=fp)
             print('\tTotal: ' + str(len(statList['people'][k]['bugs'])), file=fp)
+            cfg['configQA']['ignore']['oldContributors'].append(statList['people'][k]['email'])
 
         statList['people'][k]['oldest'] = statList['people'][k]['oldest'].strftime("%Y-%m-%d")
         statList['people'][k]['newest'] = statList['people'][k]['newest'].strftime("%Y-%m-%d")
 
     fp.close()
+    dumpResult = {}
+    dumpResult['configQA'] = cfg['configQA']
+    common.util_dump_config(dumpResult)
 
 def runCfg():
     cfg = common.get_config()

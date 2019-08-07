@@ -60,8 +60,9 @@ def util_load_file(fileName):
         pass
     return rawData
 
-def util_dump_file(fileName, rawList):
+def util_dump_config(rawList):
     try:
+        fileName = configDir + 'configQA.json'
         fp = open(fileName, 'w', encoding='utf-8')
         json.dump(rawList, fp, ensure_ascii=False, indent=4, sort_keys=True)
         fp.close()
