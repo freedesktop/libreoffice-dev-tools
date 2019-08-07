@@ -13,6 +13,8 @@ import datetime
 import re
 import ast
 
+bugzillaReportPath = '/tmp/bugzilla_report.txt'
+bugzillaUserReportPath = '/tmp/bugzilla_users_report.txt'
 if datetime.date.today().weekday() == 0:
     # Weekends
     reportPeriodDays = 3
@@ -384,9 +386,12 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 value = [rowId, '', '']
                 util_add_to_result(lResults, 'empty_alias', value)
 
+    fp = open(bugzillaReportPath, 'w', encoding='utf-8')
+    print("Creating file " + bugzillaReportPath)
+
     for dKey, dValue in sorted(lResults.items()):
         if dValue:
-            print('\n=== ' + dKey.replace('_', ' ').upper() + ' ===')
+            print('\n=== ' + dKey.replace('_', ' ').upper() + ' ===', file=fp)
             dValue = sorted(dValue, key=lambda x: x[1])
             for idx in range(len(dValue)):
 
@@ -396,42 +401,50 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
                 count = idx + 1
                 print("{:<3} | {:<58} | {} | {}".format(
-                    str(count), common.urlShowBug + str(dValue[idx][0]), str(dValue[idx][1] ), str(dValue[idx][2])))
+                    str(count), common.urlShowBug + str(dValue[idx][0]),
+                    str(dValue[idx][1].strftime("%Y-%m-%d")),
+                    str(dValue[idx][2])),
+                    file=fp)
 
                 if count != len(dValue) and count % 10 == 0:
-                    print('=' * 100)
+                    print('=' * 100, file=fp)
+    fp.close()
 
+    fp = open(bugzillaUserReportPath, 'w', encoding='utf-8')
+    print("Creating file " + bugzillaUserReportPath)
     for k, v in statList['people'].items():
         if not statList['people'][k]['name']:
             statList['people'][k]['name'] = statList['people'][k]['email'].split('@')[0]
 
         if statList['people'][k]['oldest'] >= cfg['newUserPeriod'] and len(statList['people'][k]['bugs']) >= newUserBugs and \
                 statList['people'][k]['email'] not in cfg['configQA']['ignore']['newContributors']:
-            print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
+            print('\n=== New contributor: '+ statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ") ===", file=fp)
             lBugs = list(statList['people'][k]['bugs'])
             for idx in range(len(lBugs)):
                 isEasyHack = False
                 if 'easyHack' in bugzillaData['bugs'][str(lBugs[idx])]['keywords']:
                         isEasyHack = True
                 print("{:<3} | {:<58} | {}".format(
-                    str(idx + 1), common.urlShowBug + str(lBugs[idx]), 'easyHack: ' + str(isEasyHack)))
+                    str(idx + 1), common.urlShowBug + str(lBugs[idx]), 'easyHack: ' + str(isEasyHack)), file=fp)
 
         if statList['people'][k]['oldest'] >= cfg['memberPeriod'] and statList['people'][k]['newest'] >= cfg['reportPeriod'] and \
                 len(statList['people'][k]['bugs']) >= memberBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['members']:
-            print('\n=== New MEMBER: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
-            print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"))
-            print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"))
-            print('\tTotal: ' + str(len(statList['people'][k]['bugs'])))
+            print('\n=== New MEMBER: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ") ===", file=fp)
+            print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"), file=fp)
+            print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"), file=fp)
+            print('\tTotal: ' + str(len(statList['people'][k]['bugs'])), file=fp)
 
         if statList['people'][k]['newest'] < cfg['oldUserPeriod'] and statList['people'][k]['newest'] >= cfg['oldUserPeriod2'] and \
                 len(statList['people'][k]['bugs']) >= oldUserBugs and statList['people'][k]['email'] not in cfg['configQA']['ignore']['oldContributors']:
-            print('\n=== Old Contributor: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ")")
-            print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"))
-            print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"))
-            print('\tTotal: ' + str(len(statList['people'][k]['bugs'])))
+            print('\n=== Old Contributor: ' + statList['people'][k]['name'] + " ("  + statList['people'][k]['email'] + ") ===", file=fp)
+            print('\tOldest: ' + statList['people'][k]['oldest'].strftime("%Y-%m-%d"), file=fp)
+            print('\tNewest: ' + statList['people'][k]['newest'].strftime("%Y-%m-%d"), file=fp)
+            print('\tTotal: ' + str(len(statList['people'][k]['bugs'])), file=fp)
 
         statList['people'][k]['oldest'] = statList['people'][k]['oldest'].strftime("%Y-%m-%d")
         statList['people'][k]['newest'] = statList['people'][k]['newest'].strftime("%Y-%m-%d")
+
+    fp.close()
 
 def runCfg():
     cfg = common.get_config()
