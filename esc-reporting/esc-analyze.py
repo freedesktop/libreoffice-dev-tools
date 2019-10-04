@@ -634,7 +634,8 @@ def analyze_reports():
                               'easyhacks_new': [],
                               'too_many_comments': [],
                               'top10commit': [],
-                              'top10review': []}
+                              'top10review': [],
+                              'abandonedPatches': []}
     fileAutomate = cfg['homedir'] + 'automateTODO.json'
     automateList = util_load_data_file(fileAutomate)
     automateList['gerrit']['to_abandon_abandon'] = {}
@@ -687,6 +688,7 @@ def analyze_reports():
       # only accepts ambiguous changeID, doesn't help, so fullid is not really fullid, but at least
       # less prone to conflicts than just changeset-number that also can easily prefix-match commit-hashes
       entry = {'id': key, 'fullid': row['change_id'], 'name': row['owner']['name'], 'email': ownerEmail, 'title': row['subject']}
+
       if row['status'] != 'ABANDONED':
         if ownerEmail is None:
           ownerEmail = row['owner']['email']
@@ -697,6 +699,16 @@ def analyze_reports():
           and not is_domain_mapped(ownerEmail):
           entry['license'] = 'GERRIT: ' + statList['people'][ownerEmail]['licenseText']
           statList['reportList']['missing_license'].append(entry)
+      else:
+        if row['branch'] == 'master':
+          for message in row['messages']:
+            messageDate = datetime.datetime.strptime(message['date'], '%Y-%m-%d %H:%M:%S.%f000')
+            if messageDate >= cfg['1weekDate']:
+              if message['author']['username'] == 'pootlebot' and 'inactivity' in message['message']:
+                x = {'name': entry['name'],
+                     'title': entry['title'],
+                     'id': entry['id']}
+                statList['reportList']['abandonedPatches'].append(x)
 
       if row['status'] == 'NEW':
         doBlock = False
@@ -715,6 +727,7 @@ def analyze_reports():
         else:
           patchset = 1
           txt = ''
+
         if xDate < cfg['1monthDate'] and not doBlock:
           # gerrit cli sucks and doesn't accept changeset,patchrev but only uses numericID
           if 'A polite ping' in txt:

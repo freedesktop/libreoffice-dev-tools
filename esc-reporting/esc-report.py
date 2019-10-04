@@ -199,10 +199,19 @@ def report_mentoring():
           reviewer['name'],
           reviewer['month'],
           reviewer['year']), file=fp)
+    if statList['reportList']['abandonedPatches']:
+      print("    + Patches automatically abandoned:", file=fp)
+      for patch in statList['reportList']['abandonedPatches']:
+        print('        {} ( {} )'.format(
+            patch['title'],
+            patch['name']), file=fp)
+        print('            - https://gerrit.libreoffice.org/#/c/{}'.format(
+            patch['id']), file=fp)
 
-    print("    + big CONGRATULATIONS to contributors who have at least 1 merged patch, since last report:", file=fp)
-    for row in statList['reportList']['award_1st_email']:
-        print('          {} {} {}'.format(row['name'],row['email'],row['license']), file=fp)
+    if statList['reportList']['award_1st_email']:
+        print("    + big CONGRATULATIONS to contributors who have at least 1 merged patch, since last report:", file=fp)
+        for row in statList['reportList']['award_1st_email']:
+            print('          {} {} {}'.format(row['name'],row['email'],row['license']), file=fp)
     fp.close()
     return
 
