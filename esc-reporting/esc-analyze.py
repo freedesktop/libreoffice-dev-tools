@@ -54,7 +54,8 @@ import datetime
 import json
 import xmltodict
 import re
-
+import gzip
+from shutil import copyfile
 
 
 def util_load_file(fileName, isJson=True):
@@ -876,7 +877,14 @@ def analyze_final():
     sFile = cfg['homedir'] + 'stats.json'
     util_dump_file(sFile, statList)
     x = myDay.strftime('%Y-%m-%d')
-    os.system('cp '+ sFile + ' ' + cfg['homedir'] + 'archive/stats_' + x + '.json')
+
+    sArchiveFile = cfg['homedir'] + 'archive/stats_' + x + '.json'
+    copyfile(sFile, sArchiveFile)
+    with open(sArchiveFile, 'rb') as f_in:
+      with gzip.open(sArchiveFile + '.gz', 'wb') as f_out:
+        f_out.writelines(f_in)
+    os.remove(sArchiveFile)
+
     if myDay.strftime('%w') == '4':
       if 'people' in statList:
         del statList['people']
@@ -950,7 +958,8 @@ def runAnalyze():
     global openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList, automateData, committersNames
 
     x = (cfg['nowDate'] - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
-    weekList = util_load_file(cfg['homedir'] + 'archive/stats_' + x + '.json')
+    with gzip.open(cfg['homedir'] + 'archive/stats_' + x + '.json.gz', 'rb'):
+      weekList = util_load_file(x + '.json')
 
     openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
     bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
