@@ -959,7 +959,7 @@ def runAnalyze():
 
     x = (cfg['nowDate'] - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
     with gzip.open(cfg['homedir'] + 'archive/stats_' + x + '.json.gz', 'rb'):
-      weekList = util_load_file(x + '.json')
+      weekList = util_load_file('stats_' + x + '.json')
 
     openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
     bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
