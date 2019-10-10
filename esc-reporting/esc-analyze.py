@@ -224,14 +224,16 @@ def util_create_statList():
                          'haveBacktrace': 0, 'needsDevAdvice': 0, 'android': 0, 'ios': 0, 'online': 0}},
                      'easyhacks' : {'needsDevEval': 0,  'needsUXEval': 0, 'cleanup_comments': 0,
                                     'total': 0,         'assigned': 0,    'open': 0},
-                     'esc': {}},
+                     'esc': {
+                       'regression': {'open': 0, 'total': 0}
+                       }},
                      'stat': {'openhub_last_analyse': "2001-01-01"},
                      'people': {},
-                     'escList': {},
+                     'escList': {
+                       'bisect': [],
+                       'bibisect': []
+                       },
                      'reportList': {}}
-
-
-
 
 def util_check_mail(name, xmail):
     global statList
@@ -958,8 +960,13 @@ def runAnalyze():
     global openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList, automateData, committersNames
 
     x = (cfg['nowDate'] - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
-    with gzip.open(cfg['homedir'] + 'archive/stats_' + x + '.json.gz', 'rb'):
-      weekList = util_load_file('stats_' + x + '.json')
+    jsonFileName = 'stats_' + x + '.json'
+    gzFilePath = cfg['homedir'] + 'archive/' + jsonFileName + '.gz'
+    if os.path.isfile(gzFilePath):
+      with gzip.open(gzFilePath , 'rb'):
+        weekList = util_load_file(jsonFileName)
+    else:
+      weekList = util_create_statList()
 
     openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
     bugzillaData = util_load_data_file(cfg['homedir'] + 'dump/bugzilla_dump.json')
