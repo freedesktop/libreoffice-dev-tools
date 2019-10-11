@@ -959,13 +959,17 @@ def runAnalyze():
     global cfg, statList
     global openhubData, bugzillaData, bugzillaESCData, gerritData, gitData, crashData, weekList, automateData, committersNames
 
+    weekList = None
     x = (cfg['nowDate'] - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
-    jsonFileName = 'stats_' + x + '.json'
-    gzFilePath = cfg['homedir'] + 'archive/' + jsonFileName + '.gz'
+    gzFilePath = cfg['homedir'] + 'archive/stats_' + x + '.json.gz'
     if os.path.isfile(gzFilePath):
-      with gzip.open(gzFilePath , 'rb'):
-        weekList = util_load_file(jsonFileName)
-    else:
+      fp = gzip.open(gzFilePath)
+      content = fp.read()
+      fp.close()
+      if content:
+        weekList = json.loads(content.decode('utf-8'))
+
+    if not weekList:
       weekList = util_create_statList()
 
     openhubData = util_load_data_file(cfg['homedir'] + 'dump/openhub_dump.json')
