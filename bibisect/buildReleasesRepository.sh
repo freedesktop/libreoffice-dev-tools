@@ -53,9 +53,4 @@ do
     git tag -a $par1 -m $par1
 done
 
-
-
-
-
-
-
+git gc
