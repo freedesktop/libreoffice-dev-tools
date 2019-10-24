@@ -36,9 +36,10 @@ do
     mv $rootDir/$name/DEBS/opt/$folder/* $rootDir/$name/DEBS/opt/
     rm -r $rootDir/$name/DEBS/opt/$folder
     rm $rootDir/$name/DEBS/*.deb
-    echo "*** Moving files to bibisect/"
+    echo "*** Removing unneeded files"
     cd ${targetDir}
-    git rm -r opt/
+    LANG=C diff -qr ${rootDir}/$name/DEBS/opt ${targetDir}/opt | grep -w "Only in ${targetDir}/opt" | sed -r -e 's/^.*Only in //' -e 's@: @/@' | xargs git rm -r
+    echo "*** Moving files to bibisect/"
     cd $rootDir
     cp -rf $rootDir/$name/DEBS/* ${targetDir}/
     echo "*** Removing files in origin"
