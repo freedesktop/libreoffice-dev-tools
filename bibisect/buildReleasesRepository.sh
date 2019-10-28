@@ -36,18 +36,16 @@ do
     mv $rootDir/$name/DEBS/opt/$folder/* $rootDir/$name/DEBS/opt/
     rm -r $rootDir/$name/DEBS/opt/$folder
     rm $rootDir/$name/DEBS/*.deb
-    echo "*** Removing unneeded files"
-    cd ${targetDir}
-    LANG=C diff -qr ${rootDir}/$name/DEBS/opt ${targetDir}/opt | grep -w "Only in ${targetDir}/opt" | sed -r -e 's/^.*Only in //' -e 's@: @/@' | xargs git rm -r
-    echo "*** Moving files to bibisect/"
-    cd $rootDir
+    echo "*** Cleaning destination"
+    rm -rf ${targetDir}/opt/
+    echo "*** Moving files to destination"
     cp -rf $rootDir/$name/DEBS/* ${targetDir}/
     echo "*** Removing files in origin"
     rm -rf $name
     cd ${targetDir}
     par1=libreoffice-$input
     echo "*** Creating commit $par1"
-    git add opt/
+    git add -A opt/
     git commit . -m $par1 -m $file
     git clean -ffxd
     git tag -d $par1
