@@ -23,7 +23,7 @@ import sys
 def getGerritChanges():
     ret = []
 
-    p = subprocess.Popen(["ssh", "logerrit", "gerrit", "query", "--format=json", "status:open project:core owner:self"], stdout=subprocess.PIPE)
+    p = subprocess.Popen(["ssh", "-p", "29418", "gerrit.libreoffice.org", "gerrit", "query", "--format=json", "status:open project:core owner:self"], stdout=subprocess.PIPE)
     lines = p.communicate()[0].decode('utf-8').splitlines()
     for line in lines:
         j = json.loads(line)
