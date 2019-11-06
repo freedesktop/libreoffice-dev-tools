@@ -298,15 +298,15 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
                             addedResolution = change['added']
                             removedResolution = change['removed']
 
+                            if isResolved and removedResolution:
+                                statList['resolvedStatuses'][removedResolution] -= 1
+                                isResolved = False
+
                             if addedResolution:
                                 if addedResolution not in statList['resolvedStatuses']:
                                     statList['resolvedStatuses'][addedResolution] = 0
                                 statList['resolvedStatuses'][addedResolution] += 1
                                 isResolved = True
-
-                            if isResolved and removedResolution:
-                                statList['resolvedStatuses'][removedResolution] -= 1
-                                isResolved = False
 
                             if addedResolution == 'FIXED':
                                 fixedBugs[rowId] = actionDate
