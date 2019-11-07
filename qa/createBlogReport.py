@@ -36,6 +36,7 @@ def util_create_statList():
         'fixed': util_create_basic_schema(),
         'resolvedStatuses' : {},
         'criticalFixed': {},
+        'highFixed': {},
         'crashFixed': {},
         'perfFixed': {},
         'oldBugsFixed': {},
@@ -402,6 +403,8 @@ def analyze_bugzilla_data(statList, bugzillaData, cfg):
 
                             if row['priority'] == "highest":
                                 statList['criticalFixed'][rowId]= {'summary': row['summary'], 'author': author}
+                            if row['priority'] == "high":
+                                statList['highFixed'][rowId]= {'summary': row['summary'], 'author': author}
                             if 'crash' in row['summary'].lower():
                                 statList['crashFixed'][rowId]= {'summary': row['summary'], 'author': author}
                             if 'perf' in row['keywords']:
@@ -624,6 +627,7 @@ def createReport(statList):
     createDonutSection(fp, statList['resolvedStatuses'], 'Resolution of resolved bugs')
     createSection(fp, statList['fixed'], "Fixed Bugs", "fixed", "Fixers", "darksalmon")
     createList(fp, statList['criticalFixed'], "List of critical bugs fixed")
+    createList(fp, statList['highFixed'], "List of high severity bugs fixed")
     createList(fp, statList['crashFixed'], "List of crashes fixed")
     createList(fp, statList['perfFixed'], "List of performance issues fixed")
     createList(fp, statList['oldBugsFixed'], "List of old bugs ( more than {} years old ) fixed".format(oldBugsYears))
