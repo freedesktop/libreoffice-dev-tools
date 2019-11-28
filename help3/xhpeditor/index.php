@@ -35,7 +35,9 @@
     <br />
     <div class="snip_heading"><div class="snip_div">Actions:</div>
         <p>File name: <input type="text" id="01" name="filename" value="test.xhp"/><button onclick="loadText(document.getElementById('01').value);">Open File</button></p>
-        <p>File name: <input type="text" id="02" name="filename" value="test.xhp"/><button onclick="alert('Not yet implemented');">Save Changes</button><button onclick="displayResult()">Render page</button></p>
+        <p>File name: <input type="text" id="02" name="filename" value="test.xhp"/>
+        <button onclick="alert('Not yet implemented');">Save Changes</button>
+        <button onclick="displayResult()">Render page</button></p>
     </div>
     <div class="snip_heading"><div class="snip_div">Edit:</div>
         <button onclick="editor.undo()">Undo</button>
