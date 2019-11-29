@@ -64,19 +64,6 @@ def util_increase_user_actions(statList, bug, mail, targets, action, actionTime)
             statList['period'][period]['people'][mail][action] += 1
             statList['period'][period]['people'][mail]['bugs'].append(bug)
 
-def util_check_duplicated(bugID, isFirst=True):
-    rowDupeOf = bugzillaData['bugs'][str(bugID)]['dupe_of']
-    if rowDupeOf:
-        if str(rowDupeOf) in bugzillaData['bugs']:
-            return util_check_duplicated(rowDupeOf, False)
-        else:
-            return bugID
-    else:
-        if isFirst:
-            return None
-        else:
-            return bugID
-
 def util_create_bug(summary, component, version, keywords, creationDate, count_cc):
     return { 'summary': summary,
              'component': component,
@@ -131,7 +118,7 @@ def analyze_bugzilla_wiki_stats(statList, bugzillaData, cfg):
                 statList['MostCCBugs'][rowId] = util_create_bug(
                         row['summary'], row['component'], row['version'], rowKeywords, creationDate, len(row['cc']))
 
-            rowDupeOf = util_check_duplicated(rowId)
+            rowDupeOf = common.util_check_duplicated(bugzillaData, rowId)
             if rowDupeOf:
                 if rowDupeOf not in statList['dupesBugs']:
                     statList['dupesBugs'][rowDupeOf] = []

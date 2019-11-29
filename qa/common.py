@@ -80,6 +80,19 @@ def util_create_person_bugzilla(email, name):
              'bugs': set()
         }
 
+def util_check_duplicated(bugzillaData, bugID, isFirst=True):
+    rowDupeOf = bugzillaData['bugs'][str(bugID)]['dupe_of']
+    if rowDupeOf:
+        if str(rowDupeOf) in bugzillaData['bugs']:
+            return util_check_duplicated(bugzillaData, rowDupeOf, False)
+        else:
+            return bugID
+    else:
+        if isFirst:
+            return None
+        else:
+            return bugID
+
 def util_check_bugzilla_mail(statList, mail, name, date=None, bug=None):
     if mail not in statList['people']:
         statList['people'][mail] = util_create_person_bugzilla(mail, name)
