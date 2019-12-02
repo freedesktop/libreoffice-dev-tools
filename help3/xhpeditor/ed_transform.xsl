@@ -21,7 +21,7 @@
 
 <xsl:output indent="yes" method="html" doctype-system= "about:legacy-compat"/>
 
-<xsl:include href="hc2/help3xsl/links.txt.xsl"/>
+<!-- <xsl:include href="hc2/help3xsl/links.txt.xsl"/> -->
 <!--
 ############################
 # Variables and Parameters #
@@ -159,7 +159,7 @@
             </div>
         </footer>
     </div>
-    <xsl:choose>
+<!--    <xsl:choose>
         <xsl:when test="$online">
             <script type="text/javascript">
                 <![CDATA[
@@ -192,7 +192,7 @@
                 ]]>
             </script>
         </xsl:otherwise>
-    </xsl:choose>
+    </xsl:choose>-->
     </body>
 </html>
 </xsl:template>

@@ -6,39 +6,48 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
-
+<?php 
+$xhp = $_POST["olivier"];
+?>
 <html>
-<meta charset="utf-8"/>
 <head>
+<meta charset="utf-8"/>
     <title>LibreOffice Documentation XHP Editor</title>
-    <link rel="stylesheet" href="xhpeditor.css">
-    <link rel="stylesheet" href="lib/codemirror.css">
-    <link rel="stylesheet" href="addon/hint/show-hint.css">
-    <link rel="stylesheet" href="/ed/hc2/help3xsl/normalize.css">
-    <link rel="stylesheet" href="/ed/hc2/help3xsl/prism.css">
+    <link type="text/css" rel="stylesheet" href="xhpeditor.css">
+    <link type="text/css" rel="stylesheet" href="lib/codemirror.css">
+    <link type="text/css" rel="stylesheet" href="addon/hint/show-hint.css">
+    <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/normalize.css">
+    <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/prism.css">
 
     <script type="text/javascript" src="lib/codemirror.js"></script>
     <script type="text/javascript" src="addon/hint/show-hint.js"></script>
     <script type="text/javascript" src="addon/hint/xml-hint.js"></script>
     <script type="text/javascript" src="mode/xml/xml.js"></script>
     <script type="text/javascript" src="xhp2html.js"></script>
-    <script type="text/javascript" src="/ed/hc2/help3xsl/help2.js"></script>
-    <script type="text/javascript" src="/ed/hc2/help3xsl/prism.js"></script>
+    <script type="text/javascript" src="helpcontent2/help3xsl/help2.js"></script>
+    <script type="text/javascript" src="helpcontent2/help3xsl/prism.js"></script>
+    <script type="text/javascript" src="helpcontent2/help3xsl/help.js" defer=""></script>
+    <script type="text/javascript" src="autocomplete.js" defer=""></script>
+    <script type="text/javascript" src="snippets.js" defer=""></script>
 </head>
 
 <body style="font-family:sans-serif;">
 <div class="leftside">
     <h2>LibreOffice Documentation XHP Editor</h2>
-    <form class="form_area">
-        <textarea id="xhpeditor"></textarea>
+    <form id="mytextarea" class="form_area" action="xhpeditor/index.php" method="post">
+        <textarea id="xhpeditor" name="olivier" form="mytextarea"><?php echo $xhp; ?></textarea></br>
+        <input type="submit" value="Render page"/>
     </form>
     <br />
-    <div class="snip_heading"><div class="snip_div">Actions:</div>
+    <div class="snip_heading">
+    <div class="snip_div">Actions:</div>
         <p>File name: <input type="text" id="01" name="filename" value="test.xhp"/><button onclick="loadText(document.getElementById('01').value);">Open File</button></p>
         <p>File name: <input type="text" id="02" name="filename" value="test.xhp"/>
         <button onclick="alert('Not yet implemented');">Save Changes</button>
-        <button onclick="displayResult()">Render page</button></p>
-    </div>
+        <!--<button onclick="displayResult()">Render page</button>-->
+        </p>
+</div>
+    
     <div class="snip_heading"><div class="snip_div">Edit:</div>
         <button onclick="editor.undo()">Undo</button>
         <button onclick="editor.redo()">Redo</button>
@@ -107,10 +116,17 @@
 </div>
 <div class="rightside">
     <h2>Rendered page</h2> 
-    <div id="renderedpage"></div>
+    <div id="renderedpage">
+    <?php 
+    $xml = new DOMDocument();
+    $xml->loadXML($xhp);
+    $xsl = new DOMDocument; 
+    $xsl->load('ed_transform.xsl'); 
+    $proc = new XSLTProcessor(); 
+    $proc->importStyleSheet($xsl); 
+    echo $proc->transformToXML($xml);
+    ?>
+    </div>
 </div>
 </body>
-<script type="text/javascript" src="/ed/hc2/help3xsl/help.js"></script>
-<script type="text/javascript" src="autocomplete.js"></script>
-<script type="text/javascript" src="snippets.js"></script>
 </html>

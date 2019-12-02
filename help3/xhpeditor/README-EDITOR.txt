@@ -6,7 +6,7 @@ git clone https://gerrit.libreoffice.org/dev-tools dev-tools
 
 The editor is in folder
 
-dev-tools/help3/html/
+dev-tools/help3/xhpeditor/
 
 To clone the HelpContents2 submodule
 -------------------------------------
@@ -17,20 +17,15 @@ all help files are in helpcontent2/ folder
 Other services
 --------------
 A) A working  apache or nginx webserver at http://localhost
-b) PHP support for apache
+b) PHP support for apache, include support for xslt
 
 Setup
 -----
 
 1) change to the editor folder
 
-cd <location>/dev-tools/help3/html
+cd <location>/dev-tools/help3/xhpeditor
 
-2) Set a symbolic link to helpcontent2
-
-ln -s <location>/helcontent2 hc2
-
-this will make a symbolic link between hc2 -> <location>/helpcontent2
 
 3) Set a symbolic link to the core repo
 
@@ -41,19 +36,18 @@ Note: the core/ link is needed to get the colibre_svg/ icon theme
 
 4) Web server
 
-As root/admin execute a symbolic link
-
+As root/admin execute a symbolic link, assuming /var/www/html is your webroot
 cd /var/www/html
-ln -s <location>/dev-tools/help3/html ed
+ln -s <location>/dev-tools/help3/xhpeditor .
 
-this will create a symbolic link /var/www/html/ed -> <location>/dev-tools/help3/html
+this will create a symbolic link /var/www/html/xhpeditor -> <location>/dev-tools/help3/xhpeditor
 
 Running the editor
 ------------------
 
 point the browser to
 
-http://localhost/ed/index.php
+http://localhost/xhpeditor/index.php
 
 Open XHP file
 -------------
