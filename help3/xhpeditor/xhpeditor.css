@@ -306,6 +306,9 @@ icontable {
 .bug {
     color: red;
 }
+.debugembed {
+    color: magenta;
+}
 .debug {
     border: 1px solid black;
     padding: 3px;
@@ -325,4 +328,14 @@ icontable {
 .bascode {
     margin-top:15px;
     margin-bottom: 15px;
+}
+.screenshot, .genericimage {
+    border-collapse: collapse;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 2em;
+    margin-bottom: 2em;
+    border-style:none;
+    display:block;
+    box-shadow: 10px 10px 5px grey;
 }

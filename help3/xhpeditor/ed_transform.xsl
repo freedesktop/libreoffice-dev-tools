@@ -55,7 +55,7 @@
 <xsl:variable name="brand4" select="'%PRODUCTVERSION'"/>
 
 <!-- Installation -->
-<xsl:variable name="target" select="'/help_editor/'"/>
+<xsl:variable name="target" select="''"/>
 <xsl:variable name="source" select="$root"/>
 
 <!-- meta data variables from the help file -->
@@ -952,7 +952,7 @@
                         <xsl:variable name="tmp1" select="substring-after(@src, '/ui/')"/>
                         <xsl:variable name="tmp2" select="substring-before($tmp1,'/')"/>
                         <xsl:variable name="tmp3" select="substring-after($tmp1,'/')"/>
-                        <xsl:value-of select="concat($source,'source/',$tmp0,'/ui/', $tmp2, '/',$lang,'/',$tmp3)"/>
+                        <xsl:value-of select="concat($source,'/',$tmp0,'/ui/', $tmp2, '/',$lang,'/',$tmp3)"/>
                     </xsl:when>
                     <xsl:otherwise>
                         <xsl:value-of select="concat($source,'source/',@src)"/>
@@ -996,7 +996,7 @@
             <xsl:call-template name="convert2px"><xsl:with-param name="value" select="@height"/></xsl:call-template>
         </xsl:if>
     </xsl:variable>
-    <p class="bug">image href: <xsl:value-of select="$src2"/></p>
+    <p class="debugembed">Image href: <xsl:value-of select="$src2"/></p>
     <img src="{$src2}" alt="{$alt}" title="{$alt}" height="{$height}" width="{$width}">
         <xsl:if test="ancestor::tablecell">
             <xsl:attribute name="class"><xsl:value-of select="'imageicon'"/></xsl:attribute>
@@ -1177,7 +1177,7 @@
             <xsl:with-param name="doc" select="$docum" />
             <xsl:with-param name="anchor" select="$anc" />
         </xsl:call-template>
-        <p class="bug">Embed href: <xsl:value-of select="$href"/>#<xsl:value-of select="$anc"/></p>
+        <p class="debugembed">Embed href: <xsl:value-of select="$href"/>#<xsl:value-of select="$anc"/></p>
     </div>
 </xsl:template>
 
