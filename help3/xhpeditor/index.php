@@ -7,6 +7,8 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 <?php 
+require_once './class.Diff.php';
+require_once './config.php';
 $xhp = $_POST["xhpdoc"];
 ?>
 <html>
@@ -38,6 +40,7 @@ $xhp = $_POST["xhpdoc"];
         <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp; ?></textarea></br>
         <input type="submit" name="render_page" value="Render page"/>
         <input type="submit" name="get_patch" value="Generate patch"/>
+        <input type="submit" name="check_xhp" value="Check XHP"/>
     </form>
     <br />
     <div class="snip_heading">
@@ -45,7 +48,6 @@ $xhp = $_POST["xhpdoc"];
         <p>File name: <input type="text" id="01" name="filename" value="test.xhp"/><button onclick="loadText(document.getElementById('01').value);">Open File</button></p>
         <p>File name: <input type="text" id="02" name="filename" value="test.xhp"/>
         <button onclick="alert('Not yet implemented');">Save Changes</button>
-        <!--<button onclick="displayResult()">Render page</button>-->
         </p>
 </div>
     
@@ -125,6 +127,9 @@ $xhp = $_POST["xhpdoc"];
             $xsl = new DOMDocument;
             $xsl->load('ed_transform.xsl');
             $proc = new XSLTProcessor();
+            $proc->setParameter("","root",$CONFIG["help_path"]);
+            $proc->setParameter("","productname",$CONFIG["productname"]);
+            $proc->setParameter("","iconpath",$CONFIG["icon_path"]);
             $proc->importStyleSheet($xsl);
             echo $proc->transformToXml($xml);
             echo'</div>';

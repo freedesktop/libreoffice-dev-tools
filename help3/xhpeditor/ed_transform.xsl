@@ -21,18 +21,18 @@
 
 <xsl:output indent="yes" method="html" doctype-system= "about:legacy-compat"/>
 
-<!-- <xsl:include href="hc2/help3xsl/links.txt.xsl"/> -->
+<xsl:include href="links.txt.xsl"/>
 <!--
 ############################
 # Variables and Parameters #
 ############################
 //-->
 
-<xsl:param name="local" />
 <xsl:param name="root"/>
 <xsl:param name="Language"/>
 <xsl:param name="productname"/>
 <xsl:param name="productversion"/>
+<xsl:param name="iconpath"/>
 
 <xsl:param name="System" select="'WIN'"/>
 <xsl:param name="imgtheme" select="'colibre_svg'"/>
@@ -55,9 +55,8 @@
 <xsl:variable name="brand4" select="'%PRODUCTVERSION'"/>
 
 <!-- Installation -->
-<xsl:variable name="online" select="$local!='yes'"/>
 <xsl:variable name="target" select="'/help_editor/'"/>
-<xsl:variable name="source" select="'/hc2/'"/>
+<xsl:variable name="source" select="$root"/>
 
 <!-- meta data variables from the help file -->
 <xsl:variable name="filename" select="/helpdocument/meta/topic/filename"/>
@@ -89,25 +88,12 @@
 <xsl:variable name="linkpostfix" select="''"/>
 
 <!-- images for notes, tips and warnings -->
-<xsl:variable name="note_img" select="concat($img_url_prefix,'help/note.svg')"/>
-<xsl:variable name="tip_img" select="concat($img_url_prefix,'help/tip.svg')"/>
-<xsl:variable name="warning_img" select="concat($img_url_prefix,'help/warning.svg')"/>
+<xsl:variable name="note_img" select="concat($iconpath,'/help/note.svg')"/>
+<xsl:variable name="tip_img" select="concat($iconpath,'/help/tip.svg')"/>
+<xsl:variable name="warning_img" select="concat($iconpath,'/help/warning.svg')"/>
 
 <!-- Strings for the help UI page -->
-<xsl:variable name="tmp_href_ui"><xsl:value-of select="concat($urlpre,'text/shared/help/browserhelp.xhp')"/></xsl:variable>
-<xsl:variable name="tmp_doc_ui" select="document($tmp_href_ui)"/>
-<xsl:variable name ="ui_contents"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='contents']"/></xsl:variable>
-<xsl:variable name ="ui_index"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='index']"/></xsl:variable>
-<xsl:variable name ="ui_pholderall"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='pholderall']"/></xsl:variable>
-<xsl:variable name ="ui_pholderchosen"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='pholderchosen']"/></xsl:variable>
-<xsl:variable name ="ui_module"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='module']"/></xsl:variable>
-<xsl:variable name ="ui_language"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='language']"/></xsl:variable>
-<xsl:variable name ="ui_donate"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='donate']"/></xsl:variable>
-<xsl:variable name ="ui_logo"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='LibreOfficeHelp']"/></xsl:variable>
-<xsl:variable name ="ui_selectmodule"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='selectmodule']"/></xsl:variable>
-<xsl:variable name ="ui_selectlang"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='selectlanguage']"/></xsl:variable>
-<xsl:variable name ="ui_search"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='searchhelpcontents']"/></xsl:variable>
-<xsl:variable name ="ui_copyclip"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='copyclip']"/></xsl:variable>
+
 <!--
 #############
 # Templates #
@@ -138,11 +124,6 @@
 
 <!-- ALT -->
 <xsl:template match="alt"/>
-
-<!-- MATHML -->
-<xsl:template match="math">
-<div class="mathml"><xsl:apply-templates /></div>
-</xsl:template>
 
 <!-- BOOKMARK -->
 <xsl:template match="bookmark">
