@@ -7,7 +7,7 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 <?php 
-$xhp = $_POST["olivier"];
+$xhp = $_POST["xhpdoc"];
 ?>
 <html>
 <head>
@@ -34,9 +34,10 @@ $xhp = $_POST["olivier"];
 <body style="font-family:sans-serif;">
 <div class="leftside">
     <h2>LibreOffice Documentation XHP Editor</h2>
-    <form id="mytextarea" class="form_area" action="xhpeditor/index.php" method="post">
-        <textarea id="xhpeditor" name="olivier" form="mytextarea"><?php echo $xhp; ?></textarea></br>
-        <input type="submit" value="Render page"/>
+    <form id="CMtextarea" class="form_area" action="index.php" method="post">
+        <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp; ?></textarea></br>
+        <input type="submit" name="render_page" value="Render page"/>
+        <input type="submit" name="get_patch" value="Generate patch"/>
     </form>
     <br />
     <div class="snip_heading">
@@ -115,18 +116,24 @@ $xhp = $_POST["olivier"];
     </div>
 </div>
 <div class="rightside">
-    <h2>Rendered page</h2> 
-    <div id="renderedpage">
     <?php 
-    $xml = new DOMDocument();
-    $xml->loadXML($xhp);
-    $xsl = new DOMDocument; 
-    $xsl->load('ed_transform.xsl'); 
-    $proc = new XSLTProcessor(); 
-    $proc->importStyleSheet($xsl); 
-    echo $proc->transformToXML($xml);
+        $xhp = $_POST["xhpdoc"];
+        if (isset($_POST["render_page"])) {
+            echo '<h2>Rendered page</h2><div id="renderedpage">';
+            $xml = new DOMDocument();
+            $xml->loadXML($xhp);
+            $xsl = new DOMDocument;
+            $xsl->load('ed_transform.xsl');
+            $proc = new XSLTProcessor();
+            $proc->importStyleSheet($xsl);
+            echo $proc->transformToXml($xml);
+            echo'</div>';
+        } else if(isset($_POST["get_patch"])) {
+            echo '<h2>Patch</h2><div id="patchpage"><textarea>';
+            print $xhp;
+            echo '</textarea></div>';
+        }else {}
     ?>
-    </div>
 </div>
 </body>
 </html>

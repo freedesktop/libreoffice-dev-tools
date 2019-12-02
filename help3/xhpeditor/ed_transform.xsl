@@ -116,39 +116,9 @@
 
 <!-- Create the document skeleton -->
 <xsl:template match="/">
-    <xsl:variable name="htmlpage"><xsl:value-of select="concat(substring-before($filename,'.xhp'),'.html')"/></xsl:variable>
-    <xsl:variable name="titleL10N">
-        <xsl:call-template name="brand"><xsl:with-param name="string"><xsl:value-of select="$title"/></xsl:with-param></xsl:call-template>
-    </xsl:variable>
-    <xsl:variable name="install">
-        <xsl:call-template name="tokenize">
-            <xsl:with-param name="str" select="$filename"/>
-        </xsl:call-template>
-    </xsl:variable>
-    <xsl:variable name="logoprodversion">
-        <xsl:choose>
-            <xsl:when test="$productversion='latest'"><xsl:value-of select="''"/></xsl:when>
-            <xsl:otherwise><xsl:value-of select="$productversion"/></xsl:otherwise>
-        </xsl:choose>
-    </xsl:variable>
-<html lang="{$lang}">
-    <head>
-        <base href="{$install}"/>
-        <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    </head>
-    <body itemscope="true" itemtype="http://schema.org/TechArticle">
     <div id="DisplayArea" itemprop="articleBody">
         <xsl:apply-templates select="/helpdocument/body"/>
-
         <footer>
-            <xsl:if test="$online">
-                <div class="donation">
-                    <p><a href="https://www.libreoffice.org/donate/?pk_campaign=help" target ="_blank">
-                        <xsl:value-of select="$ui_donate"/>
-                    </a></p>
-                </div>
-                <p><a href="https://www.libreoffice.org/imprint" target="_blank">Impressum (Legal Info)</a> | <a href="https://www.libreoffice.org/privacy" target="_blank">Privacy Policy</a> | <a href="https://www.documentfoundation.org/statutes.pdf" target="_blank">Statutes (non-binding English translation)</a> - <a href="https://www.documentfoundation.org/satzung.pdf" target="_blank">Satzung (binding German version)</a> | Copyright information: Unless otherwise specified, all text and images on this website are licensed under the <a href="https://www.libreoffice.org/download/license/" target="_blank">Mozilla Public License v2.0</a>. “LibreOffice” and “The Document Foundation” are registered trademarks of their corresponding registered owners or are in actual use as trademarks in one or more countries. Their respective logos and icons are also subject to international copyright laws. Use thereof is explained in our <a href="https://wiki.documentfoundation.org/TradeMark_Policy" target="_blank">trademark policy</a>. LibreOffice was based on OpenOffice.org.</p>
-            </xsl:if>
             <div id="DEBUG" class="debug">
                 <h3 class="bug">Help content debug info:</h3>
                 <p>This page is: <a href="https://opengrok.libreoffice.org/xref/help/source{$filename}" target="_blank"><xsl:value-of select="$filename"/></a></p>
@@ -159,42 +129,6 @@
             </div>
         </footer>
     </div>
-<!--    <xsl:choose>
-        <xsl:when test="$online">
-            <script type="text/javascript">
-                <![CDATA[
-                var module = getParameterByName("DbPAR");
-                var system = getParameterByName("System");
-                var helpID = getParameterByName("HID");
-                fixURL(module,system);
-                var dbg = getParameterByName("Debug");
-                if (dbg == null){dbg=0}
-                document.getElementById("DEBUG").style.display = (dbg == 0) ? "none":"block";
-                document.getElementById("bm_module").innerHTML ="Module is: "+module;
-                document.getElementById("bm_system").innerHTML ="System is: "+system;
-                document.getElementById("bm_HID").innerHTML ="HID is: "+helpID;
-                ]]>
-            </script>
-        </xsl:when>
-        <xsl:otherwise>
-            <script type="text/javascript">
-                <![CDATA[
-                var module = getParameterByName("DbPAR");
-                var helpID = getParameterByName("HID");
-                var system = getSystem();
-                fixURL(module,system);
-                var dbg = getParameterByName("Debug");
-                if (dbg == null){dbg=0}
-                document.getElementById("DEBUG").style.display = (dbg == 0) ? "none":"block";
-                document.getElementById("bm_module").innerHTML ="Module is: "+module;
-                document.getElementById("bm_system").innerHTML ="System is: "+system;
-                document.getElementById("bm_HID").innerHTML ="HID is: "+helpID;
-                ]]>
-            </script>
-        </xsl:otherwise>
-    </xsl:choose>-->
-    </body>
-</html>
 </xsl:template>
 
 <!-- AHELP -->
