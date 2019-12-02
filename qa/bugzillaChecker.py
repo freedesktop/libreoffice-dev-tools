@@ -90,14 +90,16 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             common.util_check_bugzilla_mail(statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
 
             if common.isOpen(rowStatus) and rowId not in dupesBugs:
-                dupesBugs[rowId] = { 'totalDupes': 0, 'totalCC': len(row['cc']), 'priority': row['priority'], 'severity': row['severity'] }
+                dupesBugs[rowId] = { 'totalDupes': 0, 'totalCC': len(row['cc']), 'priority': row['priority'], 'severity': row['severity'],
+                        'isRegression': 'regression' in rowKeywords }
 
             rowDupeOf = common.util_check_duplicated(bugzillaData, rowId)
             if rowDupeOf and common.isOpen(bugzillaData['bugs'][str(rowDupeOf)]['status']):
                 if rowDupeOf not in dupesBugs:
                     dupesBugs[rowDupeOf] = { 'totalDupes': 0, 'totalCC': len(bugzillaData['bugs'][str(rowDupeOf)]['cc']),
                             'priority': bugzillaData['bugs'][str(rowDupeOf)]['priority'],
-                            'severity': bugzillaData['bugs'][str(rowDupeOf)]['severity'] }
+                            'severity': bugzillaData['bugs'][str(rowDupeOf)]['severity'],
+                            'isRegression': 'regression' in bugzillaData['bugs'][str(rowDupeOf)]['keywords'] }
                 dupesBugs[rowDupeOf]['totalDupes'] += 1
 
             crashSignature = row['cf_crashreport']
@@ -410,9 +412,13 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 value = [k, '', '']
                 util_add_to_result(lResults, 'change_enhancement_priority_to_high', value)
         else:
-            if (v['totalDupes'] >= minNumOfDupes or v['totalCC'] >= minNumOfCC) and (v['priority'] != 'high' and v['priority'] != 'highest'):
-                value = [k, '', '']
-                util_add_to_result(lResults, 'change_bug_priority_to_high', value)
+            if v['totalDupes'] >= minNumOfDupes or v['totalCC'] >= minNumOfCC:
+                if v['isRegression'] and v['priority'] != 'highest':
+                    value = [k, '', '']
+                    util_add_to_result(lResults, 'change_bug_priority_to_highest', value)
+                elif (v['priority'] != 'high' and v['priority'] != 'highest'):
+                    value = [k, '', '']
+                    util_add_to_result(lResults, 'change_bug_priority_to_high', value)
 
     fp = open(bugzillaReportPath, 'w', encoding='utf-8')
     print("Creating file " + bugzillaReportPath)
