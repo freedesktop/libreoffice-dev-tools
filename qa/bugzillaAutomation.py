@@ -14,7 +14,7 @@ import datetime
 import os
 import json
 
-untouchedPeriodDays = 365
+untouchedPeriodDays = 730
 
 needInfoPingPeriodDays = 180
 
@@ -126,13 +126,7 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         comments[-1]['creator'] == row['creator']:
                     statList['needInfoToUnconfirmed'][rowId] = rowCreator
 
-                if 'MassPing-UntouchedBug' in comments[-1]["text"]:
-                    if rowStatus != 'NEEDINFO':
-                        if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
-                            statList['tags']['addObsolete'].remove(comments[-1]["id"])
-                        else:
-                            statList['tags']['removeObsolete'].add(comments[-1]["id"])
-                elif 'MassPing-NeedInfo-Ping' in comments[-1]["text"]:
+                if 'MassPing-NeedInfo-Ping' in comments[-1]["text"]:
                     if rowStatus != 'NEEDINFO':
                         if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
                             statList['tags']['addObsolete'].remove(comments[-1]["id"])
@@ -150,11 +144,23 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                         else:
                             statList['tags']['removeObsolete'].add(comments[-1]["id"])
                 else:
+                    if 'MassPing-UntouchedBug' in comments[-1]["text"]:
+                        if rowStatus != 'NEEDINFO':
+                            if "obsolete" not in [x.lower() for x in comments[-1]["tags"]]:
+                                statList['tags']['addObsolete'].remove(comments[-1]["id"])
+                            else:
+                                statList['tags']['removeObsolete'].add(comments[-1]["id"])
+
                     if datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedPeriod'] and \
                             rowStatus == 'NEW' and 'needsUXEval' not in rowKeywords and 'easyHack' not in rowKeywords and \
                             row['component'] != 'Documentation' and (row['product'] == 'LibreOffice' or \
                             row['product'] == 'Impress Remote') and row['severity'] != 'enhancement':
+
                         statList['untouched'][rowId] = rowCreator
+                        if 'MassPing-UntouchedBug' in comments[-1]["text"]:
+                            statList['tags']['addObsolete'].add(comments[-1]["id"])
+                            if comments[-1]["id"] in statList['tags']['removeObsolete']:
+                                statList['tags']['removeObsolete'].remove(comments[-1]["id"])
 
 def post_comment(statList, keyInStatList, commentId, comment, addFirstLine, changeCommand=""):
     for bugId, creator in statList[keyInStatList].items():
@@ -165,7 +171,8 @@ def post_comment(statList, keyInStatList, commentId, comment, addFirstLine, chan
         rawData = json.loads(rGet.text)
         rGet.close()
 
-        if commentId not in rawData['bugs'][bugId]['comments'][-1]['text']:
+        if commentId not in rawData['bugs'][bugId]['comments'][-1]['text'] or \
+                datetime.datetime.strptime(rawData['bugs'][bugId]['comments'][-1]['creation_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['untouchedPeriod']:
             if addFirstLine:
                 firstLine = "Dear " + creator + ",\\n\\n"
                 fullComment = firstLine + comment
