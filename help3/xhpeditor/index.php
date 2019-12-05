@@ -25,7 +25,7 @@ $xhp = $_POST["xhpdoc"];
     <script type="text/javascript" src="addon/hint/show-hint.js"></script>
     <script type="text/javascript" src="addon/hint/xml-hint.js"></script>
     <script type="text/javascript" src="mode/xml/xml.js"></script>
-    <script type="text/javascript" src="xhp2html.js"></script>
+    <script type="text/javascript" src="xhp2html.js" defer=""></script>
     <script type="text/javascript" src="helpcontent2/help3xsl/help2.js"></script>
     <script type="text/javascript" src="helpcontent2/help3xsl/prism.js"></script>
     <script type="text/javascript" src="helpcontent2/help3xsl/help.js" defer=""></script>
@@ -37,20 +37,29 @@ $xhp = $_POST["xhpdoc"];
 <div class="leftside">
     <h2>LibreOffice Documentation XHP Editor</h2>
     <form id="CMtextarea" class="form_area" action="index.php" method="post">
-        <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp; ?></textarea></br>
         <input type="submit" name="render_page" value="Render page"/>
         <input type="submit" name="get_patch" value="Generate patch"/>
         <input type="submit" name="check_xhp" value="Check XHP"/>
+        <input type="submit" name="open_master" value="Open Master"/>
+        <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea">
+<?php
+if (isset($_POST["render_page"])) {
+echo $xhp;
+}elseif (isset($_POST["get_patch"])) {
+echo "get patch";
+}elseif (isset($_POST["check_xhp"])) {
+echo "check xhp";
+}elseif (isset($_POST["open_master"])) {
+echo "Open in master repository";
+}else{
+echo $xhp;
+} 
+?>
+        </textarea></br>
     </form>
-    <br />
-    <div class="snip_heading">
-    <div class="snip_div">Actions:</div>
-        <p>File name: <input type="text" id="01" name="filename" value="test.xhp"/><button onclick="loadText(document.getElementById('01').value);">Open File</button></p>
-        <p>File name: <input type="text" id="02" name="filename" value="test.xhp"/>
-        <button onclick="alert('Not yet implemented');">Save Changes</button>
-        </p>
-</div>
-    
+    <div class="snip_heading"><div class="snip_div">Open local file:</div>
+        <input type="file" id="file-input" accept=".xhp"/>
+    </div>
     <div class="snip_heading"><div class="snip_div">Edit:</div>
         <button onclick="editor.undo()">Undo</button>
         <button onclick="editor.redo()">Redo</button>
@@ -133,11 +142,7 @@ $xhp = $_POST["xhpdoc"];
             $proc->importStyleSheet($xsl);
             echo $proc->transformToXml($xml);
             echo'</div>';
-        } else if(isset($_POST["get_patch"])) {
-            echo '<h2>Patch</h2><div id="patchpage"><textarea>';
-            print $xhp;
-            echo '</textarea></div>';
-        }else {}
+        }
     ?>
 </div>
 </body>

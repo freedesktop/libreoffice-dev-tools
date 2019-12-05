@@ -9,6 +9,7 @@
 
 /* change these parameters to fit your installation */
 
+
 var xhttp;
 
 function loadDoc(filename, isXML)
@@ -33,3 +34,20 @@ function loadText(filename){
     var text = loadDoc(filename,false);
     editor.doc.setValue(text);
 }
+
+function readSingleFile(e) {
+  var file = e.target.files[0];
+
+  if (!file) {
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var contents = e.target.result;
+    editor.doc.setValue(contents);
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('file-input').addEventListener('change', readSingleFile, false);
+

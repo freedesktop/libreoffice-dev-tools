@@ -12,6 +12,7 @@ $CONFIG = array (
 'help_path' => 'helpcontent2/source/',
 'icon_path' => 'icon-themes',
 'productname' => 'LibreOffice',
+'xhpDTD' => 'helpcontent2/helpers/xmlhelp.dtd',
 );
 
 ?>
