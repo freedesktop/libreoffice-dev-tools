@@ -21,7 +21,7 @@
 
 <xsl:output indent="yes" method="html" doctype-system= "about:legacy-compat"/>
 
-<xsl:include href="links.txt.xsl"/>
+<xsl:include href="helpcontent2/help3xsl/links.txt.xsl"/>
 <!--
 ############################
 # Variables and Parameters #
@@ -78,7 +78,7 @@
 
   <!-- parts of help and image urls -->
 
-<xsl:variable name="img_url_prefix" select="concat($target,'core/icon-themes/',$imgtheme,'/')"/>
+<xsl:variable name="img_url_prefix" select="concat($iconpath,'/')"/>
 
 <xsl:variable name="urlpost" select="concat('?Language=',$lang,$am,'System=',$System,$am,'UseDB=no')"/>
 
@@ -93,7 +93,9 @@
 <xsl:variable name="warning_img" select="concat($iconpath,'/help/warning.svg')"/>
 
 <!-- Strings for the help UI page -->
-
+<xsl:variable name="tmp_href_ui"><xsl:value-of select="concat($urlpre,'text/shared/help/browserhelp.xhp')"/></xsl:variable>
+<xsl:variable name="tmp_doc_ui" select="document($tmp_href_ui)"/>
+<xsl:variable name ="ui_copyclip"><xsl:apply-templates select="$tmp_doc_ui//variable[@id='copyclip']"/></xsl:variable>
 <!--
 #############
 # Templates #
