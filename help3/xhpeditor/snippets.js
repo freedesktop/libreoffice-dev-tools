@@ -20,7 +20,7 @@ function startNewXHPDoc() {
 }
 function docHeading() {
     var a1 = '<section id="CHANGE ME">\n    <bookmark id="' + random('bm') + '" xml-lang="en-US" branch="hid/CHANGE ME" localize="false"/>\n';
-    var a2 = '    <h1 id="' + random('hd') + '><link href="HELP FILE URL" name="CHANGE ME">CHANGE ME</link></h1>\n';
+    var a2 = '    <h1 id="' + random('hd') + '"><link href="HELP FILE URL" name="CHANGE ME">CHANGE ME</link></h1>\n';
     var a3 = '    <paragraph id="' + random('par') + '" role="paragraph"><variable id="CHANGE ME"><ahelp hid="CHANGE ME">CHANGE ME</ahelp></variable></paragraph>\n\n</section>\n';
     editor.replaceRange(a1 + a2 + a3 , editor.doc.getCursor());
 }
@@ -62,7 +62,7 @@ function bascode_par() {
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
 function pycode_par() {
-    var a1 = '<paragraph role="pycode" id="' + random('bas') + '">';
+    var a1 = '<paragraph role="pycode" id="' + random('pyc') + '">';
     var a2 = '</paragraph>\n';
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
