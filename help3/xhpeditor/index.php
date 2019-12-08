@@ -57,8 +57,9 @@ echo $xhp;
 ?>
         </textarea></br>
     </form>
-    <div class="snip_heading"><div class="snip_div">Open local file:</div>
-        <input type="file" id="file-input" accept=".xhp"/>
+    <div class="snip_heading">
+        <div class="snip_div">Open:</div><input type="file" id="file-input" accept=".xhp"/>
+        <div class="snip_div">Save:</div><button onclick="download(editor.getValue(),getFileNameFromXML(),'text/xml')" class="snip_buttons">Save local file</button>
     </div>
     <div class="snip_heading"><div class="snip_div">Edit:</div>
         <button onclick="editor.undo()">Undo</button>
@@ -93,6 +94,7 @@ echo $xhp;
         <button onclick="warning()" class="snip_buttons">warning</button>
         <button onclick="tip()" class="snip_buttons">tip</button>
         <button onclick="bascode_par()" class="snip_buttons">bascode-par</button>
+        <button onclick="pycode_par()" class="snip_buttons">pycode-par</button>
     </div>
     <div class="snip_heading"><div class="snip_div">Characters:</div>
         <button onclick="emph()" class="snip_buttons">emph</button>
@@ -113,6 +115,8 @@ echo $xhp;
         <button onclick="switchXHP('sys')" class="snip_buttons">Switch sys</button>
         <button onclick="switchInline('appl')" class="snip_buttons">Switchinline appl</button>
         <button onclick="switchInline('sys')" class="snip_buttons">Switchinline sys</button>
+        <button onclick="MenuPrefMAC()" class="snip_buttons">Menu MAC</button>
+        <button onclick="KeyMAC()" class="snip_buttons">Key MAC</button>
     </div>
     <div class="snip_heading"><div class="snip_div">Lists:</div>
         <button onclick="tList('unordered')" class="snip_buttons">UL</button>

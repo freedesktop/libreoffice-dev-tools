@@ -11,7 +11,6 @@
 
 
 var xhttp;
-
 function loadDoc(filename, isXML)
 {
     if (window.ActiveXObject)
@@ -51,3 +50,31 @@ function readSingleFile(e) {
 
 document.getElementById('file-input').addEventListener('change', readSingleFile, false);
 
+// XML parser of the poor...
+function getFileNameFromXML(){
+    var textXML = editor.doc.getValue();
+    var p1=textXML.lastIndexOf('<filename>');
+    var p2=textXML.lastIndexOf('</filename>');
+    return textXML.substring(p1+10,p2).split('/').pop();
+}
+
+
+// Function to download data to a file
+// source: https://stackoverflow.com/questions/13405129/javascript-create-and-save-file
+function download(data, filename, type) {
+    var file = new Blob([data], {type: type});
+    if (window.navigator.msSaveOrOpenBlob) // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+    else { // Others
+        var a = document.createElement("a"),
+                url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);  
+        }, 0); 
+    }
+}
