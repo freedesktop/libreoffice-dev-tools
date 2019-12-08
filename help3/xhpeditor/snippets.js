@@ -27,7 +27,7 @@ function docHeading() {
 
 // Paragraph
 function paragraph(role) {
-    var a0 = '<paragraph role="'+ role + '" id="' + random('par') + '">'
+    var a0 = '<paragraph role="'+ role + '" id="' + random("par") + '">'
     var a1 = '</paragraph>\n';
     editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
 }
@@ -185,7 +185,12 @@ function switchInline(type) {
     var a4 = '</switchinline>';
     editor.replaceRange(a1 + a2 + a3 + a4, editor.doc.getCursor());
 }
-
+function MenuPrefMAC(){
+    editor.replaceRange('<switchinline select="sys"><caseinline select="MAC"><menuitem>%PRODUCTNAME - Preferences</menuitem></caseinline><defaultinline><menuitem>Tools - Options</menuitem></defaultinline></switchinline><menuitem> - </menuitem> ', editor.doc.getCursor());
+}
+function KeyMAC(){
+    editor.replaceRange('<switchinline select="sys"><caseinline select="MAC"><keystroke>command</keystroke></caseinline><defaultinline><keystroke>Ctrl</keystroke></defaultinline></switchinline><keystroke>+</keystroke>', editor.doc.getCursor());
+}
 // lists
 function tList(mode){
     var a1 = '<list type="' + mode + '">\n\n</list>';
