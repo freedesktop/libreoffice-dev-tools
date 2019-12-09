@@ -26,11 +26,10 @@ $xhp = $_POST["xhpdoc"];
     <script type="text/javascript" src="addon/hint/xml-hint.js"></script>
     <script type="text/javascript" src="mode/xml/xml.js"></script>
     <script type="text/javascript" src="xhp2html.js" defer=""></script>
-    <script type="text/javascript" src="helpcontent2/help3xsl/help2.js"></script>
     <script type="text/javascript" src="helpcontent2/help3xsl/prism.js"></script>
-    <script type="text/javascript" src="helpcontent2/help3xsl/help.js" defer=""></script>
     <script type="text/javascript" src="autocomplete.js" defer=""></script>
     <script type="text/javascript" src="snippets.js" defer=""></script>
+    <script type="text/javascript" src="DisplayArea.js"></script>
 </head>
 
 <body style="font-family:sans-serif;">
@@ -134,7 +133,11 @@ echo $xhp;
     <?php 
         $xhp = $_POST["xhpdoc"];
         if (isset($_POST["render_page"])) {
-            echo '<h2>Rendered page</h2><div id="renderedpage">';
+            echo '<h2>Rendered page</h2>';
+            echo '<button onclick="setSystemSpan(\'MAC\')" class="snip_buttons">MAC</button>';
+            echo '<button onclick="setSystemSpan(\'WIN\')" class="snip_buttons">WIN</button>';
+            echo '<button onclick="setSystemSpan(\'UNIX\')" class="snip_buttons">UNIX</button>';
+            echo '<div id="renderedpage">';
             $xml = new DOMDocument();
             $xml->loadXML($xhp);
             $xsl = new DOMDocument;

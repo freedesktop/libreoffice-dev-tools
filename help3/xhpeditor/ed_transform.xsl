@@ -467,94 +467,82 @@
 
 <!-- SWITCH -->
 <xsl:template match="switch">
-    <xsl:variable name="idsw" select="concat('swln',generate-id())"/>
-    <span id="{$idsw}" class="switch">
-        <xsl:choose>
-            <xsl:when test ="@select = 'sys'">
+    <xsl:choose>
+        <xsl:when test ="@select = 'sys'">
+            <xsl:variable name="idsw" select="concat('swlnsys',generate-id())"/>
+            <span id="{$idsw}" class="switch">
                 <xsl:apply-templates />
-                <script type="text/javascript">
-                    <![CDATA[setSystemSpan("]]><xsl:value-of select="$idsw"/><![CDATA[");]]>
-                </script>
-            </xsl:when>
-            <xsl:when test ="@select = 'appl'">
+            </span>
+        </xsl:when>
+        <xsl:when test ="@select = 'appl'">
+            <xsl:variable name="idsw" select="concat('swlnappl',generate-id())"/>
+            <span id="{$idsw}" class="switch">
                 <xsl:apply-templates />
-                <script type="text/javascript">
-                    <![CDATA[setApplSpan("]]><xsl:value-of select="$idsw"/><![CDATA[");]]>
-                </script>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:apply-templates />
-            </xsl:otherwise>
-        </xsl:choose>
-    </span>
+            </span>
+        </xsl:when>
+        <xsl:otherwise>
+            <p class="debug">Unsupported switch condition.</p>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 <xsl:template match="switch" mode="embedded">
-    <xsl:variable name="idsw" select="concat('swln',generate-id())"/>
-    <span id="{$idsw}" class="switch">
-        <xsl:choose>
-            <xsl:when test ="@select = 'sys'">
+    <xsl:choose>
+        <xsl:when test ="@select = 'sys'">
+            <xsl:variable name="idsw" select="concat('swlnsys',generate-id())"/>
+            <span id="{$idsw}" class="switch">
                 <xsl:apply-templates mode="embedded"/>
-                <script type="text/javascript">
-                    <![CDATA[setSystemSpan("]]><xsl:value-of select="$idsw"/><![CDATA[");]]>
-                </script>
-            </xsl:when>
-            <xsl:when test ="@select = 'appl'">
-                <xsl:apply-templates />
-                <script type="text/javascript">
-                    <![CDATA[setApplSpan("]]><xsl:value-of select="$idsw"/><![CDATA[");]]>
-                </script>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:apply-templates />
-            </xsl:otherwise>
-        </xsl:choose>
-    </span>
+            </span>
+        </xsl:when>
+        <xsl:when test ="@select = 'appl'">
+            <xsl:variable name="idsw" select="concat('swlnappl',generate-id())"/>
+            <span id="{$idsw}" class="switch">
+                <xsl:apply-templates mode="embedded"/>
+            </span>
+        </xsl:when>
+        <xsl:otherwise>
+            <p class="debug">Unsupported switch condition.</p>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- SWITCHINLINE -->
 <xsl:template match="switchinline">
-    <xsl:variable name="idsw" select="concat('swln',generate-id())"/>
-    <span id="{$idsw}" class="switchinline">
-        <xsl:choose>
-            <xsl:when test ="@select = 'sys'">
+    <xsl:choose>
+        <xsl:when test ="@select = 'sys'">
+            <xsl:variable name="idsw" select="concat('swlnsys',generate-id())"/>
+            <span id="{$idsw}" class="switchinline">
                 <xsl:apply-templates />
-                <script type="text/javascript">
-                    <![CDATA[setSystemSpan("]]><xsl:value-of select="$idsw"/><![CDATA[");]]>
-                </script>
-            </xsl:when>
-            <xsl:when test ="@select = 'appl'">
+            </span>
+        </xsl:when>
+        <xsl:when test ="@select = 'appl'">
+            <xsl:variable name="idsw" select="concat('swlnappl',generate-id())"/>
+            <span id="{$idsw}" class="switchinline">
                 <xsl:apply-templates />
-                <script type="text/javascript">
-                    <![CDATA[setApplSpan("]]><xsl:value-of select="$idsw"/><![CDATA[");]]>
-                </script>
-            </xsl:when>
-            <xsl:otherwise>
-               <xsl:apply-templates />
-            </xsl:otherwise>
-        </xsl:choose>
-    </span>
+            </span>
+        </xsl:when>
+        <xsl:otherwise>
+            <p class="debug">Unsupported switch condition.</p>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 <xsl:template match="switchinline" mode="embedded">
-    <xsl:variable name="idsw" select="concat('swln',generate-id())"/>
-    <span id="{$idsw}" class="switchinline">
-        <xsl:choose>
-            <xsl:when test ="@select = 'sys'">
-                <xsl:apply-templates />
-                <script type="text/javascript">
-                    <![CDATA[setSystemSpan("]]><xsl:value-of select="$idsw"/><![CDATA[");]]>
-                </script>
-            </xsl:when>
-            <xsl:when test ="@select = 'appl'">
-                <xsl:apply-templates />
-                <script type="text/javascript">
-                    <![CDATA[setApplSpan("]]><xsl:value-of select="$idsw"/><![CDATA[");]]>
-                </script>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:apply-templates />
-            </xsl:otherwise>
-        </xsl:choose>
-    </span>
+    <xsl:choose>
+        <xsl:when test ="@select = 'sys'">
+            <xsl:variable name="idsw" select="concat('swlnsys',generate-id())"/>
+            <span id="{$idsw}" class="switchinline">
+                <xsl:apply-templates mode="embedded"/>
+            </span>
+        </xsl:when>
+        <xsl:when test ="@select = 'appl'">
+            <xsl:variable name="idsw" select="concat('swlnappl',generate-id())"/>
+            <span id="{$idsw}" class="switchinline">
+                <xsl:apply-templates mode="embedded"/>
+            </span>
+        </xsl:when>
+        <xsl:otherwise>
+            <p class="debug">Unsupported switch condition.</p>
+        </xsl:otherwise>
+    </xsl:choose>
 </xsl:template>
 
 <!-- TABLE -->
@@ -803,21 +791,9 @@
 </xsl:template>
 
 <!-- Create a link -->
+<!-- Modified for editor -->
 <xsl:template name="createlink">
-    <xsl:choose>
-        <xsl:when test="starts-with(@href,'http://') or starts-with(@href,'https://')">  <!-- web links -->
-            <a target ="_blank" href="{@href}"><xsl:apply-templates /></a>
-        </xsl:when>
-        <xsl:when test="contains(@href,'#')"> <!-- internal links with bookmark -->
-            <xsl:variable name="anchor"><xsl:value-of select="concat('#',substring-after(@href,'#'))"/></xsl:variable>
-            <xsl:variable name="href"><xsl:value-of select="concat($linkprefix,substring-before(@href, 'xhp'),'html',$anchor,$linkpostfix)"/></xsl:variable>
-            <a target ="_top" href="{$href}"><xsl:apply-templates /></a>
-        </xsl:when>
-        <xsl:otherwise>
-            <xsl:variable name="href"><xsl:value-of select="concat($linkprefix,substring-before(@href, 'xhp'),'html',$linkpostfix)"/></xsl:variable>
-            <a target ="_top" href="{$href}"><xsl:apply-templates /></a>
-        </xsl:otherwise>
-    </xsl:choose>
+     <span style="color: blue;" data-tooltip="{@href}"><xsl:apply-templates /></span>
 </xsl:template>
 
 <!-- Insert Note, Warning, or Tip -->
@@ -1175,11 +1151,11 @@
         <xsl:variable name="href"><xsl:value-of select="concat($urlpre,substring-before(@href,'#'))"/></xsl:variable>
         <xsl:variable name="anc"><xsl:value-of select="substring-after(@href,'#')"/></xsl:variable>
         <xsl:variable name="docum" select="document($href)"/>
+        <p class="debugembed">Embed href: <xsl:value-of select="@href"/></p>
         <xsl:call-template name="insertembed">
             <xsl:with-param name="doc" select="$docum" />
             <xsl:with-param name="anchor" select="$anc" />
         </xsl:call-template>
-        <p class="debugembed">Embed href: <xsl:value-of select="$href"/>#<xsl:value-of select="$anc"/></p>
     </div>
 </xsl:template>
 
