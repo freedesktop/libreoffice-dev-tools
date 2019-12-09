@@ -133,11 +133,17 @@ echo $xhp;
     <?php 
         $xhp = $_POST["xhpdoc"];
         if (isset($_POST["render_page"])) {
-            echo '<h2>Rendered page</h2>';
-            echo '<button onclick="setSystemSpan(\'MAC\')" class="snip_buttons">MAC</button>';
-            echo '<button onclick="setSystemSpan(\'WIN\')" class="snip_buttons">WIN</button>';
-            echo '<button onclick="setSystemSpan(\'UNIX\')" class="snip_buttons">UNIX</button>';
-            echo '<div id="renderedpage">';
+            echo '<h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons">';
+            $opSys = array("MAC", "WIN", "UNIX");
+            foreach ($opSys as $value) {
+               echo '<button onclick="setSystemSpan(\''.$value.'\')" class="snip_buttons">'.$value.'</button>';
+               }
+            echo '</div><div class="applbuttons">';
+            $appModule = array("WRITER", "CALC", "IMPRESS", "DRAW", "BASE", "MATH");
+            foreach ($appModule as $value){
+                echo '<button onclick="setApplSpan(\''.$value.'\')" class="snip_buttons">'.$value.'</button>';
+            }
+            echo '</div></div><div id="renderedpage">';
             $xml = new DOMDocument();
             $xml->loadXML($xhp);
             $xsl = new DOMDocument;

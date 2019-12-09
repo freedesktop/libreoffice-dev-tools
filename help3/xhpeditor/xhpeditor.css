@@ -44,15 +44,22 @@
     overflow: scroll;
     border:1px solid grey;
 }
-
-/* Imported from default css for DisplayArea */
-
+.buttonrow{    
+}
+.systembuttons{
+    float:left;
+}
+.applbuttons{
+    float:right;
+}
 #renderedpage {
     background-color: gray;
     margin: 10px;
     line-height: normal;
+    clear:left;
 }
 
+/* Imported from default css for DisplayArea */
 #DisplayArea {
     background-color: white;
     overflow: auto;
