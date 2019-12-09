@@ -963,6 +963,22 @@
             </xsl:otherwise>
         </xsl:choose>
     </xsl:variable>
+    <xsl:variable name="imagestyle">
+        <xsl:choose>
+            <xsl:when test="starts-with(@src,'media/screenshots/')">
+                <xsl:value-of select="'screenshot'"/>
+            </xsl:when>
+            <xsl:when test="starts-with(@src,'media/')">
+                <xsl:value-of select="'genericimage'"/>
+            </xsl:when>
+            <xsl:when test="not(starts-with(@src,'media/'))">
+                <xsl:value-of select="'iconimage'"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="'genericimage'"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:variable>
     <xsl:variable name="alt"><xsl:value-of select="./alt"/></xsl:variable>
     <xsl:variable name="width">
         <xsl:if test="string-length(@width)!=0">
@@ -975,11 +991,7 @@
         </xsl:if>
     </xsl:variable>
     <p class="debugembed">Image href: <xsl:value-of select="$src2"/></p>
-    <img src="{$src2}" alt="{$alt}" title="{$alt}" height="{$height}" width="{$width}">
-        <xsl:if test="ancestor::tablecell">
-            <xsl:attribute name="class"><xsl:value-of select="'imageicon'"/></xsl:attribute>
-        </xsl:if>
-    </img>
+    <img src="{$src2}" class="{$imagestyle}" alt="{$alt}" title="{$alt}" style="{concat('width:',$width,';height:',$height)}"/>
 </xsl:template>
 
 <!-- Insert an object -->
