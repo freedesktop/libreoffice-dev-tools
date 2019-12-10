@@ -322,14 +322,10 @@
 
 <!-- OBJECT -->
 <xsl:template match="object">
-    <xsl:if test="$online">
 	    <xsl:call-template name="insertobject"/>
-    </xsl:if>
 </xsl:template>
 <xsl:template match="object" mode="embedded">
-    <xsl:if test="$online">
 	    <xsl:call-template name="insertobject"/>
-    </xsl:if>
 </xsl:template>
 
 <!-- PARAGRAPH -->
@@ -1218,10 +1214,7 @@
             </xsl:call-template>
         </xsl:when>
         <xsl:otherwise>
-            <xsl:choose>
-                <xsl:when test="$online"><xsl:value-of select="concat('../',$result)" /></xsl:when>
-                <xsl:otherwise><xsl:value-of select="$result" /></xsl:otherwise>
-            </xsl:choose>
+                <xsl:value-of select="$result" />
         </xsl:otherwise>
     </xsl:choose>
 </xsl:template>
