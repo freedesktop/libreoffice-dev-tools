@@ -6,9 +6,9 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
-<?php 
-require_once './class.Diff.php';
+<?php
 require_once './config.php';
+require_once './snippets.php';
 $xhp = $_POST["xhpdoc"];
 ?>
 <html>
@@ -35,115 +35,33 @@ $xhp = $_POST["xhpdoc"];
 <body style="font-family:sans-serif;">
 <div class="leftside">
     <h2>LibreOffice Documentation XHP Editor</h2>
-    <form id="CMtextarea" class="form_area" action="index.php" method="post">
+    
+    <form id="CMtextarea" class="form_area" method="post" action="index.php">
         <input type="submit" name="render_page" value="Render page"/>
         <input type="submit" name="get_patch" value="Generate patch"/>
         <input type="submit" name="check_xhp" value="Check XHP"/>
         <input type="submit" name="open_master" value="Open Master"/>
-        <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea">
-<?php
-if (isset($_POST["render_page"])) {
-echo $xhp;
-}elseif (isset($_POST["get_patch"])) {
-echo "get patch";
-}elseif (isset($_POST["check_xhp"])) {
-echo "check xhp";
-}elseif (isset($_POST["open_master"])) {
-echo "Open in master repository";
-}else{
-echo $xhp;
-} 
-?>
-        </textarea></br>
+        <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp;?></textarea></br>
     </form>
-    <div class="snip_heading">
-        <div class="snip_div">Open:</div><input type="file" id="file-input" accept=".xhp"/>
-        <div class="snip_div">Save:</div><button onclick="download(editor.getValue(),getFileNameFromXML(),'text/xml')" class="snip_buttons">Save local file</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Edit:</div>
-        <button onclick="editor.undo()">Undo</button>
-        <button onclick="editor.redo()">Redo</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Document:</div>
-        <button onclick="startNewXHPDoc()" class="snip_buttons">Start new XHP document</button>
-        <button onclick="docHeading()" class="snip_buttons">DocHeading</button>
-        <button onclick="snippet7()" class="snip_buttons">ahelp</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Bookmarks: </div>
-        <button onclick="bookmarkValue()" class="snip_buttons">bk-value</button>
-        <button onclick="bookmarkBranch()" class="snip_buttons">bk-hid</button>
-        <button onclick="bookmarkIndex()" class="snip_buttons">bk-index</button>
-        <button onclick="bookmarkNoWidget()" class="snip_buttons">bk-nowidget</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Sections: </div>
-        <button onclick="section_div()" class="snip_buttons">Section</button>
-        <button onclick="related_topics()" class="snip_buttons">Related Topics</button>
-        <button onclick="howtoget()" class="snip_buttons">How to get</button>
-        <button onclick="bascode_div()" class="snip_buttons">bascode div</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Tables:</div>
-        <button onclick="table2R3C()" class="snip_buttons">Table Full</button>
-        <button onclick="tableRow()" class="snip_buttons">TableRow</button>
-        <button onclick="tableCell()" class="snip_buttons">Table Cell</button>
-        <button onclick="iconTable()" class="snip_buttons">Icon Table</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Paragraph:</div>
-        <button onclick="paragraph('paragraph')" class="snip_buttons">paragraph</button>
-        <button onclick="note()" class="snip_buttons">note</button>
-        <button onclick="warning()" class="snip_buttons">warning</button>
-        <button onclick="tip()" class="snip_buttons">tip</button>
-        <button onclick="bascode_par()" class="snip_buttons">bascode-par</button>
-        <button onclick="pycode_par()" class="snip_buttons">pycode-par</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Characters:</div>
-        <button onclick="emph()" class="snip_buttons">emph</button>
-        <button onclick="c_menuitem()" class="snip_buttons">menuitem</button>
-        <button onclick="_input()" class="snip_buttons">input</button>
-        <button onclick="_literal()" class="snip_buttons">literal</button>
-        <button onclick="_keystroke()" class="snip_buttons">keystroke</button>
-        <button onclick="_widget()" class="snip_buttons">widget</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Headings:</div>
-        <button onclick="heading('1')" class="snip_buttons">H1</button>
-        <button onclick="heading('2')" class="snip_buttons">H2</button>
-        <button onclick="heading('3')" class="snip_buttons">H3</button>
-        <button onclick="heading('4')" class="snip_buttons">H4</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Switches:</div>
-        <button onclick="switchXHP('appl')" class="snip_buttons">Switch appl</button>
-        <button onclick="switchXHP('sys')" class="snip_buttons">Switch sys</button>
-        <button onclick="switchInline('appl')" class="snip_buttons">Switchinline appl</button>
-        <button onclick="switchInline('sys')" class="snip_buttons">Switchinline sys</button>
-        <button onclick="MenuPrefMAC()" class="snip_buttons">Menu MAC</button>
-        <button onclick="KeyMAC()" class="snip_buttons">Key MAC</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Lists:</div>
-        <button onclick="tList('unordered')" class="snip_buttons">UL</button>
-        <button onclick="tList('ordered')" class="snip_buttons">OL</button>
-        <button onclick="listItem()" class="snip_buttons">List Item</button>
-    </div>
-    <div class="snip_heading"><div class="snip_div">Links:</div>
-        <button onclick="tVariable()" class="snip_buttons">Variable</button>
-        <button onclick="tEmbed()" class="snip_buttons">Embed</button>
-        <button onclick="tEmbedvar()" class="snip_buttons">Embedvar</button>
-        <button onclick="tLink()" class="snip_buttons">Link</button>
+    <div class-"buttonsdiv">
+    <?php include './buttons.php';?>
     </div>
 </div>
 <div class="rightside">
-    <?php 
+    <?php
         $xhp = $_POST["xhpdoc"];
         if (isset($_POST["render_page"])) {
-            echo '<h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons">';
+            echo '<h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons"><p>System: ';
             $opSys = array("MAC", "WIN", "UNIX");
             foreach ($opSys as $value) {
-               echo '<button onclick="setSystemSpan(\''.$value.'\')" class="snip_buttons">'.$value.'</button>';
+               echo '<input type="radio" name="sys" onclick="setSystemSpan(\''.$value.'\')" class="snip_buttons">'.$value.'&nbsp;';
                }
-            echo '</div><div class="applbuttons">';
+            echo '</p></div><div class="applbuttons"><p> Module: ';
             $appModule = array("WRITER", "CALC", "IMPRESS", "DRAW", "BASE", "MATH");
             foreach ($appModule as $value){
-                echo '<button onclick="setApplSpan(\''.$value.'\')" class="snip_buttons">'.$value.'</button>';
+                echo '<input type="radio" name="app" onclick="setApplSpan(\''.$value.'\')" class="snip_buttons">'.$value.'&nbsp;';
             }
-            echo '</div></div><div id="renderedpage">';
+            echo '</p></div></div><div id="renderedpage">';
             $xml = new DOMDocument();
             $xml->loadXML($xhp);
             $xsl = new DOMDocument;
@@ -154,8 +72,41 @@ echo $xhp;
             $proc->setParameter("","iconpath",$CONFIG["icon_path"]);
             $proc->importStyleSheet($xsl);
             echo $proc->transformToXml($xml);
-            echo'</div>';
-        }
+            echo '</div>';
+        }elseif (isset($_POST["check_xhp"])) {
+            libxml_use_internal_errors(true);
+            
+            $root = 'helpdocument';
+
+            $old = new DOMDocument;
+            $old->loadXML($xhp);
+
+            $creator = new DOMImplementation;
+            $doctype = $creator->createDocumentType($root, null, 'xmlhelp.dtd');
+            $new = $creator->createDocument(null, null, $doctype);
+            $new->encoding = "utf-8";
+
+            $oldNode = $old->getElementsByTagName($root)->item(0);
+            $newNode = $new->importNode($oldNode, true);
+            $new->appendChild($newNode);
+
+            echo '<h2>Check XHP:</h2>';
+            if (!$new->validate()) {
+                echo '<p class="bug">This document does not verify the DTD and is NOT VALID!</p>';
+                $errors = libxml_get_errors();
+                foreach ($errors as $error) {
+                    echo display_xml_error($error, explode("\n", $new->saveXML()));
+                }
+                libxml_clear_errors();
+            }else{
+                echo '<p>This document verifies the DTD!</p>';
+            };
+        }elseif (isset($_POST["get_patch"])) {
+        echo '<h2>Get Patch:</h2>';        
+        echo "<p>get patch</p>";
+        } else {
+        echo '<h2>Boo:</h2>';
+        echo '<p>Aha!!!!!</p>';}
     ?>
 </div>
 </body>
