@@ -119,6 +119,7 @@ $xhp = $_POST["xhpdoc"];
             }else{
                 echo "<p>No duplicates ids found.</p>";
             }
+            }
         }elseif (isset($_POST["get_patch"])) {
         echo '<h2>Get Patch:</h2>';
         } else {
