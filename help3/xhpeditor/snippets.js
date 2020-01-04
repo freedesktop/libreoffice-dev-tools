@@ -67,19 +67,22 @@ function pycode_par() {
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
 
+function image_par() {
+    var a1 = '<paragraph role="image" id="' + random('par') + '"><image src="media/CHANGE-ME" id="' + random('img') + '" width="" height=""><alt id="' + random('alt') +'">';
+    var a2 = '</alt></image></paragraph>\n';
+    editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
+}
 // Tables
 // simple table cell
 function tCell (role){
     return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="' + role + '"></paragraph>\n       </tablecell>\n';
 }
 
-
 function iconTable() {
     var a1 = '<table id="' + random('tab') + '">\n    <tablerow>\n        <tablecell>\n            ';
-    var a2 = '<paragraph id=" ' + random('par')+ '" localize="false">\n                ';
-    var a3 = '<image >CHANGE ME</image>\n            </paragraph>\n        </tablecell>\n' + tCell();
-    var a4 = '\n    </tablerow>\n</table>\n';
-    editor.replaceRange(a1 + a2 + a3 + a4, editor.doc.getCursor());
+    var a2 = '<paragraph role="image" id="' + random('par') + '">\n<image src="media/CHANGE-ME" id="' + random('img') + '" width="" height=""><alt id="' + random('alt') +'">Icon</alt></image>\n            </paragraph>';
+    var a3 = '\n       </tablecell>\n' + tCell("paragraph") + '    </tablerow>\n</table>\n';
+    editor.replaceRange(a1 + a2 + a3, editor.doc.getCursor());
 }
 
 function tableCell() {
@@ -171,19 +174,19 @@ function _widget() {
 // switches
 
 function switchXHP(type) {
+    var type_string = (type=='sys') ? "MAC | UNIX | WIN" : "WRITER | CALC | IMPRESS | DRAW | BASE | MATH";
     var a1 = '<switch select="' + type + '">\n';
-    var a2 = '<case select="APPLICATION OR SYSTEM">CHANGE ME</case>\n';
-    var a3 = '<default>DEFAULT STUFF</default>\n';
-    var a4 = '</switch>\n';
-    editor.replaceRange(a1 + a2 + a3 + a4, editor.doc.getCursor());
+    var a2 = '<case select="' + type_string +'">\nCHANGE ME\n</case>\n';
+    var a3 = '<default>\nDEFAULT STUFF\n</default>\n</switch>\n';
+    editor.replaceRange(a1 + a2 + a3, editor.doc.getCursor());
 }
 
 function switchInline(type) {
+    var type_string = (type=='sys') ? "MAC | UNIX | WIN" : "WRITER | CALC | IMPRESS | DRAW | BASE | MATH";
     var a1 = '<switchinline select="' + type + '">';
-    var a2 = '<caseinline  select="APPLICATION OR SYSTEM">CHANGE ME</caseinline>';
-    var a3 = '<defaultinline>DEFAULT STUFF</defaultinline>';
-    var a4 = '</switchinline>';
-    editor.replaceRange(a1 + a2 + a3 + a4, editor.doc.getCursor());
+    var a2 = '<caseinline  select="' + type_string +'">CHANGE ME</caseinline>';
+    var a3 = '<defaultinline>DEFAULT STUFF</defaultinline></switchinline>';
+    editor.replaceRange(a1 + a2 + a3, editor.doc.getCursor());
 }
 function MenuPrefMAC(){
     editor.replaceRange('<switchinline select="sys"><caseinline select="MAC"><menuitem>%PRODUCTNAME - Preferences</menuitem></caseinline><defaultinline><menuitem>Tools - Options</menuitem></defaultinline></switchinline><menuitem> - </menuitem> ', editor.doc.getCursor());

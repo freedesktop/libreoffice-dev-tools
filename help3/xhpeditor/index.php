@@ -109,22 +109,22 @@ $xhp = $_POST["xhpdoc"];
                 foreach ($xmlarray->xpath("//$tag_uniq") as $tag){
                     $idarray[$i] = $tag['id'];
                     ++$i;
+                }
             }
             $dupped_array =  array_values(array_unique(array_diff_key($idarray, array_unique($idarray))));
             if (count($dupped_array) > 0){
                 echo '<p class="bug">Found duplicated ids:</p>';
                 foreach($dupped_array as $dup) {
-                echo "<p>$dup</p>";
+                    echo "<p>$dup</p>";
                 }
             }else{
                 echo "<p>No duplicates ids found.</p>";
             }
-            }
         }elseif (isset($_POST["get_patch"])) {
         echo '<h2>Get Patch:</h2>';
         } else {
-        echo '<h2>Boo:</h2>';
-        echo '<p>Aha!!!!!</p>';}
+        echo '<h2>Viewing Area</h2>';
+        }
     ?>
 </div>
 </body>

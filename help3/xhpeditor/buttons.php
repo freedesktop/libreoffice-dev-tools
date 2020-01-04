@@ -27,7 +27,7 @@ echo '<div class="snip_heading">
     </div>
     <div class="snip_heading"><div class="snip_div">Tables:</div>
         <button onclick="table2R3C()" class="snip_buttons">Table Full</button>
-        <button onclick="tableRow()" class="snip_buttons">TableRow</button>
+        <button onclick="tableRow()" class="snip_buttons">Table Row</button>
         <button onclick="tableCell()" class="snip_buttons">Table Cell</button>
         <button onclick="iconTable()" class="snip_buttons">Icon Table</button>
     </div>
@@ -38,6 +38,7 @@ echo '<div class="snip_heading">
         <button onclick="tip()" class="snip_buttons">tip</button>
         <button onclick="bascode_par()" class="snip_buttons">bascode-par</button>
         <button onclick="pycode_par()" class="snip_buttons">pycode-par</button>
+        <button onclick="image_par()" class="snip_buttons">image-par</button>
     </div>
     <div class="snip_heading"><div class="snip_div">Characters:</div>
         <button onclick="emph()" class="snip_buttons">emph</button>
