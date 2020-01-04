@@ -43,7 +43,7 @@ $xhp = $_POST["xhpdoc"];
         <input type="submit" name="open_master" value="Open Master"/>
         <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp;?></textarea></br>
     </form>
-    <div class-"buttonsdiv">
+    <div class="buttonsdiv">
     <?php include './buttons.php';?>
     </div>
 </div>
@@ -101,9 +101,26 @@ $xhp = $_POST["xhpdoc"];
             }else{
                 echo '<p>This document verifies the DTD!</p>';
             };
+            echo "<h2>Check duplicated Id's:</h2>";
+            $tags_id_uniq = array('paragraph','note','warning','tip','h1','h2','h3','h4','h5','h6');
+            $xmlarray = simplexml_load_string($xhp);
+            $i=0;
+            foreach($tags_id_uniq as $tag_uniq) {
+                foreach ($xmlarray->xpath("//$tag_uniq") as $tag){
+                    $idarray[$i] = $tag['id'];
+                    ++$i;
+            }
+            $dupped_array =  array_values(array_unique(array_diff_key($idarray, array_unique($idarray))));
+            if (count($dupped_array) > 0){
+                echo '<p class="bug">Found duplicated ids:</p>';
+                foreach($dupped_array as $dup) {
+                echo "<p>$dup</p>";
+                }
+            }else{
+                echo "<p>No duplicates ids found.</p>";
+            }
         }elseif (isset($_POST["get_patch"])) {
-        echo '<h2>Get Patch:</h2>';        
-        echo "<p>get patch</p>";
+        echo '<h2>Get Patch:</h2>';
         } else {
         echo '<h2>Boo:</h2>';
         echo '<p>Aha!!!!!</p>';}
