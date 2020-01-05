@@ -75,50 +75,59 @@ $xhp = $_POST["xhpdoc"];
             echo '</div>';
         }elseif (isset($_POST["check_xhp"])) {
             libxml_use_internal_errors(true);
-            
+            libxml_clear_errors();
             $root = 'helpdocument';
-
             $old = new DOMDocument;
-            $old->loadXML($xhp);
-
-            $creator = new DOMImplementation;
-            $doctype = $creator->createDocumentType($root, null, 'xmlhelp.dtd');
-            $new = $creator->createDocument(null, null, $doctype);
-            $new->encoding = "utf-8";
-
-            $oldNode = $old->getElementsByTagName($root)->item(0);
-            $newNode = $new->importNode($oldNode, true);
-            $new->appendChild($newNode);
-
-            echo '<h2>Check XHP:</h2>';
-            if (!$new->validate()) {
-                echo '<p class="bug">This document does not verify the DTD and is NOT VALID!</p>';
+            
+            echo '<h2>XHP Verification</h2>';
+            if ( !$old->loadXML($xhp) ) {
                 $errors = libxml_get_errors();
+                echo '<p class="bug">The XML is malformed!</p>';
                 foreach ($errors as $error) {
-                    echo display_xml_error($error, explode("\n", $new->saveXML()));
+                    echo display_xml_error($error, explode("\n", $old->saveXML()));
                 }
                 libxml_clear_errors();
             }else{
-                echo '<p>This document verifies the DTD!</p>';
-            };
-            echo "<h2>Check duplicated Id's:</h2>";
-            $tags_id_uniq = array('paragraph','note','warning','tip','h1','h2','h3','h4','h5','h6');
-            $xmlarray = simplexml_load_string($xhp);
-            $i=0;
-            foreach($tags_id_uniq as $tag_uniq) {
-                foreach ($xmlarray->xpath("//$tag_uniq") as $tag){
-                    $idarray[$i] = $tag['id'];
-                    ++$i;
+                echo "<p>No XML errors found</p>";
+                $creator = new DOMImplementation;
+                $doctype = $creator->createDocumentType($root, null, 'xmlhelp.dtd');
+                $new = $creator->createDocument(null, null, $doctype);
+                $new->encoding = "utf-8";
+
+                $oldNode = $old->getElementsByTagName($root)->item(0);
+                $newNode = $new->importNode($oldNode, true);
+                $new->appendChild($newNode);
+
+                echo '<h2>Check XHP:</h2>';
+                if (!$new->validate()) {
+                    echo '<p class="bug">This document does not verify the DTD and is NOT VALID!</p>';
+                    $errors = libxml_get_errors();
+                    foreach ($errors as $error) {
+                        echo display_xml_error($error, explode("\n", $new->saveXML()));
+                    }
+                    libxml_clear_errors();
+                }else{
+                    echo '<p>This document verifies the DTD!</p>';
+                };
+                echo "<h2>Check duplicated Id's:</h2>";
+                $tags_id_uniq = array('paragraph','note','warning','tip','h1','h2','h3','h4','h5','h6');
+                $xmlarray = simplexml_load_string($xhp);
+                $i=0;
+                foreach($tags_id_uniq as $tag_uniq) {
+                    foreach ($xmlarray->xpath("//$tag_uniq") as $tag){
+                        $idarray[$i] = $tag['id'];
+                        ++$i;
+                    }
                 }
-            }
-            $dupped_array =  array_values(array_unique(array_diff_key($idarray, array_unique($idarray))));
-            if (count($dupped_array) > 0){
-                echo '<p class="bug">Found duplicated ids:</p>';
-                foreach($dupped_array as $dup) {
-                    echo "<p>$dup</p>";
+                $dupped_array =  array_values(array_unique(array_diff_key($idarray, array_unique($idarray))));
+                if (count($dupped_array) > 0){
+                    echo '<p class="bug">Found duplicated ids:</p>';
+                    foreach($dupped_array as $dup) {
+                        echo "<p>$dup</p>";
+                    }
+                }else{
+                    echo "<p>No duplicates ids found.</p>";
                 }
-            }else{
-                echo "<p>No duplicates ids found.</p>";
             }
         }elseif (isset($_POST["get_patch"])) {
         echo '<h2>Get Patch:</h2>';
