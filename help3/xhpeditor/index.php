@@ -21,15 +21,20 @@ $xhp = $_POST["xhpdoc"];
     <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/normalize.css">
     <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/prism.css">
 
-    <script type="text/javascript" src="lib/codemirror.js"></script>
-    <script type="text/javascript" src="addon/hint/show-hint.js"></script>
-    <script type="text/javascript" src="addon/hint/xml-hint.js"></script>
-    <script type="text/javascript" src="mode/xml/xml.js"></script>
-    <script type="text/javascript" src="xhp2html.js" defer=""></script>
-    <script type="text/javascript" src="helpcontent2/help3xsl/prism.js"></script>
-    <script type="text/javascript" src="autocomplete.js" defer=""></script>
-    <script type="text/javascript" src="snippets.js" defer=""></script>
-    <script type="text/javascript" src="DisplayArea.js"></script>
+    <script type="application/javascript" src="lib/codemirror.js"></script>
+    <script type="application/javascript" src="addon/hint/show-hint.js"></script>
+    <script type="application/javascript" src="addon/hint/xml-hint.js"></script>
+    <script type="application/javascript" src="addon/edit/matchtags.js"></script>
+    <script type="application/javascript" src="addon/edit/closetags.js"></script>
+    <script type="application/javascript" src="mode/xml/xml.js"></script>
+    <script type="application/javascript" src="addon/fold/xml-fold.js"></script>
+    <script type="application/javascript" src="addon/fold/foldcode.js"></script>
+    
+    <script type="application/javascript" src="helpcontent2/help3xsl/prism.js"></script>
+    <script type="application/javascript" src="autocomplete.js" defer=""></script>
+    <script type="application/javascript" src="xhp2html.js" defer></script>
+    <script type="application/javascript" src="snippets.js" defer=""></script>
+    <script type="application/javascript" src="DisplayArea.js"></script>
 </head>
 
 <body style="font-family:sans-serif;">
@@ -44,7 +49,7 @@ $xhp = $_POST["xhpdoc"];
         <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp;?></textarea></br>
     </form>
     <div class="buttonsdiv">
-    <?php include './buttons.php';?>
+        <?php include './buttons.php';?>
     </div>
 </div>
 <div class="rightside">
@@ -97,7 +102,7 @@ $xhp = $_POST["xhpdoc"];
                 $oldNode = $old->getElementsByTagName($root)->item(0);
                 $newNode = $new->importNode($oldNode, true);
                 $new->appendChild($newNode);
-
+                libxml_clear_errors();
                 echo '<h2>Check XHP:</h2>';
                 if (!$new->validate()) {
                     echo '<p class="bug">This document does not verify the DTD and is NOT VALID!</p>';

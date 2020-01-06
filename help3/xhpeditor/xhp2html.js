@@ -9,31 +9,6 @@
 
 /* change these parameters to fit your installation */
 
-
-var xhttp;
-function loadDoc(filename, isXML)
-{
-    if (window.ActiveXObject)
-    {
-        xhttp = new ActiveXObject("Msxml2.XMLHTTP");
-    }
-    else
-    {
-        xhttp = new XMLHttpRequest();
-    }
-    xhttp.open("GET", filename, false);
-    try {xhttp.responseType = "msxml-document"} catch(err) {} // Helping IE11
-//     if isXML=true return XML otherwise return a text string
-    xhttp.send(null);
-    var response =  (isXML) ? xhttp.responseXML : xhttp.responseText;
-    return response;
-}
-
-function loadText(filename){
-    var text = loadDoc(filename,false);
-    editor.doc.setValue(text);
-}
-
 function readSingleFile(e) {
   var file = e.target.files[0];
 
@@ -78,3 +53,22 @@ function download(data, filename, type) {
         }, 0); 
     }
 }
+
+// Codemirror configuration 
+var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
+    lineNumbers: true,
+    indentUnit: 4,
+    indentWithTabs: false,
+    mode: "xml",
+    matchBrackets: true,
+    theme: "default",
+    lineWrapping: true,
+    extraKeys: {
+        "'<'": completeAfter,
+        "'/'": completeIfAfterLt,
+        "' '": completeIfInTag,
+        "'='": completeIfInTag,
+        "Ctrl-Space": "autocomplete"
+    },
+    hintOptions: {schemaInfo: tags}
+});

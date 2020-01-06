@@ -13,14 +13,18 @@
     border:1px solid grey;
 }
 .snip_buttons{
-    margin-top:5px;
-}
-.snip_div{
     display:inline-block;
-    width:5em;
 }
 .snip_heading{
-    margin-top:10px;
+    display:inline-block;
+    width:6em;
+}
+.buttonrow{
+    margin-top:5px;
+    margin-left:10px;
+}
+.buttonsdiv{
+    display:block;
 }
 
 .leftside{
@@ -44,8 +48,6 @@
     overflow: scroll;
     border:1px solid grey;
 }
-.buttonrow{    
-}
 .systembuttons{
     float:left;
 }
@@ -58,7 +60,6 @@
     line-height: normal;
     clear:left;
 }
-.buttonsdiv{}
 
 /* Imported from default css for DisplayArea */
 #DisplayArea {

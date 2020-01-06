@@ -163,7 +163,7 @@ function _literal() {
     editor.replaceSelection('<literal>'+ editor.doc.getSelection() +'</literal>','');
 }
 function _keystroke() {
-    editor.replaceSelection('<keystroke>'+ editor.doc.getSelection() +'</keystroke>','');
+    editor.replaceSelection('<keycode>'+ editor.doc.getSelection() +'</keycode>','');
 }
 function _input() {
     editor.replaceSelection('<input>'+ editor.doc.getSelection() +'</input>','');
@@ -192,11 +192,11 @@ function MenuPrefMAC(){
     editor.replaceRange('<switchinline select="sys"><caseinline select="MAC"><menuitem>%PRODUCTNAME - Preferences</menuitem></caseinline><defaultinline><menuitem>Tools - Options</menuitem></defaultinline></switchinline><menuitem> - </menuitem> ', editor.doc.getCursor());
 }
 function KeyMAC(){
-    editor.replaceRange('<switchinline select="sys"><caseinline select="MAC"><keystroke>command</keystroke></caseinline><defaultinline><keystroke>Ctrl</keystroke></defaultinline></switchinline><keystroke>+</keystroke>', editor.doc.getCursor());
+    editor.replaceRange('<switchinline select="sys"><caseinline select="MAC"><keycode>command</keycode></caseinline><defaultinline><keycode>Ctrl</keycode></defaultinline></switchinline><keycode>+</keycode>', editor.doc.getCursor());
 }
 // lists
 function tList(mode){
-    var a1 = '<list type="' + mode + '">\n\n</list>';
+    var a1 = '<list type="' + mode + '">\n\n</list>\n';
     editor.replaceRange(a1, editor.doc.getCursor());
 }
 

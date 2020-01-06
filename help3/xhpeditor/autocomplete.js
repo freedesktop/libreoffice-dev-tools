@@ -164,19 +164,4 @@ function completeIfInTag(cm) {
     });
 }
 
-var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
-    lineNumbers: true,
-    mode: "xml",
-    matchBrackets: true,
-    theme: "default",
-    lineWrapping: true,
-    extraKeys: {
-        "'<'": completeAfter,
-        "'/'": completeIfAfterLt,
-        "' '": completeIfInTag,
-        "'='": completeIfInTag,
-        "Ctrl-Space": "autocomplete"
-    },
-    hintOptions: {schemaInfo: tags}
-});
 /* vim:set shiftwidth=4 softtabstop=4 expandtab cinoptions=b1,g0,N-s cinkeys+=0=break: */
