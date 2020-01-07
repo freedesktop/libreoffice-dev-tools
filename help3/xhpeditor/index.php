@@ -84,7 +84,8 @@ $xhp = $_POST["xhpdoc"];
             $root = 'helpdocument';
             $old = new DOMDocument;
             
-            echo '<h2>XHP Verification</h2>';
+            echo '<h2>Help File Verification</h2>';
+            echo '<h3>Check XML Formation</h3>';
             if ( !$old->loadXML($xhp) ) {
                 $errors = libxml_get_errors();
                 echo '<p class="bug">The XML is malformed!</p>';
@@ -93,7 +94,7 @@ $xhp = $_POST["xhpdoc"];
                 }
                 libxml_clear_errors();
             }else{
-                echo "<p>No XML errors found</p>";
+                echo "<p>No XML errors found!</p>";
                 $creator = new DOMImplementation;
                 $doctype = $creator->createDocumentType($root, null, 'xmlhelp.dtd');
                 $new = $creator->createDocument(null, null, $doctype);
@@ -103,18 +104,18 @@ $xhp = $_POST["xhpdoc"];
                 $newNode = $new->importNode($oldNode, true);
                 $new->appendChild($newNode);
                 libxml_clear_errors();
-                echo '<h2>Check XHP:</h2>';
+                echo '<h3>Check XML Document Type Definition:</h3>';
                 if (!$new->validate()) {
-                    echo '<p class="bug">This document does not verify the DTD and is NOT VALID!</p>';
+                    echo '<p class="bug">This document does not verify the DTD and is <b>NOT VALID!</b></p>';
                     $errors = libxml_get_errors();
                     foreach ($errors as $error) {
                         echo display_xml_error($error, explode("\n", $new->saveXML()));
                     }
                     libxml_clear_errors();
                 }else{
-                    echo '<p>This document verifies the DTD!</p>';
+                    echo '<p>No DTD errors found!</p>';
                 };
-                echo "<h2>Check duplicated Id's:</h2>";
+                echo "<h3>Check duplicated id= :</h3>";
                 $tags_id_uniq = array('paragraph','note','warning','tip','h1','h2','h3','h4','h5','h6');
                 $xmlarray = simplexml_load_string($xhp);
                 $i=0;
@@ -126,12 +127,12 @@ $xhp = $_POST["xhpdoc"];
                 }
                 $dupped_array =  array_values(array_unique(array_diff_key($idarray, array_unique($idarray))));
                 if (count($dupped_array) > 0){
-                    echo '<p class="bug">Found duplicated ids:</p>';
+                    echo '<p class="bug">Found duplicated id= attributes:</p>';
                     foreach($dupped_array as $dup) {
                         echo "<p>$dup</p>";
                     }
                 }else{
-                    echo "<p>No duplicates ids found.</p>";
+                    echo "<p>No duplicate id= found.</p>";
                 }
             }
         }elseif (isset($_POST["get_patch"])) {
