@@ -38,7 +38,7 @@ $xhp = $_POST["xhpdoc"];
 </head>
 
 <body style="font-family:sans-serif;">
-<div class="leftside">
+<div id="leftside">
     <h2>LibreOffice Documentation XHP Editor</h2>
     
     <form id="CMtextarea" class="form_area" method="post" action="index.php">
@@ -52,11 +52,11 @@ $xhp = $_POST["xhpdoc"];
         <?php include './buttons.php';?>
     </div>
 </div>
-<div class="rightside">
+<div id="rightside">
     <?php
         $xhp = $_POST["xhpdoc"];
         if (isset($_POST["render_page"])) {
-            echo '<h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons"><p>System: ';
+            echo '<div id="renderedpageheader"><h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons"><p>System: ';
             $opSys = array("MAC", "WIN", "UNIX");
             foreach ($opSys as $value) {
                echo '<input type="radio" name="sys" onclick="setSystemSpan(\''.$value.'\')" class="snip_buttons">'.$value.'&nbsp;';
@@ -66,7 +66,7 @@ $xhp = $_POST["xhpdoc"];
             foreach ($appModule as $value){
                 echo '<input type="radio" name="app" onclick="setApplSpan(\''.$value.'\')" class="snip_buttons">'.$value.'&nbsp;';
             }
-            echo '</p></div></div><div id="renderedpage">';
+            echo '</p></div></div></div><div id="renderedpage">';
             $xml = new DOMDocument();
             $xml->loadXML($xhp);
             $xsl = new DOMDocument;
