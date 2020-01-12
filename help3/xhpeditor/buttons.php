@@ -1,86 +1,129 @@
-<div class="buttonrow">
-    <div class="snip_heading">File:</div>
-    <div class="snip_buttons">Open: <input type="file" id="file-input" accept=".xhp"/></div>
-    <button onclick="download(editor.getValue(),getFileNameFromXML(),'text/xml')" class="snip_buttons">Save local file</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Edit: </div>
-    <button class="snip_buttons" onclick="editor.undo()">Undo</button>
-    <button class="snip_buttons" onclick="editor.redo()">Redo</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Document: </div>
-    <button onclick="startNewXHPDoc()" class="snip_buttons">Start new XHP document</button>
-    <button onclick="docHeading()" class="snip_buttons">DocHeading</button>
-    <button onclick="snippet7()" class="snip_buttons">&lt;ahelp&gt;</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Bookmarks: </div>
-    <button onclick="bookmarkValue()" class="snip_buttons">bmk-value</button>
-    <button onclick="bookmarkBranch()" class="snip_buttons">bmk-hid</button>
-    <button onclick="bookmarkIndex()" class="snip_buttons">bmk-index</button>
-    <button onclick="bookmarkNoWidget()" class="snip_buttons">bmk-nowidget</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Sections: </div>
-    <button onclick="section_div()" class="snip_buttons">Section</button>
-    <button onclick="related_topics()" class="snip_buttons">Related Topics</button>
-    <button onclick="howtoget()" class="snip_buttons">How to get</button>
-    <button onclick="bascode_div()" class="snip_buttons">bascode div</button>
-    <button onclick="pycode_div()" class="snip_buttons">pycode div</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Tables: </div>
-    <button onclick="table2R3C()" class="snip_buttons">Table Full</button>
-    <button onclick="tableRow()" class="snip_buttons">Table Row</button>
-    <button onclick="tableCell()" class="snip_buttons">Table Cell</button>
-    <button onclick="iconTable()" class="snip_buttons">Icon Table</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Paragraph: </div>
-    <button onclick="paragraph('paragraph')" class="snip_buttons">&lt;paragraph&gt;</button>
-    <button onclick="note()" class="snip_buttons">&lt;note&gt;</button>
-    <button onclick="warning()" class="snip_buttons">&lt;warning&gt;</button>
-    <button onclick="tip()" class="snip_buttons">&lt;tip&gt;</button>
-    <button onclick="bascode_par()" class="snip_buttons">bascode-par</button>
-    <button onclick="pycode_par()" class="snip_buttons">pycode-par</button>
-    <button onclick="image_par()" class="snip_buttons">image-par</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Characters: </div>
-    <button onclick="emph()" class="snip_buttons">&lt;emph&gt;</button>
-    <button onclick="c_menuitem()" class="snip_buttons">&lt;menuitem&gt;</button>
-    <button onclick="_input()" class="snip_buttons">&lt;input&gt;</button>
-    <button onclick="_literal()" class="snip_buttons">&lt;literal&gt;</button>
-    <button onclick="_keystroke()" class="snip_buttons">&lt;keycode&gt;</button>
-    <button onclick="_widget()" class="snip_buttons">&lt;widget&gt;</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Headings:</div>
-    <button onclick="heading('1')" class="snip_buttons">&lt;H1&gt;</button>
-    <button onclick="heading('2')" class="snip_buttons">&lt;H2&gt;</button>
-    <button onclick="heading('3')" class="snip_buttons">&lt;H3&gt;</button>
-    <button onclick="heading('4')" class="snip_buttons">&lt;H4&gt;</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Switches: </div>
-    <button onclick="switchXHP('appl')" class="snip_buttons">Switch appl</button>
-    <button onclick="switchXHP('sys')" class="snip_buttons">Switch sys</button>
-    <button onclick="switchInline('appl')" class="snip_buttons">Switchinline appl</button>
-    <button onclick="switchInline('sys')" class="snip_buttons">Switchinline sys</button>
-    <button onclick="MenuPrefMAC()" class="snip_buttons">Menu MAC</button>
-    <button onclick="KeyMAC()" class="snip_buttons">Key MAC</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Lists: </div>
-    <button onclick="tList('unordered')" class="snip_buttons">&lt;ul&gt;</button>
-    <button onclick="tList('ordered')" class="snip_buttons">&lt;ol&gt;</button>
-    <button onclick="listItem()" class="snip_buttons">&lt;listitem&gt;</button>
-</div>
-<div class="buttonrow">
-    <div class="snip_heading">Links:</div>
-    <button onclick="tVariable()" class="snip_buttons">&lt;variable&gt;</button>
-    <button onclick="tEmbed()" class="snip_buttons">&lt;embed&gt;</button>
-    <button onclick="tEmbedvar()" class="snip_buttons">&lt;embedvar&gt;</button>
-    <button onclick="tLink()" class="snip_buttons">&lt;link&gt;</button>
+<div class="navbar">
+    <div class="dropdown">
+    <button class="dropbtn">File</button>
+    <div class="dropdown-content">
+    <input type="file" id="file-input" accept=".xhp" value="Open"/>
+    <a href="#" onclick="download(editor.getValue(),getFileNameFromXML(),'text/xml')">Save</a>
+    </div>
+  </div>
+    <div class="dropdown">
+    <button class="dropbtn">Edit</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="editor.undo()">Undo</a>
+    <a href="#" onclick="editor.redo()">Redo</a>
+    </div>
+  </div>
+    <div class="dropdown">
+    <button class="dropbtn">Document</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="startNewXHPDoc()">Start new XHP document</a>
+    <a href="#" onclick="docHeading()">DocHeading</a>
+    <a href="#" onclick="snippet7()">&lt;ahelp&gt;</a>
+    </div>
+  </div>
+    <div class="dropdown">
+    <button class="dropbtn">Bookmarks</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="bookmarkValue()">bmk-value</a>
+    <a href="#" onclick="bookmarkBranch()">bmk-hid</a>
+    <a href="#" onclick="bookmarkIndex()">bmk-index</a>
+    <a href="#" onclick="bookmarkNoWidget()">bmk-nowidget</a>
+    </div>
+  </div>
+    <div class="dropdown">
+    <button class="dropbtn">Sections</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="section_div()">Section</a>
+    <a href="#" onclick="related_topics()">Related Topics</a>
+    <a href="#" onclick="howtoget()">How to get</a>
+    <a href="#" onclick="bascode_div()">bascode div</a>
+    <a href="#" onclick="pycode_div()">pycode div</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Tables</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="table2R3C()">Table Full</a>
+    <a href="#" onclick="tableRow()">Table Row</a>
+    <a href="#" onclick="tableCell()">Table Cell</a>
+    <a href="#" onclick="iconTable()">Icon Table</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Paragraph</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="paragraph('paragraph')">&lt;paragraph&gt;</a>
+    <a href="#" onclick="note()">&lt;note&gt;</a>
+    <a href="#" onclick="warning()">&lt;warning&gt;</a>
+    <a href="#" onclick="tip()">&lt;tip&gt;</a>
+    <a href="#" onclick="bascode_par()">bascode-par</a>
+    <a href="#" onclick="pycode_par()">pycode-par</a>
+    <a href="#" onclick="image_par()">image-par</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Characters</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="emph()">&lt;emph&gt;</a>
+    <a href="#" onclick="c_menuitem()">&lt;menuitem&gt;</a>
+    <a href="#" onclick="_input()">&lt;input&gt;</a>
+    <a href="#" onclick="_literal()">&lt;literal&gt;</a>
+    <a href="#" onclick="_keystroke()">&lt;keycode&gt;</a>
+    <a href="#" onclick="_widget()">&lt;widget&gt;</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Headings</button>
+    <div class="dropdown-content">
+    <a href="#" onclick="heading('1')">&lt;H1&gt;</a>
+    <a href="#" onclick="heading('2')">&lt;H2&gt;</a>
+    <a href="#" onclick="heading('3')">&lt;H3&gt;</a>
+    <a href="#" onclick="heading('4')">&lt;H4&gt;</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Switches</button>
+    <div class="dropdown-content">
+        <a href="#" onclick="switchXHP('appl')">Switch appl</a>
+        <a href="#" onclick="switchXHP('sys')">Switch sys</a>
+        <a href="#" onclick="switchInline('appl')">Switchinline appl</a>
+        <a href="#" onclick="switchInline('sys')">Switchinline sys</a>
+        <a href="#" onclick="MenuPrefMAC()">Menu MAC</a>
+        <a href="#" onclick="KeyMAC()">Key MAC</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Lists</button>
+    <div class="dropdown-content">
+      <a href="#" onclick="tList('unordered')">&lt;ul&gt;</a>
+      <a href="#" onclick="tList('ordered')">&lt;ol&gt;</a>
+      <a href="#" onclick="listItem()">&lt;listitem&gt;</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Links</button>
+    <div class="dropdown-content">
+      <a href="#" onclick="tVariable()">&lt;variable&gt;</a>
+      <a href="#" onclick="tEmbed()">&lt;embed&gt;</a>
+      <a href="#" onclick="tEmbedvar()">&lt;embedvar&gt;</a>
+      <a href="#" onclick="tLink()">&lt;link&gt;</a>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Tools</button>
+    <div class="dropdown-content">
+        <input type="submit" form="CMtextarea" name="render_page" value="Render page"/>
+        <input type="submit" form="CMtextarea" name="get_patch" value="Generate patch"/>
+        <input type="submit" form="CMtextarea" name="check_xhp" value="Check XHP"/>
+        <input type="submit" form="CMtextarea" name="open_master" value="Open Master"/>
+    </div>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Help</button>
+    <div class="dropdown-content">
+        <a href="https://wiki.documentfoundation.org/Documentation/Understanding,_Authoring_and_Editing_Openoffice.org_Help/3" target="_blank">XHP Reference</a>
+        <a href="doc/manual.html#commands" target="_blank">Editor shortcuts</a>
+        <a href="#" target="_blank">Editor</a>
+    </div>
+  </div>
 </div>

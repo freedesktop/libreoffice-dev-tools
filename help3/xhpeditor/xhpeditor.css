@@ -7,24 +7,86 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* css for the man editor  web page */
+/* css for the main editor  web page */
 
 .form_area{
     border:1px solid grey;
+    height: auto;
 }
-.snip_buttons{
-    display:inline-block;
+
+.CodeMirror {
+  border: 1px solid #eee;
+  height: auto;
 }
-.snip_heading{
-    display:inline-block;
-    width:6em;
-}
+
 .buttonrow{
     margin-top:5px;
     margin-left:10px;
 }
-.buttonsdiv{
-    display:block;
+
+/* CSS for the menu (W3Schools) */
+.navbar {
+  overflow: hidden;
+  background-color: #333;
+}
+
+.navbar a {
+  float: left;
+  font-size: 16px;
+  color: white;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+.dropdown {
+  float: left;
+  overflow: hidden;
+}
+
+.dropdown .dropbtn {
+  font-size: 16px;  
+  border: none;
+  outline: none;
+  color: white;
+  padding: 14px 16px;
+  background-color: inherit;
+  font-family: inherit;
+  margin: 0;
+}
+
+.navbar a:hover, .dropdown:hover .dropbtn {
+  background-color: #148603;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-content a, .dropdown-content input {
+  float: none;
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+.dropdown-content input{
+    
+}
+
+.dropdown-content a:hover, .dropdown-content input:hover {
+  background-color: #ddd;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
 }
 
 #leftside{
@@ -36,7 +98,22 @@
     background: Beige;
     display:block;
     border:1px solid grey;
-    overflow: scroll;
+    overflow: auto;
+}
+#editorpageheader{
+    top: 0%;
+    left: 0%;
+    position:absolute;
+    margin: 0px 10px 10px 10px;
+    z-index:100;
+}
+#editortextarea{
+    margin: 170px 10px 10px 10px;
+    left:0%;
+    right: 50%;
+    line-height: normal;
+    clear:right;
+    overflow: auto;
 }
 #rightside{
     top: 0%;

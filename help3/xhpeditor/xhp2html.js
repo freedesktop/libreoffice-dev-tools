@@ -57,6 +57,7 @@ function download(data, filename, type) {
 // Codemirror configuration 
 var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
     lineNumbers: true,
+    viewportMargin: Infinity,
     indentUnit: 4,
     indentWithTabs: false,
     mode: "xml",
@@ -69,6 +70,5 @@ var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
         "' '": completeIfInTag,
         "'='": completeIfInTag,
         "Ctrl-Space": "autocomplete"
-    },
-    hintOptions: {schemaInfo: tags}
+    }
 });

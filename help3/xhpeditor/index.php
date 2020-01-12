@@ -39,17 +39,14 @@ $xhp = $_POST["xhpdoc"];
 
 <body style="font-family:sans-serif;">
 <div id="leftside">
-    <h2>LibreOffice Documentation XHP Editor</h2>
-    
-    <form id="CMtextarea" class="form_area" method="post" action="index.php">
-        <input type="submit" name="render_page" value="Render page"/>
-        <input type="submit" name="get_patch" value="Generate patch"/>
-        <input type="submit" name="check_xhp" value="Check XHP"/>
-        <input type="submit" name="open_master" value="Open Master"/>
-        <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp;?></textarea></br>
-    </form>
-    <div class="buttonsdiv">
+    <div id="editorpageheader">
+        <h2>LibreOffice Documentation XHP Editor</h2>
         <?php include './buttons.php';?>
+    </div>
+    <div id="editortextarea">
+        <form id="CMtextarea" method="post" action="index.php">
+            <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp;?></textarea>
+        </form>
     </div>
 </div>
 <div id="rightside">
@@ -59,12 +56,12 @@ $xhp = $_POST["xhpdoc"];
             echo '<div id="renderedpageheader"><h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons"><p>System: ';
             $opSys = array("MAC", "WIN", "UNIX");
             foreach ($opSys as $value) {
-               echo '<input type="radio" name="sys" onclick="setSystemSpan(\''.$value.'\')" class="snip_buttons">'.$value.'&nbsp;';
+               echo '<input type="radio" name="sys" onclick="setSystemSpan(\''.$value.'\')">'.$value.'&nbsp;';
                }
             echo '</p></div><div class="applbuttons"><p> Module: ';
             $appModule = array("WRITER", "CALC", "IMPRESS", "DRAW", "BASE", "MATH");
             foreach ($appModule as $value){
-                echo '<input type="radio" name="app" onclick="setApplSpan(\''.$value.'\')" class="snip_buttons">'.$value.'&nbsp;';
+                echo '<input type="radio" name="app" onclick="setApplSpan(\''.$value.'\')">'.$value.'&nbsp;';
             }
             echo '</p></div></div></div><div id="renderedpage">';
             $xml = new DOMDocument();
