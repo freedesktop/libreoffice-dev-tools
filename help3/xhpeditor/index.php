@@ -45,7 +45,7 @@ $xhp = $_POST["xhpdoc"];
     </div>
     <div id="editortextarea">
         <form id="CMtextarea" method="post" action="index.php">
-            <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo $xhp;?></textarea>
+            <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo htmlspecialchars($xhp,ENT_NOQUOTES);?></textarea>
         </form>
     </div>
 </div>
