@@ -14,6 +14,7 @@ var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
     lineNumbers: true,
     theme: "default",
     mode: "xml",
+    lineWrapping: true,
     extraKeys: {
         "'<'": completeAfter,
         "'/'": completeIfAfterLt,
@@ -28,15 +29,9 @@ var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
     
     matchBrackets: true,
     
-    lineWrapping: true,
+    
     viewportMargin: Infinity,
-    extraKeys: {
-        "'<'": completeAfter,
-        "'/'": completeIfAfterLt,
-        "' '": completeIfInTag,
-        "'='": completeIfInTag,
-        "Ctrl-Space": "autocomplete"
-    }
+
 */
 
 function readSingleFile(e) {
