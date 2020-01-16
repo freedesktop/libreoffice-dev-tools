@@ -17,7 +17,7 @@ $xhp = $_POST["xhpdoc"];
     <title>LibreOffice Documentation XHP Editor</title>
     <link rel="shortcut icon" href="favicon.ico"/>
     <link type="text/css" rel="stylesheet" href="xhpeditor.css">
-    <link type="text/css" rel="stylesheet" href="DisplayArea.css.css">
+    <link type="text/css" rel="stylesheet" href="DisplayArea.css">
     <link type="text/css" rel="stylesheet" href="lib/codemirror.css">
     <link type="text/css" rel="stylesheet" href="addon/hint/show-hint.css">
     <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/normalize.css">
