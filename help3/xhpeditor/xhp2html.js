@@ -9,6 +9,36 @@
 
 /* change these parameters to fit your installation */
 
+// Codemirror configuration 
+var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
+    lineNumbers: true,
+    theme: "default",
+    mode: "xml",
+    extraKeys: {
+        "'<'": completeAfter,
+        "'/'": completeIfAfterLt,
+        "' '": completeIfInTag,
+        "'='": completeIfInTag,
+        "Ctrl-Space": "autocomplete"
+    }
+});
+/*
+    indentUnit: 4,
+    indentWithTabs: false,
+    
+    matchBrackets: true,
+    
+    lineWrapping: true,
+    viewportMargin: Infinity,
+    extraKeys: {
+        "'<'": completeAfter,
+        "'/'": completeIfAfterLt,
+        "' '": completeIfInTag,
+        "'='": completeIfInTag,
+        "Ctrl-Space": "autocomplete"
+    }
+*/
+
 function readSingleFile(e) {
   var file = e.target.files[0];
 
@@ -36,7 +66,7 @@ function getFileNameFromXML(){
 
 // Function to download data to a file
 // source: https://stackoverflow.com/questions/13405129/javascript-create-and-save-file
-function download(data, filename, type) {
+function downloadFile(data, filename, type) {
     var file = new Blob([data], {type: type});
     if (window.navigator.msSaveOrOpenBlob) // IE10+
         window.navigator.msSaveOrOpenBlob(file, filename);
@@ -53,22 +83,3 @@ function download(data, filename, type) {
         }, 0); 
     }
 }
-
-// Codemirror configuration 
-var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
-    lineNumbers: true,
-    viewportMargin: Infinity,
-    indentUnit: 4,
-    indentWithTabs: false,
-    mode: "xml",
-    matchBrackets: true,
-    theme: "default",
-    lineWrapping: true,
-    extraKeys: {
-        "'<'": completeAfter,
-        "'/'": completeIfAfterLt,
-        "' '": completeIfInTag,
-        "'='": completeIfInTag,
-        "Ctrl-Space": "autocomplete"
-    }
-});

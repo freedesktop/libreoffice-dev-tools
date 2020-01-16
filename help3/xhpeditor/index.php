@@ -15,6 +15,7 @@ $xhp = $_POST["xhpdoc"];
 <head>
 <meta charset="utf-8"/>
     <title>LibreOffice Documentation XHP Editor</title>
+    <link rel="shortcut icon" href="favicon.ico"/>
     <link type="text/css" rel="stylesheet" href="xhpeditor.css">
     <link type="text/css" rel="stylesheet" href="lib/codemirror.css">
     <link type="text/css" rel="stylesheet" href="addon/hint/show-hint.css">
@@ -22,26 +23,26 @@ $xhp = $_POST["xhpdoc"];
     <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/prism.css">
 
     <script type="application/javascript" src="lib/codemirror.js"></script>
+    <script type="application/javascript" src="mode/xml/xml.js"></script>
     <script type="application/javascript" src="addon/hint/show-hint.js"></script>
     <script type="application/javascript" src="addon/hint/xml-hint.js"></script>
     <script type="application/javascript" src="addon/edit/matchtags.js"></script>
-    <script type="application/javascript" src="addon/edit/closetags.js"></script>
-    <script type="application/javascript" src="mode/xml/xml.js"></script>
+    <script type="application/javascript" src="addon/edit/closetag.js"></script>
     <script type="application/javascript" src="addon/fold/xml-fold.js"></script>
     <script type="application/javascript" src="addon/fold/foldcode.js"></script>
     
     <script type="application/javascript" src="helpcontent2/help3xsl/prism.js"></script>
-    <script type="application/javascript" src="autocomplete.js" defer=""></script>
-    <script type="application/javascript" src="xhp2html.js" defer></script>
-    <script type="application/javascript" src="snippets.js" defer=""></script>
+    <script type="application/javascript" src="autocomplete.js"></script>
+    <script type="application/javascript" src="snippets.js"></script>
     <script type="application/javascript" src="DisplayArea.js"></script>
+    <script type="application/javascript" src="xhp2html.js" defer></script>
 </head>
 
 <body style="font-family:sans-serif;">
 <div id="leftside">
     <div id="editorpageheader">
         <h2>LibreOffice Documentation XHP Editor</h2>
-        <?php include './buttons.php';?>
+        <?php include './menu.php';?>
     </div>
     <div id="editortextarea">
         <form id="CMtextarea" method="post" action="index.php">

@@ -3,7 +3,7 @@
     <button class="dropbtn">File</button>
     <div class="dropdown-content">
     <input type="file" id="file-input" accept=".xhp" value="Open"/>
-    <a href="#" onclick="download(editor.getValue(),getFileNameFromXML(),'text/xml')">Save</a>
+    <a href="#" onclick="downloadFile(editor.getValue(),getFileNameFromXML(),'text/xml')">Save</a>
     </div>
   </div>
     <div class="dropdown">

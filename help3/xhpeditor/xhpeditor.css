@@ -90,40 +90,39 @@
 }
 
 #leftside{
-    top: 0%;
-    bottom:0%;
-    left:0%;
+    top: 0px;
+    bottom:0px;
+    left:0px;
     right:50%;
     position: absolute;
     background: Beige;
-    display:block;
     border:1px solid grey;
-    overflow: auto;
 }
 #editorpageheader{
-    top: 0%;
-    left: 0%;
+    top: 0px;
+    left: 0px;
+    right: 0px;
     position:absolute;
-    margin: 0px 10px 10px 10px;
+    margin: 0px 5px 5px 5px;
     z-index:100;
 }
 #editortextarea{
-    margin: 170px 10px 10px 10px;
-    left:0%;
-    right: 50%;
-    line-height: normal;
-    clear:right;
-    overflow: auto;
+    margin: 5px 5px 5px 5px;
+    left:0px;
+    right: 0px;
+    bottom:0px;
+    top:170px;
+    position:absolute;
 }
 #rightside{
-    top: 0%;
-    bottom:0%;
-    right:0%;
+    top: 0px;
+    bottom:0px;
+    right:0px;
     left: 50%;
     position:absolute;
     background: AliceBlue;
     border:1px solid grey;
-    overflow:auto;
+    overflow:hidden;
 }
 .systembuttons{
     float:left;
@@ -132,21 +131,21 @@
     float:right;
 }
 #renderedpageheader{
-    top: 0%;
-    right:0%;
-    left: 50%;
-    position:fixed;
-    margin: 0px 10px 10px 10px;
+    top: 0px;
+    right:0px;
+    left: 0px;
+    position:absolute;
+    margin: 5px 5px 5px 5px;
     background: AliceBlue;
 }
 #renderedpage {
-    background-color: gray;
-    margin: 100px 10px 10px 10px;
-    right:0%;
-    left: 50%;
-    line-height: normal;
-    clear:left;
-    overflow: auto;
+    margin: 5px 5px 5px 5px;
+    right:0px;
+    left: 0px;
+    top:120px;
+    bottom:0px;
+    position:absolute;
+    overflow-y:auto;
 }
 
 /* Imported from default css for DisplayArea */
