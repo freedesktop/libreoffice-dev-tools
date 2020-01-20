@@ -10,29 +10,22 @@
 /* change these parameters to fit your installation */
 
 // Codemirror configuration 
+
 var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
     lineNumbers: true,
     theme: "default",
     mode: "xml",
     lineWrapping: true,
+    autoCloseTags: true,
     extraKeys: {
         "'<'": completeAfter,
         "'/'": completeIfAfterLt,
         "' '": completeIfInTag,
         "'='": completeIfInTag,
         "Ctrl-Space": "autocomplete"
-    }
+    },
+    hintOptions: {schemaInfo: xhptags}
 });
-/*
-    indentUnit: 4,
-    indentWithTabs: false,
-    
-    matchBrackets: true,
-    
-    
-    viewportMargin: Infinity,
-
-*/
 
 function readSingleFile(e) {
   var file = e.target.files[0];

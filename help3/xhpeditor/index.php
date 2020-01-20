@@ -16,21 +16,30 @@ $xhp = $_POST["xhpdoc"];
 <meta charset="utf-8"/>
     <title>LibreOffice Documentation XHP Editor</title>
     <link rel="shortcut icon" href="favicon.ico"/>
-    <link type="text/css" rel="stylesheet" href="xhpeditor.css">
-    <link type="text/css" rel="stylesheet" href="DisplayArea.css">
     <link type="text/css" rel="stylesheet" href="lib/codemirror.css">
     <link type="text/css" rel="stylesheet" href="addon/hint/show-hint.css">
+    <link type="text/css" rel="stylesheet" href="addon/dialog/dialog.css">
+    <link type="text/css" rel="stylesheet" href="xhpeditor.css">
     <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/normalize.css">
     <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/prism.css">
+    <link type="text/css" rel="stylesheet" href="DisplayArea.css">
+    <link type="text/css" rel="stylesheet" href="addon/search/matchesonscrollbar.css">
 
     <script type="application/javascript" src="lib/codemirror.js"></script>
     <script type="application/javascript" src="mode/xml/xml.js"></script>
+    <script type="application/javascript" src="addon/dialog/dialog.js"></script> 
     <script type="application/javascript" src="addon/hint/show-hint.js"></script>
     <script type="application/javascript" src="addon/hint/xml-hint.js"></script>
     <script type="application/javascript" src="addon/edit/matchtags.js"></script>
     <script type="application/javascript" src="addon/edit/closetag.js"></script>
     <script type="application/javascript" src="addon/fold/xml-fold.js"></script>
     <script type="application/javascript" src="addon/fold/foldcode.js"></script>
+    <script type="application/javascript" src="addon/search/search.js"></script>
+    <script type="application/javascript" src="addon/search/searchcursor.js"></script>
+    <script type="application/javascript" src="addon/search/jump-to-line.js"></script>
+    <script type="application/javascript" src="addon/search/matchesonscrollbar.js"></script>
+    <script type="application/javascript" src="addon/search/jump-to-line.js"></script>
+    <script type="application/javascript" src="addon/scroll/annotatescrollbar.js"></script>
     
     <script type="application/javascript" src="helpcontent2/help3xsl/prism.js"></script>
     <script type="application/javascript" src="autocomplete.js"></script>

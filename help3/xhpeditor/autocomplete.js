@@ -10,7 +10,7 @@
 
 // Here we define the schema for XHP, for the auto-completion
 
-var tags = {
+var xhptags = {
     "!top": ["helpdocument"],
     helpdocument: {
         children: ["meta", "body"],
@@ -159,7 +159,7 @@ function completeIfInTag(cm) {
     return completeAfter(cm, function() {
         var tok = cm.getTokenAt(cm.getCursor());
         if (tok.type == "string" && (!/['"]/.test(tok.string.charAt(tok.string.length - 1)) || tok.string.length == 1)) return false;
-                         var inner = CodeMirror.innerMode(cm.getMode(), tok.state).state;
+        var inner = CodeMirror.innerMode(cm.getMode(), tok.state).state;
         return inner.tagName;
     });
 }
