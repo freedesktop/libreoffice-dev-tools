@@ -1,4 +1,4 @@
-<div class="navbar">
+<div id ="navmenu" class="navbar">
     <div class="dropdown">
     <button class="dropbtn">File</button>
     <div class="dropdown-content">

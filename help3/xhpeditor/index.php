@@ -19,6 +19,7 @@ $xhp = $_POST["xhpdoc"];
     <link type="text/css" rel="stylesheet" href="lib/codemirror.css">
     <link type="text/css" rel="stylesheet" href="addon/hint/show-hint.css">
     <link type="text/css" rel="stylesheet" href="addon/dialog/dialog.css">
+    <link type="text/css" rel="stylesheet" href="addon/display/fullscreen.css">
     <link type="text/css" rel="stylesheet" href="xhpeditor.css">
     <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/normalize.css">
     <link type="text/css" rel="stylesheet" href="helpcontent2/help3xsl/prism.css">
@@ -39,6 +40,7 @@ $xhp = $_POST["xhpdoc"];
     <script type="application/javascript" src="addon/search/jump-to-line.js"></script>
     <script type="application/javascript" src="addon/search/matchesonscrollbar.js"></script>
     <script type="application/javascript" src="addon/search/jump-to-line.js"></script>
+    <script type="application/javascript" src="addon/display/fullscreen.js"></script>
     <script type="application/javascript" src="addon/scroll/annotatescrollbar.js"></script>
     
     <script type="application/javascript" src="helpcontent2/help3xsl/prism.js"></script>

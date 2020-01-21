@@ -18,13 +18,23 @@ var editor = CodeMirror.fromTextArea(document.getElementById("xhpeditor"), {
     lineWrapping: true,
     autoCloseTags: true,
     extraKeys: {
+        "F11": function(cm) {
+          cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+          document.getElementById("editorpageheader").style.display=(cm.getOption("fullScreen")) ? "none" : "block";
+        },
+        "Esc": function(cm) {
+          if (cm.getOption("fullScreen")) {
+              cm.setOption("fullScreen", false);
+              document.getElementById("editorpageheader").style.display="block";
+          }
+        },
         "'<'": completeAfter,
         "'/'": completeIfAfterLt,
         "' '": completeIfInTag,
         "'='": completeIfInTag,
         "Ctrl-Space": "autocomplete"
     },
-    hintOptions: {schemaInfo: xhptags}
+    hintOptions: {schemaInfo: this.xhptags}
 });
 
 function readSingleFile(e) {
