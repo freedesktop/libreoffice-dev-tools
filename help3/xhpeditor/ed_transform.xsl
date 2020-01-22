@@ -935,7 +935,7 @@
             </xsl:when>
             <!-- generic media file -->
             <xsl:when test="starts-with(@src,'media/')">
-                <xsl:value-of select="concat($source,'/source/',@src)"/>
+                <xsl:value-of select="concat($source,'/',@src)"/>
             </xsl:when>
             <!-- handle icons -->
             <xsl:when test="not(starts-with(@src,'media/'))">
