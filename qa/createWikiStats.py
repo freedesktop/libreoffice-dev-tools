@@ -74,9 +74,10 @@ def util_increase_user_actions(statList, bug, mail, targets, action, actionTime)
             statList['period'][period]['people'][mail][action] += 1
             statList['period'][period]['people'][mail]['bugs'].append(bug)
 
-def util_create_bug(summary, component, version, keywords, creationDate, count_cc):
+def util_create_bug(summary, component, os, version, keywords, creationDate, count_cc):
     return { 'summary': summary,
              'component': component,
+             'os': os,
              'version': version,
              'keywords': keywords,
              'creationDate': creationDate,
@@ -131,7 +132,7 @@ def analyze_bugzilla_wiki_stats(statList, bugzillaData, cfg):
                 elif 'regression' in rowKeywords:
                     typeName = 'regressions'
                 statList['CC'][typeName][rowId] = util_create_bug(
-                        row['summary'], row['component'], row['version'], rowKeywords, creationDate, len(row['cc']))
+                        row['summary'], row['component'], row['op_sys'], row['version'], rowKeywords, creationDate, len(row['cc']))
 
             rowDupeOf = common.util_check_duplicated(bugzillaData, rowId)
             if rowDupeOf and str(rowDupeOf) in bugzillaData['bugs'] and \
@@ -149,6 +150,7 @@ def analyze_bugzilla_wiki_stats(statList, bugzillaData, cfg):
                 statList['duplicates'][typeName][rowDupeOf] = util_create_bug(
                 bugzillaData['bugs'][str(rowDupeOf)]['summary'],
                 bugzillaData['bugs'][str(rowDupeOf)]['component'],
+                bugzillaData['bugs'][str(rowDupeOf)]['op_sys'],
                 bugzillaData['bugs'][str(rowDupeOf)]['version'],
                 bugzillaData['bugs'][str(rowDupeOf)]['keywords'],
                 datetime.datetime.strptime(
@@ -254,11 +256,11 @@ def create_wikimedia_table_for_cc_and_duplicates(cfg, statList):
             table = []
 
             if nameList == 'regressions':
-                headers = ['Id', 'Summary', 'Component', 'Version', 'Bisected', 'Reported']
+                headers = ['Id', 'Summary', 'Component', 'OS', 'Version', 'Bisected', 'Reported']
             elif nameList == 'enhancements':
-                headers = ['Id', 'Summary', 'Component', 'Version', 'Reported']
+                headers = ['Id', 'Summary', 'Component', 'OS', 'Version', 'Reported']
             else:
-                headers = ['Id', 'Summary', 'Component', 'Version', 'EasyHack', 'Reported']
+                headers = ['Id', 'Summary', 'Component', 'OS', 'Version', 'EasyHack', 'Reported']
 
             if typeList == 'CC':
                 headers.append('Total CC')
@@ -274,6 +276,7 @@ def create_wikimedia_table_for_cc_and_duplicates(cfg, statList):
                 row.append('[' + common.urlShowBug + str(k) + ' #tdf' + str(k) + ']')
                 row.append(v['summary'])
                 row.append(v['component'])
+                row.append(v['os'])
                 row.append(v['version'])
 
                 if nameList == 'regressions':
