@@ -9,6 +9,10 @@
 
 /* css for the main editor  web page */
 
+
+
+
+
 .form_area{
     border:1px solid grey;
     height: auto;
@@ -89,40 +93,22 @@
   display: block;
 }
 
-#leftside{
-    top: 0px;
-    bottom:0px;
-    left:0px;
-    right:50%;
-    position: absolute;
-    background: Beige;
-    border:1px solid grey;
-}
-#editorpageheader{
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    position:absolute;
-    margin: 0px 5px 5px 5px;
+.editorpageheader{
+    grid-area: editorpageheader;
+    position: sticky;
+    top:0px;
+    padding: 3px;
+    margin: 0px;
     z-index:100;
+    background: Beige;
+    border: 1px solid gray;
 }
-#editortextarea{
-    margin: 5px 5px 5px 5px;
-    left:0px;
-    right: 0px;
-    bottom:0px;
-    top:170px;
-    position:absolute;
-}
-#rightside{
-    top: 0px;
-    bottom:0px;
-    right:0px;
-    left: 50%;
-    position:absolute;
-    background: AliceBlue;
-    border:1px solid grey;
-    overflow:hidden;
+.editortextarea{
+    grid-area: editortextarea;
+    padding: 3px;
+    margin: 0px;
+    background: Beige;
+    border: 1px  solid gray;
 }
 .systembuttons{
     float:left;
@@ -130,20 +116,48 @@
 .applbuttons{
     float:right;
 }
-#renderedpageheader{
-    top: 0px;
-    right:0px;
-    left: 0px;
-    position:absolute;
-    margin: 5px 5px 5px 5px;
+.renderedpageheader{
+    grid-area:renderedpageheader;
+    position: sticky;
+    top:0px;
+    padding: 3px;
+    margin: 0px;
     background: AliceBlue;
+    border:1px solid grey;
 }
-#renderedpage {
-    margin: 5px 5px 5px 5px;
-    right:0px;
-    left: 0px;
-    top:120px;
-    bottom:0px;
-    position:absolute;
+.renderedpage {
+    grid-area:renderedpage;
+    padding: 3px;
+    margin: 0px;
     overflow-y:auto;
+    background: AliceBlue;
+    border:1px solid grey;
 }
+
+/* Use @supports to sneak these rules past IE */
+@supports (grid-area: auto) {
+    @media screen and (min-width: 960px) {
+        body {
+            display: grid;
+            grid-template-columns: 50vw;
+            grid-template-rows: minmax(10vh, auto) 90vh minmax(10vh, auto) 90vh;
+            grid-template-areas: "editorpageheader"
+                                 "editortextarea" 
+                                 "renderedpageheader"
+                                 "renderedpage";
+        }
+    }
+    @media screen and (min-width: 1440px) {
+        body {
+            overflow:hidden;
+            display: grid;
+            grid-template-columns: 50vw 50vw;
+            grid-template-rows: minmax(10vh, auto) minmax(auto, 90vh);
+            grid-template-areas: "editorpageheader renderedpageheader"
+                                 "editortextarea renderedpage"
+        }
+    }
+}
+
+
+

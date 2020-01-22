@@ -13,10 +13,8 @@
     background-color: white;
     overflow: auto;
     padding: 10px;
-    grid-area: main;
 }
 
-#renderedpage,
 #DisplayArea p,
 #DisplayArea h1,
 #DisplayArea h2,

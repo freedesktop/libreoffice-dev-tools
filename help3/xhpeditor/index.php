@@ -51,22 +51,19 @@ $xhp = $_POST["xhpdoc"];
 </head>
 
 <body style="font-family:sans-serif;">
-<div id="leftside">
-    <div id="editorpageheader">
+    <div class="editorpageheader">
         <h2>LibreOffice Documentation XHP Editor</h2>
         <?php include './menu.php';?>
     </div>
-    <div id="editortextarea">
+    <div class="editortextarea">
         <form id="CMtextarea" method="post" action="index.php">
             <textarea id="xhpeditor" name="xhpdoc" form="CMtextarea"><?php echo htmlspecialchars($xhp,ENT_NOQUOTES);?></textarea>
         </form>
     </div>
-</div>
-<div id="rightside">
     <?php
         $xhp = $_POST["xhpdoc"];
         if (isset($_POST["render_page"])) {
-            echo '<div id="renderedpageheader"><h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons"><p>System: ';
+            echo '<div class="renderedpageheader"><h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons"><p>System: ';
             $opSys = array("MAC", "WIN", "UNIX");
             foreach ($opSys as $value) {
                echo '<input type="radio" name="sys" onclick="setSystemSpan(\''.$value.'\')">'.$value.'&nbsp;';
@@ -76,7 +73,7 @@ $xhp = $_POST["xhpdoc"];
             foreach ($appModule as $value){
                 echo '<input type="radio" name="app" onclick="setApplSpan(\''.$value.'\')">'.$value.'&nbsp;';
             }
-            echo '</p></div></div></div><div id="renderedpage">';
+            echo '</p></div></div></div><div class="renderedpage">';
             $xml = new DOMDocument();
             $xml->loadXML($xhp);
             $xsl = new DOMDocument;
@@ -94,8 +91,8 @@ $xhp = $_POST["xhpdoc"];
             $root = 'helpdocument';
             $old = new DOMDocument;
             
-            echo '<h2>Help File Verification</h2>';
-            echo '<h3>Check XML Formation</h3>';
+            echo '<div class="renderedpageheader"><h2>Help File Verification</h2></div>';
+            echo '<div class="renderedpage"><h3>Check XML Formation</h3>';
             if ( !$old->loadXML($xhp) ) {
                 $errors = libxml_get_errors();
                 echo '<p class="bug">The XML is malformed!</p>';
@@ -142,7 +139,7 @@ $xhp = $_POST["xhpdoc"];
                         echo "<p>$dup</p>";
                     }
                 }else{
-                    echo "<p>No duplicate id= found.</p>";
+                    echo "<p>No duplicate id= found.</p></div>";
                 }
             }
         }elseif (isset($_POST["get_patch"])) {
@@ -151,6 +148,5 @@ $xhp = $_POST["xhpdoc"];
         echo '<h2>Viewing Area</h2>';
         }
     ?>
-</div>
 </body>
 </html>
