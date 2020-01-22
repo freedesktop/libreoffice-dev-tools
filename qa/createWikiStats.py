@@ -21,9 +21,19 @@ def util_create_wiki_statList():
     return {
         'targets': {t:{'count':0, 'people':{}} for t in targets_list},
         'period': {p:{'count':0, 'people':{}} for p in periods_list},
-        'MostCCBugs': {},
         'dupesBugs': {},
-        'MostDupeBugs': {},
+        'duplicates':
+            {
+                'regressions': {},
+                'enhancements': {},
+                'bugs':{},
+            },
+        'CC':
+            {
+                'regressions': {},
+                'enhancements': {},
+                'bugs':{}
+            },
         'people': {},
         'stat': {'oldest': datetime.datetime.now(), 'newest': datetime.datetime(2001, 1, 1)}
     }
@@ -115,25 +125,34 @@ def analyze_bugzilla_wiki_stats(statList, bugzillaData, cfg):
             util_increase_user_actions(statList, key, creatorMail, bugTargets, 'created', creationDate)
 
             if common.isOpen(rowStatus) and len(row['cc']) >= 10:
-                statList['MostCCBugs'][rowId] = util_create_bug(
+                typeName = 'bugs'
+                if row['severity'] == "enhancement":
+                    typeName = 'enhancements'
+                elif 'regression' in rowKeywords:
+                    typeName = 'regressions'
+                statList['CC'][typeName][rowId] = util_create_bug(
                         row['summary'], row['component'], row['version'], rowKeywords, creationDate, len(row['cc']))
 
             rowDupeOf = common.util_check_duplicated(bugzillaData, rowId)
-            if rowDupeOf:
+            if rowDupeOf and str(rowDupeOf) in bugzillaData['bugs'] and \
+                        common.isOpen(bugzillaData['bugs'][str(rowDupeOf)]['status']):
                 if rowDupeOf not in statList['dupesBugs']:
                     statList['dupesBugs'][rowDupeOf] = []
                 statList['dupesBugs'][rowDupeOf].append(rowId)
 
-                if str(rowDupeOf) in bugzillaData['bugs'] and \
-                        common.isOpen(bugzillaData['bugs'][str(rowDupeOf)]['status']):
-                    if rowDupeOf not in statList['MostDupeBugs']:
-                        statList['MostDupeBugs'][rowDupeOf] = util_create_bug(
-                        bugzillaData['bugs'][str(rowDupeOf)]['summary'],
-                        bugzillaData['bugs'][str(rowDupeOf)]['component'],
-                        bugzillaData['bugs'][str(rowDupeOf)]['version'],
-                        bugzillaData['bugs'][str(rowDupeOf)]['keywords'],
-                        datetime.datetime.strptime(
-                            bugzillaData['bugs'][str(rowDupeOf)]['creation_time'], "%Y-%m-%dT%H:%M:%SZ"), 1)
+                typeName = 'bugs'
+                if bugzillaData['bugs'][str(rowDupeOf)]['severity'] == "enhancement":
+                    typeName = 'enhancements'
+                elif 'regression' in bugzillaData['bugs'][str(rowDupeOf)]['keywords']:
+                    typeName = 'regressions'
+
+                statList['duplicates'][typeName][rowDupeOf] = util_create_bug(
+                bugzillaData['bugs'][str(rowDupeOf)]['summary'],
+                bugzillaData['bugs'][str(rowDupeOf)]['component'],
+                bugzillaData['bugs'][str(rowDupeOf)]['version'],
+                bugzillaData['bugs'][str(rowDupeOf)]['keywords'],
+                datetime.datetime.strptime(
+                    bugzillaData['bugs'][str(rowDupeOf)]['creation_time'], "%Y-%m-%dT%H:%M:%SZ"), 1)
 
             for action in row['history']:
                 actionMail = action['who']
@@ -212,71 +231,79 @@ def analyze_bugzilla_wiki_stats(statList, bugzillaData, cfg):
     statList['stat']['oldest'] = statOldDate.strftime("%Y-%m-%d")
     print(" from " + statList['stat']['oldest'] + " to " + statList['stat']['newest'])
 
-def create_wikimedia_table_mostCCBugs_and_MostDupes(cfg, statList):
+def create_wikimedia_table_for_cc_and_duplicates(cfg, statList):
 
-    for k, v in statList['dupesBugs'].items():
-        if k in statList['MostDupeBugs']:
-            if len(v) >= minNumOfDupes:
-                statList['MostDupeBugs'][k]['count'] = len(v)
+    for nameList in statList['duplicates']:
+        for k, v in statList['dupesBugs'].items():
+            if k in statList['duplicates'][nameList]:
+                if len(v) >= minNumOfDupes:
+                    statList['duplicates'][nameList][k]['count'] = len(v)
+                else:
+                    del statList['duplicates'][nameList][k]
+
+    for typeList in ['duplicates','CC']:
+        for nameList in statList[typeList]:
+            fileName = typeList + '_' + nameList
+            print('Creating wikimedia table for ' + fileName)
+            output = ""
+
+            output += '{{TopMenu}}\n'
+            output += '{{Menu}}\n'
+            output += '{{Menu.QA}}\n'
+            output += '\n'
+            table = []
+
+            if nameList == 'regressions':
+                headers = ['Id', 'Summary', 'Component', 'Version', 'Bisected', 'Reported']
+            elif nameList == 'enhancements':
+                headers = ['Id', 'Summary', 'Component', 'Version', 'Reported']
             else:
-                del statList['MostDupeBugs'][k]
+                headers = ['Id', 'Summary', 'Component', 'Version', 'EasyHack', 'Reported']
 
-    for nameList in ['MostCCBugs', 'MostDupeBugs']:
-        print('Creating wikimedia table for ' + nameList)
-        output = ""
-
-        output += '{{TopMenu}}\n'
-        output += '{{Menu}}\n'
-        output += '{{Menu.QA}}\n'
-        output += '\n'
-        table = []
-        headers = ['Id', 'Summary', 'Component', 'Version', 'isRegression', 'isBisected',
-                           'isEasyHack', 'haveBackTrace', 'Reported']
-        if nameList == 'MostCCBugs':
-            headers.append('Total CC')
-            output += '{} bugs have 10 or more emails in the CC list. (sorted in alphabetical order by number of users)\n'.format(
-                    len(statList['MostCCBugs']))
-        else:
-            headers.append('Total Duplicates')
-            output += '{} open bugs have 3 or more duplicates. (sorted in alphabetical order by number of duplicates)\n'.format(
-                    len(statList['MostDupeBugs']))
-
-        for k,v in statList[nameList].items():
-            row = []
-            row.append('[' + common.urlShowBug + str(k) + ' #tdf' + str(k) + ']')
-            row.append(v['summary'])
-            row.append(v['component'])
-            row.append(v['version'])
-            if 'regression' in v['keywords']:
-                row.append('True')
+            if typeList == 'CC':
+                headers.append('Total CC')
+                output += '{} {} have 10 or more people in the CC list. (sorted in alphabetical order by number of users)\n'.format(
+                        len(statList['CC'][nameList]), nameList)
             else:
-                row.append('False')
-            if 'bisected' in v['keywords']:
-                row.append('True')
-            else:
-                row.append('False')
-            if 'easyHack' in v['keywords']:
-                row.append('True')
-            else:
-                row.append('False')
-            if 'haveBacktrace' in v['keywords']:
-                row.append('True')
-            else:
-                row.append('False')
-            row.append(v['creationDate'].strftime("%Y-%m-%d %H:%M:%S"))
-            row.append(v['count'])
-            table.append(row)
+                headers.append('Total Duplicates')
+                output += '{} open {} have 3 or more duplicates. (sorted in alphabetical order by number of duplicates)\n'.format(
+                        len(statList['duplicates'][nameList]), nameList)
 
-        output += tabulate(sorted(table, key = lambda x: x[9], reverse=True), headers, tablefmt='mediawiki')
-        output += "\n"
-        output +='Generated on {}.'.format(cfg['todayDate'])
-        output += "\n"
-        output += '[[Category:EN]]\n'
-        output += '[[Category:QA/Stats]]'
+            for k,v in statList[typeList][nameList].items():
+                row = []
+                row.append('[' + common.urlShowBug + str(k) + ' #tdf' + str(k) + ']')
+                row.append(v['summary'])
+                row.append(v['component'])
+                row.append(v['version'])
 
-        fp = open('/tmp/table_' + nameList + '.txt', 'w', encoding='utf-8')
-        print(output.replace('wikitable', 'wikitable sortable'), file=fp)
-        fp.close()
+                if nameList == 'regressions':
+                    if 'bibisectNotNeeded' in v['keywords']:
+                        row.append('Not Needed')
+                    elif 'bisected' in v['keywords']:
+                        row.append('True')
+                    else:
+                        row.append('False')
+
+                if nameList == 'bugs':
+                    if 'easyHack' in v['keywords']:
+                        row.append('True')
+                    else:
+                        row.append('False')
+
+                row.append(v['creationDate'].strftime("%Y-%m-%d %H:%M:%S"))
+                row.append(v['count'])
+                table.append(row)
+
+            output += tabulate(sorted(table, key = lambda x: x[len(headers) - 1], reverse=True), headers, tablefmt='mediawiki')
+            output += "\n"
+            output +='Generated on {}.'.format(cfg['todayDate'])
+            output += "\n"
+            output += '[[Category:EN]]\n'
+            output += '[[Category:QA/Stats]]'
+
+            fp = open('/tmp/table_' + fileName + '.txt', 'w', encoding='utf-8')
+            print(output.replace('wikitable', 'wikitable sortable'), file=fp)
+            fp.close()
 
 def create_wikimedia_table_by_target(cfg, statList):
     for kT,vT in sorted(statList['targets'].items()):
@@ -396,6 +423,6 @@ if __name__ == '__main__':
 
     create_wikimedia_table_by_target(cfg, statList)
     create_wikimedia_table_by_period(cfg, statList)
-    create_wikimedia_table_mostCCBugs_and_MostDupes(cfg, statList)
+    create_wikimedia_table_for_cc_and_duplicates(cfg, statList)
 
     print('End of report')
