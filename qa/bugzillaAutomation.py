@@ -50,6 +50,10 @@ def util_create_statList():
             {
                 'add': {},
                 'remove': {}
+            },
+        'needsUXEval':
+            {
+                'add': {}
             }
     }
 def analyze_bugzilla(statList, bugzillaData, cfg):
@@ -113,9 +117,13 @@ def analyze_bugzilla(statList, bugzillaData, cfg):
                 if bSameAuthor and comment['creator'] != row['creator']:
                     bSameAuthor = False
 
-            if bSameAuthor and rowStatus == 'UNCONFIRMED' and needsCommentTag not in row['whiteboard'] and \
-                    datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['needsCommentPeriod']:
-                statList['needsComment']['add'][rowId] = needsCommentTag
+            if bSameAuthor and rowStatus == 'UNCONFIRMED':
+                if row['component'] == 'UI' and row['severity'] == 'enhancement' and 'needsUXEval' not in rowKeywords:
+                    statList['needsUXEval']['add'][rowId] = 'needsUXEval'
+
+                elif needsCommentTag not in row['whiteboard'] and \
+                        datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['needsCommentPeriod']:
+                    statList['needsComment']['add'][rowId] = needsCommentTag
 
             elif not bSameAuthor and needsCommentTag in row['whiteboard']:
                 statList['needsComment']['remove'][rowId] = needsCommentTag
@@ -191,7 +199,7 @@ def post_comment(statList, keyInStatList, commentId, comment, addFirstLine, chan
                 print('Bug: ' + bugId + ' - ' + changeCommand)
                 rPut.close()
 
-def update_field(statList, field, whiteboardTag):
+def update_field(statList, field, whiteboardTag, add_cc = False):
     for action, listOfBugs in statList[whiteboardTag].items():
         for bugId, tag in listOfBugs.items():
             bugId = str(bugId)
@@ -224,6 +232,16 @@ def update_field(statList, field, whiteboardTag):
                 rPut = requests.put(urlPut, command.encode('utf-8'))
                 print('Bug: ' + bugId + ' - ' + command)
                 rPut.close()
+
+                if add_cc:
+                    command = '{"cc": {"add": ["libreoffice-ux-advise@lists.freedesktop.org"]}}'
+                    rPut = requests.put(urlPut, command.encode('utf-8'))
+                    print('Bug: ' + bugId + ' - ' + command)
+                    rPut.close()
+
+def automated_needsUXEval(statList):
+    print('== add needsUXEval ==')
+    update_field(statList, "keywords", "needsUXEval", True)
 
 def automated_tagRegression(statList):
     print('== Tag Regression ==')
@@ -325,3 +343,4 @@ if __name__ == '__main__':
     automated_needsCommentFromQA(statList)
     automated_cleanupBackportRequests(statList)
     automated_tagRegression(statList)
+    automated_needsUXEval(statList)
