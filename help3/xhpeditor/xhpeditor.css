@@ -93,7 +93,7 @@
   display: block;
 }
 
-.editorpageheader{
+#editorpageheader{
     grid-area: editorpageheader;
     position: sticky;
     top:0px;
@@ -103,7 +103,7 @@
     background: Beige;
     border: 1px solid gray;
 }
-.editortextarea{
+#editortextarea{
     grid-area: editortextarea;
     padding: 3px;
     margin: 0px;
@@ -116,7 +116,7 @@
 .applbuttons{
     float:right;
 }
-.renderedpageheader{
+#renderedpageheader{
     grid-area:renderedpageheader;
     position: sticky;
     top:0px;
@@ -125,7 +125,7 @@
     background: AliceBlue;
     border:1px solid grey;
 }
-.renderedpage {
+#renderedpage {
     grid-area:renderedpage;
     padding: 3px;
     margin: 0px;
