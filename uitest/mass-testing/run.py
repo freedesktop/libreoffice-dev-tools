@@ -113,7 +113,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
             #TODO: Find a better way to pass fileName parameter
             os.environ["TESTFILENAME"] = fileName
 
-            process = Popen(["python3.5",
+            process = Popen(["python3",
                         liboPath + "uitest/test_main.py",
                         "--debug",
                         "--soffice=path:" + sofficePath,
