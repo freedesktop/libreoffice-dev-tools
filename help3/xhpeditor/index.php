@@ -14,7 +14,7 @@ $xhp = $_POST["xhpdoc"];
 <html>
 <head>
 <meta charset="utf-8"/>
-    <title>LibreOffice Documentation XHP Editor</title>
+    <title>LibreOffice XHP Editor</title>
     <link rel="shortcut icon" href="favicon.ico"/>
     <link type="text/css" rel="stylesheet" href="cm/lib/codemirror.css">
     <link type="text/css" rel="stylesheet" href="cm/addon/hint/show-hint.css">

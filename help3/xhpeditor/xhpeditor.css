@@ -23,11 +23,6 @@
     resize: vertical;
     }
 
-.buttonrow{
-    margin-top:5px;
-    margin-left:10px;
-}
-
 /* CSS for the menu (W3Schools) */
 .navbar {
   overflow: hidden;
@@ -110,12 +105,7 @@
     background: Beige;
     border: 1px  solid gray;
 }
-.systembuttons{
-    float:left;
-}
-.applbuttons{
-    float:right;
-}
+
 #renderedpageheader{
     grid-area:renderedpageheader;
     position: sticky;
@@ -132,8 +122,18 @@
     overflow-y:auto;
     background: AliceBlue;
     border:1px solid grey;
+    display:inline-block;
 }
-
+.buttonrow{
+    margin:5px;
+    display:flow-root;
+}
+.systembuttons{
+    float:left;
+}
+.applbuttons{
+    float:right;
+}
 /* Use @supports to sneak these rules past IE */
 @supports (grid-area: auto) {
     @media screen and (min-width: 960px) {
