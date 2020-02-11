@@ -136,10 +136,10 @@
 }
 /* Use @supports to sneak these rules past IE */
 @supports (grid-area: auto) {
-    @media screen and (min-width: 960px) {
+    @media screen and (max-width: 800px) {
         body {
             display: grid;
-            grid-template-columns: 50vw;
+            grid-template-columns: 100vw;
             grid-template-rows: minmax(10vh, auto) 90vh minmax(10vh, auto) 90vh;
             grid-template-areas: "editorpageheader"
                                  "editortextarea" 
@@ -147,7 +147,7 @@
                                  "renderedpage";
         }
     }
-    @media screen and (min-width: 1440px) {
+    @media screen and (min-width: 800px) {
         body {
             overflow:hidden;
             display: grid;
