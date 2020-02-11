@@ -62,8 +62,10 @@ $xhp = $_POST["xhpdoc"];
     </div>
     <?php
         $xhp = $_POST["xhpdoc"];
+        $xhp_filename = simplexml_load_string($xhp)->xpath("//filename");
         if (isset($_POST["render_page"])) {
-            echo '<div id="renderedpageheader"><h2>Rendered page</h2><div class="buttonrow"><div class="systembuttons"><p>System: ';
+            echo '<div id="renderedpageheader"><h2>Rendered page: '.$xhp_filename[0];
+            echo '</h2><div class="buttonrow"><div class="systembuttons"><p>System: ';
             $opSys = array("MAC", "WIN", "UNIX");
             foreach ($opSys as $value) {
                echo '<input type="radio" name="sys" onclick="setSystemSpan(\''.$value.'\')">'.$value.'&nbsp;';
@@ -91,7 +93,8 @@ $xhp = $_POST["xhpdoc"];
             $root = 'helpdocument';
             $old = new DOMDocument;
             
-            echo '<div id="renderedpageheader"><h2>Help File Verification</h2></div>';
+            echo '<div id="renderedpageheader"><h2>Help File Verification: '.$xhp_filename[0];
+            echo '</h2></div>';
             echo '<div id="renderedpage"><h3>Check XML Formation</h3>';
             if ( !$old->loadXML($xhp) ) {
                 $errors = libxml_get_errors();
