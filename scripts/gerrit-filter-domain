@@ -4,7 +4,7 @@
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 # Simple script that tries to do more than a simple query:
 # - can filter for the owner's domains (e.g. you can filter for gmail.com to see volunteer patches)
@@ -66,14 +66,14 @@ def main(argv):
         if len(skip):
             skippedChanges.append((i, skip))
             continue
-        print("http://gerrit.libreoffice.org/%s [%s] %s" % (i['number'], i['branch'], i['subject']))
+        print("https://gerrit.libreoffice.org/%s [%s] %s" % (i['number'], i['branch'], i['subject']))
         print("Changed files: %s" % ', '.join(files))
         print()
     print("Found %s changes to review" % (len(domainChanges) - len(skippedChanges)))
     print()
     print("Skipped %s changes:" % len(skippedChanges))
     for i in skippedChanges:
-        print("http://gerrit.libreoffice.org/%s: %s" % (i[0]['number'], ", ".join(i[1])))
+        print("https://gerrit.libreoffice.org/%s: %s" % (i[0]['number'], ", ".join(i[1])))
 
 if __name__ == "__main__":
     try:

@@ -20,7 +20,7 @@ cd plugins
 wget --no-check-certificate http://updates.jenkins-ci.org/latest/git.hpi
 cd ..
 wget --no-check-certificate https://github.com/downloads/KentBeck/junit/junit-4.9b2.jar
-git clone git://anongit.freedesktop.org/libreoffice/contrib/dev-tools dev-tools
+git clone https://git.libreoffice.org/dev-tools dev-tools
 mv dev-tools/ubuntu-jenkins/jobs jobs
 rm -rf dev-tools
 echo "#!/bin/sh" > start-lo-jenkins.sh

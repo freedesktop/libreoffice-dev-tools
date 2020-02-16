@@ -1729,4 +1729,4 @@ Add a [theme](https://codemirror.net/doc/manual.html#option_theme) system ([demo
 
 ## 2.0.0 (2011-03-28)
 
-CodeMirror 2 is a complete rewrite that's faster, smaller, simpler to use, and less dependent on browser quirks. See [this](https://codemirror.net/doc/internals.html) and [this](http://groups.google.com/group/codemirror/browse_thread/thread/5a8e894024a9f580) for more information.
+CodeMirror 2 is a complete rewrite that's faster, smaller, simpler to use, and less dependent on browser quirks. See [this](https://codemirror.net/doc/internals.html) and [this](https://groups.google.com/group/codemirror/browse_thread/thread/5a8e894024a9f580) for more information.

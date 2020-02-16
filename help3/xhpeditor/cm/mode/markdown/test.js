@@ -370,7 +370,7 @@
      "[header&header-1 =]");
 
   MT("setext_linkDef",
-     "[link [[aaa]]:] [string&url http://google.com 'title']",
+     "[link [[aaa]]:] [string&url https://google.com 'title']",
      "[hr ---]");
 
   // currently, looks max one line ahead, thus won't catch valid CommonMark

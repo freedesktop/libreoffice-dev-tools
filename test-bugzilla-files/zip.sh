@@ -26,4 +26,4 @@ cd /srv/www/dev-builds.libreoffice.org/crashtest/
 unzip current.zip
 ENDSSH
 cd /srv/crashtestdata/
-./sendEmail -f "Crashtest VM <crashtest.libreoffice@gmail.com>" -t libreoffice@lists.freedesktop.org -o tls=yes -s smtp.gmail.com:587 -u "Crash test update" -m "New crashtest update available at http://dev-builds.libreoffice.org/crashtest/$SHA/" -a logs/*.csv -xu crashtest.libreoffice -xp $PASSWORD
+./sendEmail -f "Crashtest VM <crashtest.libreoffice@gmail.com>" -t libreoffice@lists.freedesktop.org -o tls=yes -s smtp.gmail.com:587 -u "Crash test update" -m "New crashtest update available at https://dev-builds.libreoffice.org/crashtest/$SHA/" -a logs/*.csv -xu crashtest.libreoffice -xp $PASSWORD

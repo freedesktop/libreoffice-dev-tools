@@ -134,6 +134,6 @@ else
 			fi
 		done
 fi |
-mail -s "$subject" -a "X-Git-Repository: git://anongit.freedesktop.org/git/libreoffice/contrib/mso-dumper.git" \
+mail -s "$subject" -a "X-Git-Repository: https://git.libreoffice.org/mso-dumper" \
      -a "List-Post: <mailto:libreoffice@lists.freedesktop.org>" $recipients
 exit 0

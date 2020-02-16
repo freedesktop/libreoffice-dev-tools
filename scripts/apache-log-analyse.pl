@@ -21,19 +21,19 @@ sub escape_entity($)
 while (<>) {
     my $line = $_;
     my $slice = $line;
-# wiki.documentfoundation.org.log:wiki.documentfoundation.org:80 190.69.122.160 - - [16/Oct/2011:08:17:18 +0200] "GET /Development/Easy_Hacks HTTP/1.1" 200 13665 "http://www.libreoffice.org/get-involved/" "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.202 Safari/535.1"
+# wiki.documentfoundation.org.log:wiki.documentfoundation.org:80 190.69.122.160 - - [16/Oct/2011:08:17:18 +0200] "GET /Development/Easy_Hacks HTTP/1.1" 200 13665 "https://www.libreoffice.org/get-involved/" "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/14.0.835.202 Safari/535.1"
     my ($server, $host, $date, $page, $referrer);
     if ($slice =~ s/^[^:]+:([^:]+):\d+\s+([\d\.]+)\s+-\s+-\s+//) {
 	$server = $1; $host = $2;
 
-# [11/Oct/2011:06:26:20 +0200] "GET /Development/Easy_Hacks_by_Difficulty/be HTTP/1.1" 404 5516 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+# [11/Oct/2011:06:26:20 +0200] "GET /Development/Easy_Hacks_by_Difficulty/be HTTP/1.1" 404 5516 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +https://www.google.com/bot.html)"
 	if ($slice =~ s/^\[\s*([^\]]+)\s*\]\s+//) {
 	    $date = $1;
 
 # "GET /Development/Easy_Hacks HTTP/1.1" 200 13663 "-" "Mozilla/5.0 (compatible; ScoutJet; +http://www.scoutjet.com/)
 	    if ($slice =~ s/^\"([^"]+)\"\s+\d+\s+\d+\s+//) {
 		$page = $1;
-# "http://wiki.documentfoundation.org/Development/Easy_Hacks" "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0)"
+# "https://wiki.documentfoundation.org/Development/Easy_Hacks" "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.0; Trident/5.0)"
 		if ($slice =~ s/^\"([^"]*)\"//) {
 		    $referrer = $1;
 		    $referrer = '' if ($referrer eq '-');

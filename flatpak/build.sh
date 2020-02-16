@@ -2,7 +2,7 @@
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # This shell script creates a LibreOffice.flatpak bundle from a given git
 # branch/tag.
@@ -48,7 +48,7 @@ my_gpgkeyid="${5?}"
 mkdir -p "${my_dir?}"
 
 if [ ! -e "${my_dir?}"/lo ]; then
- git clone --mirror git://gerrit.libreoffice.org/core "${my_dir?}"/lo
+ git clone --mirror https://git.libreoffice.org/core "${my_dir?}"/lo
 else
  git -C "${my_dir?}"/lo fetch
 fi
@@ -84,7 +84,7 @@ gpg2 --homedir="${my_gpghomedir?}" --output="${my_dir?}"/key --export \
  "${my_gpgkeyid?}"
 
 flatpak build-bundle \
- --repo-url=http://download.documentfoundation.org/libreoffice/flatpak/repository \
+ --repo-url=https://download.documentfoundation.org/libreoffice/flatpak/repository \
  --runtime-repo=https://sdk.gnome.org/gnome.flatpakrepo \
  --gpg-keys="${my_dir?}"/key "${my_dir?}"/repository \
  "${my_dir?}"/LibreOffice.flatpak org.libreoffice.LibreOffice \
@@ -92,6 +92,6 @@ flatpak build-bundle \
 
 rm -f "${my_dir?}"/LibreOffice.flatpakref
 printf \
- '[Flatpak Ref]\nTitle=The Document Foundation LibreOffice\nName=org.libreoffice.LibreOffice\nBranch=%s\nUrl=http://download.documentfoundation.org/libreoffice/flatpak/repository\nIsRuntime=False\nGPGKey=%s\nRuntimeRepo=https://sdk.gnome.org/gnome.flatpakrepo\n' \
+ '[Flatpak Ref]\nTitle=The Document Foundation LibreOffice\nName=org.libreoffice.LibreOffice\nBranch=%s\nUrl=https://download.documentfoundation.org/libreoffice/flatpak/repository\nIsRuntime=False\nGPGKey=%s\nRuntimeRepo=https://sdk.gnome.org/gnome.flatpakrepo\n' \
  "${my_flatpakbranch?}" "$(base64 --wrap=0 < "${my_dir?}"/key)" \
  > "${my_dir?}"/LibreOffice.flatpakref

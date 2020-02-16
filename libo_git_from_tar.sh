@@ -6,7 +6,7 @@
 # be slow and suceptible to interruption in case of un-reliable internet connection
 #
 # (C) 2011 Norbert Thiebaud <nthiebaud@gmail.com>
-# Licence: GPLv3  see: http://www.gnu.org/licenses/gpl-3.0.txt
+# Licence: GPLv3  see: https://www.gnu.org/licenses/gpl-3.0.txt
 #
 
 temp_dir=/tmp
@@ -124,7 +124,7 @@ process_child_repo()
 local repo="$1"
 
     if ! $resume ; then do_action "Remove old copy of $repo tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-$repo.tar.bz2"  rm -f ${temp_dir}/libreoffice-$repo.tar.bz2 ; fi
-    do_action "Download the $repo repo tar.bz2 file" "downloading package for the $repo repo" download http://dev-www.libreoffice.org/bundles/libreoffice-$repo.tar.bz2 ${temp_dir}
+    do_action "Download the $repo repo tar.bz2 file" "downloading package for the $repo repo" download https://dev-www.libreoffice.org/bundles/libreoffice-$repo.tar.bz2 ${temp_dir}
 
     if [ -e ./clone/$repo ] ; then
         do_action "Remove the current $repo repo" "removing ./clone/$repo" rm -fr ./clone/$repo
@@ -191,7 +191,7 @@ fi
 
 if $do_core ; then
     if ! $resume ; then do_action "Remove any old copy of core tar.bz2 file, if any" "removing ${temp_dir}/libreoffice-core.tar.bz2"  rm -f ${temp_dir}/libreoffice-core.tar.bz2 ; fi
-    do_action "Download the core repo tar.bz2 file" "downloading package for the core repo" download http://dev-www.libreoffice.org/bundles/libreoffice-core.tar.bz2 ${temp_dir}
+    do_action "Download the core repo tar.bz2 file" "downloading package for the core repo" download https://dev-www.libreoffice.org/bundles/libreoffice-core.tar.bz2 ${temp_dir}
     do_action "" "cannot create the directory ${core_path}" mkdir ${core_path?}
     do_action "" "cannot cd to ${core_path?}" pushd ${core_path?} > /dev/null
     do_action "Unpack the core repo tar.bz2 file to ${core_path}" "unpacking the core tar.bz2 file" tar --strip-components=1 -xf ${temp_dir}/libreoffice-core.tar.bz2

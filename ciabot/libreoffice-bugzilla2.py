@@ -12,7 +12,7 @@
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # When a commit referencing a report is merged, this script
 # - adds a comment to the report
@@ -75,7 +75,7 @@ class FreedesktopBZ:
                 new_whiteboard = old_whiteboard + "target:" + new_version
                 bug.setwhiteboard(new_whiteboard)
 
-        cgiturl = "https://git.libreoffice.org/%s/+/%s%%5E%%21" % (repo_name, commit.hexsha)
+        cgiturl = "https://git.libreoffice.org/%s/commit/%s" % (repo_name, commit.hexsha)
         if branch is None:
             branch = "master"
 

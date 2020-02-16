@@ -9,7 +9,7 @@ editing of the LibreOffice Help.  Usage info is here:
 
 If you want to improve the extension itself, get the sources here:
 
-  $ git clone git://gerrit.libreoffice.org/dev-tools
+  $ git clone https://git.libreoffice.org/dev-tools
 
 and start hacking it.  Most probably you'll want to do improvements to the
 .xhp export filter:
@@ -22,7 +22,7 @@ like:
   help/source/text/schart/01/type_stock.xhp
 
 if you did an independent
-git clone git://gerrit.libreoffice.org/help
+git clone https://git.libreoffice.org/help
 as suggested in https://wiki.documentfoundation.org/Documentation/Help
 
 or if you are in the developers' work tree with submodules
@@ -51,6 +51,6 @@ The new version will be created in the dist/ directory.
 
 Upload it to:
 
-  http://dev-www.libreoffice.org/helpauthoring/
+  https://dev-www.libreoffice.org/helpauthoring/
 
 and announce.

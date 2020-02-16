@@ -5,8 +5,7 @@ There used to be customized versions of GNU make here in the dirs:
 
 These have been moved to the repository hosted at:
 
- git://gerrit.libreoffice.org/gnu-make-lo.git
- https://gerrit.libreoffice.org/gitweb?p=gnu-make-lo.git
+ https://git.libreoffice.org/gnu-make-lo
 
 in the branches:
 

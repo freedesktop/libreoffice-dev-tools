@@ -4,7 +4,7 @@
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 
@@ -15,7 +15,7 @@
 function startNewXHPDoc() {
     if (confirm('Lose all changes and start fresh?')) {
         var a1 =
-        editor.doc.setValue('<?xml version="1.0" encoding="UTF-8"?>\n<helpdocument version="1.0">\n<!--\n * This file is part of the LibreOffice project.\n *\n * This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this\n * file, You can obtain one at http://mozilla.org/MPL/2.0/.\n *\n-->\n\n<meta>\n  <topic id="CHANGE ME" indexer="include" status="PUBLISH">\n    <title id="tit" xml-lang="en-US">TITLE ME</title>\n    <filename>FILE NAME ME</filename>\n  </topic>\n</meta>\n<body>\n\n</body>\n</helpdocument>');
+        editor.doc.setValue('<?xml version="1.0" encoding="UTF-8"?>\n<helpdocument version="1.0">\n<!--\n * This file is part of the LibreOffice project.\n *\n * This Source Code Form is subject to the terms of the Mozilla Public\n * License, v. 2.0. If a copy of the MPL was not distributed with this\n * file, You can obtain one at https://mozilla.org/MPL/2.0/.\n *\n-->\n\n<meta>\n  <topic id="CHANGE ME" indexer="include" status="PUBLISH">\n    <title id="tit" xml-lang="en-US">TITLE ME</title>\n    <filename>FILE NAME ME</filename>\n  </topic>\n</meta>\n<body>\n\n</body>\n</helpdocument>');
     }
 }
 function docHeading() {

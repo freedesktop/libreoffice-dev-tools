@@ -18,7 +18,7 @@ ref_type=$(git cat-file -t "$3")
 if [ "$1" = "refs/heads/master" ] ; then
     echo "*** This repository has been migrated to core.git," >&2
     echo "*** the 'master' branch is now read-only." >&2
-    echo "*** see http://wiki.documentfoundation.org/Development/One_Git_Conversion" >&2
+    echo "*** see https://wiki.documentfoundation.org/Development/One_Git_Conversion" >&2
     echo "*** for more details" >&2
     exit 1;
 fi

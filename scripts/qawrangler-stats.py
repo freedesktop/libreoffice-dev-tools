@@ -4,7 +4,7 @@
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 # qawrangler-stats.py
 #
@@ -25,7 +25,7 @@ from urllib.request import urlopen, URLError
 from io import BytesIO
 from collections import Counter, OrderedDict
 
-URL = 'http://lists.freedesktop.org/archives/libreoffice-bugs/{}.txt.gz'
+URL = 'https://lists.freedesktop.org/archives/libreoffice-bugs/{}.txt.gz'
 ENTITIES = OrderedDict({
     'changers': re.compile(r'^(.+)\schanged:$', re.MULTILINE),
     'reporters': re.compile(r'^\s*Reporter:\s(.+)$', re.MULTILINE),

@@ -47,7 +47,7 @@ Not done since moving to .ui makes current work invalid. I will wait for validat
   + static files are expected in a specific place, so if you want to keep the framework struct, you need a `.htaccess` to redirect that.
   + doesn't accept a module folder whose name is the same as base script.
   + To keep in the 1GB allowed:
-    + `git clone -n --single-branch  git://gerrit.libreoffice.org/core lo_core  (~900MB out of 1GB)`
+    + `git clone -n --single-branch https://git.libreoffice.org/core lo_core  (~900MB out of 1GB)`
     + `git config core.sparsecheckout true`
     + `echo *.ui > .git/info/sparse-checkout`
     + `git grep -l "" HEAD -- *.ui  | awk -F:  '{print $2}' | xargs git checkout HEAD --`

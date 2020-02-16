@@ -28,7 +28,7 @@
     <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
     <gitTool>Default</gitTool>
     <browser class="hudson.plugins.git.browser.GitWeb">
-      <url>http://cgit.freedesktop.org/libreoffice/core/commit</url>
+      <url>https://git.libreoffice.org/core/commit</url>
     </browser>
     <submoduleCfg class="list"/>
     <relativeTargetDir></relativeTargetDir>

@@ -19,7 +19,7 @@ To install gerritbot::
  
 * get the source::
 
-    git clone http://cgit.freedesktop.org/libreoffice/contrib/dev-tools
+    git clone https://git.libreoffice.org/dev-tools
 
 * link the files in the user root::
 

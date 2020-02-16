@@ -5,7 +5,7 @@
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
 import argparse
@@ -70,7 +70,7 @@ def init_freshers():
     os.chdir(repo_dir)
 
     if not os.path.exists(os.path.join(repo_dir,'config')):
-        subprocess.call(['git','clone','--bare','git://gerrit.libreoffice.org/core',repo_dir])
+        subprocess.call(['git','clone','--bare','https://git.libreoffice.org/core',repo_dir])
     else:
         subprocess.call(['git','fetch','origin','master:master'])
     return subprocess.check_output(['git','shortlog','-s','master'])
@@ -135,7 +135,7 @@ Best,
 Your friendly LibreOffice Gerrit Digest Mailer
 
 Note: The bot generating this message can be found and improved here:
-       https://gerrit.libreoffice.org/gitweb?p=dev-tools.git;a=blob;f=gerritbot/send-daily-digest'''
+       https://git.libreoffice.org/dev-tools/tree/master/gerritbot/send-daily-digest'''
     msg = email.mime.text.MIMEText(body, 'plain', 'UTF-8')
     msg['From'] = msg_from
     msg['To'] = msg_to[0]

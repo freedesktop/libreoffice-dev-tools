@@ -98,12 +98,12 @@ Example:
   Robinson Tryon committed a patch related to this issue.
   It has been pushed to "master":
   
-  http://cgit.freedesktop.org/libreoffice/core/commit/?id=3da8ea79e96163
+  https://git.libreoffice.org/core/commit/3da8ea79e96163
   
   fdo#76789 - Test Git-Bugzilla integration scripts
   
   The patch should be included in the daily builds available at
-  http://dev-builds.libreoffice.org/daily/ in the next 24-48 hours. More
+  https://dev-builds.libreoffice.org/daily/ in the next 24-48 hours. More
   information about daily builds can be found at:
-  http://wiki.documentfoundation.org/Testing_Daily_Builds
+  https://wiki.documentfoundation.org/Testing_Daily_Builds
   Affected users are encouraged to test the fix and report feedback.

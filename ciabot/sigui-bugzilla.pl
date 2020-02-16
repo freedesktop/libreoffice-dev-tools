@@ -8,7 +8,7 @@ use strict;
 
 # This program is released under the terms of the GNU General Public License
 # version 2. A copy of the license may be obtained by emailing the author,
-# or at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+# or at https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 #
 # The absolute lack of warranty and other disclaimers as per the license
 # apply.
@@ -37,7 +37,7 @@ my $sha    = $ARGV[1];
 my $branch = $ARGV[2];
 
 use WWW::Bugzilla;
-my $cgiturl = "https://gerrit.libreoffice.org/gitweb?p=$repo.git;a=commit;h=$sha";
+my $cgiturl = "https://git.libreoffice.org/$repo/commit/$sha";
 $branch = "master";
 my $line;
 

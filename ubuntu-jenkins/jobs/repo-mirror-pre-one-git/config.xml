@@ -20,7 +20,7 @@ import os.path
 import subprocess
 
 workspace = os.environ[&apos;WORKSPACE&apos;]
-baseurl = &apos;git://anongit.freedesktop.org/libreoffice/&apos;
+baseurl = &apos;https://git.libreoffice.org/&apos;
 repos = [&apos;artwork&apos;, &apos;base&apos;, &apos;bootstrap&apos;, &apos;calc&apos;, &apos;components&apos;, &apos;extensions&apos;, &apos;extras&apos;, &apos;filters&apos;, &apos;help&apos;, &apos;impress&apos;, &apos;libs-core&apos;, &apos;libs-extern&apos;, &apos;libs-extern-sys&apos;, &apos;libs-gui&apos;, &apos;postprocess&apos;, &apos;sdk&apos;, &apos;testing&apos;, &apos;ure&apos;, &apos;writer&apos;]
 
 state = []

@@ -3,7 +3,7 @@
 # Invoke this script as '/home/$username/git/dev-tools/ciabot/setup/install' or
 # so, and it'll handle the update of the code from git to prod.
 #
-# When cloning new repos, use 'git clone --no-checkout git://gerrit.libreoffice.org/foo.git'
+# When cloning new repos, use 'git clone --no-checkout https://git.libreoffice.org/foo'
 #
 # After update, use /sbin/initctl list | grep irkerd (or loircbot), sudo /sbin/start irkerd or sudo /sbin/stop irkerd
 # NOTE: it's enough to start/stop irkerd, it'll automatically start/stop loircbot as well, as they are linked.

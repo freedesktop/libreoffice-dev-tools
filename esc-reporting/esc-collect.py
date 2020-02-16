@@ -4,7 +4,7 @@
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
 
@@ -698,24 +698,24 @@ def get_crash(cfg):
     fileName = cfg['homedir'] + 'dump/crash_dump.json'
     rawList = {'crashtest': {}, 'crashreport': {}}
     print("Updating crashtest dump")
-    dirList = util_load_url('http://dev-builds.libreoffice.org/crashtest/?C=M&O=D', useRaw=True)
+    dirList = util_load_url('https://dev-builds.libreoffice.org/crashtest/?C=M&O=D', useRaw=True)
     # find newest entry by using sort - in nginx' fancyindex first row is parent-directory
     # the second ones is most recent dir that was created. Only regular entries have a title
     # attribute though, so use that as a shortcut, skip
     inx = dirList.find('title="', 0)
     if inx == -1:
-       print("ERROR: http://dev-builds.libreoffice.org/crashtest/?C=M&O=D not showing DIR list")
+       print("ERROR: https://dev-builds.libreoffice.org/crashtest/?C=M&O=D not showing DIR list")
        return
     inx = inx + 7
     end = dirList.find('"', inx)
-    url = 'http://dev-builds.libreoffice.org/crashtest/' + dirList[inx:end] + '/'
+    url = 'https://dev-builds.libreoffice.org/crashtest/' + dirList[inx:end] + '/'
 
     for type in 'crashlog', 'exportCrash':
         tmp = util_load_url(url + type + '.txt', useRaw=True).split('\n')
         rawList['crashtest'][type] = len(tmp) - 1
 
     print("Updating crashreport dump")
-    rawList['crashreport'] = util_load_url('http://crashreport.libreoffice.org/api/get/crash-count')
+    rawList['crashreport'] = util_load_url('https://crashreport.libreoffice.org/api/get/crash-count')
 
     rawList['newest-entry'] = datetime.datetime.now().strftime('%Y-%m-%d %H')
     util_dump_file(fileName, rawList)

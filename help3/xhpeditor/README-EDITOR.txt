@@ -11,7 +11,7 @@ e) open index.php in the webserver
 
 To clone the editor
 -------------------
-git clone https://gerrit.libreoffice.org/dev-tools dev-tools
+git clone https://git.libreoffice.org/dev-tools dev-tools
 
 The editor is in folder
 
@@ -19,7 +19,7 @@ dev-tools/help3/xhpeditor/
 
 To clone the HelpContents2 submodule
 -------------------------------------
-git clone https://gerrit.libreoffice.org/help helpcontent2
+git clone https://git.libreoffice.org/help helpcontent2
 
 all help files are in helpcontent2/ folder
 

@@ -3,7 +3,7 @@
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # creates a working submodule based checkout using using bundles
 function usage {
@@ -53,7 +53,7 @@ EOF
     exit 0
 }
 
-bundleurl="http://dev-www.libreoffice.org/bundles"
+bundleurl="https://dev-www.libreoffice.org/bundles"
 
 #defaults
 target_dir="libo-core"
@@ -107,7 +107,7 @@ function submodulesetup {
         perl -ni -e 's#anongit\.freedesktop\.org/libreoffice/#gerrit.libreoffice.org/# ; print ; print "\tworkdir = ../../../'$directory'\n" if /logallrefupdates/;' $superrepo/.git/modules/$directory/config
         cat <<EOF >> $superrepo/.git/config
 [submodule "$directory"]
-	url = git://gerrit.libreoffice.org/$reponame
+	url = https://git.libreoffice.org/$reponame
 EOF
         cd "$workdir"
     fi

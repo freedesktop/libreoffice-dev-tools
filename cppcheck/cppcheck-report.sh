@@ -5,7 +5,7 @@
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
 [ "$DEBUG" ] && set -xv
@@ -114,7 +114,7 @@ mail_success()
 {
 cat > "$EMAIL_BODY" <<EOF
 
-A new cppcheck report is available at : http://dev-builds.libreoffice.org/cppcheck_reports/master/
+A new cppcheck report is available at : https://dev-builds.libreoffice.org/cppcheck_reports/master/
 
 
 Note:
@@ -122,7 +122,7 @@ Note:
         $(date "+%Y-%d-%m %H:%M:%S") with user $(whoami) at host $(cat /etc/hostname) as $MY_NAME $MY_ARGS
 
     It can be found and improved here:
-        https://gerrit.libreoffice.org/plugins/gitiles/dev-tools/+/master/cppcheck/cppcheck-report.sh
+        https://git.libreoffice.org/dev-tools/tree/master/cppcheck/cppcheck-report.sh
 
 EOF
 
@@ -151,7 +151,7 @@ Note:
         $(date "+%Y-%d-%m %H:%M:%S") with user $(whoami) at host $(cat /etc/hostname) as $MY_NAME $MY_ARGS
 
     It can be found and improved here:
-        https://gerrit.libreoffice.org/plugins/gitiles/dev-tools/+/master/cppcheck/cppcheck-report.sh
+        https://git.libreoffice.org/dev-tools/tree/master/cppcheck/cppcheck-report.sh
 
 EOF
 
@@ -184,8 +184,8 @@ LO_SRC_DIR="$HOME"/source/libo-core
 HTML_DIR="$HOME"/tmp/www
 CPPCHECK_DIR="$HOME"/source/cppcheck
 DATA_DIR="$HOME"/tmp
-CPPCHECK_GIT_URL="git://github.com/danmar/cppcheck.git"
-LO_GIT_URL="git://anongit.freedesktop.org/libreoffice/core.git"
+CPPCHECK_GIT_URL="https://github.com/danmar/cppcheck"
+LO_GIT_URL="https://git.libreoffice.org/core"
 UPLOAD_DIR=/srv/www/dev-builds.libreoffice.org/cppcheck_reports/master
 MAILTO=libreoffice@lists.freedesktop.org
 MAILFROM=cppcheck.libreoffice@gmail.com

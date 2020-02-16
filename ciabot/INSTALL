@@ -12,8 +12,8 @@ Configure the software:
 - Have this directory as e.g. ~/prod
 
 Clone-out extra repositories
-- git clone git://gitorious.org/irker/irker.git ~/git/irker
-- git clone git://github.com/vmiklos/irker-cia-proxy.git ~/git/irker-cia-proxy
+- git clone https://gitlab.com/esr/irker ~/git/irker
+- git clone https://github.com/vmiklos/irker-cia-proxy ~/git/irker-cia-proxy
 
 Run the install script
 - ~/git/dev-tools/ciabot/setup/install

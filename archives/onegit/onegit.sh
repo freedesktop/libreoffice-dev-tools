@@ -30,8 +30,7 @@ Options:
    -C       base directory where to create the onegit repo. the default
             is the current working directory, i.e '.'
    -g       base part of the url to access the libreoffice repos
-            for example -g "git://anongit.freedesktop.org/libreoffice"
-            or -f "/lo/"
+            for example -g "https://git.libreoffice.org" or -f "/lo/"
             if the url given is a local directory we expect it
             to be the path of bootstrap. the other repos are expected to be in <path>/clone/
    -n       name of the onegit repo to be created. the default is 'libo'
