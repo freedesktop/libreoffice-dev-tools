@@ -38,6 +38,7 @@ import datetime
 import json
 import xmltodict
 import requests
+from subprocess import check_call, Popen, PIPE
 from requests.auth import HTTPDigestAuth
 
 
@@ -667,15 +668,11 @@ def get_git(cfg):
                   '"committer": "%cn", "committer-email": "%ce" }'
       basedir = cfg['homedir'] + '../libreoffice/'
       if repo['git'] and cfg['platform'] == 'linux':
-        os.system('(cd ' + basedir + repo['dir'] + ';git pull -r;git fetch --all) > /dev/null')
-      os.system('(cd ' + basedir + repo['dir'] + ";git log --pretty=format:'" + useFormat + "') > /tmp/git.log")
-      fp = open('/tmp/git.log', encoding='utf-8')
-      while True:
+        check_call(["git", "-C", basedir + repo['dir'], "pull", "--quiet", "--rebase", "--all"])
+      p = Popen([ "git", "-C", basedir + repo['dir'], "log", "--pretty=format:" + useFormat ], stdout=PIPE)
+      for x in io.TextIOWrapper(p.stdout, encoding="utf-8"):
         # Json fails if there's a backslash somewhere in the git log
-        x = fp.readline().replace("\\", "/")
-        if x is None or x == '':
-          break
-        row = json.loads(x)
+        row = json.loads(x.replace("\\", "/"))
         row['repo'] = repo['name']
         key = repo['name'] + '_' + row['hash']
         if not key in rawList['commits']:
