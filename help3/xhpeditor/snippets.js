@@ -28,48 +28,48 @@ function docHeading() {
 // Paragraph
 function paragraph(role) {
     var a0 = '<paragraph role="'+ role + '" id="' + random("par") + '">'
-    var a1 = '</paragraph>\n';
+    var a1 = '</paragraph>';
     editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
 }
 
 function note() {
     var a0 = '<note id="' + random('par') + '">'
-    var a1 = '</note>\n';
+    var a1 = '</note>';
     editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
 }
 
 function tip() {
     var a0 = '<tip id="' + random('par') + '">'
-    var a1 = '</tip>\n';
+    var a1 = '</tip>';
     editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
 }
 
 function warning() {
     var a0 = '<warning id="' + random('par') + '">'
-    var a1 = '</warning>\n';
+    var a1 = '</warning>';
     editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
 }
 
 function heading(level) {
     var a0 = '<h'+ level +' id="' + random('hd') + '">'
-    var a1 = '</h' + level+'>\n';
+    var a1 = '</h' + level+'>';
     editor.replaceSelection(a0 + editor.doc.getSelection() + a1,'');
 }
 
 function bascode_par() {
     var a1 = '<paragraph role="bascode" id="' + random('bas') + '">';
-    var a2 = '</paragraph>\n';
+    var a2 = '</paragraph>';
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
 function pycode_par() {
     var a1 = '<paragraph role="pycode" id="' + random('pyc') + '">';
-    var a2 = '</paragraph>\n';
+    var a2 = '</paragraph>';
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
 
 function image_par() {
     var a1 = '<paragraph role="image" id="' + random('par') + '"><image src="media/CHANGE-ME" id="' + random('img') + '" width="" height=""><alt id="' + random('alt') +'">';
-    var a2 = '</alt></image></paragraph>\n';
+    var a2 = '</alt></image></paragraph>';
     editor.replaceSelection(a1 + editor.doc.getSelection() + a2,'');
 }
 // Tables
