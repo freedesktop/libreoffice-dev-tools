@@ -39,6 +39,7 @@ import operator
 import datetime
 import json
 import xmltodict
+from subprocess import check_call
 
 
 
@@ -462,8 +463,8 @@ def report_bug_metrics():
     filePath = cfg['homedir'] + fileName
     fileContent = '/tmp/bugs/content.xml'
 
-    os.system('rm -rf /tmp/bugs')
-    os.system('unzip -d /tmp/bugs ' + filePath)
+    check_call(['rm', '-rf', '/tmp/bugs'])
+    check_call(['unzip', '-d', '/tmp/bugs', filePath])
     fp = open(fileContent, encoding='utf-8')
     text = fp.read()
     fp.close()
@@ -498,8 +499,8 @@ def report_bug_metrics():
     fp = open(fileContent, 'w', encoding='utf-8')
     print(text, file=fp)
     fp.close()
-    os.system('cd /tmp/bugs; zip ' + filePath + ' *')
-    os.system('cd ' + cfg['homedir'] + 'bug-metrics; git add *; git commit -m \'new version ' + statList['addDate'] + '\'')
+    check_call(['zip', filePath, '-r', '.'], cwd='/tmp/bugs')
+    check_call(['git', '-C', cfg['homedir'] + 'bug-metrics', 'commit', '-am', 'new version ' + statList['addDate']])
 
     fileBody='/tmp/esc_odf.txt'
     fp = open(fileBody, 'w', encoding='utf-8')

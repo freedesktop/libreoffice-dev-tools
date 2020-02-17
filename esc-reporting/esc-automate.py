@@ -27,6 +27,8 @@ import datetime
 import json
 import requests
 from requests.auth import HTTPDigestAuth
+from shlex import quote
+from subprocess import check_call
 import unidecode
 
 def util_load_data_file(fileName):
@@ -78,10 +80,8 @@ def doBugzilla(id, command, isComment=False):
 
 
 def doGerrit(id, command):
-    cmd = 'ssh gerrit.libreoffice.org gerrit ' + command + ' "' + id + '"'
-    r = os.system(cmd)
-    if r != 0:
-      raise Exception('error: ' + cmd + ' failed')
+    gerrit = ['ssh', '-p', '29418', 'gerrit.libreoffice.org', 'gerrit']
+    check_call(gerrit + command + [quote(id)])
 
 
 def doMail(cfg, mail, subject, content, attachFile=None):
@@ -91,13 +91,13 @@ def doMail(cfg, mail, subject, content, attachFile=None):
 
 def handle_gerrit_abandon(id, patchset):
     pid = str(id) + ',' + str(patchset)
-    cmd = 'review --abandon --message \'"' + cfg['automate']['gerrit']['abandon'] + '"\''
+    cmd = ['review', '--abandon', '--message', quote(cfg['automate']['gerrit']['abandon'])]
     doGerrit(pid, cmd)
 
 
 
 def handle_gerrit_review(id, row):
-    cmd = 'set-reviewers -a  \'"' + row['name'] + '"\''
+    cmd = ['set-reviewers', '-a', quote(row['name'])]
     doGerrit(id, cmd)
     handle_gerrit_comment(row['id'], row['patchset'], useText='added reviewer')
 
@@ -109,7 +109,7 @@ def handle_gerrit_comment(id, patchset, useText = None):
       txt = 'A polite ping, ' + cfg['automate']['gerrit']['comment']
     else:
       txt = useText
-    cmd = 'review --message \'"' + txt + '"\''
+    cmd = ['review', '--message', quote(txt)]
     doGerrit(pid, cmd)
 
 
@@ -133,13 +133,10 @@ def handle_mail_pdf(email, name):
     fp.close()
 
     filePdf = '/tmp/award.pdf'
-    pdfGen = 'pdftk ' + cfg['homedir'] + 'AcknowledgmentForm.pdf fill_form ' + fileFdf + ' output ' + filePdf
-    attachFile= {'path': filePdf, 'name': 'award.pdf', 'extension': 'pdf'}
-    r = os.system(pdfGen)
-    if r != 0:
-      raise Exception('pdf generation failed ')
+    check_call(['pdftk', cfg['homedir'] + 'AcknowledgmentForm.pdf', 'fill_form', fileFdf, 'output', filePdf])
 
     text = cfg['automate']['1st award']['content'].format(name)
+    attachFile= {'path': filePdf, 'name': 'award.pdf', 'extension': 'pdf'}
 
     doMail(cfg, email, cfg['automate']['1st award']['subject'], text, attachFile)
 

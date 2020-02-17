@@ -38,7 +38,7 @@ import datetime
 import json
 import xmltodict
 import requests
-from subprocess import check_call, Popen, PIPE
+from subprocess import check_call, Popen, PIPE, CalledProcessError
 from requests.auth import HTTPDigestAuth
 
 
@@ -591,19 +591,17 @@ def get_gerrit(cfg):
     print("Updating gerrit dump from " + rawList['newest-entry'])
 
     rawList['committers'] = []
-    r = os.system('ssh gerrit.libreoffice.org "gerrit ls-members Committers" > /tmp/committerList')
-    if r != 0:
-      raise Exception('ssh gerrit... failed')
-
-    fp = open('/tmp/committerList', encoding='utf-8')
-    tmp = fp.read().split('\n')[1:-1]
-    fp.close()
-    for line in tmp:
-      row = line.split('\t')
+    # Could use the REST API instead and receive pre-formatted JSON, but that requires HTTP auth
+    cmd = ["ssh", "-p", "29418", "gerrit.libreoffice.org", "gerrit", "ls-members", "Committers"]
+    p = Popen(cmd, stdout=PIPE)
+    for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
+      row = line.rstrip().split('\t')
       rawList['committers'].append({"_account_id": int(row[0]),
                                     "email": row[3],
                                     "name": row[2],
                                     "username": row[1]})
+    if p.wait() != 0:
+        raise CalledProcessError(p.returncode, cmd)
 
     url = 'https://gerrit.libreoffice.org/changes/?q=after:' + searchDate.strftime("%Y-%m-%d") + \
          '&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=MESSAGES&limit=200&start='
