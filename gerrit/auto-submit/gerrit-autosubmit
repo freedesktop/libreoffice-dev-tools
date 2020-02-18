@@ -27,7 +27,8 @@ if port != None and port != "":
     sshcommand.extend(["-p", port])
 
 while True:
-    cmd = sshcommand + ["-n", "-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"]
+    cmd = sshcommand + ["-n", "-o", "ServerAliveInterval=5", server, "gerrit",
+            "stream-events", "-s", "comment-added"]
     sock = subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1)
 
     try:
@@ -35,7 +36,7 @@ while True:
             event = json.loads(line)
 
             if event['type'] != "comment-added":
-                continue
+                continue # should never happen
             if 'username' not in event['change']['owner'].keys():
                 continue
             if event['change']['owner']['username'] != os.environ['USER']:
