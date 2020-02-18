@@ -27,7 +27,7 @@ if port != None and port != "":
     sshcommand.extend(["-p", port])
 
 while True:
-    cmd = sshcommand + ["-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"]
+    cmd = sshcommand + ["-n", "-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"]
     sock = subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1)
 
     try:
