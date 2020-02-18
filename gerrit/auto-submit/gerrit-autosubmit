@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,14 +15,15 @@ def get_config(key):
     sock = subprocess.Popen(["git", "config", "-f", ".gitreview", key], stdout=subprocess.PIPE)
     ret = sock.stdout.readline().strip()
     sock.stdout.close()
-    return ret
+    return ret.decode("utf-8")
 
 server = get_config("gerrit.host")
 project = get_config("gerrit.project")
 branch = get_config("gerrit.defaultbranch")
 
 while True:
-    sock = subprocess.Popen(["ssh", "-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"], stdout=subprocess.PIPE, bufsize=1)
+    cmd = ["ssh", "-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"]
+    sock = subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1)
 
     try:
         for line in iter(sock.stdout.readline, b''):
@@ -44,9 +45,9 @@ while True:
                 continue
 
             rev = event['patchSet']['revision']
-            cmd = "ssh " + server + " gerrit review -s " + rev
-            print(cmd)
-            os.system(cmd)
+            cmd = ["ssh", server, "gerrit", "review", "-s", rev]
+            print(' '.join(cmd))
+            subprocess.call(cmd)
     except KeyboardInterrupt:
         print("Interrupted.")
         break
