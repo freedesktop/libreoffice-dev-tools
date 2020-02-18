@@ -122,6 +122,7 @@
     <button class="dropbtn">Help</button>
     <div class="dropdown-content">
         <a href="https://wiki.documentfoundation.org/Documentation/Understanding,_Authoring_and_Editing_Openoffice.org_Help/3" target="_blank">XHP Reference</a>
+        <a href="https://wiki.documentfoundation.org/DocumentationHelpEditor" target="_blank">Editor Help</a>
         <a href="cm/doc/manual.html#commands" target="_blank">Editor shortcuts</a>
         <a href="#" target="_blank">Editor</a>
     </div>

@@ -39,7 +39,6 @@ $xhp = $_POST["xhpdoc"];
     <script type="application/javascript" src="cm/addon/search/searchcursor.js"></script>
     <script type="application/javascript" src="cm/addon/search/jump-to-line.js"></script>
     <script type="application/javascript" src="cm/addon/search/matchesonscrollbar.js"></script>
-    <script type="application/javascript" src="cm/addon/search/jump-to-line.js"></script>
     <script type="application/javascript" src="cm/addon/display/fullscreen.js"></script>
     <script type="application/javascript" src="cm/addon/scroll/annotatescrollbar.js"></script>
     
