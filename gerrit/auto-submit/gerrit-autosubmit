@@ -18,11 +18,16 @@ def get_config(key):
     return ret.decode("utf-8")
 
 server = get_config("gerrit.host")
+port = get_config("gerrit.port")
 project = get_config("gerrit.project")
 branch = get_config("gerrit.defaultbranch")
 
+sshcommand = ["ssh"]
+if port != None and port != "":
+    sshcommand.extend(["-p", port])
+
 while True:
-    cmd = ["ssh", "-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"]
+    cmd = sshcommand + ["-o", "ServerAliveInterval=5", server, "gerrit", "stream-events"]
     sock = subprocess.Popen(cmd, stdout=subprocess.PIPE, bufsize=1)
 
     try:
@@ -45,7 +50,7 @@ while True:
                 continue
 
             rev = event['patchSet']['revision']
-            cmd = ["ssh", server, "gerrit", "review", "-s", rev]
+            cmd = sshcommand + [server, "gerrit", "review", "-s", rev]
             print(' '.join(cmd))
             subprocess.call(cmd)
     except KeyboardInterrupt:
