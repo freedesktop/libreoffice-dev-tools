@@ -594,6 +594,7 @@ def get_gerrit(cfg):
     # Could use the REST API instead and receive pre-formatted JSON, but that requires HTTP auth
     cmd = ["ssh", "-p", "29418", "gerrit.libreoffice.org", "gerrit", "ls-members", "Committers"]
     p = Popen(cmd, stdout=PIPE)
+    p.stdout.readline() # strip header
     for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
       row = line.rstrip().split('\t')
       rawList['committers'].append({"_account_id": int(row[0]),
