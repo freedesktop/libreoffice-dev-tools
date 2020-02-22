@@ -37,7 +37,7 @@ import bugzilla
 from bugzilla import Bugzilla
 from bugzilla.base import _BugzillaToken
 
-master_target = "6.4.0"
+master_target = "7.0.0"
 bug_regex = "\\b(?:bug|fdo|tdf|lo)[#:]?(\\d+)\\b"
 dry_run = False
 
@@ -142,7 +142,7 @@ def find_target_version(repo, branch):
                 return base + ".0." + str(int(max(rc_list)) + 1)
 
             # we have not yet tagged an RC, check which betas have been tagged
-            search_string = "libreoffice-" + base + ".0.0.beta(\d+)" 
+            search_string = "libreoffice-" + base + ".0.0.beta(\d+)"
             beta_list = [m.group(1) for m in [re.search(search_string, str(tag)) for tag in tags] if m is not None]
             print(beta_list)
             if len(beta_list) == 0:
