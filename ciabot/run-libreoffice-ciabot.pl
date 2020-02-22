@@ -3,8 +3,8 @@
 use POSIX;
 use File::Basename;
 
-open STDOUT, '>', dirname($0) . "/ciabot.out";
-open STDERR, '>', dirname($0) . "/ciabot.err";
+open STDOUT, '>>', "/var/log/ciabot/ciabot.out";
+open STDERR, '>>', "/var/log/ciabot/ciabot.err";
 
 my $suffix = "";
 my $cwd;
@@ -123,7 +123,7 @@ sub report($$$) {
                                         my $branch = $branch_name;
                                         $branch = 'master' if ($branch eq '');
                                         print "reporting to bugzilla: $_ and branch $branch";
-                                        qx(python $cwd/libreoffice-bugzilla2.py -r $repo -c $_ -b $branch >> /srv/home/ciabot/bugzilla.log);
+                                        qx(python $cwd/libreoffice-bugzilla2.py -r $repo -c $_ -b $branch >>/var/log/ciabot/bugzilla.log);
                                     }
                                     qx($ciabot $repo $_ $branch_name $ciaproxy);
                                 }
