@@ -48,7 +48,7 @@ class FreedesktopBZ:
 
     def connect(self):
         config = ConfigParser.ConfigParser()
-        config.read('/srv/home/ciabot/prod/config.cfg')
+        config.read(os.path.dirname(os.path.abspath(__file__)) + '/config.cfg')
         url = config.get('bugzilla', 'url')
         user = config.get('bugzilla', 'user')
         password = config.get('bugzilla', 'password')
@@ -178,7 +178,7 @@ def find_bugid(repo, commit_id):
 
 def read_repo(repo_name):
     config = ConfigParser.ConfigParser()
-    config.read('/srv/home/ciabot/prod/config.cfg')
+    config.read(os.path.dirname(os.path.abspath(__file__)) + '/config.cfg')
     path = config.get(repo_name, 'location')
     repo = git.repo.base.Repo(path)
     return repo
