@@ -38,8 +38,8 @@ How to test the Bugzilla integration:
 
 - Edit file projmap.json to change the IRC channel
 
-e.g. "to": "irc://irc.freenode.net/libreoffice-dev" ->
-     "to": "irc://irc.freenode.net/libreoffice-dev-test"
+e.g. "to": "ircs://irc.freenode.net/libreoffice-dev" ->
+     "to": "ircs://irc.freenode.net/libreoffice-dev-test"
 
 - Edit config.cfg to change the url for the Bugzilla install
 
