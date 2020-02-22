@@ -2,8 +2,8 @@ The following steps are needed to use this code:
 
 Install some packages:
 - Python
-  * git module (ubuntu: python-git)
-  * bugzilla module (?) (ubuntu: not in standard repos)
+  * git module (Debian: python-git)
+  * bugzilla module (Debian: python-bugzilla)
 
 Configure the software:
 - Copy config-example.cfg -> config.cfg and change the defaults
