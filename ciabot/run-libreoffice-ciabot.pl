@@ -7,16 +7,14 @@ open STDOUT, '>>', "/var/log/ciabot/ciabot.out";
 open STDERR, '>>', "/var/log/ciabot/ciabot.err";
 
 my $suffix = "";
-my $cwd;
+my $cwd = dirname($0);
+my $repodir = "$cwd/../repositories";
 
-$cwd = `pwd`;
-chomp $cwd;
-
-if ( ! -d 'core' && ! -d 'core.git' ) {
+if ( ! -d "$repodir/core" && ! -d "$repodir/core.git" ) {
     print STDERR "Not a directory with libreoffice repos!\n";
     exit 1;
 }
-if ( -d 'core.git' ) {
+if ( -d "$repodir/core.git" ) {
     $suffix=".git"
 }
 sub error($) {
@@ -193,7 +191,8 @@ if ($test) {
 
 my %old_ref;
 foreach $repo (@all_repos) {
-    chdir "$cwd/$repo$suffix";
+    chdir "$repodir/$repo$suffix";
+    # skip any commits received before we started
     qx(git fetch origin);
     qx(git fetch --tags origin);
     $old_ref{$repo} = get_branches();
@@ -201,7 +200,7 @@ foreach $repo (@all_repos) {
 
 while ( 1 ) {
     foreach $repo (@all_repos) {
-        chdir "$cwd/$repo$suffix";
+        chdir "$repodir/$repo$suffix";
 
         # update
         qx(git fetch origin);
