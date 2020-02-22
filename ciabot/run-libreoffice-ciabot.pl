@@ -1,13 +1,19 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -T
+
+use strict;
+use warnings;
+
+$ENV{PATH} = join ':', qw{/usr/bin /bin};
 
 use POSIX;
 use File::Basename;
 
 open STDOUT, '>>', "/var/log/ciabot/ciabot.out";
 open STDERR, '>>', "/var/log/ciabot/ciabot.err";
+my $test = 0;
 
 my $suffix = "";
-my $cwd = dirname($0);
+my $cwd = dirname($0) =~ /\A([[:alnum:]\/%\.\+\-_]+)\z/ ? $1 : die;
 my $repodir = "$cwd/../repositories";
 
 if ( ! -d "$repodir/core" && ! -d "$repodir/core.git" ) {
@@ -34,7 +40,7 @@ sub get_branches() {
     if ( open REFS, "git show-ref |" ) {
         while ( <REFS> ) {
             chomp;
-            if ( /^([^ ]*) refs\/remotes\/origin\/(.*)/ ) {
+            if ( /^([[:xdigit:]]{40,}) refs\/remotes\/origin\/([[:alnum:]\/%\.\+\-_]+)$/ ) {
                 if ( $2 ne 'HEAD' ) {
                     $branches{$2} = $1;
                 }
@@ -110,7 +116,7 @@ sub report($$$) {
                     }
                     if ( open COMMITS, "git rev-list -n $limit $new_head ^$old_head | tac |" ) {
                         while ( <COMMITS> ) {
-                            chomp;
+                            $_ = /^([[:xdigit:]]{40,})$/ ? $1 : next; # untaint
                             print timestamp() . " Sending report about $_ in $key\n";
                             if (!$test) {
                                 if ($repo eq "si-gui")
@@ -153,7 +159,7 @@ sub report($$$) {
             # Report the newest commit which is not in master
             if ( open COMMITS, "git rev-list -n 1 $new_head ^refs/remotes/origin/master |" ) {
                 while ( <COMMITS> ) {
-                    chomp;
+                    $_ = /^([[:xdigit:]]{40,})$/ ? $1 : next; # untaint
                     print timestamp() . " Sending report about $_ in $key (newly created branch)\n";
                     if (!$test) {
                         qx($ciabot $repo $_ $branch_name $ciaproxy);
@@ -173,7 +179,7 @@ sub report($$$) {
 
 print timestamp() . " Checking for changes in the libreoffice repo & sending reports to CIA.vc.\n";
 
-@all_repos = (
+my @all_repos = (
     "core",
     "dictionaries",
     "help",
@@ -182,15 +188,13 @@ print timestamp() . " Checking for changes in the libreoffice repo & sending rep
     "contrib/dev-tools",
 );
 
-$test = 0;
-
 if ($test) {
     @all_repos = ("test");
 }
 
 
 my %old_ref;
-foreach $repo (@all_repos) {
+foreach my $repo (@all_repos) {
     chdir "$repodir/$repo$suffix";
     # skip any commits received before we started
     qx(git fetch origin);
@@ -199,7 +203,7 @@ foreach $repo (@all_repos) {
 }
 
 while ( 1 ) {
-    foreach $repo (@all_repos) {
+    foreach my $repo (@all_repos) {
         chdir "$repodir/$repo$suffix";
 
         # update
