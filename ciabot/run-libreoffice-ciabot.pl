@@ -120,9 +120,9 @@ sub report($$$) {
                                     qx(perl -I $cwd $cwd/sigui-bugzilla.pl $repo $_ $branch_name);
                                 } else {
                                     if ( is_valid_bugzilla_commit( $repo, $branch_name ) ) {
-					my $branch = $branch_name;
-					$branch = 'master' if ($branch eq '');
-					print "reporting to bugzilla: $_ and branch $branch";
+                                        my $branch = $branch_name;
+                                        $branch = 'master' if ($branch eq '');
+                                        print "reporting to bugzilla: $_ and branch $branch";
                                         qx(python $cwd/libreoffice-bugzilla2.py -r $repo -c $_ -b $branch >> /srv/home/ciabot/bugzilla.log);
                                     }
                                     qx($ciabot $repo $_ $branch_name $ciaproxy);
