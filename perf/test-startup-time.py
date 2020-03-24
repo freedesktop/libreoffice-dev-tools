@@ -29,6 +29,7 @@ import tempfile
 import time
 import subprocess
 import logging
+import signal
 from multiprocessing_logging import install_mp_handler
 
 extensions = [ "odt", "doc", "docx", "rtf", "ods", "xls", "xlsx", "odp", "ppt", "pptx" ]
@@ -55,6 +56,15 @@ class DefaultHelpParser(argparse.ArgumentParser):
         sys.stderr.write('error: %s\n' % message)
         self.print_help()
         sys.exit(2)
+
+def kill_soffice():
+    p = subprocess.Popen(['ps', '-A'], stdout=subprocess.PIPE)
+    out, err = p.communicate()
+    for line in out.splitlines():
+        if b'soffice' in line:
+            pid = int(line.split(None, 1)[0])
+            print("Killing process: " + str(pid))
+            os.kill(pid, signal.SIGKILL)
 
 def get_file_names(filesPath):
     auxNames = []
@@ -129,18 +139,26 @@ if __name__ == '__main__':
             for line in f:
                 previousResults.append(line.strip().split(' ')[2])
 
-    install_mp_handler()
-    pool = multiprocessing.Pool() # use all CPUs
-    manager = multiprocessing.Manager()
+    kill_soffice()
+
     totalCount = 0
 
-    for fileName in listFiles:
-        if fileName not in previousResults:
-            totalCount += 1
-            pool.apply_async(launchLibreOffice, args=(fileName, liboPath))
+    cpuCount = multiprocessing.cpu_count() #use all CPUs
+    chunkSplit = cpuCount * 16
+    chunks = [listFiles[x:x+chunkSplit] for x in range(0, len(listFiles), chunkSplit)]
 
-    pool.close()
-    pool.join()
+    for chunk in chunks:
+        install_mp_handler()
+        pool = multiprocessing.Pool(cpuCount)
+        for fileName in chunk:
+            if fileName not in previousResults:
+                totalCount += 1
+                pool.apply_async(launchLibreOffice, args=(fileName, liboPath))
+
+        pool.close()
+        pool.join()
+
+        kill_soffice()
 
     print()
     if totalCount:
