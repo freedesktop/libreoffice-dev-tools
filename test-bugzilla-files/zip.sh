@@ -1,3 +1,4 @@
+#!/bin/bash
 cd ~/source/libo-core/
 SHA=`git rev-parse HEAD`
 echo $SHA

@@ -1,3 +1,4 @@
+#!/bin/bash
 dir_name=$(basename $1)
 dir=${PWD}
 source ${dir}/config.asan

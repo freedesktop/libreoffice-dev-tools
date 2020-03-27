@@ -1,3 +1,4 @@
+#!/bin/bash
 ulimit -c unlimited
 dir_name=$(basename $1)
 dir=${PWD}
