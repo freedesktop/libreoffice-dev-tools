@@ -336,22 +336,6 @@ def writeExportCrash(fileName):
 def exportDoc(xDoc, filterName, validationCommand, filename, connection, timer):
     props = [ ("FilterName", filterName) ]
     saveProps = tuple([mkPropertyValue(name, value) for (name, value) in props])
-    extensions = { "calc8": ".ods",
-                    "MS Excel 97": ".xls",
-                    "Calc Office Open XML": ".xlsx",
-                    "writer8": ".odt",
-                    "Office Open XML Text": ".docx",
-                    "Rich Text Format": ".rtf",
-                    "MS Word 97": ".doc",
-                    "impress8": ".odp",
-                    "draw8": ".odg",
-                    "Impress Office Open XML": ".pptx",
-                    "MS PowerPoint 97": ".ppt",
-                    "math8": ".odf",
-                    "StarOffice XML (Base)": ".odb"
-                    }
-    base = os.path.splitext(filename)[0]
-    filename = base + extensions[filterName]
     # note: avoid empty path segments in the url!
     fileURL = "file://" + os.path.normpath(os.environ["CRASHTESTDATA"] + "/current/" + filename)
     t = None
@@ -400,17 +384,36 @@ class ExportFileTest:
         self.filename = filename
         self.enable_validation = enable_validation
         self.timer = timer
+        self.exportedFiles = []
 
     def run(self, connection):
         formats = self.getExportFormats()
         print(formats)
+        extensions = { "calc8": ".ods",
+                        "MS Excel 97": ".xls",
+                        "Calc Office Open XML": ".xlsx",
+                        "writer8": ".odt",
+                        "Office Open XML Text": ".docx",
+                        "Rich Text Format": ".rtf",
+                        "MS Word 97": ".doc",
+                        "impress8": ".odp",
+                        "draw8": ".odg",
+                        "Impress Office Open XML": ".pptx",
+                        "MS PowerPoint 97": ".ppt",
+                        "math8": ".odf",
+                        "StarOffice XML (Base)": ".odb"
+                        }
         for format in formats:
             filterName = self.getFilterName(format)
             validation = self.getValidationCommand(filterName)
             print(format)
             print(filterName)
             if filterName:
-                xExportedDoc = exportDoc(self.xDoc, filterName, validation, self.filename, connection, self.timer)
+                base = os.path.splitext(self.filename)[0]
+                filename = base + extensions[filterName]
+                self.exportedFiles.append(filename)
+
+                xExportedDoc = exportDoc(self.xDoc, filterName, validation, filename, connection, self.timer)
                 if xExportedDoc:
                     xExportedDoc.close(True)
 
@@ -479,10 +482,12 @@ class ExportFileTest:
         return filterNames[format]
 
 class LoadFileTest:
-    def __init__(self, file, enable_validation, timer):
+    def __init__(self, file, enable_validation, timer, doExport):
         self.file = file
         self.enable_validation = enable_validation
         self.timer = timer
+        self.doExport = doExport
+        self.exportedFiles = []
 
     def run(self, xContext, connection):
         print("Loading document: " + self.file)
@@ -500,9 +505,11 @@ class LoadFileTest:
             xDoc = loadFromURL(xContext, url, t)
             print("doc loaded")
             t.cancel()
-            if xDoc:
+            if xDoc and self.doExport:
                 exportTest = ExportFileTest(xDoc, self.file, self.enable_validation, self.timer)
                 exportTest.run(connection)
+                self.exportedFiles = exportTest.exportedFiles
+
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
             print("caught UnknownPropertyException " + self.file)
             if not t.is_alive():
@@ -570,14 +577,13 @@ class AsanTimer:
         return 900
 
 
-def runLoadFileTests(opts, file_list_name):
+def runLoadFileTests(opts, files, doExport):
     startTime = datetime.datetime.now()
     connection = PersistentConnection(opts)
+    exportedFiles = []
     try:
         tests = []
 #        print("before map")
-        files = []
-        files.extend(getFiles(file_list_name[0]))
         files.sort()
         asan = "--asan" in opts
         print(asan)
@@ -587,10 +593,14 @@ def runLoadFileTests(opts, file_list_name):
         else:
             timer = NormalTimer()
 
-        tests.extend( (LoadFileTest(file, not asan, timer) for file in files) )
+        tests.extend( (LoadFileTest(file, not asan, timer, doExport) for file in files) )
         runConnectionTests(connection, simpleInvoke, tests)
+
+        exportedFiles = [item for sublist in tests for item in sublist.exportedFiles]
     finally:
         connection.kill()
+
+    return exportedFiles
 
 def parseArgs(argv):
     (optlist,args) = getopt.getopt(argv[1:], "hr",
@@ -622,7 +632,12 @@ if __name__ == "__main__":
         usage()
         sys.exit()
     elif "--soffice" in opts:
-        runLoadFileTests(opts, args)
+        files = []
+        files.extend(getFiles(args[0]))
+        exportedFiles = runLoadFileTests(opts, files, True)
+
+        # Check the roundtripped files doesn't crash at import time
+        runLoadFileTests(opts, exportedFiles, False)
     else:
         usage()
         sys.exit(1)
