@@ -61,7 +61,7 @@ def get_file_names(filesPath):
 
     return auxNames
 
-def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
+def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
 
     results = {
         'pass' : 0,
@@ -69,7 +69,6 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
         'timeout' : 0,
         'skip' : 0}
 
-    sofficePath = liboPath + "instdir/program/soffice"
     process = Popen([sofficePath, "--version"], stdout=PIPE, stderr=PIPE)
     stdout = process.communicate()[0].decode("utf-8")
     sourceHash = stdout.split(" ")[2].strip()
@@ -121,7 +120,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
             os.environ["TESTFILENAME"] = fileName
 
             process = Popen(["python3",
-                        liboPath + "uitest/test_main.py",
+                        './uitest/test_main.py',
                         "--debug",
                         "--soffice=path:" + sofficePath,
                         "--userdir=file://" + profilePath,
@@ -225,6 +224,13 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
         print("No test run!")
 
 if __name__ == '__main__':
+    currentPath = os.path.dirname(os.path.realpath(__file__))
+    uitestPath = os.path.join(currentPath, 'uitest/test_main.py')
+    if not os.path.exists(uitestPath):
+        print("ERROR: " + uitestPath + " doesn't exists. " + \
+                "Copy uitest folder from LibreOffice codebase and paste it here")
+        sys.exit(1)
+
     parser = DefaultHelpParser()
 
     parser.add_argument(
@@ -242,12 +248,12 @@ if __name__ == '__main__':
     if not os.path.exists(filesPath):
         parser.error(filesPath + " is an invalid directory path")
 
-    liboPath = os.path.join(argument.soffice, '')
-    if not os.path.exists(liboPath) or not os.path.exists(liboPath + "instdir/program/"):
-        parser.error(liboPath + " is an invalid LibreOffice path")
+    sofficePath = argument.soffice
+    if not os.path.exists(sofficePath) or not sofficePath.endswith('/soffice'):
+        parser.error(sofficePath + " is an invalid LibreOffice path")
 
-    os.environ["PYTHONPATH"] = liboPath + "instdir/program/"
-    os.environ["URE_BOOTSTRAP"] = "file://" + liboPath + "instdir/program/fundamentalrc"
+    os.environ["PYTHONPATH"] = sofficePath.split('/soffice')[0]
+    os.environ["URE_BOOTSTRAP"] = "file://" + sofficePath.split('/soffice')[0] + '/fundamentalrc'
     os.environ["SAL_USE_VCLPLUGIN"] = "gen"
 
     if not os.path.exists('./logs'):
@@ -258,6 +264,6 @@ if __name__ == '__main__':
     listFiles = get_file_names(filesPath)
     listFiles.sort()
 
-    run_tests_and_get_results(liboPath, listFiles, argument.debug, argument.resume)
+    run_tests_and_get_results(sofficePath, listFiles, argument.debug, argument.resume)
 
 # vim: set shiftwidth=4 softtabstop=4 expandtab:
