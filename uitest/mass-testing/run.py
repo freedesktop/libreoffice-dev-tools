@@ -62,16 +62,20 @@ def start_logger(name):
 def get_file_names(filesPath):
     auxNames = []
     for fileName in os.listdir(filesPath):
-        auxNames.append("file:///" + filesPath + fileName)
+        for key, val in extensions.items():
+            extension = os.path.splitext(fileName)[1][1:]
+            if extension in val:
+                auxNames.append("file:///" + filesPath + fileName)
 
-        #Remove previous lock files
-        lockFilePath = filesPath + '.~lock.' + fileName + '#'
-        if os.path.isfile(lockFilePath):
-            os.remove(lockFilePath)
+                #Remove previous lock files
+                lockFilePath = filesPath + '.~lock.' + fileName + '#'
+                if os.path.isfile(lockFilePath):
+                    os.remove(lockFilePath)
+                break
 
     return auxNames
 
-def launchLibreOffice(logger, fileName, sofficePath, component, isDebug):
+def launchLibreOffice(logger, fileName, sofficePath, component, countInfo, isDebug):
     #Create temp directory for the user profile
     with tempfile.TemporaryDirectory() as tmpdirname:
         profilePath = os.path.join(tmpdirname, 'libreoffice/4')
@@ -102,7 +106,7 @@ def launchLibreOffice(logger, fileName, sofficePath, component, isDebug):
         # 1. The file can't be loaded in 'fileInterval' seconds
         # 2. The test can't be executed in 'testInterval' seconds
         fileInterval = 20
-        testIternval = 20
+        testInterval = 20
         timeout = time.time() + fileInterval
         notLoaded = True
         while True:
@@ -110,9 +114,9 @@ def launchLibreOffice(logger, fileName, sofficePath, component, isDebug):
 
             if time.time() > timeout:
                 if notLoaded:
-                    logger.info("SKIP: " + fileName)
+                    logger.info(countInfo + " - SKIP: " + fileName)
                 else:
-                    logger.info("TIMEOUT: " + fileName)
+                    logger.info(countInfo + " - TIMEOUT: " + fileName)
 
                 # kill popen process
                 os.killpg(process.pid, signal.SIGKILL)
@@ -137,7 +141,7 @@ def launchLibreOffice(logger, fileName, sofficePath, component, isDebug):
                 if line.startswith("mass-uitesting:"):
                     message = line.split(":")[1]
                     if message == 'skipped':
-                        logger.info("SKIP: " + fileName + " : " + importantInfo)
+                        logger.info(countInfo + " - SKIP: " + fileName + " : " + importantInfo)
 
                         # kill popen process
                         os.killpg(process.pid, signal.SIGKILL)
@@ -147,7 +151,7 @@ def launchLibreOffice(logger, fileName, sofficePath, component, isDebug):
                         notLoaded = False
 
                         #Extend timeout
-                        timeout += testIternval
+                        timeout += testInterval
 
                 elif 'Execution time' in line:
                     importantInfo = line.split('for ')[1]
@@ -157,15 +161,15 @@ def launchLibreOffice(logger, fileName, sofficePath, component, isDebug):
 
             if importantInfo:
                 if isFailure:
-                    logger.info("FAIL: " + fileName + " : " + importantInfo)
+                    logger.info(countInfo + " - FAIL: " + fileName + " : " + importantInfo)
                 else:
                     # No error found between the Execution time line and the end of stdout
-                    logger.info("PASS: " + fileName + " : " + str(importantInfo))
+                    logger.info(countInfo + " - PASS: " + fileName + " : " + str(importantInfo))
 
             if process.poll() is not None:
                 break
 
-def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
+def run_tests_and_get_results(sofficePath, listFiles, isDebug):
 
     process = Popen([sofficePath, "--version"], stdout=PIPE, stderr=PIPE)
     stdout = process.communicate()[0].decode("utf-8")
@@ -177,7 +181,8 @@ def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
     logName = './logs/' + sourceHash + ".log"
     logger = start_logger(logName)
 
-    if isResume:
+    previousLog = ""
+    if os.path.exists(logName):
         with open(logName, 'r') as file:
             previousLog = file.read()
 
@@ -185,28 +190,29 @@ def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
     cpuCount = multiprocessing.cpu_count() #use all CPUs
     chunkSplit = cpuCount * 16
     chunks = [listFiles[x:x+chunkSplit] for x in range(0, len(listFiles), chunkSplit)]
+    totalCount = len(listFiles)
 
+    count = 0
     for chunk in chunks:
         install_mp_handler()
         pool = multiprocessing.Pool(cpuCount)
         for fileName in chunk:
-            if isResume:
-                if fileName in previousLog:
-                    print("SKIP: " + fileName)
-                    continue
+            count += 1
+            countInfo = str(count) + '/' + str(totalCount)
+
+            if fileName in previousLog:
+                print(countInfo + " - SKIP: " + fileName)
+                continue
 
             extension = os.path.splitext(fileName)[1][1:]
 
-            component = ""
             for key, val in extensions.items():
                 if extension in val:
                     component = key
-
-            if not component:
-                continue
+                    break
 
             pool.apply_async(launchLibreOffice,
-                    args=(logger, fileName, sofficePath, component, isDebug))
+                    args=(logger, fileName, sofficePath, component, countInfo, isDebug))
 
         pool.close()
         pool.join()
@@ -230,8 +236,6 @@ if __name__ == '__main__':
             '--soffice', required=True, help="Path to the LibreOffice directory")
     parser.add_argument(
             '--debug', action='store_true', help="Flag to print output")
-    parser.add_argument(
-            '--resume', action='store_true', help="Flag to resume previous runs")
 
     argument = parser.parse_args()
 
@@ -250,6 +254,6 @@ if __name__ == '__main__':
     listFiles = get_file_names(filesPath)
     listFiles.sort()
 
-    run_tests_and_get_results(sofficePath, listFiles, argument.debug, argument.resume)
+    run_tests_and_get_results(sofficePath, listFiles, argument.debug)
 
 # vim: set shiftwidth=4 softtabstop=4 expandtab:
