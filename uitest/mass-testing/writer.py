@@ -79,13 +79,13 @@ class massTesting(UITestCase):
             #Insert Default header if it doesn't exists
             if not document.StyleFamilies.PageStyles.Standard.HeaderIsOn:
                 self.xUITest.executeCommand(
-                        ".uno:InsertPageHeader?PageStyle:string=Default%20Style&On:bool=true")
+                        ".uno:InsertPageHeader?PageStyle:string=Default%20Page%20Style&On:bool=true")
 
             self.assertEqual(document.StyleFamilies.PageStyles.Standard.HeaderIsOn, True)
 
             # Delete the header
             self.ui_test.execute_dialog_through_command(
-                    ".uno:InsertPageHeader?PageStyle:string=Default%20Style&On:bool=false")
+                    ".uno:InsertPageHeader?PageStyle:string=Default%20Page%20Style&On:bool=false")
 
             xDialog = self.xUITest.getTopFocusWindow()  #question dialog
             xOption = xDialog.getChild("yes")
@@ -118,13 +118,13 @@ class massTesting(UITestCase):
             #Insert Default footer if it doesn't exists
             if not document.StyleFamilies.PageStyles.Standard.FooterIsOn:
                 self.xUITest.executeCommand(
-                        ".uno:InsertPageFooter?PageStyle:string=Default%20Style&On:bool=true")
+                        ".uno:InsertPageFooter?PageStyle:string=Default%20Page%20Style&On:bool=true")
 
             self.assertEqual(document.StyleFamilies.PageStyles.Standard.FooterIsOn, True)
 
             # Delete the header
             self.ui_test.execute_dialog_through_command(
-                    ".uno:InsertPageFooter?PageStyle:string=Default%20Style&On:bool=false")
+                    ".uno:InsertPageFooter?PageStyle:string=Default%20Page%20Style&On:bool=false")
 
             xDialog = self.xUITest.getTopFocusWindow()  #question dialog
             xOption = xDialog.getChild("yes")
