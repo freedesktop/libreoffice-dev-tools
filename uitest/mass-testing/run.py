@@ -12,7 +12,6 @@ import sys
 import signal
 import logging
 from shutil import copyfile
-import pickle
 import time
 import fcntl
 import tempfile
@@ -35,12 +34,12 @@ class DefaultHelpParser(argparse.ArgumentParser):
         self.print_help()
         sys.exit(2)
 
-def start_logger():
+def start_logger(name):
     rootLogger = logging.getLogger()
     rootLogger.setLevel(os.environ.get("LOGLEVEL", "INFO"))
 
     logFormatter = logging.Formatter("%(asctime)s %(message)s")
-    fileHandler = logging.FileHandler("./log")
+    fileHandler = logging.FileHandler(name)
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
 
@@ -63,32 +62,26 @@ def get_file_names(filesPath):
 
 def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
 
-    results = {
-        'pass' : 0,
-        'fail' : 0,
-        'timeout' : 0,
-        'skip' : 0}
-
     process = Popen([sofficePath, "--version"], stdout=PIPE, stderr=PIPE)
     stdout = process.communicate()[0].decode("utf-8")
     sourceHash = stdout.split(" ")[2].strip()
 
-    #Keep track of the files run
-    filesRun = {}
+    if not os.path.exists('./logs'):
+        os.makedirs('./logs')
+
+    logName = './logs/' + sourceHash + ".log"
+    logger = start_logger(logName)
 
     if isResume:
-        pklFile = './resume.pkl'
-        if os.path.exists(pklFile):
-            with open(pklFile, 'rb') as pickle_in:
-                filesRun = pickle.load(pickle_in)
-
-        if sourceHash not in filesRun:
-            filesRun[sourceHash] = {'files': []}
-
-        if 'results' in filesRun[sourceHash]:
-            results = filesRun[sourceHash]['results']
+        with open(logName, 'r') as file:
+            previousLog = file.read()
 
     for fileName in listFiles:
+        if isResume:
+            if fileName in previousLog:
+                print("SKIP: " + fileName)
+                continue
+
         extension = os.path.splitext(fileName)[1][1:]
 
         component = ""
@@ -98,11 +91,6 @@ def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
 
         if not component:
             continue
-
-        if isResume:
-            if fileName in filesRun[sourceHash]['files']:
-                print("SKIP: " + fileName)
-                continue
 
         #Create temp directory for the user profile
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -143,10 +131,8 @@ def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
                 if time.time() > timeout:
                     if notLoaded:
                         logger.info("SKIP: " + fileName)
-                        results['skip'] += 1
                     else:
                         logger.info("TIMEOUT: " + fileName)
-                        results['timeout'] += 1
 
                     # kill popen process
                     os.killpg(process.pid, signal.SIGKILL)
@@ -172,7 +158,6 @@ def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
                         message = line.split(":")[1]
                         if message == 'skipped':
                             logger.info("SKIP: " + fileName + " : " + importantInfo)
-                            results['skip'] += 1
 
                             # kill popen process
                             os.killpg(process.pid, signal.SIGKILL)
@@ -193,35 +178,12 @@ def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
                 if importantInfo:
                     if isFailure:
                         logger.info("FAIL: " + fileName + " : " + importantInfo)
-                        results['fail'] += 1
                     else:
                         # No error found between the Execution time line and the end of stdout
                         logger.info("PASS: " + fileName + " : " + str(importantInfo))
-                        results['pass'] += 1
 
                 if process.poll() is not None:
                     break
-
-            if isResume:
-                filesRun[sourceHash]['files'].append(fileName)
-
-                filesRun[sourceHash]['results'] = results
-
-                with open(pklFile, 'wb') as pickle_out:
-                    pickle.dump(filesRun, pickle_out)
-
-
-    totalTests = sum(results.values())
-    if totalTests > 0:
-        logger.info("")
-        logger.info("Total Tests: " + str(totalTests))
-        logger.info("\tPASS: " + str(results['pass']))
-        logger.info("\tSKIP: " + str(results['skip']))
-        logger.info("\tTIMEOUT: " + str(results['timeout']))
-        logger.info("\tFAIL: " + str(results['fail']))
-        logger.info("")
-    else:
-        print("No test run!")
 
 if __name__ == '__main__':
     currentPath = os.path.dirname(os.path.realpath(__file__))
@@ -255,11 +217,6 @@ if __name__ == '__main__':
     os.environ["PYTHONPATH"] = sofficePath.split('/soffice')[0]
     os.environ["URE_BOOTSTRAP"] = "file://" + sofficePath.split('/soffice')[0] + '/fundamentalrc'
     os.environ["SAL_USE_VCLPLUGIN"] = "gen"
-
-    if not os.path.exists('./logs'):
-        os.makedirs('./logs')
-
-    logger = start_logger()
 
     listFiles = get_file_names(filesPath)
     listFiles.sort()
