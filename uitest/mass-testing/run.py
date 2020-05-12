@@ -15,6 +15,8 @@ from shutil import copyfile
 import time
 import fcntl
 import tempfile
+import multiprocessing
+from multiprocessing_logging import install_mp_handler
 
 extensions = {
     'writer' : [ "odt", "doc", "docx", "rtf" ],
@@ -33,6 +35,15 @@ class DefaultHelpParser(argparse.ArgumentParser):
         sys.stderr.write('error: %s\n' % message)
         self.print_help()
         sys.exit(2)
+
+def kill_soffice():
+    p = Popen(['ps', '-A'], stdout=PIPE)
+    out, err = p.communicate()
+    for line in out.splitlines():
+        if b'soffice' in line:
+            pid = int(line.split(None, 1)[0])
+            print("Killing process: " + str(pid))
+            os.kill(pid, signal.SIGKILL)
 
 def start_logger(name):
     rootLogger = logging.getLogger()
@@ -60,6 +71,100 @@ def get_file_names(filesPath):
 
     return auxNames
 
+def launchLibreOffice(logger, fileName, sofficePath, component, isDebug):
+    #Create temp directory for the user profile
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        profilePath = os.path.join(tmpdirname, 'libreoffice/4')
+        userPath = os.path.join(profilePath, 'user')
+        os.makedirs(userPath)
+
+        # Replace the profile file with
+        # 1. DisableMacrosExecution = True
+        # 2. IgnoreProtectedArea = True
+        # 3. AutoPilot = False
+        copyfile(os.getcwd() + '/registrymodifications.xcu', userPath + '/registrymodifications.xcu')
+
+        #TODO: Find a better way to pass fileName parameter
+        os.environ["TESTFILENAME"] = fileName
+
+        process = Popen(["python3",
+                    './uitest/test_main.py',
+                    "--debug",
+                    "--soffice=path:" + sofficePath,
+                    "--userdir=file://" + profilePath,
+                    "--file=" + component + ".py"], stdin=PIPE, stdout=PIPE, stderr=PIPE,
+                    preexec_fn=os.setsid)
+
+        # Do not block on process.stdout
+        fcntl.fcntl(process.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+
+        # Kill the process if:
+        # 1. The file can't be loaded in 'fileInterval' seconds
+        # 2. The test can't be executed in 'testInterval' seconds
+        fileInterval = 20
+        testIternval = 20
+        timeout = time.time() + fileInterval
+        notLoaded = True
+        while True:
+            time.sleep(1)
+
+            if time.time() > timeout:
+                if notLoaded:
+                    logger.info("SKIP: " + fileName)
+                else:
+                    logger.info("TIMEOUT: " + fileName)
+
+                # kill popen process
+                os.killpg(process.pid, signal.SIGKILL)
+                break
+
+            try:
+                outputLines = process.stdout.readlines()
+            except IOError:
+                pass
+
+            importantInfo = ''
+            isFailure = False
+            for line in outputLines:
+                line = line.decode("utf-8").strip()
+
+                if not line:
+                    continue
+
+                if isDebug:
+                    print(line)
+
+                if line.startswith("mass-uitesting:"):
+                    message = line.split(":")[1]
+                    if message == 'skipped':
+                        logger.info("SKIP: " + fileName + " : " + importantInfo)
+
+                        # kill popen process
+                        os.killpg(process.pid, signal.SIGKILL)
+
+                        break
+                    elif message == 'loaded':
+                        notLoaded = False
+
+                        #Extend timeout
+                        timeout += testIternval
+
+                elif 'Execution time' in line:
+                    importantInfo = line.split('for ')[1]
+
+                elif importantInfo and 'error' == line.lower() or 'fail' == line.lower():
+                    isFailure = True
+
+            if importantInfo:
+                if isFailure:
+                    logger.info("FAIL: " + fileName + " : " + importantInfo)
+                else:
+                    # No error found between the Execution time line and the end of stdout
+                    logger.info("PASS: " + fileName + " : " + str(importantInfo))
+
+            if process.poll() is not None:
+                break
+
 def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
 
     process = Popen([sofficePath, "--version"], stdout=PIPE, stderr=PIPE)
@@ -76,114 +181,38 @@ def run_tests_and_get_results(sofficePath, listFiles, isDebug, isResume):
         with open(logName, 'r') as file:
             previousLog = file.read()
 
-    for fileName in listFiles:
-        if isResume:
-            if fileName in previousLog:
-                print("SKIP: " + fileName)
+    kill_soffice()
+    cpuCount = multiprocessing.cpu_count() #use all CPUs
+    chunkSplit = cpuCount * 16
+    chunks = [listFiles[x:x+chunkSplit] for x in range(0, len(listFiles), chunkSplit)]
+
+    for chunk in chunks:
+        install_mp_handler()
+        pool = multiprocessing.Pool(cpuCount)
+        for fileName in chunk:
+            if isResume:
+                if fileName in previousLog:
+                    print("SKIP: " + fileName)
+                    continue
+
+            extension = os.path.splitext(fileName)[1][1:]
+
+            component = ""
+            for key, val in extensions.items():
+                if extension in val:
+                    component = key
+
+            if not component:
                 continue
 
-        extension = os.path.splitext(fileName)[1][1:]
+            pool.apply_async(launchLibreOffice,
+                    args=(logger, fileName, sofficePath, component, isDebug))
 
-        component = ""
-        for key, val in extensions.items():
-            if extension in val:
-                component = key
+        pool.close()
+        pool.join()
 
-        if not component:
-            continue
+        kill_soffice()
 
-        #Create temp directory for the user profile
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            profilePath = os.path.join(tmpdirname, 'libreoffice/4')
-            userPath = os.path.join(profilePath, 'user')
-            os.makedirs(userPath)
-
-            # Replace the profile file with
-            # 1. DisableMacrosExecution = True
-            # 2. IgnoreProtectedArea = True
-            # 3. AutoPilot = False
-            copyfile(os.getcwd() + '/registrymodifications.xcu', userPath + '/registrymodifications.xcu')
-
-            #TODO: Find a better way to pass fileName parameter
-            os.environ["TESTFILENAME"] = fileName
-
-            process = Popen(["python3",
-                        './uitest/test_main.py',
-                        "--debug",
-                        "--soffice=path:" + sofficePath,
-                        "--userdir=file://" + profilePath,
-                        "--file=" + component + ".py"], stdin=PIPE, stdout=PIPE, stderr=PIPE,
-                        preexec_fn=os.setsid)
-
-            # Do not block on process.stdout
-            fcntl.fcntl(process.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
-
-            # Kill the process if:
-            # 1. The file can't be loaded in 'fileInterval' seconds
-            # 2. The test can't be executed in 'testInterval' seconds
-            fileInterval = 10
-            testIternval = 20
-            timeout = time.time() + fileInterval
-            notLoaded = True
-            while True:
-                time.sleep(1)
-
-                if time.time() > timeout:
-                    if notLoaded:
-                        logger.info("SKIP: " + fileName)
-                    else:
-                        logger.info("TIMEOUT: " + fileName)
-
-                    # kill popen process
-                    os.killpg(process.pid, signal.SIGKILL)
-                    break
-
-                try:
-                    outputLines = process.stdout.readlines()
-                except IOError:
-                    pass
-
-                importantInfo = ''
-                isFailure = False
-                for line in outputLines:
-                    line = line.decode("utf-8").strip()
-
-                    if not line:
-                        continue
-
-                    if isDebug:
-                        print(line)
-
-                    if line.startswith("mass-uitesting:"):
-                        message = line.split(":")[1]
-                        if message == 'skipped':
-                            logger.info("SKIP: " + fileName + " : " + importantInfo)
-
-                            # kill popen process
-                            os.killpg(process.pid, signal.SIGKILL)
-
-                            break
-                        elif message == 'loaded':
-                            notLoaded = False
-
-                            #Extend timeout
-                            timeout += testIternval
-
-                    elif 'Execution time' in line:
-                        importantInfo = line.split('for ')[1]
-
-                    elif importantInfo and 'error' == line.lower() or 'fail' == line.lower():
-                        isFailure = True
-
-                if importantInfo:
-                    if isFailure:
-                        logger.info("FAIL: " + fileName + " : " + importantInfo)
-                    else:
-                        # No error found between the Execution time line and the end of stdout
-                        logger.info("PASS: " + fileName + " : " + str(importantInfo))
-
-                if process.poll() is not None:
-                    break
 
 if __name__ == '__main__':
     currentPath = os.path.dirname(os.path.realpath(__file__))
