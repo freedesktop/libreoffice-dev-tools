@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+import os
 import re
 import sys
 
@@ -30,7 +31,7 @@ conv = {
 
 # We know that VirtualDevices use a DPI of 96.
 # Could use 'gtk.gdk.screen_get_default().get_resolution()' from pygtk.
-conv['pixel'] = conv['inch'] / 96;
+conv['pixel'] = conv['inch'] / int(os.environ.get("DPI", "96"));
 
 def convert(amount, fro, to):
     # convert to EMU
@@ -43,10 +44,10 @@ def main(args):
         fro = args[2]
         to = args[4]
     except IndexError:
-        print "usage: tpconv <amount> <from> in <to>"
+        print("usage: tpconv <amount> <from> in <to>")
         return
 
-    print convert(amount, fro, to)
+    print(convert(amount, fro, to))
 
 if __name__ == '__main__':
     main(sys.argv)
