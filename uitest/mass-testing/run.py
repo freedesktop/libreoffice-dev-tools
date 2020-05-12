@@ -35,12 +35,12 @@ class DefaultHelpParser(argparse.ArgumentParser):
         self.print_help()
         sys.exit(2)
 
-def start_logger(component):
+def start_logger():
     rootLogger = logging.getLogger()
     rootLogger.setLevel(os.environ.get("LOGLEVEL", "INFO"))
 
     logFormatter = logging.Formatter("%(asctime)s %(message)s")
-    fileHandler = logging.FileHandler("./logs/" + component + ".log")
+    fileHandler = logging.FileHandler("./log")
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)
 
@@ -49,17 +49,15 @@ def start_logger(component):
 
     return rootLogger
 
-def get_file_names(component, filesPath):
+def get_file_names(filesPath):
     auxNames = []
     for fileName in os.listdir(filesPath):
-        for ext in extensions[component]:
-            if fileName.endswith(ext):
-                auxNames.append("file:///" + filesPath + fileName)
+        auxNames.append("file:///" + filesPath + fileName)
 
-                #Remove previous lock files
-                lockFilePath = filesPath + '.~lock.' + fileName + '#'
-                if os.path.isfile(lockFilePath):
-                    os.remove(lockFilePath)
+        #Remove previous lock files
+        lockFilePath = filesPath + '.~lock.' + fileName + '#'
+        if os.path.isfile(lockFilePath):
+            os.remove(lockFilePath)
 
     return auxNames
 
@@ -80,7 +78,7 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
     filesRun = {}
 
     if isResume:
-        pklFile = './logs/' + component + '.pkl'
+        pklFile = './resume.pkl'
         if os.path.exists(pklFile):
             with open(pklFile, 'rb') as pickle_in:
                 filesRun = pickle.load(pickle_in)
@@ -92,6 +90,15 @@ def run_tests_and_get_results(liboPath, listFiles, isDebug, isResume):
             results = filesRun[sourceHash]['results']
 
     for fileName in listFiles:
+        extension = os.path.splitext(fileName)[1][1:]
+
+        component = ""
+        for key, val in extensions.items():
+            if extension in val:
+                component = key
+
+        if not component:
+            continue
 
         if isResume:
             if fileName in filesRun[sourceHash]['files']:
@@ -228,15 +235,8 @@ if __name__ == '__main__':
             '--debug', action='store_true', help="Flag to print output")
     parser.add_argument(
             '--resume', action='store_true', help="Flag to resume previous runs")
-    parser.add_argument(
-            '--component', required=True, help="The component to be used. Options: " + \
-                    " ".join("[" + x + "]" for x in extensions.keys()))
 
     argument = parser.parse_args()
-
-    component = argument.component.lower()
-    if component not in extensions.keys():
-        parser.error(component + " is an invalid component.")
 
     filesPath = os.path.join(argument.dir, '')
     if not os.path.exists(filesPath):
@@ -253,9 +253,9 @@ if __name__ == '__main__':
     if not os.path.exists('./logs'):
         os.makedirs('./logs')
 
-    logger = start_logger(component)
+    logger = start_logger()
 
-    listFiles = get_file_names(component, filesPath)
+    listFiles = get_file_names(filesPath)
     listFiles.sort()
 
     run_tests_and_get_results(liboPath, listFiles, argument.debug, argument.resume)
