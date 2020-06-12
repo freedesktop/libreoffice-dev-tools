@@ -71,30 +71,6 @@ class massTesting(UITestCase):
 
         self.ui_test.close_doc()
 
-    def test_insert_remove_header(self):
-        xEdit = self.load_file()
-        if xEdit:
-            document = self.ui_test.get_component()
-
-            #Insert Default header if it doesn't exists
-            if not document.StyleFamilies.PageStyles.Standard.HeaderIsOn:
-                self.xUITest.executeCommand(
-                        ".uno:InsertPageHeader?PageStyle:string=Default%20Page%20Style&On:bool=true")
-
-            self.assertEqual(document.StyleFamilies.PageStyles.Standard.HeaderIsOn, True)
-
-            # Delete the header
-            self.ui_test.execute_dialog_through_command(
-                    ".uno:InsertPageHeader?PageStyle:string=Default%20Page%20Style&On:bool=false")
-
-            xDialog = self.xUITest.getTopFocusWindow()  #question dialog
-            xOption = xDialog.getChild("yes")
-            xOption.executeAction("CLICK", tuple())
-
-            self.assertEqual(document.StyleFamilies.PageStyles.Standard.HeaderIsOn, False)
-
-        self.ui_test.close_doc()
-
     def test_copy_all_paste_undo(self):
         xEdit = self.load_file()
         if xEdit:
@@ -107,30 +83,6 @@ class massTesting(UITestCase):
 
             for i in range(5):
                 self.xUITest.executeCommand(".uno:Undo")
-
-        self.ui_test.close_doc()
-
-    def test_insert_remove_footer(self):
-        xEdit = self.load_file()
-        if xEdit:
-            document = self.ui_test.get_component()
-
-            #Insert Default footer if it doesn't exists
-            if not document.StyleFamilies.PageStyles.Standard.FooterIsOn:
-                self.xUITest.executeCommand(
-                        ".uno:InsertPageFooter?PageStyle:string=Default%20Page%20Style&On:bool=true")
-
-            self.assertEqual(document.StyleFamilies.PageStyles.Standard.FooterIsOn, True)
-
-            # Delete the header
-            self.ui_test.execute_dialog_through_command(
-                    ".uno:InsertPageFooter?PageStyle:string=Default%20Page%20Style&On:bool=false")
-
-            xDialog = self.xUITest.getTopFocusWindow()  #question dialog
-            xOption = xDialog.getChild("yes")
-            xOption.executeAction("CLICK", tuple())
-
-            self.assertEqual(document.StyleFamilies.PageStyles.Standard.FooterIsOn, False)
 
         self.ui_test.close_doc()
 
