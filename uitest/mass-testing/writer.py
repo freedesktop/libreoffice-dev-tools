@@ -43,6 +43,8 @@ class massTesting(UITestCase):
         xEdit = self.load_file()
         if xEdit:
             self.xUITest.executeCommand(".uno:SelectAll")
+            self.xUITest.executeCommand(".uno:SelectAll")
+            self.xUITest.executeCommand(".uno:SelectAll")
             xEdit.executeAction("TYPE", mkPropertyValues({"KEYCODE":"DELETE"}))
 
             self.xUITest.executeCommand(".uno:Undo")
@@ -74,6 +76,8 @@ class massTesting(UITestCase):
     def test_copy_all_paste_undo(self):
         xEdit = self.load_file()
         if xEdit:
+            self.xUITest.executeCommand(".uno:SelectAll")
+            self.xUITest.executeCommand(".uno:SelectAll")
             self.xUITest.executeCommand(".uno:SelectAll")
 
             self.xUITest.executeCommand(".uno:Copy")
