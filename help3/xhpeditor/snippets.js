@@ -74,19 +74,21 @@ function image_par() {
 }
 // Tables
 // simple table cell
-function tCell (role){
-    return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="' + role + '"></paragraph>\n       </tablecell>\n';
+function tCell (role,text){
+    var newtext = (text == '') ? 'CHANGE ME' : text;
+    return '       <tablecell>\n           <paragraph id="' + random('par') + '" role="' + role + '">'+ newtext +'</paragraph>\n       </tablecell>\n';
 }
 
 function iconTable() {
     var a1 = '<table id="' + random('tab') + '">\n    <tablerow>\n        <tablecell>\n            ';
-    var a2 = '<paragraph role="image" id="' + random('par') + '">\n<image src="media/CHANGE-ME" id="' + random('img') + '" width="" height=""><alt id="' + random('alt') +'">Icon</alt></image>\n            </paragraph>';
-    var a3 = '\n       </tablecell>\n' + tCell("paragraph") + '    </tablerow>\n</table>\n';
-    editor.replaceRange(a1 + a2 + a3, editor.doc.getCursor());
+    var a2 = '<paragraph role="paragraph" id="' + random('par') + '">\n<image src="media/CHANGE-ME" id="' + random('img') + '" width="1cm" height="1cm"><alt id="' + random('alt') +'">Icon ';
+    var a3 = '</alt></image>\n            </paragraph>\n       </tablecell>\n';
+    var a4 = tCell("paragraph", editor.doc.getSelection()) + '    </tablerow>\n</table>\n';
+    editor.replaceSelection(a1 + a2 + editor.doc.getSelection() + a3 + a4,'');
 }
 
 function tableCell() {
-    editor.replaceRange(tCell('tablecontent'), editor.doc.getCursor());
+    editor.replaceSelection(tCell('tablecontent',editor.doc.getSelection()), '');
 }
 
 function table2R3C() {
