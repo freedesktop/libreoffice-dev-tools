@@ -28,7 +28,7 @@ $xhp = $_POST["xhpdoc"];
 
     <script type="application/javascript" src="cm/lib/codemirror.js"></script>
     <script type="application/javascript" src="cm/mode/xml/xml.js"></script>
-    <script type="application/javascript" src="cm/addon/dialog/dialog.js"></script> 
+    <script type="application/javascript" src="cm/addon/dialog/dialog.js"></script>
     <script type="application/javascript" src="cm/addon/hint/show-hint.js"></script>
     <script type="application/javascript" src="cm/addon/hint/xml-hint.js"></script>
     <script type="application/javascript" src="cm/addon/edit/matchtags.js"></script>
@@ -41,7 +41,7 @@ $xhp = $_POST["xhpdoc"];
     <script type="application/javascript" src="cm/addon/search/matchesonscrollbar.js"></script>
     <script type="application/javascript" src="cm/addon/display/fullscreen.js"></script>
     <script type="application/javascript" src="cm/addon/scroll/annotatescrollbar.js"></script>
-    
+
     <script type="application/javascript" src="helpcontent2/help3xsl/prism.js"></script>
     <script type="application/javascript" src="autocomplete.js"></script>
     <script type="application/javascript" src="snippets.js"></script>
@@ -70,7 +70,7 @@ $xhp = $_POST["xhpdoc"];
                echo '<input type="radio" name="sys" onclick="setSystemSpan(\''.$value.'\')">'.$value.'&nbsp;';
                }
             echo '</p></div><div class="applbuttons"><p> Module: ';
-            $appModule = array("WRITER", "CALC", "IMPRESS", "DRAW", "BASE", "MATH");
+            $appModule = array("WRITER", "CALC", "IMPRESS", "DRAW", "BASE", "MATH", "CHART");
             foreach ($appModule as $value){
                 echo '<input type="radio" name="app" onclick="setApplSpan(\''.$value.'\')">'.$value.'&nbsp;';
             }
@@ -91,7 +91,7 @@ $xhp = $_POST["xhpdoc"];
             libxml_clear_errors();
             $root = 'helpdocument';
             $old = new DOMDocument;
-            
+
             echo '<div id="renderedpageheader"><h2>Help File Verification: '.$xhp_filename[0];
             echo '</h2></div>';
             echo '<div id="renderedpage"><h3>Check XML Formation</h3>';
