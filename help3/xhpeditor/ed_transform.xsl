@@ -21,7 +21,7 @@
 
 <xsl:output indent="yes" method="html" doctype-system= "about:legacy-compat"/>
 
-<xsl:include href="helpcontent2/help3xsl/links.txt.xsl"/>
+<xsl:include href="links.txt.xsl"/>
 <!--
 ############################
 # Variables and Parameters #
