@@ -105,12 +105,12 @@ def launchLibreOffice(logger, fileName, sofficePath, component, countInfo, isDeb
         # Kill the process if:
         # 1. The file can't be loaded in 'fileInterval' seconds
         # 2. The test can't be executed in 'testInterval' seconds
-        fileInterval = 20
+        fileInterval = 30
         testInterval = 20
         timeout = time.time() + fileInterval
         notLoaded = True
         while True:
-            time.sleep(1)
+            time.sleep(0.1)
 
             if time.time() > timeout:
                 if notLoaded:
