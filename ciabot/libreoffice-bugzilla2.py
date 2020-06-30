@@ -35,7 +35,6 @@ else:
 
 import bugzilla
 from bugzilla import Bugzilla
-from bugzilla.base import _BugzillaToken
 
 master_target = "7.1.0"
 bug_regex = "\\b(?:bug|fdo|tdf|lo)[#:]?(\\d+)\\b"
