@@ -65,14 +65,15 @@ class FreedesktopBZ:
             if not bug.product in ("LibreOffice", "LibreOffice Online"):
                 print("refusing to update bug with non-LO component")
                 return;
-            old_whiteboard = bug.getwhiteboard()
+            old_whiteboard = bug.whiteboard
 
             m = re.findall(new_version, old_whiteboard)
             if m is None or len(m) == 0:
                 if not old_whiteboard == "":
                     old_whiteboard = old_whiteboard + " "
                 new_whiteboard = old_whiteboard + "target:" + new_version
-                bug.setwhiteboard(new_whiteboard)
+                update = self.bz.build_update(whiteboard=new_whiteboard)
+                self.bz.update_bugs([bugnr], update)
 
         cgiturl = "https://git.libreoffice.org/%s/commit/%s" % (repo_name, commit.hexsha)
         if branch is None:
