@@ -126,7 +126,7 @@ sub report($$$) {
                                     if ( is_valid_bugzilla_commit( $repo, $branch_name ) ) {
                                         my $branch = $branch_name;
                                         $branch = 'master' if ($branch eq '');
-                                        print "reporting to bugzilla: $_ and branch $branch";
+                                        print "reporting to bugzilla: $_ and branch $branch\n";
                                         qx(python $cwd/libreoffice-bugzilla2.py -r $repo -c $_ -b $branch >>/var/log/ciabot/bugzilla.log);
                                     }
                                     qx($ciabot $repo $_ $branch_name $ciaproxy);
