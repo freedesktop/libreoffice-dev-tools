@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 irker-cia-proxy - proxy CIA requests to an irker relay agent
 
@@ -15,8 +15,8 @@ from the use of this software.
 
 import json, socket, posixpath, re, sys
 from xml.dom import minidom
-from SimpleXMLRPCServer import SimpleXMLRPCServer
-from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCRequestHandler
 
 bind_ip = ''
 bind_port = 8000
@@ -117,9 +117,9 @@ class CIAMessage:
     def get_template(self):
         # If there is a template for this branch, use it, otherwise fall back to the project or the global one.
         branch_template = "template-%s" % self.data()['branch']
-        if projmap[self.project()].has_key(branch_template):
+        if branch_template in projmap[self.project()]:
             return projmap[self.project()][branch_template]
-        if projmap[self.project()].has_key('template'):
+        if 'template' in projmap[self.project()]:
             return projmap[self.project()]['template']
         return template
     def get_target(self):
@@ -131,7 +131,7 @@ class CIAMessage:
         envelope = json.dumps(structure)
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.sendto(envelope + "\n", (target_server, target_port))
+            sock.sendto(envelope.encode() + b"\n", (target_server, target_port))
         finally:
             sock.close()
 

@@ -89,7 +89,7 @@ sub report($$$) {
     my %old = %{$old_ref};
     my %new = %{$new_ref};
     my $ciabot = "timeout 60 $cwd/libreoffice-ciabot.pl";
-    my $ciaproxy = "| ( cd $cwd && python irker-cia-proxy.py -s )";
+    my $ciaproxy = "| ( cd $cwd && python3 irker-cia-proxy.py -s )";
 
     foreach my $key ( keys %new ) {
         my $branch_name = $key;
@@ -127,13 +127,13 @@ sub report($$$) {
                                         my $branch = $branch_name;
                                         $branch = 'master' if ($branch eq '');
                                         print "reporting to bugzilla: $_ and branch $branch\n";
-                                        qx(python $cwd/libreoffice-bugzilla2.py -r $repo -c $_ -b $branch >>/var/log/ciabot/bugzilla.log);
+                                        qx(python3 $cwd/libreoffice-bugzilla2.py -r $repo -c $_ -b $branch >>/var/log/ciabot/bugzilla.log);
                                     }
                                     qx($ciabot $repo $_ $branch_name $ciaproxy);
                                 }
                             } else {
                                 if ( is_valid_bugzilla_commit( $repo, $branch_name ) ) {
-                                    print "python $cwd/libreoffice-bugzilla2.py -r '$repo' -c '$_' -b '$branch_name'\n";
+                                    print "python3 $cwd/libreoffice-bugzilla2.py -r '$repo' -c '$_' -b '$branch_name'\n";
                                 }
                                 print "$ciabot '$repo' '$_' '$branch_name' $ciaproxy\n";
                             }
