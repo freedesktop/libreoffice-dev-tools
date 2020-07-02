@@ -105,7 +105,7 @@ def find_target_version(repo, branch):
     # form libreoffice-x-y-z => will be available in x.y.z
     match = re.search("libreoffice-(\d+)-(\d+)-(\d+)", branch)
     if match is not None:
-        return ".".join(map(str, match.groups()))
+        return ".".join(match.groups())
 
     # form libreoffice-x-y
     # branch of libreoffice-x-y-z exists => will be available in x.y.z+1
@@ -115,26 +115,26 @@ def find_target_version(repo, branch):
     #       beta
     match = re.search("libreoffice-(\d+)-(\d+)", branch)
     if match is not None:
-        base = ".".join(map(str, match.groups()))
+        base = ".".join(match.groups())
         branches = repo.remote().refs
         branch_names = [str(branch) for branch in branches]
         print(branch_names)
-        search_string = "libreoffice-"+"-".join(map(str, match.groups())) + "-(\d+)"
+        search_string = "libreoffice-" + "-".join(match.groups()) + "-(\d+)"
         print(search_string)
-        micro_list = [m.group(1) for m in [re.search(search_string, branch) for branch in branch_names] if m is not None]
+        micro_list = [int(m.group(1)) for m in [re.search(search_string, branch) for branch in branch_names] if m is not None]
         if len(micro_list) == 0:
             # first search if we are at an RC already
             search_string = "libreoffice-" + base + ".0." + "(\d+)$"
             tags = repo.tags
             print(tags)
-            rc_list = [m.group(1) for m in [re.search(search_string, str(tag)) for tag in tags] if m is not None]
+            rc_list = [int(m.group(1)) for m in [re.search(search_string, str(tag)) for tag in tags] if m is not None]
             print(rc_list)
             if len(rc_list) > 0:
-                return base + ".0." + str(int(max(rc_list)) + 1)
+                return base + ".0." + str(max(rc_list) + 1)
 
             # we have not yet tagged an RC, check which betas have been tagged
             search_string = "libreoffice-" + base + ".0.0.beta(\d+)"
-            beta_list = [m.group(1) for m in [re.search(search_string, str(tag)) for tag in tags] if m is not None]
+            beta_list = [int(m.group(1)) for m in [re.search(search_string, str(tag)) for tag in tags] if m is not None]
             print(beta_list)
             if len(beta_list) == 0:
                 # no beta yet
@@ -145,10 +145,10 @@ def find_target_version(repo, branch):
                 return base + ".0.1"
 
             # normal beta
-            return base + ".0.0.beta" + str(int(max(beta_list)) + 1)
+            return base + ".0.0.beta" + str(max(beta_list) + 1)
         print(micro_list)
         # the next release from libreoffice-x-y is max existing z-branch + 1
-        return base + "." + str(int(max(micro_list)) + 1)
+        return base + "." + str(max(micro_list) + 1)
 
     return None
 
@@ -165,7 +165,7 @@ def find_bugid(repo, commit_id):
         print("no bugid found")
         sys.exit()
 
-    return m
+    return [int(i) for i in m]
 
 def read_repo(repo_name):
     config = configparser.ConfigParser()
