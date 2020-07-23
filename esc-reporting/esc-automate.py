@@ -154,8 +154,8 @@ def executeLoop(func, xType, xName):
     global autoList
 
     try:
-      for id in autoList[xType][xName]:
-        func(id, autoList[xType][xName][id])
+      for id, val in autoList[xType][xName].items():
+        func(id, val)
     except Exception as e:
       common.util_errorMail(cfg, 'esc-automate', 'ERROR: ' + str(func) + ' failed with ' + str(e))
       return
