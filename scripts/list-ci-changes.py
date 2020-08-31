@@ -49,7 +49,7 @@ def getCIChanges(changesHTML):
             if tag == "a":
                 for attrKey, attrValue in attrs:
                     if attrKey == "tooltip":
-                        match = re.match(".*(https://gerrit.libreoffice.org/[0-9]+).*", attrValue)
+                        match = re.match(r".*(https://gerrit.libreoffice.org/c/core/\+/[0-9]+).*", attrValue)
                         if match:
                             self.changes.append(match.group(1))
 
@@ -59,7 +59,7 @@ def getCIChanges(changesHTML):
 
 def main():
     if len(sys.argv) > 1:
-        gerrit = [{"url": "https://gerrit.libreoffice.org/" + sys.argv[1], "branch": "unknown"}]
+        gerrit = [{"url": "https://gerrit.libreoffice.org/c/core/+/" + sys.argv[1], "branch": "unknown"}]
     else:
         gerrit = getGerritChanges()
 
