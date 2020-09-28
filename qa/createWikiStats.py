@@ -110,6 +110,9 @@ def analyze_bugzilla_wiki_stats(statList, bugzillaData, cfg):
 
             creatorMail = row['creator']
 
+            common.util_check_bugzilla_mail(
+                    statList, creatorMail, row['creator_detail']['real_name'], creationDate, rowId)
+
             whiteboard_list = row['whiteboard'].split(' ')
             bugTargets = []
             for whiteboard in whiteboard_list:
@@ -226,8 +229,7 @@ def analyze_bugzilla_wiki_stats(statList, bugzillaData, cfg):
 
             #this way we can get the users' name
             for person in row['cc_detail']:
-                if person['email'] not in statList['people']:
-                    statList['people'][person['email']] = person['real_name']
+                common.util_check_bugzilla_mail(statList, person['email'], person['real_name'])
 
     statList['stat']['newest'] = statNewDate.strftime("%Y-%m-%d")
     statList['stat']['oldest'] = statOldDate.strftime("%Y-%m-%d")
@@ -328,7 +330,7 @@ def create_wikimedia_table_by_target(cfg, statList):
         for kP, vP in vT['people'].items():
             name = ''
             if vP['email'] in statList['people']:
-                name = statList['people'][kP]
+                name = statList['people'][kP]['name']
             if not name:
                 name = vP['email'].split('@')[0]
 
@@ -376,7 +378,7 @@ def create_wikimedia_table_by_period(cfg, statList):
         for kP, vP in vT['people'].items():
             name = ''
             if vP['email'] in statList['people']:
-                name = statList['people'][kP]
+                name = statList['people'][kP]['name']
             if not name:
                 name = vP['email'].split('@')[0]
 
