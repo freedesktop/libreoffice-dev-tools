@@ -84,6 +84,7 @@ class OfficeConnection:
         self.socket = None
         self.xContext = None
         self.pro = None
+        self.suicided = False
     def setUp(self):
         (method, sep, rest) = self.args["--soffice"].partition(":")
         if sep != ":":
@@ -149,12 +150,14 @@ class OfficeConnection:
                 self.soffice.terminate()
             ret = self.soffice.wait()
             self.xContext = None
+            self.suicided = False
             self.socket = None
             self.soffice = None
             if ret != 0:
                 raise Exception("Exit status indicates failure: " + str(ret))
 #            return ret
     def kill(self):
+        self.suicided = True
         command = "kill " + str(self.pro.pid)
         killFile = open("killFile.log", "a")
         killFile.write(command + "\n")
@@ -187,6 +190,10 @@ class PersistentConnection:
     def kill(self):
         if self.connection:
             self.connection.kill()
+    def suicided(self):
+        if self.connection:
+            return self.connection.suicided
+        return False
 
 def simpleInvoke(connection, test):
     try:
@@ -345,11 +352,13 @@ def exportDoc(xDoc, filterName, validationCommand, filename, connection, timer):
         t.start()      
         xDoc.storeToURL(fileURL, saveProps)
     except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
-        if t.is_alive():
+        print("caught UnknownPropertyException " + filename + " timedOut: " + str(connection.suicided()))
+        if not connection.suicided():
             writeExportCrash(filename)
         raise # means crashed, handle it later
     except pyuno.getClass("com.sun.star.lang.DisposedException"):
-        if t.is_alive():
+        print("caught DisposedException " + filename + " timedOut: " + str(connection.suicided()))
+        if not connection.suicided():
             writeExportCrash(filename)
         raise # means crashed, handle it later
     except pyuno.getClass("com.sun.star.lang.IllegalArgumentException"):
@@ -511,20 +520,16 @@ class LoadFileTest:
                 self.exportedFiles = exportTest.exportedFiles
 
         except pyuno.getClass("com.sun.star.beans.UnknownPropertyException"):
-            print("caught UnknownPropertyException " + self.file)
-            if not t.is_alive():
-                print("TIMEOUT!")
-            else:
+            print("caught UnknownPropertyException " + self.file + " timedOut: " + str(connection.suicided()))
+            if not connection.suicided():
                 t.cancel()
                 handleCrash(self.file, 0)
             connection.tearDown()
             connection.setUp()
             xDoc = None
         except pyuno.getClass("com.sun.star.lang.DisposedException"):
-            print("caught DisposedException " + self.file)
-            if not t.is_alive():
-                print("TIMEOUT!")
-            else:
+            print("caught DisposedException " + self.file + " timedOut: " + str(connection.suicided()))
+            if not connection.suicided():
                 t.cancel()
                 handleCrash(self.file, 1)
             connection.tearDown()
