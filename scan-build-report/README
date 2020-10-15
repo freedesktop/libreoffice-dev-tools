@@ -1,0 +1,24 @@
+
+DESCRIPTION
+This script is for automating the process of running the clang static analyzer on the LibreOffice codebase.
+
+
+USAGE
+The script accepts 2 flags, both of which are mandatory. The first is '-s /dir1/dir2', which should point to the directory that contains the git repository of the LibreOffice codebase. The second is '-o /dir1/dir2', which should point to the directory the reports should be created in. All of the scripts output will be redirected to a logfile, and no output will be displayed to the tty on stdout or stderr.
+
+
+EXAMPLE
+An example of it's usage could be as simple as this :
+
+./scan-build-report.sh -s ~/src/libreoffice/core -o ~/tmp/scan-build-libreoffice/output
+
+which tells the script it should look for the LibreOffice git repo in ~/src/libreoffice/core, and create the reports in ~/tmp/scan-build-libreoffice/output.
+
+
+FILES
+/tmp/scan-build-report.log
+All output by the script will be redirected to a logfils, and no output file be send to stdout or stderr.
+
+
+NOTES
+You need at least clang9 (or newer) to run this script, as the needed '--exclude' option didn't exist before clang9.
