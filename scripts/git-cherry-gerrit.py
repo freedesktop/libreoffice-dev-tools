@@ -62,7 +62,10 @@ def main() -> None:
         branch_point = merge_base
 
     to_change_ids = []
-    to_hashes = from_pipe(["git", "rev-list", merge_base + ".." + cherry_to]).split("\n")
+    to_hash_string = from_pipe(["git", "rev-list", merge_base + ".." + cherry_to])
+    to_hashes = []
+    if to_hash_string:
+        to_hashes = to_hash_string.split("\n")
     git_cat_file = subprocess.Popen(['git', 'cat-file', '--batch'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     for to_hash in to_hashes:
         to_change_ids.append(get_change_id(git_cat_file, to_hash))
