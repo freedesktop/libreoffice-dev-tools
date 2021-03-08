@@ -643,6 +643,7 @@ def analyze_reports():
     automateList = util_load_data_file(fileAutomate)
     automateList['gerrit']['to_abandon_abandon'] = {}
     automateList['gerrit']['to_abandon_comment'] = {}
+    automateList['gerrit']['old_parent'] = {}
     automateList['gerrit']['to_review'] = {}
     automateList['bugzilla']['missing_cc'] = {}
     automateList['bugzilla']['remove_cc'] = {}
@@ -711,11 +712,6 @@ def analyze_reports():
                 statList['reportList']['abandonedPatches'].append(x)
 
       if row['status'] == 'NEW':
-        cntReview = 0
-        for x1 in 'Code-Review', 'Verified':
-          for x in row['labels'][x1]['all']:
-            if x['email'] != ownerEmail:
-              cntReview += 1
 
         x = len(row['messages']) - 1
         if x >= 0:
@@ -724,6 +720,31 @@ def analyze_reports():
         else:
           patchset = 1
           txt = ''
+
+        cntReview = 0
+        for x1 in 'Code-Review', 'Verified':
+          for x in row['labels'][x1]['all']:
+            if x['email'] != ownerEmail:
+              cntReview += 1
+
+            if row['branch'] == 'master' and x['name'] == "Jenkins" and x['value'] == 1:
+              bIsOneWeekOld = False
+              verificationDate = datetime.datetime.strptime(x['date'], '%Y-%m-%d %H:%M:%S.%f000')
+              if verificationDate < cfg['1weekDate']:
+                bIsOneWeekOld = True
+              else:
+                currentRevision = row['current_revision']
+                parentId = row['revisions'][currentRevision]['commit']['parents'][0]['commit']
+                parentIdName = "core_" + parentId
+                if parentIdName in gitData['commits']:
+                  parentIdInfo = gitData['commits'][parentIdName]
+
+                  xParentDate = datetime.datetime.strptime(parentIdInfo['date'], "%Y-%m-%d %H:%M:%S")
+                  if xParentDate < cfg['1weekDate']:
+                    bIsOneWeekOld = True
+
+              if bIsOneWeekOld:
+                automateList['gerrit']['old_parent'][entry['id']] = patchset
 
         if xDate < cfg['1monthDate']:
           # gerrit cli sucks and doesn't accept changeset,patchrev but only uses numericID
