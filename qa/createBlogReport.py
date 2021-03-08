@@ -606,7 +606,7 @@ def createEvolutionSection(fp, value, sectionName, urlParam, color):
     print("Check the current list of {} {}".format(sectionName.lower(), makeLink(urlPath + urlParam, "here")), file=fp)
     print('<img src="PATH_HERE/{}.png" alt="" width="640" height="480" class="alignnone size-full" />'.format(
         sectionName.replace(" ", "_")), file=fp)
-    createPlot(value, "line", sectionName + " Per Day", sectionName, color)
+    createPlot(value, "line", sectionName + " Over Time", sectionName, color)
 
 
 def createList(fp, value, listName):
