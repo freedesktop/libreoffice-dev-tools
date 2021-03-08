@@ -609,7 +609,7 @@ def get_gerrit(cfg):
     if not os.path.isfile(fileName):
       # if gerrit_dump.json doesn't exist, the script will request the data from the last 365 days.
       # This is slow and will probably timeout. In this case, only care about open tickets
-      queryType = 'q=is:open+after:'
+      queryType = 'q=is:open+after'
 
     url = 'https://gerrit.libreoffice.org/changes/?' + queryType + ':' + searchDate.strftime("%Y-%m-%d") + \
         '&o=DETAILED_LABELS&o=DETAILED_ACCOUNTS&o=MESSAGES&o=CURRENT_COMMIT&o=CURRENT_REVISION&limit=200&start='
