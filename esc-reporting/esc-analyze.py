@@ -711,13 +711,10 @@ def analyze_reports():
                 statList['reportList']['abandonedPatches'].append(x)
 
       if row['status'] == 'NEW':
-        doBlock = False
         cntReview = 0
         for x1 in 'Code-Review', 'Verified':
           for x in row['labels'][x1]['all']:
-            if x['value'] == -2:
-              doBlock = True
-            if x['email'] != ownerEmail and x['email'] != 'ci@libreoffice.org':
+            if x['email'] != ownerEmail:
               cntReview += 1
 
         x = len(row['messages']) - 1
@@ -728,7 +725,7 @@ def analyze_reports():
           patchset = 1
           txt = ''
 
-        if xDate < cfg['1monthDate'] and not doBlock:
+        if xDate < cfg['1monthDate']:
           # gerrit cli sucks and doesn't accept changeset,patchrev but only uses numericID
           if 'A polite ping' in txt:
             automateList['gerrit']['to_abandon_abandon'][entry['id']] = patchset
