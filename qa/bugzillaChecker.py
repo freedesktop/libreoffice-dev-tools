@@ -104,9 +104,8 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
 
             crashSignature = row['cf_crashreport']
             if crashSignature:
-                resultValue = [ rowId, creationDate, '']
                 if not crashSignature.startswith('["'):
-                    util_add_to_result(lResults, 'incorrect_crash_signature', resultValue)
+                    util_add_to_result(lResults, 'incorrect_crash_signature', rowId)
                 else:
                     if common.isOpen(rowStatus):
                         lcrashSignature = ast.literal_eval(crashSignature)
@@ -115,37 +114,27 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             crashReportUrl = crashReportUrl.replace('<', '%3C').replace('>', '%3E')
                             #Link should be shorter than 255, otherwise Bugzilla returns an error
                             if crashReportUrl not in row['see_also'] and len(crashReportUrl) < 255:
-                                util_add_to_result(lResults, 'add_crashReport_to_seeAlso', resultValue)
+                                util_add_to_result(lResults, 'add_crashReport_to_seeAlso', rowId)
 
             everConfirmed = False
             autoConfirmed = False
-            autoConfirmedValue = None
             versionChanged = False
-            versionChangedValue = None
             oldestVersion = 999999
             newerVersion = False
-            newerVersionValue = None
             autoFixed = False
-            autoFixedValue = None
-            lastAssignedValue = None
             closeDate = None
             movedToFixed = False
             movedToNeedInfo = False
-            movedToNeedInfoValue = None
             isReopened = False
-            reopenValue = None
             addAssigned = False
-            addassignedValue = None
             movedToNew = False
-            movedToNewValue = None
             addAssigned = False
+            actionMail = None
 
             for action in row['history']:
                 actionMail = action['who']
                 actionDate = datetime.datetime.strptime(action['when'], "%Y-%m-%dT%H:%M:%SZ")
                 common.util_check_bugzilla_mail(statList, actionMail, '', actionDate, rowId)
-
-                resultValue = [ rowId, actionDate, actionMail ]
 
                 # Use this variable in case the status is set before the resolution
                 newStatus = None
@@ -178,23 +167,17 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                 newerVersion = False
                             else:
                                 newerVersion = True
-                                newerVersionValue = resultValue
 
                     elif change['field_name'] == 'status':
                         addedStatus = change['added']
                         removedStatus = change['removed']
 
-                        if rowStatus == 'ASSIGNED' and addedStatus == 'ASSIGNED':
-                            lastAssignedValue = resultValue
-
                         if addedStatus == 'REOPENED' and rowStatus == 'REOPENED' and not movedToFixed:
                             isReopened = True
-                            reopenValue = resultValue
 
                         if actionDate >= cfg['reportPeriod'] and addedStatus == 'NEEDINFO' and \
                                 rowStatus == 'NEEDINFO' and common.isOpen(removedStatus):
                             movedToNeedInfo = True
-                            movedToNeedInfoValue = resultValue
 
                         if movedToNeedInfo and removedStatus == 'NEEDINFO':
                             movedToNeedInfo = False
@@ -219,7 +202,6 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             common.isOpen(rowStatus) and common.isOpen(addedStatus) and 'bisected' not in rowKeywords and \
                             creatorMail not in cfg['configQA']['ignore']['autoConfirmed']:
                                 autoConfirmed = True
-                                autoConfirmedValue = resultValue
 
                         if autoFixed and removedStatus == 'RESOLVED':
                             autoFixed = False
@@ -228,22 +210,20 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             if actionMail == creatorMail and addedStatus == 'RESOLVED_FIXED' and \
                                     rowStatus == 'RESOLVED_FIXED' and 'target:' not in row['whiteboard']:
                                 autoFixed = True
-                                autoFixedValue = resultValue
 
                             if removedStatus == "ASSIGNED" and addedStatus == "NEW" and \
                                     rowStatus == "NEW" and row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org':
-                                util_add_to_result(lResults, 'remove_assignee', resultValue)
+                                util_add_to_result(lResults, 'remove_assignee', rowId)
                             elif addedStatus == "ASSIGNED" and rowStatus == "ASSIGNED" and \
                                     row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org':
-                                util_add_to_result(lResults, 'add_assignee', resultValue)
+                                util_add_to_result(lResults, 'add_assignee', rowId)
 
                             if addedStatus == 'NEW' and rowStatus == 'NEW' and row['product'] == 'LibreOffice':
                                 movedToNew = True
-                                movedToNewValue = resultValue
 
                             if addedStatus == 'RESOLVED_FIXED' and rowStatus == 'RESOLVED_FIXED' and ('regression' in rowKeywords \
                                     or 'crash' in row['summary'].lower() or 'perf' in rowKeywords):
-                                util_add_to_result(lResults, 'verify_fix', resultValue)
+                                util_add_to_result(lResults, 'verify_fix', rowId)
 
                     elif change['field_name'] == 'resolution':
                         if newStatus:
@@ -257,7 +237,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                 closeDate = actionDate
                         elif change['removed'] == 'FIXED' and actionDate >= cfg['reportPeriod'] and \
                                 closeDate and (actionDate - closeDate).days > 30:
-                            util_add_to_result(lResults, 'reopened_after_1_months', resultValue)
+                            util_add_to_result(lResults, 'reopened_after_1_months', rowId)
 
                     elif change['field_name'] == 'keywords':
                         if actionDate >= cfg['reportPeriod']:
@@ -265,23 +245,23 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                             for keyword in keywordsAdded:
                                 if keyword in common.keywords_list and keyword in rowKeywords:
                                         if keyword == 'patch' and (common.isOpen(rowStatus) or rowStatus == 'UNCONFIRMED'):
-                                            util_add_to_result(lResults, 'patch_added', resultValue)
+                                            util_add_to_result(lResults, 'patch_added', rowId)
 
                                         if row['status'] != 'RESOLVED':
                                             if keyword == 'bibisectRequest' and 'regression' not in rowKeywords:
-                                                util_add_to_result(lResults, 'bibisectRequest_added', resultValue)
+                                                util_add_to_result(lResults, 'bibisectRequest_added', rowId)
 
                                             elif keyword == 'possibleRegression' and 'possibleRegression' in rowKeywords:
-                                                util_add_to_result(lResults, 'possibleregression_added', resultValue)
+                                                util_add_to_result(lResults, 'possibleregression_added', rowId)
                                             elif keyword == 'needsUXEval' and 'libreoffice-ux-advise@lists.freedesktop.org' not in row['cc']:
-                                                util_add_to_result(lResults, 'needsUXEval_missing_email', resultValue)
+                                                util_add_to_result(lResults, 'needsUXEval_missing_email', rowId)
 
                     elif change['field_name'] == 'whiteboard':
                         if actionDate >= cfg['reportPeriod']:
                             for whiteboard in change['added'].split(' '):
                                 if 'backportrequest' in whiteboard.lower() and \
                                         whiteboard in row['whiteboard'] and common.isOpen(rowStatus):
-                                    util_add_to_result(lResults, 'backport_added', resultValue)
+                                    util_add_to_result(lResults, 'backport_added', rowId)
 
 
                     elif change['field_name'] == 'assigned_to':
@@ -292,10 +272,10 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                     row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and \
                                     ( rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
                                 addAssigned = True
-                                util_add_to_result(lResults, 'change_status_assigned', resultValue)
+                                util_add_to_result(lResults, 'change_status_assigned', rowId)
                             if addedAssignee == "libreoffice-bugs@lists.freedesktop.org" and \
                                     row['assigned_to'] == 'libreoffice-bugs@lists.freedesktop.org' and rowStatus == 'ASSIGNED':
-                                util_add_to_result(lResults, 'remove_assigned_status', resultValue)
+                                util_add_to_result(lResults, 'remove_assigned_status', rowId)
 
             commentMail = None
             comments = row['comments'][1:]
@@ -309,42 +289,34 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                 if rowStatus == 'UNCONFIRMED' and 'needsDevAdvice' not in rowKeywords and row['severity'] != 'enhancement':
                     if comments[-1]['creator'] != creatorMail and '[Automated Action]' not in comments[-1]['text'] and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
-                        value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
-                        util_add_to_result(lResults, 'unconfirmed_last_comment_not_from_reporter', value)
+                        util_add_to_result(lResults, 'unconfirmed_last_comment_not_from_reporter', rowId)
                     elif comments[-1]['creator'] == creatorMail and \
                         datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveUnconfirmedPeriod']:
-                        value = [ rowId, row['last_change_time'], comments[-1]['creator'] ]
-                        util_add_to_result(lResults, 'unconfirmed_last_comment_from_reporter', value)
+                        util_add_to_result(lResults, 'unconfirmed_last_comment_from_reporter', rowId)
 
             if rowStatus == 'UNCONFIRMED' and row['severity'] == 'enhancement' and 'QA:needsComment' not in row['whiteboard'] and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['retestUnconfirmedPeriod']:
-                value = [ rowId, creationDate, creatorMail ]
-                util_add_to_result(lResults, 'inactive_unconfirmed_enhacements', value)
+                util_add_to_result(lResults, 'inactive_unconfirmed_enhacements', rowId)
 
             if autoFixed:
-                util_add_to_result(lResults, 'auto_fixed', autoFixedValue)
+                util_add_to_result(lResults, 'auto_fixed', rowId)
 
             if autoConfirmed:
-                util_add_to_result(lResults, 'auto_confirmed', autoConfirmedValue)
+                util_add_to_result(lResults, 'auto_confirmed', rowId)
 
             if newerVersion and rowVersion != 'unspecified':
-                util_add_to_result(lResults, 'newer_version', newerVersionValue)
+                util_add_to_result(lResults, 'newer_version', rowId)
 
             if isReopened and not autoConfirmed:
-                util_add_to_result(lResults, 'is_reopened', reopenValue)
+                util_add_to_result(lResults, 'is_reopened', rowId)
 
             #In case the reporter assigned the bug to himself at creation time
             if not addAssigned and creationDate >= cfg['reportPeriod'] and \
                     row['assigned_to'] != 'libreoffice-bugs@lists.freedesktop.org' and (rowStatus == 'NEW' or rowStatus == 'UNCONFIRMED'):
-                value = [ rowId, creationDate, row['assigned_to'] ]
-                util_add_to_result(lResults, 'change_status_assigned', value)
+                util_add_to_result(lResults, 'change_status_assigned', rowId)
 
             if movedToNeedInfo and everConfirmed:
-                util_add_to_result(lResults, 'moved_to_needinfo', movedToNeedInfoValue)
-
-            if movedToNew and row['component'] != 'Documentation' and 'needsUXEval' not in rowKeywords\
-                    and 'regression' not in rowKeywords and not row['blocks']:
-                util_add_to_result(lResults, 'metabug_not_added', movedToNewValue)
+                util_add_to_result(lResults, 'moved_to_needinfo', rowId)
 
             if not versionChanged and movedToNew and not autoConfirmed and row['severity'] != 'enhancement' and \
                     'regression' not in rowKeywords and 'bisected' not in rowKeywords and \
@@ -352,9 +324,9 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                     row['component'] != 'Documentation' and \
                     row['component'] != 'UI' and \
                     row['component'] != 'iOS' and row['component'] != 'Android Viewer' and \
-                    movedToNewValue[2] not in cfg['configQA']['ignore']['confirmer'] and \
+                    actionMail not in cfg['configQA']['ignore']['confirmer'] and \
                     (rowVersion.startswith(versionsToCheck) or rowVersion == 'unspecified'):
-                util_add_to_result(lResults, 'version_not_changed', movedToNewValue)
+                util_add_to_result(lResults, 'version_not_changed', rowId)
 
 
             if common.isOpen(rowStatus) and 'target:' in row['whiteboard'] and 'easyHack' not in row['keywords']:
@@ -370,8 +342,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                         commentDate = datetime.datetime.strptime(comments[negIt]['time'], "%Y-%m-%dT%H:%M:%SZ")
                         if commentDate < cfg['PingFixedBugPeriod'] and commentDate >= cfg['pingFixedBugDiff']:
                             if it == 1 and  'Is this bug fixed?' in commentText and commentMail == 'xiscofauli@libreoffice.org':
-                                value = [rowId, commentDate, row['assigned_to']]
-                                util_add_to_result(lResults, 'take_action_fixed_bug', value)
+                                util_add_to_result(lResults, 'take_action_fixed_bug', rowId)
                                 break
 
                             elif commentMail == 'libreoffice-commits@lists.freedesktop.org':
@@ -379,8 +350,7 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
                                 if 'evert' in commentText:
                                     break
                                 else:
-                                    value = [rowId, commentDate, row['assigned_to']]
-                                    util_add_to_result(lResults, 'ping_bug_fixed', value)
+                                    util_add_to_result(lResults, 'ping_bug_fixed', rowId)
                                     break
 
                             # Ignore duplicated comments
@@ -395,58 +365,43 @@ def analyze_bugzilla_checkers(statList, bugzillaData, cfg):
             if rowStatus == 'ASSIGNED' and \
                     datetime.datetime.strptime(row['last_change_time'], "%Y-%m-%dT%H:%M:%SZ") < cfg['inactiveAssignedPeriod'] and \
                     rowId not in cfg['configQA']['ignore']['inactiveAssigned']:
-                value = [rowId, row['last_change_time'], row['assigned_to']]
-                util_add_to_result(lResults, 'inactive_assignee', value)
+                util_add_to_result(lResults, 'inactive_assignee', rowId)
 
         elif row['summary'].lower().startswith('[meta]'):
             if not row['alias'] and common.isOpen(row['status']):
-                value = [rowId, '', '']
-                util_add_to_result(lResults, 'empty_alias', value)
+                util_add_to_result(lResults, 'empty_alias', rowId)
 
     for k, v in dupesBugs.items():
         if v['severity'] == 'enhancement':
             if v['totalDupes'] < minNumOfDupes and v['totalCC'] < minNumOfCC and (v['priority'] == 'high' or v['priority'] == 'highest'):
-                value = [k, '', '']
-                util_add_to_result(lResults, 'change_enhancement_priority_to_medium', value)
+                util_add_to_result(lResults, 'change_enhancement_priority_to_medium', k)
             elif (v['totalDupes'] >= minNumOfDupes or v['totalCC'] >= minNumOfCC) and (v['priority'] != 'high' and v['priority'] != 'highest'):
-                value = [k, '', '']
-                util_add_to_result(lResults, 'change_enhancement_priority_to_high', value)
+                util_add_to_result(lResults, 'change_enhancement_priority_to_high', k)
         else:
             if v['totalDupes'] >= minNumOfDupes or v['totalCC'] >= minNumOfCC:
                 if v['isRegression'] and v['priority'] != 'highest':
-                    value = [k, '', '']
-                    util_add_to_result(lResults, 'change_bug_priority_to_highest', value)
+                    util_add_to_result(lResults, 'change_bug_priority_to_highest', k)
                 elif (v['priority'] != 'high' and v['priority'] != 'highest'):
-                    value = [k, '', '']
-                    util_add_to_result(lResults, 'change_bug_priority_to_high', value)
+                    util_add_to_result(lResults, 'change_bug_priority_to_high', k)
 
     fp = open(bugzillaReportPath, 'w', encoding='utf-8')
     print("Creating file " + bugzillaReportPath)
 
     for dKey, dValue in sorted(lResults.items()):
         if dValue:
-            print('\n=== ' + dKey.replace('_', ' ').upper() + ' ===', file=fp)
-            dValue = sorted(dValue, key=lambda x: x[1])
-            for idx in range(len(dValue)):
+            print('\n=== ' + dKey.replace('_', ' ').upper() + ' ( ' + str(len(dValue)) +  ' ) ===', file=fp)
 
-                if dValue[idx][1]:
-                    if isinstance(dValue[idx][1], str):
-                        dValue[idx][1] = datetime.datetime.strptime(dValue[idx][1], "%Y-%m-%dT%H:%M:%SZ")
+            sortedValues = sorted([str(item) for item in dValue])
+            if len(sortedValues) == 1:
+                print('\t1. ' + common.urlShowBug + sortedValues[0] , file=fp)
+            else:
+                count = 1
+                for i in range(0, len(sortedValues), 20):
+                    subList = sortedValues[i:i + 20]
+                    url = "https://bugs.documentfoundation.org/buglist.cgi?bug_id=" + ','.join(subList)
+                    print('\t' + str(count) + '. ' + url , file=fp)
+                    count += 1
 
-                count = idx + 1
-                if dValue[idx][1]:
-                    print("{:<3} | {:<58} | {} | {}".format(
-                        str(count), common.urlShowBug + str(dValue[idx][0]),
-                        str(dValue[idx][1].strftime("%Y-%m-%d")),
-                        str(dValue[idx][2])),
-                        file=fp)
-                else:
-                    print("{:<3} | {:<58}".format(
-                        str(count), common.urlShowBug + str(dValue[idx][0])),
-                        file=fp)
-
-                if count != len(dValue) and count % 10 == 0:
-                    print('=' * 100, file=fp)
     fp.close()
 
     fp = open(bugzillaUserReportPath, 'w', encoding='utf-8')
