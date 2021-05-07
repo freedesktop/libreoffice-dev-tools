@@ -12,6 +12,9 @@ if [ "$kind" == "text/rtf" ]; then
 elif [ "$kind" == "application/xml" -o "$kind" == "image/svg+xml" -o "$kind" == "text/xml" ]; then
 	#xmllint --format --recover $file 2>/dev/null
 	$mydir/formatxml $file
+elif [ "$1" == "json" ]; then
+	# file(1) sets $kind to text/plain for me, allow forcing it via a parameter
+	cat $file | python3 -mjson.tool
 else
 	echo "unknown type: $kind"
 fi
