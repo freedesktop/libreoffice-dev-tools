@@ -38,7 +38,7 @@ export function onDrop(e) {
                             text.filter(t => t != null).join(cm.doc.lineSeparator())),
                         origin: "paste"}
           makeChange(cm.doc, change)
-          setSelectionReplaceHistory(cm.doc, simpleSelection(pos, changeEnd(change)))
+          setSelectionReplaceHistory(cm.doc, simpleSelection(clipPos(cm.doc, pos), clipPos(cm.doc, changeEnd(change))))
         })()
       }
     }
@@ -56,7 +56,7 @@ export function onDrop(e) {
           markAsReadAndPasteIfAllFilesAreRead()
           return
         }
-        text[i] = content;
+        text[i] = content
         markAsReadAndPasteIfAllFilesAreRead()
       }
       reader.readAsText(file)
