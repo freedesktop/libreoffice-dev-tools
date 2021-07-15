@@ -326,11 +326,13 @@ def analyze_mentoring():
       statList['people'][ownerEmail]['isContributor'] = True
       util_build_period_stat(xDate, ownerEmail, 'gerrit', dataTarget=row['status'], peopleTarget='owner')
 
-      for i in 'Verified', 'Code-Review':
-        for x in row['labels'][i]['all']:
-          xEmail = util_check_mail(x['name'], x['email'])
-          if xEmail != ownerEmail:
-            util_build_period_stat(xDate, xEmail, 'gerrit', dataTarget='reviewed', peopleTarget='reviewer')
+      # Exclude feature and distro branches
+      if row['branch'] == 'master' or row['branch'].startswith('libreoffice-'):
+          for i in 'Verified', 'Code-Review':
+            for x in row['labels'][i]['all']:
+              xEmail = util_check_mail(x['name'], x['email'])
+              if xEmail != ownerEmail:
+                util_build_period_stat(xDate, xEmail, 'gerrit', dataTarget='reviewed', peopleTarget='reviewer')
 
     print(" from " + statOldDate.strftime('%Y-%m-%d') + " to " + statNewDate.strftime('%Y-%m-%d'))
     print("mentoring: analyze git", end="", flush=True)
